@@ -638,9 +638,8 @@ function newTeam(){
     const f=FORMATS[k];
     const c=document.createElement('div');
     c.className='chip';
-    c.style.cssText='padding:18px 10px;display:flex;flex-direction:column;gap:4px';
-    c.innerHTML=`<div style="font-size:18px;font-weight:800;color:#e94560">${f.label}</div>
-      <div style="font-size:12px;color:#aaa;font-weight:600">${f.age}${f.hasGk?' · GK':''}</div>`;
+    c.style.cssText='padding:18px 10px';
+    c.innerHTML=`<div style="font-size:18px;font-weight:800;color:#e94560">${f.label}</div>`;
     c.onclick=()=>pickFormat(k);
     g.appendChild(c);
   });
