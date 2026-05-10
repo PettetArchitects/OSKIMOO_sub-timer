@@ -102,6 +102,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .pitch-goal-bot{position:absolute;left:50%;bottom:0;width:20%;height:4%;border:1px solid rgba(255,255,255,.25);transform:translateX(-50%);border-bottom:none}
 .pitch-goal-top{position:absolute;left:50%;top:0;width:20%;height:4%;border:2px solid rgba(255,255,255,.3);transform:translateX(-50%);border-top:none;border-radius:0 0 4px 4px}
 .pitch-goal-bot{position:absolute;left:50%;bottom:0;width:20%;height:4%;border:2px solid rgba(255,255,255,.3);transform:translateX(-50%);border-bottom:none;border-radius:4px 4px 0 0}
+/* Netball court markings — overrides soccer when .lu-pitch is .np-netball */
+.lu-pitch.np-netball .pitch-lines::before,.lu-pitch.np-netball .pitch-lines::after,.lu-pitch.np-netball .pitch-center,.lu-pitch.np-netball .pitch-box-top,.lu-pitch.np-netball .pitch-box-bot,.lu-pitch.np-netball .pitch-goal-top,.lu-pitch.np-netball .pitch-goal-bot{display:none}
+.nb-third{position:absolute;left:0;right:0;height:0;border-top:1px solid rgba(255,255,255,.22);pointer-events:none}
+.nb-third-1{top:33.33%}
+.nb-third-2{top:66.66%}
+.nb-circle-top{position:absolute;left:50%;top:0;width:65%;height:32.5%;border:1px solid rgba(255,255,255,.28);border-top:none;border-radius:0 0 50% 50%/0 0 100% 100%;transform:translateX(-50%);pointer-events:none}
+.nb-circle-bot{position:absolute;left:50%;bottom:0;width:65%;height:32.5%;border:1px solid rgba(255,255,255,.28);border-bottom:none;border-radius:50% 50% 0 0/100% 100% 0 0;transform:translateX(-50%);pointer-events:none}
+.nb-centre-circle{position:absolute;left:50%;top:50%;width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.28);transform:translate(-50%,-50%);pointer-events:none}
 
 /* Overlay */
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;flex-direction:column;align-items:center;justify-content:center;padding:24px}
@@ -1658,9 +1666,12 @@ function renderLineupPitch(){
   }
 
   const pitch=document.createElement('div');
-  pitch.className='lu-pitch';
+  const _luSport=getSport(currentTeam);
+  pitch.className='lu-pitch'+(_luSport.key==='netball'?' np-netball':'');
   pitch.style.cssText='aspect-ratio:auto;width:100%;max-width:none;height:100%';
-  pitch.innerHTML=`
+  pitch.innerHTML=_luSport.key==='netball'
+    ? `<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`
+    : `
     <div class="pitch-lines"></div>
     <div class="pitch-center"></div>
     <div class="pitch-box-top"></div>
@@ -2444,9 +2455,12 @@ function renderRoster(){
   const pitchC=document.createElement('div');
   pitchC.style.cssText='padding:4px 0 6px';
   const pitch=document.createElement('div');
-  pitch.className='lu-pitch';
+  const _gSport=getSport(currentTeam);
+  pitch.className='lu-pitch'+(_gSport.key==='netball'?' np-netball':'');
   pitch.style.cssText='width:100%;aspect-ratio:3/4;border-radius:6px';
-  pitch.innerHTML=`<div class="pitch-lines"></div><div class="pitch-center" style="width:44px;height:44px"></div><div class="pitch-box-top"></div><div class="pitch-box-bot"></div><div class="pitch-goal-top"></div><div class="pitch-goal-bot"></div>`;
+  pitch.innerHTML=_gSport.key==='netball'
+    ? `<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`
+    : `<div class="pitch-lines"></div><div class="pitch-center" style="width:44px;height:44px"></div><div class="pitch-box-top"></div><div class="pitch-box-bot"></div><div class="pitch-goal-top"></div><div class="pitch-goal-bot"></div>`;
 
   playerSlots.forEach(({pos,pIdx,isGk})=>{
     const isOff=nextOff.has(pIdx);
