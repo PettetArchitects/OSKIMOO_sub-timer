@@ -649,6 +649,7 @@ function pickFormat(fmtKey){
   editingTeam={id:Date.now(),name:'',format:fmtKey,players:['']};
   document.getElementById('editTitle').textContent='New Team';
   document.getElementById('delTeamBtn').style.display='none';
+  document.getElementById('teamNameInput').placeholder=`e.g. Dragonflies ${FORMATS[fmtKey].age}`;
   renderEditTeam();
   showScr('editTeam');
 }
