@@ -265,6 +265,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <input class="input" id="teamNameInput" placeholder="e.g. Dragonflies U8">
 
     <h2 style="margin-top:16px">Players</h2>
+    <div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc">
+      <div style="font-weight:700;color:#00d4aa;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">⚡ Set position tags</div>
+      Tap <span style="background:rgba(233,69,96,.15);color:#e94560;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700">GK</span>
+      <span style="background:rgba(0,212,170,.15);color:#00d4aa;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700">DEF</span>
+      <span style="background:rgba(91,192,222,.15);color:#5bc0de;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700">MID</span>
+      <span style="background:rgba(240,165,0,.15);color:#f0a500;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700">WNG</span>
+      <span style="background:rgba(255,107,107,.15);color:#ff6b6b;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700">FWD</span>
+      under each name. The app uses these to swap players into positions they actually play. Multiple tags = versatile.
+    </div>
     <div id="playerEditList"></div>
     <button class="btn btn-o btn-s" onclick="addPlayerField()" style="margin-top:8px;width:100%">+ Add Player</button>
     <button class="btn btn-g" onclick="saveAndBack()" style="margin-top:16px">Save Team</button>
@@ -908,10 +917,16 @@ function renderEditTeam(){
       <button class="rm-btn" onclick="editingTeam.players.splice(${i},1);renderEditTeam()">×</button>`;
     wrap.appendChild(row);
     // Position tags
+    const tagsRow=document.createElement('div');
+    tagsRow.style.cssText='display:flex;align-items:center;gap:6px;margin-left:4px;margin-top:4px;flex-wrap:wrap';
+    const cur=getPlayerPos(editingTeam,p);
+    const lbl=document.createElement('span');
+    lbl.style.cssText='font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:'+(cur.length?'#666':'#f0a500');
+    lbl.textContent=cur.length?'Positions':'⚠ Set positions';
+    tagsRow.appendChild(lbl);
     const tags=document.createElement('div');
     tags.className='pos-tags';
-    tags.style.marginLeft='4px';
-    const cur=getPlayerPos(editingTeam,p);
+    tags.style.cssText='display:flex;gap:4px;flex-wrap:wrap';
     POS_TYPES.forEach(pt=>{
       const tag=document.createElement('span');
       const active=cur.includes(pt);
@@ -926,7 +941,8 @@ function renderEditTeam(){
       };
       tags.appendChild(tag);
     });
-    wrap.appendChild(tags);
+    tagsRow.appendChild(tags);
+    wrap.appendChild(tagsRow);
     c.appendChild(wrap);
   });
 }
