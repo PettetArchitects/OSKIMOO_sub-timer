@@ -462,8 +462,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S4: GAME ===== -->
 <div id="s4" class="scr" style="height:100dvh;overflow:hidden;flex-direction:column">
-  <!-- Top bar: score centred -->
-  <div style="display:flex;flex-direction:column;align-items:center;padding:10px 12px 6px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0">
+  <!-- Top bar: score centred + abandon-game button -->
+  <div style="display:flex;flex-direction:column;align-items:center;padding:10px 12px 6px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative">
+    <button onclick="abandonGame()" aria-label="End game" title="End game" style="position:absolute;top:8px;left:10px;width:28px;height:28px;border-radius:50%;border:1px solid #444;background:none;color:#888;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
     <span style="font-size:10px;color:#e94560;font-weight:700;letter-spacing:1.5px;margin-bottom:4px" id="hLbl">1ST HALF</span>
     <div style="display:flex;align-items:center;gap:6px">
       <span style="font-size:13px;color:#888;font-weight:700" id="scoreUsLabel">US</span>
@@ -970,6 +971,25 @@ function showScr(id){
 function discardActiveGame(){
   if(!confirm('Discard the in-progress game? This cannot be undone.'))return;
   clearActiveGame();
+  renderHome();
+}
+// Abandon a game from the live game screen — for "started in error" cases. Stops the
+// clock, clears the active-game snapshot, and returns to home without saving a match.
+function abandonGame(){
+  const elapsed=G?(G.elapsedMs||0)+(G.running&&G.lastTs?(performance.now()-G.lastTs):0):0;
+  const hasProgress=elapsed>2000||(G&&(G.scoreUs>0||G.scoreThem>0||(G.log&&G.log.length>0)));
+  const msg=hasProgress
+    ? 'End this game now? It won’t be saved to match history.'
+    : 'End this game?';
+  if(!confirm(msg))return;
+  if(G){
+    if(G.running){G.running=false;G.lastTs=null;if(G.raf){cancelAnimationFrame(G.raf);G.raf=null;}}
+  }
+  G=null;
+  clearActiveGame();
+  // Close any overlays that might still be visible
+  document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'));
+  showScr('home');
   renderHome();
 }
 function renderHome(){
