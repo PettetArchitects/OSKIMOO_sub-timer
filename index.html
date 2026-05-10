@@ -1049,12 +1049,21 @@ async function handleRosterPhoto(inputEl){
     setRosterBtnLoading(true,'Reading your roster…');
     const{data,error}=await sb.functions.invoke('extract-roster',{body:{imageBase64:dataUrl}});
     if(error){
-      const msg=error.message||error.error||JSON.stringify(error)||'extract failed';
+      let msg=error.message||'extract failed';
+      // Supabase wraps non-2xx in FunctionsHttpError; the body lives on error.context
+      try{
+        if(error.context&&typeof error.context.json==='function'){
+          const bodyJson=await error.context.json();
+          if(bodyJson&&bodyJson.error)msg=bodyJson.error;
+          if(bodyJson&&bodyJson.detail)msg+=' · '+(typeof bodyJson.detail==='string'?bodyJson.detail.slice(0,200):JSON.stringify(bodyJson.detail).slice(0,200));
+        }
+      }catch{}
+      console.error('extract-roster error',error,msg);
       setRosterImportStatus('Error: '+msg,'err');
       return;
     }
     if(data&&data.error){
-      setRosterImportStatus('Error: '+data.error,'err');
+      setRosterImportStatus('Error: '+data.error+(data.detail?' · '+String(data.detail).slice(0,200):''),'err');
       return;
     }
     const names=Array.isArray(data&&data.names)?data.names:[];
