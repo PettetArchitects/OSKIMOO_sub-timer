@@ -777,6 +777,7 @@ function resumeActiveGame(){
   currentTeam=t;
   curFmt=s.curFmt;curFormation=s.curFormation;
   avail=s.avail;cfg=s.cfg;gk1=s.gk1;gk2=s.gk2;
+  setDisplayNameList(avail);
   luOrd=s.luOrd;rotPairs=s.rotPairs;
   G=s.G;
   showScr('s4');
@@ -914,7 +915,24 @@ let rotPairs=[]; // [[onFieldIdx,benchIdx], ...] — paired rotation groups
 let pairSel=null; // for re-pairing: {pairIdx, slot:'on'|'bench'}
 let G=null; // game state
 
-const fn=f=>f.split(' ')[0];
+// Disambiguation context for short-form names. When the active list contains two players
+// who share a first name, fn() returns "First L" (last-name initial) for both; otherwise
+// just the first name. Set this to avail (the active match roster) once a game flow starts;
+// fall back to currentTeam.players elsewhere.
+let _dnList=null;
+function setDisplayNameList(list){_dnList=Array.isArray(list)?list.filter(n=>typeof n==='string'&&n):null;}
+const fn=name=>{
+  if(!name)return '';
+  const parts=String(name).trim().split(/\s+/);
+  const first=parts[0]||'';
+  const list=_dnList||(currentTeam&&currentTeam.players)||null;
+  if(!list||list.length<=1)return first;
+  const f=first.toLowerCase();
+  const sameFirst=list.filter(n=>n&&n.split(/\s+/)[0].toLowerCase()===f);
+  if(sameFirst.length<=1||parts.length<2)return first;
+  const last=parts[parts.length-1];
+  return `${first} ${last[0].toUpperCase()}`;
+};
 const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 const fmtMs=ms=>{const ts=Math.floor(ms/1000);const cs=Math.floor((ms%1000)/10);return String(Math.floor(ts/60)).padStart(2,'0')+':'+String(ts%60).padStart(2,'0')+'.'+String(cs).padStart(2,'0');};
 
@@ -1426,6 +1444,7 @@ function renderS1(){
 
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
+  setDisplayNameList(avail);
   renderFmtPicker();
   renderFormationPicker();
   updPrev();
@@ -2435,6 +2454,8 @@ function showHistory(){
 
 function showMatchDetail(m){
   // Reuse summary screen to show historical match
+  // Disambiguate names within the saved roster of this match (so two Sarahs read as Sarah B / Sarah M)
+  if(m&&Array.isArray(m.playingTime))setDisplayNameList(m.playingTime.map(p=>p.name));
   const mc=document.getElementById('sumMatch');
   const d=new Date(m.date);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
