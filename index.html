@@ -1045,7 +1045,7 @@ async function handleRosterPhoto(inputEl){
   setRosterBtnLoading(true,'Compressing photo…');
   setRosterImportStatus(null);
   try{
-    const dataUrl=await compressImageForUpload(file,1280,0.85);
+    const dataUrl=await compressImageForUpload(file,1024,0.75);
     setRosterBtnLoading(true,'Reading your roster…');
     const{data,error}=await sb.functions.invoke('extract-roster',{body:{imageBase64:dataUrl}});
     if(error){
