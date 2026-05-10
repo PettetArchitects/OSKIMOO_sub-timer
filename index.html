@@ -209,7 +209,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div id="home" class="scr active">
   <div class="hdr">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+      <div id="hdrBrand" style="display:flex;align-items:center;gap:10px;min-width:0">
         <svg viewBox="0 0 40 60" width="22" height="33" aria-hidden="true" style="flex-shrink:0;display:block">
           <circle cx="20" cy="10" r="3.4" fill="#00d4aa"/>
           <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
@@ -222,7 +222,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
       <div id="authChip" style="flex-shrink:0"></div>
     </div>
-    <div class="sub">Sideline rotation timer for grassroots team sports</div>
+    <div id="hdrTagline" class="sub">Sideline rotation timer for grassroots team sports</div>
   </div>
   <div class="sec">
     <div id="resumeBanner" style="display:none;margin-bottom:12px;padding:12px;background:#1a2a14;border:1.5px solid #00d4aa;border-radius:10px">
@@ -890,33 +890,35 @@ function renderHome(){
   const heading=document.getElementById('teamsHeading');
   const newBtn=document.getElementById('newTeamBtn');
   const histBtn=document.getElementById('historyBtn');
+  const hdrBrand=document.getElementById('hdrBrand');
+  const hdrTagline=document.getElementById('hdrTagline');
   const isLanding=teams.length===0&&!cloudUser;
   if(heading)heading.style.display=isLanding?'none':'';
   if(newBtn)newBtn.style.display=isLanding?'none':'';
   if(histBtn)histBtn.style.display=isLanding?'none':'';
+  // Hide the small header brand while the big landing hero is showing
+  if(hdrBrand)hdrBrand.style.visibility=isLanding?'hidden':'';
+  if(hdrTagline)hdrTagline.style.display=isLanding?'none':'';
   if(teams.length===0){
     if(!cloudUser){
       // First-time visitor, not signed in — push sign-in as primary CTA
-      c.innerHTML=`<div style="padding:8px 4px 12px;color:#ccc">
+      c.innerHTML=`<div style="padding:24px 4px 12px;color:#ccc">
         <div style="display:flex;justify-content:center;margin-bottom:18px">
-          <svg viewBox="0 0 40 60" width="64" height="96" aria-hidden="true" style="display:block">
-            <circle cx="14" cy="9" r="3.2" fill="#e94560"/>
-            <circle cx="26" cy="9" r="3.2" fill="#e94560"/>
-            <circle cx="6"  cy="26" r="3.2" fill="#e94560"/>
-            <circle cx="15" cy="26" r="3.2" fill="#e94560"/>
-            <circle cx="25" cy="26" r="3.2" fill="#e94560"/>
-            <circle cx="34" cy="26" r="3.2" fill="#e94560"/>
-            <circle cx="6"  cy="44" r="3.2" fill="#e94560"/>
-            <circle cx="15" cy="44" r="3.2" fill="#e94560"/>
-            <circle cx="25" cy="44" r="3.2" fill="#e94560"/>
-            <circle cx="34" cy="44" r="3.2" fill="#e94560"/>
+          <svg viewBox="0 0 40 60" width="100" height="150" aria-hidden="true" style="display:block">
+            <circle cx="20" cy="10" r="3.4" fill="#00d4aa"/>
+            <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
+            <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
+            <circle cx="32" cy="28" r="3.4" fill="#00d4aa"/>
+            <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
+            <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
           </svg>
         </div>
-        <div style="text-align:center;font-size:15px;font-weight:700;color:#eee;margin-bottom:6px;line-height:1.3">Track subs, time on field, and game-day flow.</div>
-        <div style="text-align:center;font-size:13px;color:#888;line-height:1.5;margin-bottom:18px">Built for grassroots coaches. Works on the sideline, syncs across your devices.</div>
+        <div style="text-align:center;font-size:30px;font-weight:900;letter-spacing:4px;color:#eee;margin-bottom:6px;line-height:1">SUB TIMER</div>
+        <div style="text-align:center;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:22px">Sideline rotation timer</div>
+        <div style="text-align:center;font-size:14px;color:#bbb;line-height:1.5;margin-bottom:22px;padding:0 8px">Track subs, time on field, and game-day flow. Built for grassroots coaches. Works on the sideline, syncs across your devices.</div>
         <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px">☁ Sign in to get started</button>
         <button onclick="newTeam()" style="width:100%;padding:11px;background:none;color:#888;border:1px solid #333;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Continue without account</button>
-        <div style="text-align:center;font-size:11px;color:#555;margin-top:14px;letter-spacing:.5px">Currently: ⚽ Soccer · 🏐 Netball coming soon</div>
+        <div style="text-align:center;font-size:11px;color:#555;margin-top:18px;letter-spacing:.5px">Currently: ⚽ Soccer · 🏐 Netball coming soon</div>
       </div>`;
     }else{
       // Signed in but no teams — focused nudge to create their first
