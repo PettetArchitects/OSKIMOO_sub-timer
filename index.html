@@ -223,6 +223,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 @keyframes logo-sub-pulse{0%,55%,100%{transform:scale(1);opacity:1}25%{transform:scale(1.55);opacity:.65}}
 .logo-anim .sub-dot{transform-box:fill-box;transform-origin:center;animation:logo-sub-pulse 1.6s ease-in-out infinite}
 .logo-anim .sub-dot-2{animation-delay:.8s}
+/* ===== LIGHT MODE — overrides for outdoor / bright-light sideline use ===== */
+[data-theme="light"] body{background:#f4f5f8;color:#1a1a2e}
+[data-theme="light"] .hdr{background:linear-gradient(135deg,#ffffff,#eef2f9);color:#1a1a2e;border-bottom-color:#e94560}
+[data-theme="light"] .hdr h1{color:#1a1a2e}
+[data-theme="light"] .hdr .sub{color:#5a6478}
+[data-theme="light"] .info{background:#eaeef5;color:#5a6478}
+[data-theme="light"] .card,[data-theme="light"] .chip,[data-theme="light"] .set-row,[data-theme="light"] .lu-row,[data-theme="light"] .pr{background:#ffffff;color:#1a1a2e;border-color:#d8dde6}
+[data-theme="light"] .chip{border:2px solid #d8dde6;color:#1a1a2e}
+[data-theme="light"] .chip.sel{background:#e6faf3;color:#0a8a6a;border-color:#00d4aa}
+[data-theme="light"] .chip.gk-sel{background:#fde8ee;color:#c93550;border-color:#e94560}
+[data-theme="light"] .input{background:#ffffff;color:#1a1a2e;border-color:#d8dde6}
+[data-theme="light"] .btn-g{background:#00b894;color:#ffffff}
+[data-theme="light"] .btn-r:disabled{background:#d8dde6;color:#9aa3b2}
+[data-theme="light"] .tmr{background:linear-gradient(180deg,#ffffff,#f4f5f8)}
+[data-theme="light"] .tmr-c{color:#1a1a2e}
+[data-theme="light"] .nxt{color:#5a6478}
+[data-theme="light"] .lu-bench-title{color:#5a6478}
+[data-theme="light"] .lu-bench{background:#ffffff}
+[data-theme="light"] .lu-pitch{background:linear-gradient(180deg,#dff5e8,#cfe9da);border:2px solid #b3d9c3}
+[data-theme="light"] .lu-pitch .pitch-lines::before,[data-theme="light"] .lu-pitch .pitch-lines::after,[data-theme="light"] .lu-pitch .pitch-center,[data-theme="light"] .lu-pitch .pitch-box-top,[data-theme="light"] .lu-pitch .pitch-box-bot,[data-theme="light"] .lu-pitch .pitch-goal-top,[data-theme="light"] .lu-pitch .pitch-goal-bot{border-color:rgba(0,0,0,.18)}
+[data-theme="light"] .lu-pitch .pitch-center::after{background:rgba(0,0,0,.2)}
+[data-theme="light"] .lu-pitch.np-netball .nb-third,[data-theme="light"] .lu-pitch.np-netball .nb-circle-top,[data-theme="light"] .lu-pitch.np-netball .nb-circle-bot,[data-theme="light"] .lu-pitch.np-netball .nb-centre-circle{border-color:rgba(0,0,0,.22)}
+[data-theme="light"] .fc-on .fc-card{background:rgba(0,212,170,.18);border-color:#00b894}
+[data-theme="light"] .fc-gk .fc-card{background:rgba(233,69,96,.15);border-color:#e94560}
+[data-theme="light"] .fc-name{color:#1a1a2e}
+[data-theme="light"] .fb-card{background:linear-gradient(135deg,#fff5db,#fbe8c0);border-color:#f0a500}
+[data-theme="light"] .fb-name{color:#5a6478}
+[data-theme="light"] .ov{background:rgba(244,245,248,.94)}
+[data-theme="light"] .ab{background:#ffffff;color:#1a1a2e;border:1px solid #d8dde6}
+[data-theme="light"] .ab h2{color:#1a1a2e}
+[data-theme="light"] .sm{background:#f4f5f8;color:#1a1a2e}
+[data-theme="light"] .ai-loading{background:linear-gradient(90deg,rgba(91,192,222,.18),rgba(167,139,250,.28),rgba(91,192,222,.18)) !important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -244,7 +276,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </svg>
         <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:10px;color:#666;font-weight:600;letter-spacing:1px;vertical-align:middle">v1.3</span></h1>
       </div>
-      <div id="authChip" style="flex-shrink:0"></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button id="themeBtn" onclick="toggleTheme()" aria-label="Toggle light/dark" style="background:none;border:1px solid #444;border-radius:14px;padding:5px 8px;font-size:13px;cursor:pointer;line-height:1">🌙</button>
+        <div id="authChip"></div>
+      </div>
     </div>
     <div id="hdrTagline" class="sub">Sideline rotation timer for grassroots team sports</div>
   </div>
@@ -558,6 +593,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <script>
 // ===== STORAGE =====
+// ===== THEME (light/dark) =====
+function applyTheme(theme){
+  // theme is 'light' or 'dark'
+  const html=document.documentElement;
+  if(theme==='light'){html.setAttribute('data-theme','light');}
+  else{html.removeAttribute('data-theme');}
+  const btn=document.getElementById('themeBtn');
+  if(btn){btn.textContent=theme==='light'?'☀️':'🌙';btn.style.borderColor=theme==='light'?'#d8dde6':'#444';}
+  // Update browser chrome colour to match
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',theme==='light'?'#f4f5f8':'#1a1a2e');
+}
+function getStoredTheme(){
+  try{return localStorage.getItem('subTimerTheme');}catch(e){return null;}
+}
+function toggleTheme(){
+  const current=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+  const next=current==='light'?'dark':'light';
+  applyTheme(next);
+  try{localStorage.setItem('subTimerTheme',next);}catch(e){}
+}
+// Apply on load — saved preference, otherwise system preference
+(function initTheme(){
+  let saved=getStoredTheme();
+  if(!saved){
+    saved=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+  }
+  applyTheme(saved);
+})();
+
 // ===== CLOUD SYNC (Supabase) =====
 const SUPABASE_URL='https://dnjwcfuegvlobhfwkfjo.supabase.co';
 const SUPABASE_KEY='sb_publishable_nby4TdV4jV9fi6fyrDG_tA_DIxt-Hyj';
