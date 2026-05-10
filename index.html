@@ -32,7 +32,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .hdr-row h1{font-size:16px}
 .back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:4px 8px}
 
-.scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;justify-content:center}.scr.active{display:flex}#s3.active{justify-content:flex-start;overflow:hidden}#s4.active{overflow:hidden;justify-content:flex-start}
+.scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;justify-content:center}.scr.active{display:flex}#s3.active{justify-content:flex-start;overflow:hidden}#s4.active{overflow:hidden;justify-content:flex-start}#editTeam.active,#sportPicker.active,#gradePicker.active,#s5.active{justify-content:flex-start}
 .sec{padding:16px}
 .sec h2{font-size:15px;margin-bottom:10px;color:#e94560;font-weight:700}
 .info{background:#16213e;padding:10px 16px;font-size:13px;color:#aaa;text-align:center}
@@ -1107,7 +1107,15 @@ function renderEditTeam(){
       tag.className='pos-tag pos-tag-'+pt.toLowerCase()+(active?'':' off');
       tag.textContent=pt;
       tag.onclick=()=>{
-        const nm=editingTeam.players[i];
+        let nm=editingTeam.players[i];
+        // Backstop: if the row is unnamed (user cleared the placeholder), auto-generate a unique
+        // name before applying the tag — otherwise multiple empty rows would share the "" key.
+        if(!nm||!nm.trim()){
+          let n=editingTeam.players.length;
+          nm=`Player ${i+1}`;
+          while(editingTeam.players.some((p,j)=>j!==i&&p===nm)){nm=`Player ${++n}`;}
+          editingTeam.players[i]=nm;
+        }
         const cp=getPlayerPos(editingTeam,nm);
         if(cp.includes(pt)) setPlayerPos(editingTeam,nm,cp.filter(x=>x!==pt));
         else setPlayerPos(editingTeam,nm,[...cp,pt]);
