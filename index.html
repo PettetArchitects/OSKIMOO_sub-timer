@@ -1304,7 +1304,7 @@ function trigSub(){
   let off=[],on=[];
   if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
-    off=pair.on.filter(p=>G.on.includes(p));
+    off=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
     on=G.bench.slice(0,off.length);
     if(!off.length||!on.length){
       const c=Math.min(cfg.sc,G.bench.length);
@@ -1673,7 +1673,7 @@ function getNextSwap(){
   if(ns===null) return {nextOff,nextOn,offArr,onArr};
   if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
-    offArr=pair.on.filter(p=>G.on.includes(p));
+    offArr=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
     onArr=G.bench.slice(0,offArr.length);
     if(!offArr.length||!onArr.length){
       const c=Math.min(cfg.sc,G.bench.length);
