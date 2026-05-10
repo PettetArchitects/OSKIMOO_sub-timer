@@ -1087,8 +1087,8 @@ function renderEditTeam(){
     wrap.style.cssText='margin-bottom:10px';
     const row=document.createElement('div');
     row.className='player-edit-row';
-    row.innerHTML=`<input class="input" value="${p}" placeholder="Player name" oninput="editingTeam.players[${i}]=this.value">
-      <button class="rm-btn" onclick="editingTeam.players.splice(${i},1);renderEditTeam()">×</button>`;
+    row.innerHTML=`<input class="input" value="${p.replace(/"/g,'&quot;')}" placeholder="Player name" oninput="onPlayerNameChange(${i},this.value)">
+      <button class="rm-btn" onclick="removePlayerField(${i})">×</button>`;
     wrap.appendChild(row);
     // Position tags
     const tagsRow=document.createElement('div');
@@ -1122,11 +1122,39 @@ function renderEditTeam(){
 }
 
 function addPlayerField(){
-  editingTeam.players.push('');
+  // Generate a unique placeholder so multiple new rows don't share the empty-string positions key
+  let n=editingTeam.players.length+1;
+  let nm=`Player ${n}`;
+  while(editingTeam.players.includes(nm)){nm=`Player ${++n}`;}
+  editingTeam.players.push(nm);
   renderEditTeam();
-  // Focus last input
+  // Focus last input and select all so user can just type to overwrite the placeholder
   const inputs=document.querySelectorAll('#playerEditList input');
-  if(inputs.length) inputs[inputs.length-1].focus();
+  if(inputs.length){
+    const last=inputs[inputs.length-1];
+    last.focus();
+    last.select();
+  }
+}
+// Update player name + migrate position-tag key from old name to new name
+function onPlayerNameChange(idx,newValue){
+  const oldName=editingTeam.players[idx]||'';
+  editingTeam.players[idx]=newValue;
+  if(!editingTeam.positions)editingTeam.positions={};
+  if(oldName!==newValue&&oldName&&(oldName in editingTeam.positions)){
+    const data=editingTeam.positions[oldName];
+    delete editingTeam.positions[oldName];
+    if(newValue)editingTeam.positions[newValue]=data;
+  }
+}
+// Remove player + clean up their position entry
+function removePlayerField(idx){
+  const name=editingTeam.players[idx];
+  if(name&&editingTeam.positions&&name in editingTeam.positions){
+    delete editingTeam.positions[name];
+  }
+  editingTeam.players.splice(idx,1);
+  renderEditTeam();
 }
 
 // ===== ROSTER PHOTO IMPORT =====
