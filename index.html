@@ -652,15 +652,44 @@ function renderAuthChip(){
     c.innerHTML=`<button onclick="document.getElementById('authOv').classList.add('show')" style="background:none;color:#888;border:1px solid #444;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Sign in ☁</button>`;
   }
 }
+let _magicLinkInflight=false;
 async function sendMagicLink(){
   const email=(document.getElementById('authEmail').value||'').trim();
   const msg=document.getElementById('authMsg');
+  const btn=document.querySelector('#authOv button.btn-g');
   if(!email||!email.includes('@')){msg.textContent='Enter a valid email.';msg.style.color='#e94560';return;}
   if(!sb){msg.textContent='Cloud unavailable.';msg.style.color='#e94560';return;}
+  // Debounce — Supabase signInWithOtp has a "duplicate user" race when called twice in rapid
+  // succession (the SDK or impatient user double-taps), throwing a 500 with users_email_partial_key.
+  if(_magicLinkInflight){return;}
+  _magicLinkInflight=true;
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
   msg.textContent='Sending…';msg.style.color='#aaa';
-  const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
-  if(error){msg.textContent='Error: '+error.message;msg.style.color='#e94560';}
-  else{msg.textContent='Check your inbox for the link.';msg.style.color='#00d4aa';}
+  try{
+    const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+    if(error){
+      const m=(error.message||'').toLowerCase();
+      // Interpret the most common Supabase auth errors with plain-English copy
+      if(m.includes('database error')||m.includes('users_email_partial_key')){
+        msg.textContent='If you got the email, your account is already set up — try the link in your inbox. Otherwise wait a minute and try again.';
+        msg.style.color='#f0a500';
+      }else if(m.includes('rate limit')||m.includes('seconds')){
+        msg.textContent='Too many attempts. Please wait a minute and try again.';
+        msg.style.color='#f0a500';
+      }else{
+        msg.textContent='Error: '+error.message;
+        msg.style.color='#e94560';
+      }
+    }else{
+      msg.textContent='Check your inbox for the link.';
+      msg.style.color='#00d4aa';
+    }
+  }catch(e){
+    msg.textContent='Sign-in failed. Please try again.';msg.style.color='#e94560';
+  }finally{
+    // Re-enable after a short cooldown so the user can re-send if needed but can't double-tap
+    setTimeout(()=>{_magicLinkInflight=false;if(btn){btn.disabled=false;btn.style.opacity='1';}},3000);
+  }
 }
 async function signOutCloud(){
   if(!sb)return;
