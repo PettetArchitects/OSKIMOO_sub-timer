@@ -208,7 +208,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <h1 style="margin:0">SUB TIMER <span style="font-size:10px;color:#666;font-weight:600;letter-spacing:1px;vertical-align:middle">v1.2</span></h1>
       <div id="authChip" style="flex-shrink:0"></div>
     </div>
-    <div class="sub">Game Day Substitution Manager</div>
+    <div class="sub">Sideline rotation timer for grassroots team sports</div>
   </div>
   <div class="sec">
     <div id="resumeBanner" style="display:none;margin-bottom:12px;padding:12px;background:#1a2a14;border:1.5px solid #00d4aa;border-radius:10px">
@@ -223,10 +223,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
       </div>
     </div>
-    <h2>Your Teams</h2>
+    <h2 id="teamsHeading">Your Teams</h2>
     <div id="teamList"></div>
-    <button class="btn btn-r" onclick="newTeam()">+ New Team</button>
-    <button class="btn btn-o" style="margin-top:8px" onclick="showHistory()">Match History</button>
+    <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()">+ New Team</button>
+    <button class="btn btn-o" id="historyBtn" style="margin-top:8px" onclick="showHistory()">Match History</button>
   </div>
 </div>
 
@@ -872,12 +872,35 @@ function renderHome(){
       rb.style.display='none';
     }
   }
+  // Toggle footer buttons + heading visibility based on state
+  const heading=document.getElementById('teamsHeading');
+  const newBtn=document.getElementById('newTeamBtn');
+  const histBtn=document.getElementById('historyBtn');
+  const isLanding=teams.length===0&&!cloudUser;
+  if(heading)heading.style.display=isLanding?'none':'';
+  if(newBtn)newBtn.style.display=isLanding?'none':'';
+  if(histBtn)histBtn.style.display=isLanding?'none':'';
   if(teams.length===0){
-    c.innerHTML=`<div style="text-align:center;padding:24px 12px;color:#888;font-size:14px;line-height:1.5">
-      <div style="font-size:36px;margin-bottom:8px">⚽</div>
-      <div style="font-weight:700;color:#eee;margin-bottom:6px">Welcome!</div>
-      <div>Tap <span style="color:#e94560;font-weight:700">+ New Team</span> to add your players<br>and get started.</div>
-    </div>`;
+    if(!cloudUser){
+      // First-time visitor, not signed in — push sign-in as primary CTA
+      c.innerHTML=`<div style="padding:8px 4px 12px;color:#ccc">
+        <div style="display:flex;gap:10px;justify-content:center;font-size:30px;margin-bottom:14px;line-height:1">
+          <span>⚽</span><span style="opacity:.5">🏐</span><span style="opacity:.3">🏑</span><span style="opacity:.3">🏀</span>
+        </div>
+        <div style="text-align:center;font-size:15px;font-weight:700;color:#eee;margin-bottom:6px;line-height:1.3">Track subs, time on field, and game-day flow.</div>
+        <div style="text-align:center;font-size:13px;color:#888;line-height:1.5;margin-bottom:18px">Built for grassroots coaches. Works on the sideline, syncs across your devices.</div>
+        <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px">☁ Sign in to get started</button>
+        <button onclick="newTeam()" style="width:100%;padding:11px;background:none;color:#888;border:1px solid #333;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Continue without account</button>
+        <div style="text-align:center;font-size:11px;color:#555;margin-top:14px;letter-spacing:.5px">Currently: ⚽ Soccer · 🏐 Netball coming soon</div>
+      </div>`;
+    }else{
+      // Signed in but no teams — focused nudge to create their first
+      c.innerHTML=`<div style="text-align:center;padding:24px 12px;color:#888;font-size:14px;line-height:1.5">
+        <div style="font-size:36px;margin-bottom:8px">🏟</div>
+        <div style="font-weight:700;color:#eee;margin-bottom:6px">You're signed in. Let's set up your team.</div>
+        <div>Tap <span style="color:#e94560;font-weight:700">+ New Team</span> below to add players and pick a format.</div>
+      </div>`;
+    }
     return;
   }
   teams.forEach(t=>{
