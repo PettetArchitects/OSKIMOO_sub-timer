@@ -2493,20 +2493,28 @@ function renderRoster(){
     pitch.appendChild(el);
   });
 
-  // Opposition shape — mirrored across the pitch; nudged sideways if it would overlap one of our players
-  // Skipped for netball where every team plays the same fixed 7-position layout
-  if(_gSport.key!=='netball' && G.oppFormation && FORMATIONS[curFmt][G.oppFormation]){
+  // Opposition shape — mirrored across the pitch.
+  // Soccer: nudge vertically when overlapping our player (formations vary, occasional overlap).
+  // Netball: every position overlaps a direct matchup (e.g. our GS vs their GK), so always
+  // shift horizontally so the opp marker sits beside our player as a visible matchup pairing.
+  if(G.oppFormation && FORMATIONS[curFmt][G.oppFormation]){
     const oppPositions=[...FORMATIONS[curFmt][G.oppFormation]];
     if(fmtDef.hasGk) oppPositions.unshift(GK_POS);
+    const _isNetballGame=_gSport.key==='netball';
     oppPositions.forEach(p=>{
       let oppY=100-p.y;
-      const oppX=p.x;
-      // If overlapping any of our players, shift vertically away from the player
-      for(const slot of playerSlots){
-        if(Math.abs(slot.pos.x-oppX)<8&&Math.abs(slot.pos.y-oppY)<8){
-          const dir=slot.pos.y>oppY?-1:1;
-          oppY=Math.max(4,Math.min(96,oppY+dir*10));
-          break;
+      let oppX=p.x;
+      if(_isNetballGame){
+        // Always nudge horizontally so opp marker sits next to our matched player
+        oppX=oppX<50?Math.max(4,oppX-12):Math.min(96,oppX+12);
+      }else{
+        // Soccer: only nudge if there's an actual overlap
+        for(const slot of playerSlots){
+          if(Math.abs(slot.pos.x-oppX)<8&&Math.abs(slot.pos.y-oppY)<8){
+            const dir=slot.pos.y>oppY?-1:1;
+            oppY=Math.max(4,Math.min(96,oppY+dir*10));
+            break;
+          }
         }
       }
       const op=document.createElement('div');
