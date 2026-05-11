@@ -2800,6 +2800,23 @@ function injurySub(pIdx){
 function confSub(){
   if(!G.ps)return;
   const{off,on}=G.ps;
+  // Snapshot the pre-swap state so the coach can undo this sub if they tapped
+  // by mistake. Only the most recent sub is undoable — a new sub overwrites
+  // this snapshot, and halftime/period-end clears it (different period =
+  // different game-state, can't safely roll back across the boundary).
+  const affected=[...off,...on];
+  G.lastSub={
+    off:[...off],
+    on:[...on],
+    prevOn:[...G.on],
+    prevBench:[...G.bench],
+    prevPairIdx:G.pairIdx,
+    prevPairs:G.pairs.map(p=>({on:[...p.on]})),
+    prevPt:Object.fromEntries(affected.map(p=>[avail[p],G.pt[avail[p]]||0])),
+    prevLogLen:G.log.length,
+    half:G.half,
+    secs:G.secs
+  };
   const c=Math.min(off.length,on.length);
   for(let i=0;i<c;i++){
     G.log.push({type:'sub',half:G.half,time:G.secs,off:avail[off[i]],on:avail[on[i]]});
@@ -2822,6 +2839,23 @@ function confSub(){
   G.ps=null;
   document.getElementById('subBanner').style.display='none';
   document.getElementById('subOv').classList.remove('show');
+  saveActiveGame();
+  renderG();
+}
+// Revert the most recent sub. Restores on-field order, bench order, pair
+// rotation index, and the minutes that were accrued mid-sub to the affected
+// players. Only the most recent sub is undoable; advH() clears the snapshot.
+function undoLastSub(){
+  if(!G||!G.lastSub)return;
+  const ls=G.lastSub;
+  G.on=ls.prevOn;
+  G.bench=ls.prevBench;
+  G.pairIdx=ls.prevPairIdx;
+  G.pairs=ls.prevPairs;
+  Object.entries(ls.prevPt).forEach(([name,t])=>{G.pt[name]=t;});
+  // Drop the sub log entries that were added by confSub
+  if(G.log.length>ls.prevLogLen) G.log.length=ls.prevLogLen;
+  G.lastSub=null;
   saveActiveGame();
   renderG();
 }
@@ -2931,6 +2965,7 @@ function confHT(){
   }
   G.half++;
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
+  G.lastSub=null; // undo doesn't cross the period boundary
   saveActiveGame();
   renderG();
 }
@@ -3270,8 +3305,12 @@ function renderRoster(){
   // BENCH section
   if(G.bench.length){
     const bLbl=document.createElement('div');
-    bLbl.style.cssText='font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px;padding-left:2px';
-    bLbl.textContent=`BENCH · ${G.bench.length}`;
+    bLbl.style.cssText='display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:0 2px';
+    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`+(
+      G.lastSub
+        ? `<button onclick="undoLastSub()" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px" title="Revert the last sub">${ic('undo-2',11,'#f0a500')}UNDO LAST SUB</button>`
+        : ''
+    );
     rw.appendChild(bLbl);
 
     // Pair-rotation mode swaps pre-grouped pairs as units, so reordering an
