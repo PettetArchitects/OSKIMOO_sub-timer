@@ -583,13 +583,24 @@ const SUPABASE_KEY='sb_publishable_nby4TdV4jV9fi6fyrDG_tA_DIxt-Hyj';
 const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}}):null;
 let cloudUser=null;
 let cloudSyncing=false;
+// Sync indicator state — counts in-flight pushes/pulls so we can show "Syncing…" on the auth chip,
+// and remembers the last failure so users see ⚠ until the next successful sync.
+let _syncInflight=0;
+let _syncErrored=false;
+function syncStart(){_syncInflight++;_syncErrored=false;renderAuthChip();}
+function syncEnd(err){_syncInflight=Math.max(0,_syncInflight-1);if(err)_syncErrored=true;renderAuthChip();}
 function renderAuthChip(){
   const c=document.getElementById('authChip');if(!c)return;
   if(cloudUser){
     const email=cloudUser.email||'signed in';
     const handle=email.split('@')[0]||'me';
     const short=handle.length>10?handle.slice(0,9)+'…':handle;
-    c.innerHTML=`<button onclick="signOutCloud()" title="Signed in as ${email} — tap to sign out" style="background:rgba(0,212,170,.12);color:#00d4aa;border:1px solid #00d4aa;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">☁ ${short}</button>`;
+    let dot='',title=`Signed in as ${email} — tap to sign out`;
+    if(_syncInflight>0){dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f0a500;margin-right:5px;vertical-align:middle"></span>';title='Syncing to cloud…';}
+    else if(_syncErrored){dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e94560;margin-right:5px;vertical-align:middle"></span>';title='Last cloud sync failed — saved locally only';}
+    const borderColor=_syncErrored?'#e94560':'#00d4aa';
+    const textColor=_syncErrored?'#e94560':'#00d4aa';
+    c.innerHTML=`<button onclick="signOutCloud()" title="${title}" style="background:rgba(0,212,170,.12);color:${textColor};border:1px solid ${borderColor};border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">${dot}☁ ${short}</button>`;
   }else{
     c.innerHTML=`<button onclick="document.getElementById('authOv').classList.add('show')" style="background:none;color:#888;border:1px solid #444;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Sign in ☁</button>`;
   }
@@ -652,82 +663,140 @@ async function pullCloudMatches(){
 }
 async function pushCloudTeam(team){
   if(!sb||!cloudUser)return;
-  const row={
-    owner:cloudUser.id,
-    name:team.name,
-    format:team.format||null,
-    players:team.players||[],
-    positions:team.positions||{}
-  };
-  if(team.cloud_id){
-    const{error}=await sb.from('teams').update(row).eq('id',team.cloud_id);
-    if(error)console.warn('pushCloudTeam update',error);
-  }else{
-    const{data,error}=await sb.from('teams').insert(row).select().single();
-    if(error){console.warn('pushCloudTeam insert',error);return;}
-    team.cloud_id=data.id;
-    // Persist the cloud_id back to localStorage
-    const all=loadTeamsRaw();
-    const idx=all.findIndex(t=>t.id===team.id);
-    if(idx>=0){all[idx].cloud_id=data.id;saveTeamsRaw(all);}
-  }
+  syncStart();
+  try{
+    const row={
+      owner:cloudUser.id,
+      name:team.name,
+      format:team.format||null,
+      players:team.players||[],
+      positions:team.positions||{}
+    };
+    if(team.cloud_id){
+      const{error}=await sb.from('teams').update(row).eq('id',team.cloud_id);
+      if(error){console.warn('pushCloudTeam update',error);syncEnd(true);return;}
+    }else{
+      const{data,error}=await sb.from('teams').insert(row).select().single();
+      if(error){console.warn('pushCloudTeam insert',error);syncEnd(true);return;}
+      team.cloud_id=data.id;
+      // Persist the cloud_id back to localStorage
+      const all=loadTeamsRaw();
+      const idx=all.findIndex(t=>t.id===team.id);
+      if(idx>=0){all[idx].cloud_id=data.id;saveTeamsRaw(all);}
+    }
+    syncEnd(false);
+  }catch(e){console.warn('pushCloudTeam',e);syncEnd(true);}
 }
 async function deleteCloudTeam(cloudId){
   if(!sb||!cloudUser||!cloudId)return;
-  const{error}=await sb.from('teams').delete().eq('id',cloudId);
-  if(error)console.warn('deleteCloudTeam',error);
+  syncStart();
+  try{
+    const{error}=await sb.from('teams').delete().eq('id',cloudId);
+    if(error){console.warn('deleteCloudTeam',error);syncEnd(true);return;}
+    syncEnd(false);
+  }catch(e){console.warn('deleteCloudTeam',e);syncEnd(true);}
 }
 async function pushCloudMatch(match,teamCloudId){
   if(!sb||!cloudUser)return;
-  const row={
-    owner:cloudUser.id,
-    team_id:teamCloudId||null,
-    date:match.date||new Date().toISOString(),
-    team_name:match.team||null,
-    opponent:match.opponent||null,
-    location:match.location||null,
-    format:match.format||null,
-    formation:match.formation||null,
-    score_us:match.scoreUs||0,
-    score_them:match.scoreThem||0,
-    playing_time:match.playingTime||[],
-    log:match.log||[]
-  };
-  const{error}=await sb.from('matches').insert(row);
-  if(error)console.warn('pushCloudMatch',error);
+  syncStart();
+  try{
+    const row={
+      owner:cloudUser.id,
+      team_id:teamCloudId||null,
+      date:match.date||new Date().toISOString(),
+      team_name:match.team||null,
+      opponent:match.opponent||null,
+      location:match.location||null,
+      format:match.format||null,
+      formation:match.formation||null,
+      score_us:match.scoreUs||0,
+      score_them:match.scoreThem||0,
+      playing_time:match.playingTime||[],
+      log:match.log||[]
+    };
+    const{data,error}=await sb.from('matches').insert(row).select().single();
+    if(error){console.warn('pushCloudMatch',error);syncEnd(true);return;}
+    // Stamp cloud_id on the local match so subsequent syncs don't duplicate it
+    match.cloud_id=data.id;
+    const all=loadMatches();
+    const idx=all.findIndex(m=>m.id===match.id);
+    if(idx>=0){all[idx].cloud_id=data.id;saveMatches(all);}
+    syncEnd(false);
+  }catch(e){console.warn('pushCloudMatch',e);syncEnd(true);}
 }
 async function doInitialSync(){
   if(cloudSyncing||!cloudUser)return;
   cloudSyncing=true;
+  syncStart();
   try{
-    // Pull cloud teams
+    // === TEAMS ===
     const cloudTeams=await pullCloudTeams();
-    if(cloudTeams===null){cloudSyncing=false;return;}
-    let local=loadTeamsRaw();
-    // Local teams that aren't yet on cloud → push them up
-    for(const t of local){
-      if(!t.cloud_id){
-        await pushCloudTeam(t);
+    if(cloudTeams!==null){
+      let local=loadTeamsRaw();
+      // Local teams that aren't yet on cloud → push them up
+      for(const t of local){
+        if(!t.cloud_id){
+          await pushCloudTeam(t);
+        }
+      }
+      // Re-pull after pushes so we have a single source-of-truth view
+      const freshTeams=await pullCloudTeams();
+      if(freshTeams){
+        const localByCloudId=new Map(loadTeamsRaw().filter(t=>t.cloud_id).map(t=>[t.cloud_id,t]));
+        const merged=[];
+        freshTeams.forEach(ct=>{
+          const existing=localByCloudId.get(ct.id);
+          if(existing){
+            merged.push({...existing,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions,cloud_id:ct.id});
+          }else{
+            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions});
+          }
+        });
+        saveTeamsRaw(merged);
       }
     }
-    // Re-pull after pushes so we have a single source-of-truth view
-    const fresh=await pullCloudTeams();
-    if(fresh){
-      // Reconcile: for each cloud team, ensure a local entry with matching cloud_id exists
-      const localByCloudId=new Map(loadTeamsRaw().filter(t=>t.cloud_id).map(t=>[t.cloud_id,t]));
-      const merged=[];
-      fresh.forEach(ct=>{
-        const existing=localByCloudId.get(ct.id);
-        if(existing){
-          merged.push({...existing,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions,cloud_id:ct.id});
-        }else{
-          merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions});
+    // === MATCHES ===
+    // First push any local matches that aren't yet on cloud (e.g. games saved offline)
+    const localMatches=loadMatches();
+    const teamsByName=new Map(loadTeamsRaw().map(t=>[t.name,t]));
+    for(const m of localMatches){
+      if(!m.cloud_id){
+        const team=teamsByName.get(m.team);
+        await pushCloudMatch(m,team?team.cloud_id:null);
+      }
+    }
+    // Then pull all cloud matches and merge any we don't have locally
+    const cloudMatches=await pullCloudMatches();
+    if(cloudMatches){
+      const localByCloudId=new Map(loadMatches().filter(m=>m.cloud_id).map(m=>[m.cloud_id,m]));
+      let merged=loadMatches();
+      let added=0;
+      cloudMatches.forEach(cm=>{
+        if(!localByCloudId.has(cm.id)){
+          merged.push({
+            id:Date.now()+Math.floor(Math.random()*100000)+added,
+            cloud_id:cm.id,
+            date:cm.date,
+            team:cm.team_name,
+            opponent:cm.opponent,
+            location:cm.location,
+            format:cm.format,
+            formation:cm.formation,
+            scoreUs:cm.score_us,
+            scoreThem:cm.score_them,
+            playingTime:cm.playing_time,
+            log:cm.log
+          });
+          added++;
         }
       });
-      saveTeamsRaw(merged);
+      // Sort newest-first to match the local convention
+      merged.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      saveMatches(merged);
     }
     renderHome();
-  }catch(e){console.warn('doInitialSync error',e);}
+    syncEnd(false);
+  }catch(e){console.warn('doInitialSync error',e);syncEnd(true);}
   cloudSyncing=false;
 }
 // Hook auth state
