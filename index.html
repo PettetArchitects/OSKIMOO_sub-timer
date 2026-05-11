@@ -245,6 +245,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .logo-anim .sub-dot.sub-rm.sub-dot-2{animation-delay:-3s}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -277,13 +278,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           <button onclick="discardActiveGame()" style="padding:8px 10px;background:none;color:#888;border:1px solid #444;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Discard</button>
-          <button onclick="resumeActiveGame()" style="padding:8px 12px;background:#00d4aa;color:#1a1a2e;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px">Resume <svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
+          <button onclick="resumeActiveGame()" style="padding:8px 12px;background:#00d4aa;color:#1a1a2e;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px">Resume <i data-lucide="play" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i></button>
         </div>
       </div>
     </div>
     <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px">
-        <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
+        <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px;display:inline-flex;align-items:center;gap:5px"><i data-lucide="lightbulb" width="12" height="12" style="width:12px;height:12px;display:inline-flex"></i>TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
         <div style="display:flex;gap:6px;align-items:center">
           <button onclick="prevTip()" aria-label="Previous tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">‹</button>
           <button onclick="nextTip()" aria-label="Next tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">›</button>
@@ -297,8 +298,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="teamList"></div>
     <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()">+ New Team</button>
     <button class="btn btn-o" id="historyBtn" style="margin-top:8px" onclick="showHistory()">Match History</button>
-    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg><span>Like this? Buy me a coffee</span></a>
-    <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Send feedback or feature ideas</span></button>
+    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><i data-lucide="coffee" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span>Like this? Buy me a coffee</span></a>
+    <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><i data-lucide="message-square" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i><span>Send feedback or feature ideas</span></button>
     <div style="text-align:center;font-size:10px;color:#555;margin-top:14px;letter-spacing:.5px;line-height:1.4">This is a beta — please tell me what's broken or missing.</div>
   </div>
 </div>
@@ -306,7 +307,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Feedback modal -->
 <div class="ov" id="feedbackOv">
   <div class="ab" style="max-width:380px;text-align:left">
-    <h2 style="text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send feedback</h2>
+    <h2 style="text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="message-square" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Send feedback</h2>
     <p style="color:#aaa;font-size:13px;line-height:1.5;margin:6px 0 12px;text-align:center">Sub Timer is in beta. What's broken? What's missing? What's confusing? I read every one.</p>
     <textarea id="feedbackMsg" placeholder="e.g. The sub alert was hard to hear in a noisy gym…" rows="5" class="input" style="resize:vertical;min-height:100px;margin-bottom:8px;font-family:inherit"></textarea>
     <input id="feedbackEmail" type="email" placeholder="Your email (optional — for me to follow up)" autocomplete="email" inputmode="email" class="input" style="margin-bottom:8px">
@@ -319,7 +320,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== SIGN-IN MODAL ===== -->
 <div id="authOv" class="ov">
   <div class="ab" style="max-width:340px;text-align:left">
-    <h2 style="text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Sync across devices</h2>
+    <h2 style="text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="cloud" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Sync across devices</h2>
     <p style="color:#aaa;font-size:13px;line-height:1.5;margin:12px 0">Sign in with your email to save your teams and match history to the cloud and access them on any device. We'll send you a magic link — no password needed.</p>
     <input id="authEmail" type="email" placeholder="your@email.com" autocomplete="email" inputmode="email" class="input" style="margin-bottom:12px">
     <div id="authMsg" style="font-size:12px;color:#aaa;min-height:16px;margin-bottom:8px"></div>
@@ -376,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 style="margin-top:16px">Players</h2>
     <input type="file" id="rosterPhotoInput" accept="image/*" style="display:none" onchange="handleRosterPhoto(this)">
     <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:1.5px solid #5bc0de;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
-      <span style="color:#5bc0de;display:flex"><svg class="ic ic-xl" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span>
+      <span style="color:#5bc0de;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
       <span style="text-align:left">
         <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
         <span style="display:block;font-size:11px;color:#999;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
@@ -465,7 +466,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
-    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Start Game <svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></button>
+    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Start Game <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
   </div>
 </div>
 
@@ -491,7 +492,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subPlanSection">
       <div id="subPlanList" style="max-height:80px;overflow-y:auto"></div>
     </div>
-    <button class="btn btn-g" onclick="startGame()" style="margin-top:4px;padding:10px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start Game <svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></button>
+    <button class="btn btn-g" onclick="startGame()" style="margin-top:4px;padding:10px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start Game <i data-lucide="timer" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
   </div>
   <div id="luList" style="display:none"></div>
   <div id="pairsSection" style="display:none"><div id="pairsList"></div></div>
@@ -539,7 +540,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Controls -->
   <div style="display:flex;gap:6px;padding:4px 12px 8px;flex-shrink:0">
-    <button class="btn btn-g" id="ppB" onclick="tog()" style="margin:0;flex:1;padding:12px;font-size:16px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>START</button>
+    <button class="btn btn-g" id="ppB" onclick="tog()" style="margin:0;flex:1;padding:12px;font-size:16px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="play" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i>START</button>
     <button class="btn" id="subB" onclick="manualSub()" style="margin:0;flex:1;padding:12px;font-size:14px;border-radius:10px;background:#f0a500;color:#1a1a2e;font-weight:800">SUB</button>
   </div>
 
@@ -561,7 +562,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== OVERLAYS ===== -->
 <div class="ov" id="subOv">
   <div class="ab">
-    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>TIME TO SUB!</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="refresh-cw" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>TIME TO SUB!</h2>
     <div id="subM"></div>
     <button class="btn btn-g" onclick="confSub()" style="margin-top:16px">Got it ✓</button>
   </div>
@@ -572,15 +573,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
     <button class="chip" onclick="pickSubStrategy('fair')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>Equal time</div>
+      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Equal time</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App picks the longest-on player to come off and the longest-benched to come on. Best for fair-play rules.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Paired rotation</div>
+      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="refresh-cw" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Paired rotation</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('manual')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
-      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>I'll call them</div>
+      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="target" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>I'll call them</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.</div>
     </button>
   </div>
@@ -589,7 +590,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Sound pack picker: pick the sub-alert sound (game-screen access) -->
 <div class="ov" id="soundOv">
   <div class="ab" style="max-width:360px">
-    <h2 style="text-align:center;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Sub-Alert Sound</h2>
+    <h2 style="text-align:center;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="bell" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Sub-Alert Sound</h2>
     <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center">Played at sub time and on a goal. Tap to preview.</div>
     <div class="chip-grid" id="soundPackGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <button class="btn btn-o" onclick="closeSoundPicker()" style="margin-top:14px">Done</button>
@@ -598,7 +599,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Scorer picker: who scored the goal? -->
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
-    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/></svg>Who scored?</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="goal" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Who scored?</h2>
     <div style="font-size:12px;color:#888;margin-bottom:10px">Tap the player who scored, or skip.</div>
     <div id="scorerGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;max-height:50vh;overflow-y:auto"></div>
     <button class="btn btn-o" onclick="skipScorer()">Skip (no scorer recorded)</button>
@@ -606,14 +607,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 <div class="ov" id="htOv">
   <div class="ab">
-    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>HALFTIME</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="pause" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>HALFTIME</h2>
     <p style="color:#aaa;margin-bottom:12px;font-size:14px">GK change</p>
     <div id="htGkPicker" style="margin-bottom:12px;display:none">
       <label style="display:block;font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">2nd Half Keeper</label>
       <select id="htGk2Sel" onchange="updateHtGk(parseInt(this.value))" style="width:100%;background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
     </div>
     <div id="htM"></div>
-    <button class="btn btn-g" onclick="confHT()" style="margin-top:16px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start 2nd Half <svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
+    <button class="btn btn-g" onclick="confHT()" style="margin-top:16px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start 2nd Half <i data-lucide="play" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i></button>
   </div>
 </div>
 
@@ -629,7 +630,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="sec">
     <button class="btn btn-g" onclick="saveMatch()">Save Match ✓</button>
     <button class="btn btn-o" style="margin-top:8px" onclick="showScr('home')">Done</button>
-    <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;text-decoration:none;margin-top:14px;letter-spacing:.3px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg><span>Helpful today? Buy me a coffee</span></a>
+    <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;text-decoration:none;margin-top:14px;letter-spacing:.3px"><i data-lucide="coffee" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span>Helpful today? Buy me a coffee</span></a>
   </div>
 </div>
 
@@ -679,6 +680,7 @@ function renderAuthChip(){
   }else{
     c.innerHTML=`<button onclick="document.getElementById('authOv').classList.add('show')" style="background:none;color:#888;border:1px solid #444;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">Sign in ${ic('cloud',12)}</button>`;
   }
+  _li();
 }
 let _magicLinkInflight=false;
 async function sendMagicLink(){
@@ -1091,39 +1093,39 @@ function ensureAudio(){
 }
 // Each pack defines a sub(ctx,now) and goal(ctx,now) function that creates oscillators
 // synthesizing the sound. null = silent (vibrate only).
-// Lucide-style stroked SVG paths — each value is the innards of an <svg viewBox="0 0 24 24">
-const ICONS={
-  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
-  pause:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
-  coffee:'<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>',
-  message:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
-  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
-  bellOff:'<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/>',
-  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
-  timer:'<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
-  sparkles:'<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
-  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-  bulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
-  edit:'<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
-  camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
-  bandage:'<path d="m10 15-3-3 3-3"/><path d="m14 9 3 3-3 3"/><rect x="2" y="6" width="20" height="12" rx="2"/>',
-  arrowUp:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
-  arrowDown:'<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
-  swap:'<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
-  megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
-  gamepad:'<line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59A45.5 45.5 0 0 0 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258A4 4 0 0 0 17.32 5z"/>',
-  activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
-  volume:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
-  goal:'<path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/>',
-  ball:'<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>',
-  pen:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>'
+// Map our internal icon names → Lucide's official kebab-case names.
+// Lucide is loaded via CDN; ic() emits placeholder <i data-lucide> tags and
+// _li() materialises them into SVGs (idempotent, safe to recall after any render).
+const ICON_ALIAS={
+  play:'play',pause:'pause',coffee:'coffee',message:'message-square',
+  cloud:'cloud',bell:'bell',bellOff:'bell-off',target:'target',
+  refresh:'refresh-cw',timer:'timer',sparkles:'sparkles',zap:'zap',
+  bulb:'lightbulb',edit:'pencil',camera:'camera',bandage:'bandage',
+  arrowUp:'arrow-up',arrowDown:'arrow-down',swap:'arrow-left-right',
+  megaphone:'megaphone',gamepad:'gamepad-2',activity:'activity',
+  volume:'volume-2',goal:'goal',ball:'volleyball',pen:'pencil'
 };
 function ic(name,size,color){
-  const s=size||14, c=color||'currentColor';
-  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;flex-shrink:0">'+(ICONS[name]||'')+'</svg>';
+  const s=size||14,c=color||'currentColor',li=ICON_ALIAS[name]||name;
+  return '<i data-lucide="'+li+'" width="'+s+'" height="'+s+'" style="color:'+c+';width:'+s+'px;height:'+s+'px;display:inline-flex;flex-shrink:0;vertical-align:-2px"></i>';
 }
+// rAF-debounced wrapper: many renders fire icons in the same tick; we only need
+// to call lucide.createIcons() once per frame.
+let _liQueued=false;
+function _li(){
+  if(_liQueued)return;
+  _liQueued=true;
+  requestAnimationFrame(()=>{
+    _liQueued=false;
+    if(window.lucide&&window.lucide.createIcons){try{window.lucide.createIcons();}catch(e){}}
+  });
+}
+// Lucide loads async — poll briefly until it lands, then materialise.
+(function waitLucide(tries){
+  if(window.lucide&&window.lucide.createIcons){_li();return;}
+  if(tries>40)return; // give up after ~4s
+  setTimeout(()=>waitLucide((tries||0)+1),100);
+})(0);
 
 const SOUND_PACKS={
   classic:{label:'Classic',icon:'activity',desc:'Quick beeps',
@@ -1186,6 +1188,7 @@ function renderSoundPicker(){
     c.onclick=()=>selectSoundPack(k);
     g.appendChild(c);
   });
+  _li();
 }
 function selectSoundPack(k){
   setSoundPackKey(k);
@@ -1207,6 +1210,7 @@ function showScr(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  _li(); // materialise any <i data-lucide> placeholders revealed by the screen swap
 }
 
 // ===== HOME =====
@@ -1231,6 +1235,7 @@ function renderTip(){
   document.getElementById('tipTitle').innerHTML=`<span style="display:inline-flex;align-items:center;gap:8px;color:#5bc0de">${ic(t.icon||'bulb',16,'#5bc0de')}</span> ${t.title}`;
   document.getElementById('tipDesc').textContent=t.desc;
   card.style.display='';
+  _li();
 }
 function nextTip(){
   let idx=parseInt(localStorage.getItem('subTimerTipIdx')||'0',10)||0;
@@ -1376,14 +1381,14 @@ function renderHome(){
           <div style="display:flex;gap:12px;margin-bottom:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="4"/></svg><span><strong style="color:#eee">Snap your team list</strong> <span style="color:#888">— AI fills the roster</span></span></div>
           <div style="display:flex;gap:12px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><span><strong style="color:#eee">Soccer & Netball</strong> <span style="color:#888">— more sports coming</span></span></div>
         </div>
-        <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Sign in to get started</button>
+        <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="cloud" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Sign in to get started</button>
         <button onclick="newTeam()" style="width:100%;padding:11px;background:none;color:#888;border:1px solid #333;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Continue without account</button>
         <div style="text-align:center;font-size:11px;color:#555;margin-top:16px;letter-spacing:.3px;line-height:1.4">Free to try · cloud sync + match history with sign-in</div>
       </div>`;
     }else{
       // Signed in but no teams — focused nudge to create their first
       c.innerHTML=`<div style="text-align:center;padding:24px 12px;color:#888;font-size:14px;line-height:1.5">
-        <div style="margin-bottom:8px;color:#5bc0de;display:flex;justify-content:center"><svg class="ic" viewBox="0 0 24 24" style="width:36px;height:36px"><path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/></svg></div>
+        <div style="margin-bottom:8px;color:#5bc0de;display:flex;justify-content:center"><i data-lucide="goal" width="36" height="36" style="width:36px;height:36px;display:inline-flex"></i></div>
         <div style="font-weight:700;color:#eee;margin-bottom:6px">You're signed in. Let's set up your team.</div>
         <div>Tap <span style="color:#e94560;font-weight:700">+ New Team</span> below to add players and pick a format.</div>
       </div>`;
@@ -1414,6 +1419,7 @@ function renderHome(){
     d.onclick=()=>selectTeam(t.id);
     c.appendChild(d);
   });
+  _li();
 }
 
 function selectTeam(id){
@@ -2141,6 +2147,7 @@ function renderSubPlan(){
   const benchNames=simBench.length?simBench.map(p=>fn(avail[p])).join(', '):'none';
   afterDiv.innerHTML=`<strong style="color:#00d4aa">On field at end:</strong> ${onNames}<br><strong style="color:#f0a500">Bench:</strong> ${benchNames}`;
   c.appendChild(afterDiv);
+  _li();
 }
 
 // FIFA-style interactive lineup pitch
@@ -2362,9 +2369,7 @@ function renderG(){
     ni.textContent='All subs done this half';
   }
   const pb=document.getElementById('ppB');
-  pb.innerHTML=G.running
-    ?'<svg class="ic" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>PAUSE'
-    :'<svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>START';
+  pb.innerHTML=G.running?(ic('pause',16)+'PAUSE'):(ic('play',16)+'START');
   pb.style.display='inline-flex';pb.style.alignItems='center';pb.style.justifyContent='center';pb.style.gap='6px';
   pb.className=G.running?'btn btn-o':'btn btn-g';
 
@@ -2429,7 +2434,7 @@ function renderG(){
 
   // Pitch visualization
   renderPitch();
-
+  _li();
 }
 
 function adjScore(who,d){
@@ -2592,6 +2597,7 @@ function trigSub(){
   }
   swaps.innerHTML=h;
   banner.style.display='block';
+  _li();
   playSubAlert();
   if(navigator.vibrate)navigator.vibrate([200,100,200]);
 }
@@ -2678,6 +2684,7 @@ function injurySub(pIdx){
       <button onclick="confInjury(true)" style="flex:1;padding:10px;background:#e94560;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">OUT FOR GAME</button>
     </div>`;
   banner.style.display='block';
+  _li();
   playSubAlert();
   if(navigator.vibrate)navigator.vibrate([200,100,200]);
   renderG();
@@ -2754,6 +2761,7 @@ function renderHtMsg(){
   }else{
     m.innerHTML='<div style="color:#aaa;padding:8px">Halftime — break and switch ends</div>';
   }
+  _li();
 }
 function updateHtGk(idx){gk2=idx;renderHtMsg();}
 function advH(){
@@ -3192,6 +3200,7 @@ function renderPitch(){ renderRoster(); }
 // Init
 renderHome();
 initCloudAuth();
+_li(); // materialise initial-page <i data-lucide> placeholders once Lucide is in
 </script>
 </body>
 </html>
