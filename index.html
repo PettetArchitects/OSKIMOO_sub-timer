@@ -275,6 +275,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
       </div>
     </div>
+    <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px">
+        <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px">💡 TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button onclick="prevTip()" aria-label="Previous tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">‹</button>
+          <button onclick="nextTip()" aria-label="Next tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">›</button>
+          <button onclick="dismissTip()" aria-label="Dismiss tips" style="background:none;border:none;color:#666;cursor:pointer;font-size:14px;padding:0 4px;line-height:1">✕</button>
+        </div>
+      </div>
+      <div style="font-weight:700;color:#eee;font-size:14px;margin-bottom:3px;line-height:1.3" id="tipTitle"></div>
+      <div style="color:#bbb;line-height:1.5" id="tipDesc"></div>
+    </div>
     <h2 id="teamsHeading">Your Teams</h2>
     <div id="teamList"></div>
     <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()">+ New Team</button>
@@ -391,6 +403,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
     <h2 style="margin-top:14px">Formation</h2>
     <div class="chip-grid" id="formationGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
+    <div id="formationTip" style="margin-top:8px;padding:10px 12px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.25);border-radius:8px;font-size:12px;color:#bbb;line-height:1.5;display:none"></div>
 
     <h2 id="periodLengthHeading" style="margin-top:14px">Half Length</h2>
     <div class="set-row">
@@ -1100,6 +1113,45 @@ function showScr(id){
 }
 
 // ===== HOME =====
+// ===== HOME TIPS CAROUSEL — feature reminders for returning users =====
+const HOME_TIPS=[
+  {title:'📷  Add players from a photo',desc:"Tap Edit on a team → Auto-fill from photo. Snaps the names off your roster sheet so you don't type 13 kids."},
+  {title:'🎯  Position tags = smart subs',desc:"Tag each player GK/DEF/MID/etc. in the editor. The app keeps subs in positions they actually play."},
+  {title:'🩹  Tap an on-field player for an injury sub',desc:"During the game, a single tap on any player on the pitch swaps them with the longest-benched sub. Choose 'out for game' if they can't return."},
+  {title:'🔔  Pick your alert sound',desc:"In Settings before kickoff → Alerts. Six packs including air horn, retro, and silent."},
+  {title:'⚽  Tag who scored',desc:"When you bump the score, pick the scorer from the on-field players. Shows up in the match log."},
+  {title:'☁  Teams sync across devices',desc:"Sign in (top-right) and your teams + match history follow you to any phone or iPad."}
+];
+function renderTip(){
+  const card=document.getElementById('tipsCard');
+  if(!card)return;
+  if(localStorage.getItem('subTimerTipsDismissed')==='1'){card.style.display='none';return;}
+  let idx=parseInt(localStorage.getItem('subTimerTipIdx')||'0',10);
+  if(isNaN(idx)||idx<0||idx>=HOME_TIPS.length)idx=0;
+  const t=HOME_TIPS[idx];
+  document.getElementById('tipNum').textContent=idx+1;
+  document.getElementById('tipTotal').textContent=HOME_TIPS.length;
+  document.getElementById('tipTitle').textContent=t.title;
+  document.getElementById('tipDesc').textContent=t.desc;
+  card.style.display='';
+}
+function nextTip(){
+  let idx=parseInt(localStorage.getItem('subTimerTipIdx')||'0',10)||0;
+  idx=(idx+1)%HOME_TIPS.length;
+  localStorage.setItem('subTimerTipIdx',idx);
+  renderTip();
+}
+function prevTip(){
+  let idx=parseInt(localStorage.getItem('subTimerTipIdx')||'0',10)||0;
+  idx=(idx-1+HOME_TIPS.length)%HOME_TIPS.length;
+  localStorage.setItem('subTimerTipIdx',idx);
+  renderTip();
+}
+function dismissTip(){
+  localStorage.setItem('subTimerTipsDismissed','1');
+  renderTip();
+}
+
 function discardActiveGame(){
   if(!confirm('Discard the in-progress game? This cannot be undone.'))return;
   clearActiveGame();
@@ -1159,6 +1211,12 @@ function renderHome(){
   if(histBtn)histBtn.style.display=isLanding?'none':'';
   const coffeeBtn=document.getElementById('coffeeBtn');
   if(coffeeBtn)coffeeBtn.style.display=isLanding?'none':'flex';
+  // Tips carousel — show for returning users (anyone past the landing), not on first visit
+  const tipsCard=document.getElementById('tipsCard');
+  if(tipsCard){
+    if(isLanding)tipsCard.style.display='none';
+    else renderTip();
+  }
   // Hide the small header brand while the big landing hero is showing
   if(hdrBrand)hdrBrand.style.visibility=isLanding?'hidden':'';
   if(hdrTagline)hdrTagline.style.display=isLanding?'none':'';
@@ -1653,6 +1711,40 @@ function selectFormat(k){
   updateGkSettings();
 }
 
+// Brief tactical strengths for each formation — grassroots-coach plain English
+const FORMATION_TIPS={
+  // 4v4
+  '2-2':'Balanced and easy to teach. Two backs, two forwards, no midfield — fine for the youngest age groups still learning positions.',
+  '1-2-1':'Diamond shape. One back, two wide mids, one striker. Stretches the field and works well if your kids can pass.',
+  '2-1-1':'Defensive. Two solid backs, one playmaker, one striker. Good against a stronger team.',
+  '1-1-2':'Attacking. One back, two forwards. Risky — only use it if you can win the ball back fast.',
+  // 5v5
+  '2-2-1':'Standard 5v5 setup. Balanced two-two-one. Hard to go wrong.',
+  '1-2-2':'Attacking — two strikers up top. Score-first, defend-on-the-counter mindset.',
+  '2-1-2':'Counter-attack focus. Solid back two, one playmaker, two forwards ready to break.',
+  '1-3-1':'Y-shape. Three midfielders dominate the centre — suits teams who can keep possession.',
+  '3-1-1':'Defensive. Three at the back, one mid, one striker. Good when protecting a lead or facing a stronger team.',
+  // 7v7
+  '2-3-1':'The default junior 7v7 setup. Balanced — three mids own the middle. Good place to start.',
+  '3-2-1':'Defensive. Three at the back, one striker. Easy to teach and hard to score against.',
+  '2-2-2':'Wide and attacking. Two forwards. Be ready for the counter — no central midfielder behind them.',
+  '1-3-2':'Diamond + two strikers. Midfield-heavy possession. Suits skilful, confident teams.',
+  '3-1-2':'Counter-attack. Solid back three, one playmaker, two forwards looking to break.',
+  '1-2-3':'Very attacking. One back, three forwards. Use when chasing a goal.',
+  // 9v9
+  '3-3-2':'Standard balanced 9v9. Three at the back, three mids, two strikers.',
+  '3-2-3':'Wide attack with two wingers. Width stretches the opposition defence.',
+  '2-4-2':'Two strikers, four mids — midfield dominance. Needs fit wide players.',
+  '3-4-1':'Defensive. Lone striker, packed midfield. Good vs a stronger side.',
+  '2-3-3':'Attacking. Three forwards stretch the defence; needs fit wingers tracking back.',
+  // 11v11
+  '4-4-2':'Classic balanced 11v11. Easy to teach. Two banks of four behind two strikers.',
+  '4-3-3':'Attacking. Wide wingers stretch play; press-friendly.',
+  '3-5-2':'Midfield dominant with wing-backs. Suits possession-based sides who keep the ball.',
+  '4-5-1':'Defensive / counter-attack. Lone striker, packed midfield. Good vs stronger opposition.',
+  // Netball — only one "formation"
+  'standard':'Standard netball — GS up top, GK at the back, C in the middle, WA/WD/GA/GD between. Positions are fixed by rule; the only choice is who plays where.'
+};
 function renderFormationPicker(){
   const g=document.getElementById('formationGrid');
   g.innerHTML='';
@@ -1665,6 +1757,17 @@ function renderFormationPicker(){
     c.onclick=()=>{curFormation=k;renderFormationPicker();};
     g.appendChild(c);
   });
+  // Show the strengths tip for the currently-selected formation
+  const tipEl=document.getElementById('formationTip');
+  if(tipEl){
+    const tip=FORMATION_TIPS[curFormation];
+    if(tip){
+      tipEl.innerHTML=`<strong style="color:#5bc0de">${curFormation}</strong> — ${tip}`;
+      tipEl.style.display='';
+    }else{
+      tipEl.style.display='none';
+    }
+  }
 }
 
 // ===== S2: SETTINGS =====
