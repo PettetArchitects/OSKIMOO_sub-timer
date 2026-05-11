@@ -1108,7 +1108,9 @@ const ICON_ALIAS={
 // Custom inline SVGs for icons Lucide doesn't carry (e.g. proper soccer ball
 // with pentagon centre — Lucide's "volleyball" reads as netball).
 const ICON_CUSTOM={
-  soccerBall:'<circle cx="12" cy="12" r="10"/><path d="m12 8 3.5 2.5-1.3 4.1h-4.4L8.5 10.5z"/><path d="M12 8V2.5"/><path d="m15.5 10.5 5-1.5"/><path d="m14.2 14.6 3.4 4.2"/><path d="m9.8 14.6-3.4 4.2"/><path d="m8.5 10.5-5-1.5"/>'
+  // Soccer ball — Tabler Icons "ball-football" geometry (MIT). Central
+  // pentagon panel + 5 spokes out to the edge reads as soccer at any size.
+  soccerBall:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55z"/><path d="M12 7v-4"/><path d="M15 16l3.5 1.5"/><path d="M9 16l-3.5 1.5"/><path d="M16.7 10.5l3.8 -1"/><path d="M7.2 10.5l-3.7 -1"/>'
 };
 function ic(name,size,color){
   const s=size||14,c=color||'currentColor';
