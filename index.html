@@ -31,6 +31,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 @media(min-width:768px){.app{max-width:560px}}
 @media(min-width:1024px){.app{max-width:640px}}
 
+/* Inline icons (Lucide-style strokes) — replace emoji for a cleaner look */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-2px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-lg{width:1.4em;height:1.4em}
+.ic-xl{width:1.8em;height:1.8em}
+
 .hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:0;z-index:10}
 .hdr h1{font-size:18px;font-weight:700;letter-spacing:1px}
 .hdr .sub{font-size:11px;color:#aaa;margin-top:1px}
@@ -272,13 +277,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           <button onclick="discardActiveGame()" style="padding:8px 10px;background:none;color:#888;border:1px solid #444;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Discard</button>
-          <button onclick="resumeActiveGame()" style="padding:8px 12px;background:#00d4aa;color:#1a1a2e;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer">Resume ▶</button>
+          <button onclick="resumeActiveGame()" style="padding:8px 12px;background:#00d4aa;color:#1a1a2e;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px">Resume <svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
         </div>
       </div>
     </div>
     <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px">
-        <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px">💡 TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
+        <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
         <div style="display:flex;gap:6px;align-items:center">
           <button onclick="prevTip()" aria-label="Previous tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">‹</button>
           <button onclick="nextTip()" aria-label="Next tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">›</button>
@@ -292,8 +297,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="teamList"></div>
     <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()">+ New Team</button>
     <button class="btn btn-o" id="historyBtn" style="margin-top:8px" onclick="showHistory()">Match History</button>
-    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><span style="font-size:16px">☕</span><span>Like this? Buy me a coffee</span></a>
-    <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><span style="font-size:14px">💬</span><span>Send feedback or feature ideas</span></button>
+    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg><span>Like this? Buy me a coffee</span></a>
+    <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Send feedback or feature ideas</span></button>
     <div style="text-align:center;font-size:10px;color:#555;margin-top:14px;letter-spacing:.5px;line-height:1.4">This is a beta — please tell me what's broken or missing.</div>
   </div>
 </div>
@@ -301,7 +306,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Feedback modal -->
 <div class="ov" id="feedbackOv">
   <div class="ab" style="max-width:380px;text-align:left">
-    <h2 style="text-align:center;margin-bottom:6px">💬 Send feedback</h2>
+    <h2 style="text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send feedback</h2>
     <p style="color:#aaa;font-size:13px;line-height:1.5;margin:6px 0 12px;text-align:center">Sub Timer is in beta. What's broken? What's missing? What's confusing? I read every one.</p>
     <textarea id="feedbackMsg" placeholder="e.g. The sub alert was hard to hear in a noisy gym…" rows="5" class="input" style="resize:vertical;min-height:100px;margin-bottom:8px;font-family:inherit"></textarea>
     <input id="feedbackEmail" type="email" placeholder="Your email (optional — for me to follow up)" autocomplete="email" inputmode="email" class="input" style="margin-bottom:8px">
@@ -314,7 +319,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== SIGN-IN MODAL ===== -->
 <div id="authOv" class="ov">
   <div class="ab" style="max-width:340px;text-align:left">
-    <h2 style="text-align:center">☁️ Sync across devices</h2>
+    <h2 style="text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Sync across devices</h2>
     <p style="color:#aaa;font-size:13px;line-height:1.5;margin:12px 0">Sign in with your email to save your teams and match history to the cloud and access them on any device. We'll send you a magic link — no password needed.</p>
     <input id="authEmail" type="email" placeholder="your@email.com" autocomplete="email" inputmode="email" class="input" style="margin-bottom:12px">
     <div id="authMsg" style="font-size:12px;color:#aaa;min-height:16px;margin-bottom:8px"></div>
@@ -371,7 +376,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 style="margin-top:16px">Players</h2>
     <input type="file" id="rosterPhotoInput" accept="image/*" style="display:none" onchange="handleRosterPhoto(this)">
     <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:1.5px solid #5bc0de;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
-      <span style="font-size:22px">✨</span>
+      <span style="color:#5bc0de;display:flex"><svg class="ic ic-xl" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span>
       <span style="text-align:left">
         <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
         <span style="display:block;font-size:11px;color:#999;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
@@ -460,7 +465,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
-    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px">Start Game ⏱</button>
+    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Start Game <svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></button>
   </div>
 </div>
 
@@ -471,7 +476,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button class="back-btn" onclick="showScr('s2')" style="font-size:13px">← Settings</button>
     <span style="font-size:15px;font-weight:700;letter-spacing:1px">LINEUP</span>
     <div id="gkSection" style="display:flex;align-items:center;gap:6px">
-      <span style="font-size:11px;color:#e94560;font-weight:700">🧤1H</span>
+      <span style="font-size:11px;color:#e94560;font-weight:700">GK 1H</span>
       <select id="gk1Sel" onchange="gk1=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
       <span style="font-size:11px;color:#e94560;font-weight:700">2H</span>
       <select id="gk2Sel" onchange="gk2=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
@@ -486,7 +491,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subPlanSection">
       <div id="subPlanList" style="max-height:80px;overflow-y:auto"></div>
     </div>
-    <button class="btn btn-g" onclick="startGame()" style="margin-top:4px;padding:10px;font-size:15px">Start Game ⏱</button>
+    <button class="btn btn-g" onclick="startGame()" style="margin-top:4px;padding:10px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start Game <svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></button>
   </div>
   <div id="luList" style="display:none"></div>
   <div id="pairsSection" style="display:none"><div id="pairsList"></div></div>
@@ -522,8 +527,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <span id="fmtLbl" onclick="toggleGameFormation()" style="font-size:12px;color:#888;font-weight:700;letter-spacing:1px;cursor:pointer;padding:4px 10px;border:1px solid #333;border-radius:12px;display:inline-block"></span>
     <span id="fmtVs" style="font-size:10px;color:#444">vs</span>
     <span id="oppFmtLbl" onclick="toggleOppFormation()" style="font-size:12px;color:#888;font-weight:700;letter-spacing:1px;cursor:pointer;padding:4px 10px;border:1px dashed #444;border-radius:12px;display:inline-block">OPP: ?</span>
-    <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">⏱ Subs</span>
-    <span id="soundPackLbl" onclick="openSoundPicker()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:inline-block" title="Choose sub-alert sound">🔔 Classic</span>
+    <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">Subs</span>
+    <span id="soundPackLbl" onclick="openSoundPicker()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:inline-block" title="Choose sub-alert sound">Sound</span>
   </div>
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:0 12px 6px">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
@@ -534,7 +539,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Controls -->
   <div style="display:flex;gap:6px;padding:4px 12px 8px;flex-shrink:0">
-    <button class="btn btn-g" id="ppB" onclick="tog()" style="margin:0;flex:1;padding:12px;font-size:16px;border-radius:10px">▶ START</button>
+    <button class="btn btn-g" id="ppB" onclick="tog()" style="margin:0;flex:1;padding:12px;font-size:16px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>START</button>
     <button class="btn" id="subB" onclick="manualSub()" style="margin:0;flex:1;padding:12px;font-size:14px;border-radius:10px;background:#f0a500;color:#1a1a2e;font-weight:800">SUB</button>
   </div>
 
@@ -556,7 +561,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== OVERLAYS ===== -->
 <div class="ov" id="subOv">
   <div class="ab">
-    <h2>🔄 TIME TO SUB!</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>TIME TO SUB!</h2>
     <div id="subM"></div>
     <button class="btn btn-g" onclick="confSub()" style="margin-top:16px">Got it ✓</button>
   </div>
@@ -567,15 +572,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
     <button class="chip" onclick="pickSubStrategy('fair')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px">⏱  Equal time</div>
+      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>Equal time</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App picks the longest-on player to come off and the longest-benched to come on. Best for fair-play rules.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px">🔄  Paired rotation</div>
+      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Paired rotation</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('manual')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
-      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px">🎯  I'll call them</div>
+      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>I'll call them</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.</div>
     </button>
   </div>
@@ -584,7 +589,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Sound pack picker: pick the sub-alert sound (game-screen access) -->
 <div class="ov" id="soundOv">
   <div class="ab" style="max-width:360px">
-    <h2 style="text-align:center;margin-bottom:4px">🔔 Sub-Alert Sound</h2>
+    <h2 style="text-align:center;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Sub-Alert Sound</h2>
     <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center">Played at sub time and on a goal. Tap to preview.</div>
     <div class="chip-grid" id="soundPackGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <button class="btn btn-o" onclick="closeSoundPicker()" style="margin-top:14px">Done</button>
@@ -593,7 +598,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- Scorer picker: who scored the goal? -->
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
-    <h2>⚽ Who scored?</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/></svg>Who scored?</h2>
     <div style="font-size:12px;color:#888;margin-bottom:10px">Tap the player who scored, or skip.</div>
     <div id="scorerGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;max-height:50vh;overflow-y:auto"></div>
     <button class="btn btn-o" onclick="skipScorer()">Skip (no scorer recorded)</button>
@@ -601,14 +606,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 <div class="ov" id="htOv">
   <div class="ab">
-    <h2>⏸ HALFTIME</h2>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>HALFTIME</h2>
     <p style="color:#aaa;margin-bottom:12px;font-size:14px">GK change</p>
     <div id="htGkPicker" style="margin-bottom:12px;display:none">
       <label style="display:block;font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">2nd Half Keeper</label>
       <select id="htGk2Sel" onchange="updateHtGk(parseInt(this.value))" style="width:100%;background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
     </div>
     <div id="htM"></div>
-    <button class="btn btn-g" onclick="confHT()" style="margin-top:16px">Start 2nd Half ▶</button>
+    <button class="btn btn-g" onclick="confHT()" style="margin-top:16px;display:inline-flex;align-items:center;justify-content:center;gap:6px">Start 2nd Half <svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
   </div>
 </div>
 
@@ -624,7 +629,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="sec">
     <button class="btn btn-g" onclick="saveMatch()">Save Match ✓</button>
     <button class="btn btn-o" style="margin-top:8px" onclick="showScr('home')">Done</button>
-    <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;text-decoration:none;margin-top:14px;letter-spacing:.3px"><span style="font-size:16px">☕</span><span>Helpful today? Buy me a coffee</span></a>
+    <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;text-decoration:none;margin-top:14px;letter-spacing:.3px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg><span>Helpful today? Buy me a coffee</span></a>
   </div>
 </div>
 
@@ -670,9 +675,9 @@ function renderAuthChip(){
     else if(_syncErrored){dot='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e94560;margin-right:5px;vertical-align:middle"></span>';title='Last cloud sync failed — saved locally only';}
     const borderColor=_syncErrored?'#e94560':'#00d4aa';
     const textColor=_syncErrored?'#e94560':'#00d4aa';
-    c.innerHTML=`<button onclick="signOutCloud()" title="${title}" style="background:rgba(0,212,170,.12);color:${textColor};border:1px solid ${borderColor};border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">${dot}☁ ${short}</button>`;
+    c.innerHTML=`<button onclick="signOutCloud()" title="${title}" style="background:rgba(0,212,170,.12);color:${textColor};border:1px solid ${borderColor};border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">${dot}${ic('cloud',12)} ${short}</button>`;
   }else{
-    c.innerHTML=`<button onclick="document.getElementById('authOv').classList.add('show')" style="background:none;color:#888;border:1px solid #444;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Sign in ☁</button>`;
+    c.innerHTML=`<button onclick="document.getElementById('authOv').classList.add('show')" style="background:none;color:#888;border:1px solid #444;border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">Sign in ${ic('cloud',12)}</button>`;
   }
 }
 let _magicLinkInflight=false;
@@ -931,19 +936,19 @@ function resumeActiveGame(){
 // ===== SPORTS (multi-sport core) =====
 const SPORTS={
   soccer:{
-    key:'soccer',label:'Soccer',icon:'⚽',available:true,
+    key:'soccer',label:'Soccer',icon:'ball',available:true,
     positions:['GK','DEF','MID','WNG','FWD'],
     periodCount:2,             // halves
     periodShort:half=>`${half===1?'1ST':'2ND'} HALF`,
-    breakLabels:{1:'⏸ HALFTIME'},
+    breakLabels:{1:'HALFTIME'},
     formats:['4v4','5v5','7v7','9v9','11v11']
   },
   netball:{
-    key:'netball',label:'Netball',icon:'🏐',available:true,
+    key:'netball',label:'Netball',icon:'target',available:true,
     positions:['GS','GA','WA','C','WD','GD','GK'],
     periodCount:4,             // quarters
     periodShort:q=>`Q${q}`,
-    breakLabels:{1:'⏸ QUARTER TIME',2:'⏸ HALF TIME',3:'⏸ THREE-QUARTER TIME'},
+    breakLabels:{1:'QUARTER TIME',2:'HALF TIME',3:'THREE-QUARTER TIME'},
     formats:['nb-set','nb-go','nb-junior','nb-open']
   }
 };
@@ -1086,28 +1091,62 @@ function ensureAudio(){
 }
 // Each pack defines a sub(ctx,now) and goal(ctx,now) function that creates oscillators
 // synthesizing the sound. null = silent (vibrate only).
+// Lucide-style stroked SVG paths — each value is the innards of an <svg viewBox="0 0 24 24">
+const ICONS={
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+  coffee:'<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>',
+  message:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  bellOff:'<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
+  timer:'<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
+  sparkles:'<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  bulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  edit:'<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
+  camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+  bandage:'<path d="m10 15-3-3 3-3"/><path d="m14 9 3 3-3 3"/><rect x="2" y="6" width="20" height="12" rx="2"/>',
+  arrowUp:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  arrowDown:'<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+  swap:'<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
+  megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  gamepad:'<line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59A45.5 45.5 0 0 0 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258A4 4 0 0 0 17.32 5z"/>',
+  activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  volume:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  goal:'<path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/>',
+  ball:'<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>',
+  pen:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>'
+};
+function ic(name,size,color){
+  const s=size||14, c=color||'currentColor';
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;flex-shrink:0">'+(ICONS[name]||'')+'</svg>';
+}
+
 const SOUND_PACKS={
-  classic:{label:'Classic',icon:'📟',desc:'Quick beeps',
+  classic:{label:'Classic',icon:'activity',desc:'Quick beeps',
     sub:(c,t)=>{[0,0.3,0.6].forEach(o=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='square';s.frequency.setValueAtTime(880,t+o);g.gain.setValueAtTime(0.2,t+o);g.gain.setValueAtTime(0.2,t+o+0.12);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.15);s.start(t+o);s.stop(t+o+0.18);});},
     goal:(c,t)=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sawtooth';s.frequency.setValueAtTime(220,t);s.frequency.linearRampToValueAtTime(330,t+0.3);g.gain.setValueAtTime(0.25,t);g.gain.setValueAtTime(0.25,t+0.4);g.gain.exponentialRampToValueAtTime(0.01,t+0.8);s.start(t);s.stop(t+0.85);}
   },
-  whistle:{label:'Whistle',icon:'🎽',desc:"Coach's whistle",
+  whistle:{label:'Whistle',icon:'volume',desc:"Coach's whistle",
     sub:(c,t)=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sine';s.frequency.setValueAtTime(2500,t);for(let i=0;i<8;i++)s.frequency.setValueAtTime(i%2?2400:2700,t+i*0.05);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.22,t+0.02);g.gain.setValueAtTime(0.22,t+0.45);g.gain.exponentialRampToValueAtTime(0.01,t+0.55);s.start(t);s.stop(t+0.6);},
     goal:(c,t)=>{[0,0.18,0.36].forEach(o=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sine';s.frequency.setValueAtTime(2800,t+o);g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(0.25,t+o+0.02);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.16);s.start(t+o);s.stop(t+o+0.2);});}
   },
-  airhorn:{label:'Air Horn',icon:'📣',desc:'Stadium vibes',
+  airhorn:{label:'Air Horn',icon:'megaphone',desc:'Stadium vibes',
     sub:(c,t)=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sawtooth';s.frequency.setValueAtTime(180,t);g.gain.setValueAtTime(0.32,t);g.gain.setValueAtTime(0.32,t+0.45);g.gain.exponentialRampToValueAtTime(0.01,t+0.55);s.start(t);s.stop(t+0.6);},
     goal:(c,t)=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sawtooth';s.frequency.setValueAtTime(160,t);g.gain.setValueAtTime(0.32,t);g.gain.setValueAtTime(0.32,t+1.2);g.gain.exponentialRampToValueAtTime(0.01,t+1.5);s.start(t);s.stop(t+1.55);}
   },
-  bell:{label:'Bell',icon:'🔔',desc:'Gentle chimes',
+  bell:{label:'Bell',icon:'bell',desc:'Gentle chimes',
     sub:(c,t)=>{[[1000,0],[1500,0.25]].forEach(([f,o])=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sine';s.frequency.setValueAtTime(f,t+o);g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(0.25,t+o+0.02);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.65);s.start(t+o);s.stop(t+o+0.7);});},
     goal:(c,t)=>{[800,1000,1200,1500].forEach((f,i)=>{const o=i*0.14;const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='sine';s.frequency.setValueAtTime(f,t+o);g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(0.25,t+o+0.02);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.7);s.start(t+o);s.stop(t+o+0.75);});}
   },
-  retro:{label:'Retro',icon:'🎮',desc:'8-bit arcade',
+  retro:{label:'Retro',icon:'gamepad',desc:'8-bit arcade',
     sub:(c,t)=>{[[660,0],[880,0.08],[1320,0.16]].forEach(([f,o])=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='square';s.frequency.setValueAtTime(f,t+o);g.gain.setValueAtTime(0.2,t+o);g.gain.setValueAtTime(0.2,t+o+0.06);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.09);s.start(t+o);s.stop(t+o+0.1);});},
     goal:(c,t)=>{[523,659,784,1047,1319].forEach((f,i)=>{const o=i*0.1;const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='square';s.frequency.setValueAtTime(f,t+o);g.gain.setValueAtTime(0.2,t+o);g.gain.setValueAtTime(0.2,t+o+0.08);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.11);s.start(t+o);s.stop(t+o+0.12);});}
   },
-  silent:{label:'Silent',icon:'🔇',desc:'Vibrate only',sub:null,goal:null}
+  silent:{label:'Silent',icon:'bellOff',desc:'Vibrate only',sub:null,goal:null}
 };
 function getSoundPackKey(){try{return localStorage.getItem('subTimerSoundPack')||'classic';}catch(e){return 'classic';}}
 function setSoundPackKey(k){try{localStorage.setItem('subTimerSoundPack',k);}catch(e){}}
@@ -1132,7 +1171,7 @@ function renderSoundPicker(){
   const lbl=document.getElementById('soundPackLbl');
   if(lbl){
     const p=SOUND_PACKS[cur]||SOUND_PACKS.classic;
-    lbl.innerHTML=`${p.icon} ${p.label}`;
+    lbl.innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px">${ic(p.icon,12)}${p.label}</span>`;
   }
   const g=document.getElementById('soundPackGrid');
   if(!g)return;
@@ -1141,7 +1180,7 @@ function renderSoundPicker(){
     const c=document.createElement('div');
     c.className='chip'+(cur===k?' sel':'');
     c.style.cssText='padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px';
-    c.innerHTML=`<div style="font-size:20px;line-height:1">${p.icon}</div>
+    c.innerHTML=`<div style="line-height:1;color:#5bc0de">${ic(p.icon,22)}</div>
       <div style="font-weight:800;font-size:12px;letter-spacing:.3px">${p.label}</div>
       <div style="font-size:10px;color:#888;font-weight:500">${p.desc}</div>`;
     c.onclick=()=>selectSoundPack(k);
@@ -1173,12 +1212,12 @@ function showScr(id){
 // ===== HOME =====
 // ===== HOME TIPS CAROUSEL — feature reminders for returning users =====
 const HOME_TIPS=[
-  {title:'📷  Add players from a photo',desc:"Open the team editor and tap Auto-fill from photo. Reads the names straight off your roster sheet."},
-  {title:'🎯  Position tags drive smart subs',desc:"Tag each player GK/DEF/MID/etc. in the team editor. The app swaps players into positions they actually play."},
-  {title:'🩹  Tap any on-field player for an injury sub',desc:"Mid-game, a tap on any on-field player swaps them with the longest-benched sub. Choose 'out for game' if they can't return."},
-  {title:'🔔  Choose your sub-alert sound',desc:"Tap the 🔔 chip above the pitch during a match. Six packs including whistle, air horn, retro, and silent."},
-  {title:'⚽  Tag who scored each goal',desc:"When you add a goal for your team, pick the scorer from the on-field players. Appears in your match log."},
-  {title:'☁  Sync teams across devices',desc:"Sign in (top-right). Your teams and match history follow you to any phone or iPad."}
+  {icon:'camera',title:'Add players from a photo',desc:"Open the team editor and tap Auto-fill from photo. Reads the names straight off your roster sheet."},
+  {icon:'target',title:'Position tags drive smart subs',desc:"Tag each player GK/DEF/MID/etc. in the team editor. The app swaps players into positions they actually play."},
+  {icon:'bandage',title:'Tap any on-field player for an injury sub',desc:"Mid-game, a tap on any on-field player swaps them with the longest-benched sub. Choose 'out for game' if they can't return."},
+  {icon:'bell',title:'Choose your sub-alert sound',desc:"Tap the bell chip above the pitch during a match. Six packs including whistle, air horn, retro, and silent."},
+  {icon:'goal',title:'Tag who scored each goal',desc:"When you add a goal for your team, pick the scorer from the on-field players. Appears in your match log."},
+  {icon:'cloud',title:'Sync teams across devices',desc:"Sign in (top-right). Your teams and match history follow you to any phone or iPad."}
 ];
 function renderTip(){
   const card=document.getElementById('tipsCard');
@@ -1189,7 +1228,7 @@ function renderTip(){
   const t=HOME_TIPS[idx];
   document.getElementById('tipNum').textContent=idx+1;
   document.getElementById('tipTotal').textContent=HOME_TIPS.length;
-  document.getElementById('tipTitle').textContent=t.title;
+  document.getElementById('tipTitle').innerHTML=`<span style="display:inline-flex;align-items:center;gap:8px;color:#5bc0de">${ic(t.icon||'bulb',16,'#5bc0de')}</span> ${t.title}`;
   document.getElementById('tipDesc').textContent=t.desc;
   card.style.display='';
 }
@@ -1337,14 +1376,14 @@ function renderHome(){
           <div style="display:flex;gap:12px;margin-bottom:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="4"/></svg><span><strong style="color:#eee">Snap your team list</strong> <span style="color:#888">— AI fills the roster</span></span></div>
           <div style="display:flex;gap:12px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><span><strong style="color:#eee">Soccer & Netball</strong> <span style="color:#888">— more sports coming</span></span></div>
         </div>
-        <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px">☁ Sign in to get started</button>
+        <button onclick="document.getElementById('authOv').classList.add('show')" style="width:100%;padding:14px;background:#00d4aa;color:#0a1628;border:none;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;margin-bottom:8px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Sign in to get started</button>
         <button onclick="newTeam()" style="width:100%;padding:11px;background:none;color:#888;border:1px solid #333;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Continue without account</button>
         <div style="text-align:center;font-size:11px;color:#555;margin-top:16px;letter-spacing:.3px;line-height:1.4">Free to try · cloud sync + match history with sign-in</div>
       </div>`;
     }else{
       // Signed in but no teams — focused nudge to create their first
       c.innerHTML=`<div style="text-align:center;padding:24px 12px;color:#888;font-size:14px;line-height:1.5">
-        <div style="font-size:36px;margin-bottom:8px">🏟</div>
+        <div style="margin-bottom:8px;color:#5bc0de;display:flex;justify-content:center"><svg class="ic" viewBox="0 0 24 24" style="width:36px;height:36px"><path d="M12 13V2l8 4-8 4"/><path d="M20.561 10.222a9 9 0 1 1-12.55-5.29"/><path d="M8.002 9.997a5 5 0 1 0 8.9 2.02"/></svg></div>
         <div style="font-weight:700;color:#eee;margin-bottom:6px">You're signed in. Let's set up your team.</div>
         <div>Tap <span style="color:#e94560;font-weight:700">+ New Team</span> below to add players and pick a format.</div>
       </div>`;
@@ -1369,8 +1408,8 @@ function renderHome(){
     const fmtLabel=t.format&&FORMATS[t.format]?FORMATS[t.format].label:null;
     const _spt=getSport(t);
     d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="font-size:24px;flex-shrink:0">${_spt.icon}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p></div></div>
-      <button class="back-btn" onclick="event.stopPropagation();editTeamScreen('${t.id}')" style="font-size:13px;flex-shrink:0">Edit ✏️</button>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="color:#5bc0de;flex-shrink:0;display:flex">${ic(_spt.icon,22)}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p></div></div>
+      <button class="back-btn" onclick="event.stopPropagation();editTeamScreen('${t.id}')" style="font-size:13px;flex-shrink:0;display:inline-flex;align-items:center;gap:5px">Edit ${ic('pen',13)}</button>
     </div>`;
     d.onclick=()=>selectTeam(t.id);
     c.appendChild(d);
@@ -1403,7 +1442,7 @@ function newTeam(){
     const c=document.createElement('div');
     c.className='chip';
     c.style.cssText='padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;'+(s.available?'':'opacity:0.5;cursor:not-allowed');
-    c.innerHTML=`<div style="font-size:30px;line-height:1">${s.icon}</div>
+    c.innerHTML=`<div style="line-height:1;color:#5bc0de;display:flex">${ic(s.icon,32)}</div>
       <div style="font-size:14px;font-weight:800;color:${s.available?'#e94560':'#888'}">${s.label}</div>
       ${s.note?`<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;background:#1a1a2e;padding:2px 6px;border-radius:4px">${s.note}</div>`:''}`;
     if(s.available)c.onclick=()=>pickSport(s.key);
@@ -1457,7 +1496,7 @@ function renderEditTeam(){
   if(hint){
     const types=getPosTypes(editingTeam);
     const chips=types.map(pt=>`<span class="pos-tag pos-tag-${pt.toLowerCase()}" style="font-size:11px;padding:1px 6px;cursor:default">${pt}</span>`).join(' ');
-    hint.innerHTML=`<div style="font-weight:700;color:#00d4aa;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">⚡ Set position tags</div>
+    hint.innerHTML=`<div style="font-weight:700;color:#00d4aa;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px">${ic('zap',12,'#00d4aa')} Set position tags</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:6px">Tap ${chips}</div>
       under each name. The app uses these to swap players into positions they actually play. Multiple tags = versatile.`;
   }
@@ -1580,7 +1619,7 @@ async function compressImageForUpload(file,maxEdge=1280,quality=0.85){
   ctx.drawImage(img,0,0,tw,th);
   return c.toDataURL('image/jpeg',quality);
 }
-const ROSTER_BTN_DEFAULT_HTML=`<span style="font-size:22px">✨</span>
+const ROSTER_BTN_DEFAULT_HTML=`<span style="color:#5bc0de;display:flex">${ic('sparkles',24,'#5bc0de')}</span>
       <span style="text-align:left">
         <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
         <span style="display:block;font-size:11px;color:#999;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
@@ -2054,7 +2093,7 @@ function renderSubPlan(){
         gotSubbedOn.add(coming[i]);
         const row=document.createElement('div');
         row.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;font-weight:600';
-        row.innerHTML=`<span style="color:#f0a500">⬇ ${fn(avail[off[i]])}</span><span style="color:#444">⇄</span><span style="color:#00d4aa">⬆ ${fn(avail[coming[i]])}</span>`;
+        row.innerHTML=`<span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${ic('arrowDown',12,'#f0a500')}${fn(avail[off[i]])}</span><span style="color:#444;display:inline-flex;align-items:center">${ic('swap',12,'#444')}</span><span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',12,'#00d4aa')}${fn(avail[coming[i]])}</span>`;
         card.appendChild(row);
       }
 
@@ -2323,7 +2362,10 @@ function renderG(){
     ni.textContent='All subs done this half';
   }
   const pb=document.getElementById('ppB');
-  pb.textContent=G.running?'⏸ PAUSE':'▶ START';
+  pb.innerHTML=G.running
+    ?'<svg class="ic" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>PAUSE'
+    :'<svg class="ic" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>START';
+  pb.style.display='inline-flex';pb.style.alignItems='center';pb.style.justifyContent='center';pb.style.gap='6px';
   pb.className=G.running?'btn btn-o':'btn btn-g';
 
   // Score
@@ -2351,12 +2393,14 @@ function renderG(){
   const sslbl=document.getElementById('subStratLbl');
   if(sslbl){
     if(G.subStrategy){
-      const stratMap={'fair':{icon:'⏱',label:'Equal time',color:'#00d4aa'},'paired':{icon:'🔄',label:'Paired',color:'#5bc0de'},'manual':{icon:'🎯',label:'Manual',color:'#f0a500'}};
+      const stratMap={'fair':{icon:'timer',label:'Equal time',color:'#00d4aa'},'paired':{icon:'refresh',label:'Paired',color:'#5bc0de'},'manual':{icon:'target',label:'Manual',color:'#f0a500'}};
       const s=stratMap[G.subStrategy]||stratMap.paired;
-      sslbl.style.display='';
+      sslbl.style.display='inline-flex';
+      sslbl.style.alignItems='center';
+      sslbl.style.gap='5px';
       sslbl.style.borderColor=s.color;
       sslbl.style.color=s.color;
-      sslbl.innerHTML=`${s.icon} ${s.label}`;
+      sslbl.innerHTML=`${ic(s.icon,12,s.color)}${s.label}`;
     }else{
       sslbl.style.display='none';
     }
@@ -2541,9 +2585,9 @@ function trigSub(){
   let h='';
   for(let i=0;i<c;i++){
     h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:14px;font-weight:700">
-      <span style="color:#f0a500">${fn(avail[off[i]])} ⬇</span>
-      <span style="color:#444">→</span>
-      <span style="color:#00d4aa">⬆ ${fn(avail[on[i]])}</span>
+      <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[off[i]])}${ic('arrowDown',13,'#f0a500')}</span>
+      <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span>
+      <span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[on[i]])}</span>
     </div>`;
   }
   swaps.innerHTML=h;
@@ -2623,11 +2667,11 @@ function injurySub(pIdx){
   const banner=document.getElementById('subBanner');
   const swaps=document.getElementById('subBannerSwaps');
   G.ps.injury=true;
-  swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#e94560;font-weight:700;letter-spacing:1px;margin-bottom:4px">INJURY SUB</div>
+  swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#e94560;font-weight:700;letter-spacing:1px;margin-bottom:4px;display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%">${ic('bandage',13,'#e94560')}INJURY SUB</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:14px;font-weight:700">
-      <span style="color:#f0a500">${fn(avail[off[0]])} ⬇</span>
-      <span style="color:#444">→</span>
-      <span style="color:#00d4aa">⬆ ${fn(avail[on[0]])}</span>
+      <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[off[0]])}${ic('arrowDown',13,'#f0a500')}</span>
+      <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span>
+      <span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[on[0]])}</span>
     </div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button onclick="confInjury(false)" style="flex:1;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">BACK TO BENCH</button>
@@ -2700,7 +2744,7 @@ function renderHtMsg(){
   const sport=getSport(currentTeam);
   if(sport.key==='soccer'&&fmt.hasGk && G.gk!==null && G.gk!==gk2){
     const d=document.createElement('div');d.className='sm';
-    d.innerHTML=`<span style="color:#e94560">🧤 ${fn(avail[G.gk])}</span><span style="color:#666">→</span><span style="color:#e94560">🧤 ${fn(avail[gk2])}</span>`;
+    d.innerHTML=`<span style="color:#e94560;font-weight:700">GK ${fn(avail[G.gk])}</span><span style="color:#666;display:inline-flex;align-items:center">${ic('swap',13,'#666')}</span><span style="color:#e94560;font-weight:700">GK ${fn(avail[gk2])}</span>`;
     m.appendChild(d);
   }else if(sport.key==='soccer'&&fmt.hasGk){
     m.innerHTML='<div style="color:#aaa;padding:8px">Same goalkeeper continues</div>';
@@ -2736,12 +2780,16 @@ function advH(){
     }
     // Sport-aware break heading
     const headingEl=document.querySelector('#htOv .ab h2');
-    if(headingEl)headingEl.textContent=sport.breakLabels[G.half]||'⏸ BREAK';
+    if(headingEl){
+      const breakName=sport.breakLabels[G.half]||'BREAK';
+      headingEl.innerHTML=`<span style="display:inline-flex;align-items:center;justify-content:center;gap:8px">${ic('pause',20)}${breakName}</span>`;
+    }
     // Sport-aware sub-line + button label
     const startBtn=document.querySelector('#htOv .ab button.btn-g');
     if(startBtn){
       const nextPeriod=G.half+1;
-      startBtn.textContent=sport.key==='netball'?`Start Q${nextPeriod} ▶`:(nextPeriod===2?'Start 2nd Half ▶':`Start Period ${nextPeriod} ▶`);
+      const lbl=sport.key==='netball'?`Start Q${nextPeriod}`:(nextPeriod===2?'Start 2nd Half':`Start Period ${nextPeriod}`);
+      startBtn.innerHTML=`<span style="display:inline-flex;align-items:center;justify-content:center;gap:6px">${lbl}${ic('play',14)}</span>`;
     }
     renderHtMsg();
     document.getElementById('htOv').classList.add('show');
@@ -2823,20 +2871,20 @@ function showSum(){
       const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
       let icon='',detail='';
       if(e.type==='sub'){
-        icon='🔄';detail=`<span style="color:#f0a500">${fn(e.off)}</span> → <span style="color:#00d4aa">${fn(e.on)}</span>`;
+        icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
       } else if(e.type==='gk'){
-        icon='🧤';detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> → <span style="color:#e94560">${fn(e.on)}</span>`;
+        icon=ic('target',14,'#e94560');detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#e94560">${fn(e.on)}</span>`;
       } else if(e.type==='goal'){
-        icon='⚽';
+        icon=ic('goal',14,'#00d4aa');
         if(e.who==='us'){
-          detail=e.scorer?`<span style="color:#00d4aa">${fn(e.scorer)} scored 🎯</span>`:`<span style="color:#00d4aa">${teamName} goal!</span>`;
+          detail=e.scorer?`<span style="color:#00d4aa">${fn(e.scorer)} scored</span>`:`<span style="color:#00d4aa">${teamName} goal!</span>`;
         }else{
           detail=`<span style="color:#e94560">Opposition goal</span>`;
         }
       } else if(e.type==='halftime'||e.type==='period_end'){
-        icon='⏸';detail=`<span style="color:#888">${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}</span>`;
+        icon=ic('pause',14,'#888');detail=`<span style="color:#888">${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}</span>`;
       }
-      row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span>${icon}</span><span style="flex:1">${detail}</span>`;
+      row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
       lc.appendChild(row);
     });
   }
@@ -2952,11 +3000,11 @@ function showMatchDetail(m){
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
       const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
       let icon='',detail='';
-      if(e.type==='sub'){icon='🔄';detail=`<span style="color:#f0a500">${fn(e.off)}</span> → <span style="color:#00d4aa">${fn(e.on)}</span>`;}
-      else if(e.type==='gk'){icon='🧤';detail=`GK: ${fn(e.off)} → ${fn(e.on)}`;}
-      else if(e.type==='goal'){icon='⚽';detail=e.who==='us'?(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`):'Opposition goal';}
-      else if(e.type==='halftime'||e.type==='period_end'){icon='⏸';detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}
-      row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span>${icon}</span><span style="flex:1">${detail}</span>`;
+      if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
+      else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
+      else if(e.type==='goal'){icon=ic('goal',14,'#00d4aa');detail=e.who==='us'?(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`):'Opposition goal';}
+      else if(e.type==='halftime'||e.type==='period_end'){icon=ic('pause',14,'#888');detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}
+      row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
       lc.appendChild(row);
     });
   } else {
@@ -3127,7 +3175,7 @@ function renderRoster(){
       row.innerHTML=`
         <div style="width:28px;height:28px;border-radius:6px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:8px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;color:${isNext?'#00d4aa':'#888'}">${fn(avail[pIdx])}${isNext?' ⬆':''}</div>
+          <div style="font-size:14px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px">${fn(avail[pIdx])}${isNext?ic('arrowUp',12,'#00d4aa'):''}</div>
           ${isNext&&replacesP!==undefined?`<div style="font-size:11px;color:#f0a500;font-weight:600;margin-top:1px">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
         <div style="font-size:12px;font-weight:700;color:#555;font-variant-numeric:tabular-nums">${mins}′</div>
