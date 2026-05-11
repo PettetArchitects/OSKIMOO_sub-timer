@@ -1130,10 +1130,11 @@ const ICON_CUSTOM={
   // Soccer ball — Tabler Icons "ball-football" geometry (MIT). Central
   // pentagon panel + 5 spokes out to the edge reads as soccer at any size.
   soccerBall:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55z"/><path d="M12 7v-4"/><path d="M15 16l3.5 1.5"/><path d="M9 16l-3.5 1.5"/><path d="M16.7 10.5l3.8 -1"/><path d="M7.2 10.5l-3.7 -1"/>',
-  // Netball / basketball — Tabler Icons "ball-basketball" geometry (MIT).
-  // Circle with two crossing seams + four curved panel arcs — distinct from
-  // the soccer-ball pentagon pattern at every icon size.
-  netball:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M5.65 5.65l12.7 12.7"/><path d="M18.35 5.65l-12.7 12.7"/><path d="M12 3a9 9 0 0 0 9 9"/><path d="M3 12a9 9 0 0 1 9 -9"/><path d="M12 21a9 9 0 0 0 -9 -9"/><path d="M21 12a9 9 0 0 1 -9 9"/>'
+  // Netball — Lucide "volleyball" geometry (ISC). Six interleaved curves
+  // forming the classic three-panel ball pattern. Inlined here so it
+  // doesn't depend on the Lucide CDN finishing — and so it renders
+  // reliably even at 14-22px sizes on slow connections.
+  netball:'<circle cx="12" cy="12" r="10"/><path d="M11.1 7.1a16.55 16.55 0 0 1 10.9 4"/><path d="M12 12a12.6 12.6 0 0 1-8.7 5"/><path d="M16.8 13.6a16.55 16.55 0 0 1-9 7.5"/><path d="M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10"/><path d="M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5"/>'
 };
 function ic(name,size,color){
   const s=size||14,c=color||'currentColor';
