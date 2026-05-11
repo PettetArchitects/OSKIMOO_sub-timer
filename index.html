@@ -505,10 +505,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 
   <!-- Formation picker (inline) -->
-  <div id="fmtRow" style="text-align:center;flex-shrink:0;padding:0 0 4px;display:flex;justify-content:center;gap:6px;align-items:center">
+  <div id="fmtRow" style="text-align:center;flex-shrink:0;padding:0 0 4px;display:flex;justify-content:center;gap:6px;align-items:center;flex-wrap:wrap">
     <span id="fmtLbl" onclick="toggleGameFormation()" style="font-size:12px;color:#888;font-weight:700;letter-spacing:1px;cursor:pointer;padding:4px 10px;border:1px solid #333;border-radius:12px;display:inline-block"></span>
     <span id="fmtVs" style="font-size:10px;color:#444">vs</span>
     <span id="oppFmtLbl" onclick="toggleOppFormation()" style="font-size:12px;color:#888;font-weight:700;letter-spacing:1px;cursor:pointer;padding:4px 10px;border:1px dashed #444;border-radius:12px;display:inline-block">OPP: ?</span>
+    <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">⏱ Subs</span>
   </div>
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:0 12px 6px">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
@@ -546,6 +547,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button class="btn btn-g" onclick="confSub()" style="margin-top:16px">Got it ✓</button>
   </div>
 </div>
+<!-- Sub strategy chooser — shown once at game start so coach picks how subs should behave -->
+<div class="ov" id="subStratOv">
+  <div class="ab" style="max-width:360px;text-align:left">
+    <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
+    <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
+    <button class="chip" onclick="pickSubStrategy('fair')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px">⏱  Equal time</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App picks the longest-on player to come off and the longest-benched to come on. Best for fair-play rules.</div>
+    </button>
+    <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px">🔄  Paired rotation</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.</div>
+    </button>
+    <button class="chip" onclick="pickSubStrategy('manual')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
+      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px">🎯  I'll call them</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.</div>
+    </button>
+  </div>
+</div>
+
 <!-- Scorer picker: who scored the goal? -->
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
@@ -2158,10 +2179,25 @@ function startGame(){
     on:luOrd.slice(0,on),bench:luOrd.slice(on),
     gk:fmt.hasGk?gk1:null,pt:{},sd:[],ps:null,scoreUs:0,scoreThem:0,
     pairs:rotPairs.map(p=>({on:[...p.on]})),pairIdx:0,oppFormation:curFormation,
+    subStrategy:null, // set by pickSubStrategy below
     log:[],startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   renderG();showScr('s4');
   saveActiveGame();
+  // Prompt the coach to choose how subs should behave for this game
+  document.getElementById('subStratOv').classList.add('show');
+}
+function pickSubStrategy(strat){
+  if(!G)return;
+  G.subStrategy=strat;
+  G.log.push({type:'sub_strategy',time:0,strategy:strat});
+  document.getElementById('subStratOv').classList.remove('show');
+  saveActiveGame();
+  renderG();
+}
+function changeSubStrategy(){
+  if(!G)return;
+  document.getElementById('subStratOv').classList.add('show');
 }
 function subTs(){const r=[];for(let t=cfg.sf;t<cfg.hm;t+=cfg.sf)r.push(t*60);return r;}
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
@@ -2209,6 +2245,20 @@ function renderG(){
   if(fl){
     fl.textContent=curFormation;
     fl.style.display=isNetball?'none':'';
+  }
+  // Sub strategy badge — visible chip on game screen showing current rule + lets coach change it
+  const sslbl=document.getElementById('subStratLbl');
+  if(sslbl){
+    if(G.subStrategy){
+      const stratMap={'fair':{icon:'⏱',label:'Equal time',color:'#00d4aa'},'paired':{icon:'🔄',label:'Paired',color:'#5bc0de'},'manual':{icon:'🎯',label:'Manual',color:'#f0a500'}};
+      const s=stratMap[G.subStrategy]||stratMap.paired;
+      sslbl.style.display='';
+      sslbl.style.borderColor=s.color;
+      sslbl.style.color=s.color;
+      sslbl.innerHTML=`${s.icon} ${s.label}`;
+    }else{
+      sslbl.style.display='none';
+    }
   }
   const fvs=document.getElementById('fmtVs');
   if(fvs)fvs.style.display=isNetball?'none':'';
@@ -2322,7 +2372,11 @@ function tickLoop(now){
     G.secs++;
     G.on.forEach(p=>G.pt[avail[p]]++);
     const ns=nxtST();
-    if(ns!==null&&G.secs>=ns&&G.bench.length>0){G.sd.push(ns);trigSub();}
+    if(ns!==null&&G.secs>=ns&&G.bench.length>0){
+      G.sd.push(ns);
+      // Manual strategy: don't auto-pop the sub banner — coach taps SUB when they want
+      if(G.subStrategy!=='manual')trigSub();
+    }
     if(G.secs>=cfg.hm*60){
       G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
       G.running=false;advH();saveActiveGame();return;
@@ -2343,7 +2397,27 @@ function trigSub(){
   // DON'T pause the clock — keep running, show banner for coach to confirm
   if(!G.bench.length)return;
   let off=[],on=[];
-  if(G.pairs.length>0){
+  const strat=G.subStrategy||'paired';
+  if(strat==='fair'){
+    // Equal-time: pick the on-field player(s) with the most playing time to come off,
+    // and the bench player(s) with the least playing time to come on.
+    const c=Math.min(cfg.sc,G.bench.length);
+    const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
+    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
+    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    off=sortedOn.slice(0,c);
+    on=sortedBench.slice(0,c);
+  } else if(strat==='manual'){
+    // Manual: same suggestion as fair-time so the coach has a sensible default in the banner,
+    // but trigSub is only ever called via the manual SUB button (not auto-tick).
+    const c=Math.min(cfg.sc,G.bench.length);
+    const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
+    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
+    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    off=sortedOn.slice(0,c);
+    on=sortedBench.slice(0,c);
+  } else if(G.pairs.length>0){
+    // Paired rotation (default / legacy)
     const pair=G.pairs[G.pairIdx % G.pairs.length];
     off=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
     on=G.bench.slice(0,off.length);
@@ -2800,7 +2874,16 @@ function getNextSwap(){
   if(!G||!G.bench.length) return {nextOff,nextOn,offArr,onArr};
   const ns=nxtST();
   if(ns===null) return {nextOff,nextOn,offArr,onArr};
-  if(G.pairs.length>0){
+  const strat=G.subStrategy||'paired';
+  if(strat==='fair'||strat==='manual'){
+    // Equal-time logic: longest-on come off, longest-benched come on
+    const c=Math.min(cfg.sc,G.bench.length);
+    const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
+    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
+    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    offArr=sortedOn.slice(0,c);
+    onArr=sortedBench.slice(0,c);
+  } else if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
     offArr=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
     onArr=G.bench.slice(0,offArr.length);
