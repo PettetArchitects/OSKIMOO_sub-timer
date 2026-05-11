@@ -454,6 +454,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <button class="st-btn" onclick="adj('sc',1)">+</button>
       </div>
     </div>
+    <h2 style="margin-top:14px">Sub Strategy</h2>
+    <div style="font-size:12px;color:#888;margin-bottom:8px">How should the app pick who comes off and on?</div>
+    <div id="subStratGrid" style="display:flex;flex-direction:column;gap:6px"></div>
     <div id="gkSettingsSection" style="display:none">
       <h2 style="margin-top:14px">Goalkeepers</h2>
       <div class="set-row">
@@ -1059,7 +1062,7 @@ let editingTeam=null;
 let sel=new Set();
 let curFmt='7v7';
 let curFormation='2-3-1';
-let cfg={hm:20,sf:5,sc:2};
+let cfg={hm:20,sf:5,sc:2,subStrategy:'fair'};
 let avail=[],luOrd=[],swI=null,gk1=null,gk2=null;
 let rotPairs=[]; // [[onFieldIdx,benchIdx], ...] — paired rotation groups
 let pairSel=null; // for re-pairing: {pairIdx, slot:'on'|'bench'}
@@ -1778,6 +1781,7 @@ function goSettings(){
   renderFmtPicker();
   renderFormationPicker();
   renderSoundPicker();
+  renderSubStratPicker();
   updPrev();
   updateGkSettings();
   document.getElementById('hmV').textContent=cfg.hm;
@@ -1945,6 +1949,34 @@ function renderFormationPicker(){
   // Hide the legacy long-tip box — pill blurbs replace it
   const tipEl=document.getElementById('formationTip');
   if(tipEl)tipEl.style.display='none';
+  _li();
+}
+
+// Three substitution-strategy options shown on the Settings screen + on the
+// in-game change-strategy modal. Coach picks one before kickoff; affects how
+// trigSub() chooses who comes off and on each interval.
+const SUB_STRATEGIES=[
+  {key:'fair',  icon:'timer',  label:'Equal time',     color:'#00d4aa', desc:'Longest on-field player comes off; longest-benched comes on. Best for fair-play rules.'},
+  {key:'paired',icon:'refresh',label:'Paired rotation',color:'#5bc0de', desc:'Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.'},
+  {key:'manual',icon:'target', label:"I'll call them",color:'#f0a500', desc:'No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.'}
+];
+function renderSubStratPicker(){
+  const g=document.getElementById('subStratGrid');
+  if(!g)return;
+  g.innerHTML='';
+  const cur=cfg.subStrategy||'fair';
+  SUB_STRATEGIES.forEach(s=>{
+    const c=document.createElement('button');
+    c.type='button';
+    c.className='chip'+(cur===s.key?' sel':'');
+    const isSel=cur===s.key;
+    c.style.cssText='display:block;width:100%;text-align:left;padding:10px 12px;cursor:pointer;border-color:'+(isSel?s.color:'#333');
+    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${isSel?s.color:'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,isSel?s.color:'#bbb')}${s.label}</div>
+      <div style="font-size:11px;color:#888;font-weight:500;line-height:1.4">${s.desc}</div>`;
+    c.onclick=()=>{cfg.subStrategy=s.key;renderSubStratPicker();};
+    g.appendChild(c);
+  });
+  _li();
 }
 
 // ===== S2: SETTINGS =====
@@ -2336,14 +2368,13 @@ function startGame(){
     on:luOrd.slice(0,on),bench:luOrd.slice(on),
     gk:fmt.hasGk?gk1:null,pt:{},sd:[],ps:null,scoreUs:0,scoreThem:0,
     pairs:rotPairs.map(p=>({on:[...p.on]})),pairIdx:0,oppFormation:curFormation,
-    subStrategy:null, // set by pickSubStrategy below
-    log:[],startTime:new Date().toISOString()};
+    subStrategy:cfg.subStrategy||'fair', // chosen on the Settings screen
+    log:[{type:'sub_strategy',time:0,strategy:cfg.subStrategy||'fair'}],
+    startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   renderG();showScr('s4');
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   saveActiveGame();
-  // Prompt the coach to choose how subs should behave for this game
-  document.getElementById('subStratOv').classList.add('show');
 }
 function pickSubStrategy(strat){
   if(!G)return;
