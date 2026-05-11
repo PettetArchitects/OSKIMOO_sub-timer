@@ -905,14 +905,17 @@ function loadTeamsRaw(){
 }
 function saveTeamsRaw(t){ localStorage.setItem('subTimerTeams',JSON.stringify(t)); }
 function loadTeams(){
-  // One-time migration: stamp team.sport on any legacy team that's missing it.
-  // We derive the sport from the team's format. Without this, old teams from
-  // pre-multi-sport builds always render with the soccer icon.
+  // Migration: align team.sport with the sport implied by its format. This
+  // fixes both legacy teams missing a sport field AND teams where the sport
+  // was wrongly stamped (e.g. a netball team saved with sport:'soccer' from
+  // an earlier code path). The format key is the source of truth — there's
+  // no UI for a team that's deliberately mismatched.
   const arr=loadTeamsRaw();
   let dirty=false;
   arr.forEach(t=>{
-    if(!t.sport&&t.format&&FORMATS[t.format]&&FORMATS[t.format].sport){
-      t.sport=FORMATS[t.format].sport;
+    const formatSport=t.format&&FORMATS[t.format]&&FORMATS[t.format].sport;
+    if(formatSport&&t.sport!==formatSport){
+      t.sport=formatSport;
       dirty=true;
     }
   });
