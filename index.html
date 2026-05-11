@@ -458,9 +458,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <select id="gk2SettingSel" onchange="gk2=parseInt(this.value)" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
       </div>
     </div>
-    <h2 style="margin-top:14px">Alerts</h2>
-    <div style="font-size:12px;color:#888;margin-bottom:8px">Sound played at sub time and on a goal. Tap to preview.</div>
-    <div class="chip-grid" id="soundPackGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
     <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px">Start Game ⏱</button>
   </div>
@@ -525,6 +522,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <span id="fmtVs" style="font-size:10px;color:#444">vs</span>
     <span id="oppFmtLbl" onclick="toggleOppFormation()" style="font-size:12px;color:#888;font-weight:700;letter-spacing:1px;cursor:pointer;padding:4px 10px;border:1px dashed #444;border-radius:12px;display:inline-block">OPP: ?</span>
     <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">⏱ Subs</span>
+    <span id="soundPackLbl" onclick="openSoundPicker()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:inline-block" title="Choose sub-alert sound">🔔 Classic</span>
   </div>
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:0 12px 6px">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
@@ -582,6 +580,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- Sound pack picker: pick the sub-alert sound (game-screen access) -->
+<div class="ov" id="soundOv">
+  <div class="ab" style="max-width:360px">
+    <h2 style="text-align:center;margin-bottom:4px">🔔 Sub-Alert Sound</h2>
+    <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center">Played at sub time and on a goal. Tap to preview.</div>
+    <div class="chip-grid" id="soundPackGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
+    <button class="btn btn-o" onclick="closeSoundPicker()" style="margin-top:14px">Done</button>
+  </div>
+</div>
 <!-- Scorer picker: who scored the goal? -->
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
@@ -916,6 +923,7 @@ function resumeActiveGame(){
   G=s.G;
   showScr('s4');
   renderG();
+  renderSoundPicker(); // initialise the alert-chip label on the game screen
   return true;
 }
 
@@ -1020,7 +1028,7 @@ const FORMATS = {
   '5v5':  { sport:'soccer', label:'5v5',  age:'U7',    onField:5,  hasGk:false, defaultHalf:15, defaultSub:5,  defaultSc:1, defaultFormation:'2-2-1' },
   '7v7':  { sport:'soccer', label:'7v7',  age:'U8-9',  onField:7,  hasGk:true,  defaultHalf:20, defaultSub:5,  defaultSc:2, defaultFormation:'2-3-1' },
   '9v9':  { sport:'soccer', label:'9v9',  age:'U10-11',onField:9,  hasGk:true,  defaultHalf:25, defaultSub:8,  defaultSc:2, defaultFormation:'3-3-2' },
-  '11v11':{ sport:'soccer', label:'11v11',age:'U12+',  onField:11, hasGk:true,  defaultHalf:30, defaultSub:10, defaultSc:2, defaultFormation:'4-4-2' },
+  '11v11':{ sport:'soccer', label:'11v11',age:'U12+',  onField:11, hasGk:true,  defaultHalf:45, defaultSub:15, defaultSc:2, defaultFormation:'4-4-2' },
   // Netball — periods are quarters, defaultHalf is the per-quarter length in minutes
   'nb-set':    { sport:'netball', label:'Set',    age:'U8 · 7-8 yrs',   onField:7, hasGk:false, defaultHalf:8,  defaultSub:4, defaultSc:1, defaultFormation:'standard' },
   'nb-go':     { sport:'netball', label:'GO',     age:'U10 · 9-10 yrs', onField:7, hasGk:false, defaultHalf:10, defaultSub:5, defaultSc:1, defaultFormation:'standard' },
@@ -1118,10 +1126,16 @@ function playGoalHorn(){
   if(pack.goal)pack.goal(audioCtx,audioCtx.currentTime);
 }
 function renderSoundPicker(){
+  const cur=getSoundPackKey();
+  // Update the game-screen chip label to reflect current pick
+  const lbl=document.getElementById('soundPackLbl');
+  if(lbl){
+    const p=SOUND_PACKS[cur]||SOUND_PACKS.classic;
+    lbl.innerHTML=`${p.icon} ${p.label}`;
+  }
   const g=document.getElementById('soundPackGrid');
   if(!g)return;
   g.innerHTML='';
-  const cur=getSoundPackKey();
   Object.entries(SOUND_PACKS).forEach(([k,p])=>{
     const c=document.createElement('div');
     c.className='chip'+(cur===k?' sel':'');
@@ -1140,6 +1154,13 @@ function selectSoundPack(k){
   if(SOUND_PACKS[k].sub){playSubAlert();}
   else if(navigator.vibrate){navigator.vibrate([100,60,100]);}
 }
+function openSoundPicker(){
+  renderSoundPicker();
+  document.getElementById('soundOv').classList.add('show');
+}
+function closeSoundPicker(){
+  document.getElementById('soundOv').classList.remove('show');
+}
 
 function showScr(id){
   if(G&&G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;if(G.raf)cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
@@ -1154,7 +1175,7 @@ const HOME_TIPS=[
   {title:'📷  Add players from a photo',desc:"Open the team editor and tap Auto-fill from photo. Reads the names straight off your roster sheet."},
   {title:'🎯  Position tags drive smart subs',desc:"Tag each player GK/DEF/MID/etc. in the team editor. The app swaps players into positions they actually play."},
   {title:'🩹  Tap any on-field player for an injury sub',desc:"Mid-game, a tap on any on-field player swaps them with the longest-benched sub. Choose 'out for game' if they can't return."},
-  {title:'🔔  Choose your sub-alert sound',desc:"Open Settings → Alerts before kickoff. Six packs including whistle, air horn, retro, and silent."},
+  {title:'🔔  Choose your sub-alert sound',desc:"Tap the 🔔 chip above the pitch during a match. Six packs including whistle, air horn, retro, and silent."},
   {title:'⚽  Tag who scored each goal',desc:"When you add a goal for your team, pick the scorer from the on-field players. Appears in your match log."},
   {title:'☁  Sync teams across devices',desc:"Sign in (top-right). Your teams and match history follow you to any phone or iPad."}
 ];
@@ -2234,6 +2255,7 @@ function startGame(){
     log:[],startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   renderG();showScr('s4');
+  renderSoundPicker(); // initialise the alert-chip label on the game screen
   saveActiveGame();
   // Prompt the coach to choose how subs should behave for this game
   document.getElementById('subStratOv').classList.add('show');
