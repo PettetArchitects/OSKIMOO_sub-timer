@@ -827,15 +827,29 @@ async function doInitialSync(){
       if(freshTeams){
         const localByCloudId=new Map(loadTeamsRaw().filter(t=>t.cloud_id).map(t=>[t.cloud_id,t]));
         const merged=[];
+        const needsRePush=[]; // teams where local has richer positions than cloud
         freshTeams.forEach(ct=>{
           const existing=localByCloudId.get(ct.id);
+          // Positions merge: prefer cloud when it has any, else keep local.
+          // This avoids the old bug where syncing an as-yet-untagged team
+          // overwrote freshly-added local position tags with the cloud's
+          // empty {}.
+          const cloudHasPos=ct.positions&&Object.keys(ct.positions).length>0;
+          const localHasPos=existing&&existing.positions&&Object.keys(existing.positions).length>0;
+          const positions=cloudHasPos?ct.positions:(localHasPos?existing.positions:{});
           if(existing){
-            merged.push({...existing,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions,cloud_id:ct.id});
+            merged.push({...existing,name:ct.name,format:ct.format,players:ct.players,positions,cloud_id:ct.id});
+            // If we kept local positions because cloud was empty, push them
+            // back up so the cloud catches up — otherwise the next device
+            // to sync would see empty cloud and stay empty.
+            if(localHasPos&&!cloudHasPos)needsRePush.push(merged[merged.length-1]);
           }else{
-            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players:ct.players,positions:ct.positions});
+            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players:ct.players,positions});
           }
         });
         saveTeamsRaw(merged);
+        // Quietly re-push any teams where we recovered local positions
+        for(const t of needsRePush){try{await pushCloudTeam(t);}catch(e){}}
       }
     }
     // === MATCHES ===
