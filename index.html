@@ -420,7 +420,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
   <div class="sec">
     <h2>Game Format</h2>
-    <div class="chip-grid" id="fmtGrid" style="grid-template-columns:repeat(5,1fr);gap:6px"></div>
+    <div class="chip-grid" id="fmtGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <div id="fmtInfo" style="margin-top:8px;padding:10px;background:#16213e;border-radius:10px;font-size:12px;color:#888;text-align:center"></div>
 
     <h2 style="margin-top:14px">Formation</h2>
@@ -947,7 +947,7 @@ const SPORTS={
     periodCount:2,             // halves
     periodShort:half=>`${half===1?'1ST':'2ND'} HALF`,
     breakLabels:{1:'HALFTIME'},
-    formats:['4v4','5v5','7v7','9v9','11v11']
+    formats:['4v4','5v5','6v6','7v7','9v9','11v11']
   },
   netball:{
     key:'netball',label:'Netball',icon:'volleyball',available:true,
@@ -1009,6 +1009,16 @@ const FORMATIONS = {
     '1-3':     [{label:'FX',x:50,y:78},{label:'LA',x:25,y:25},{label:'PV',x:50,y:20},{label:'RA',x:75,y:25}],
     '2-1-1':   [{label:'LD',x:30,y:75},{label:'RD',x:70,y:75},{label:'M',x:50,y:48},{label:'FW',x:50,y:22}],
   },
+  '6v6': {
+    // Summer 6-aside — 5 outfield + 1 GK. Balanced shapes typical of social /
+    // summer-league football: shorter pitch, fewer minutes, faster transitions.
+    '2-2-1':   [{label:'LD',x:30,y:75},{label:'RD',x:70,y:75},{label:'LM',x:30,y:48},{label:'RM',x:70,y:48},{label:'FW',x:50,y:22}],
+    '1-2-2':   [{label:'D',x:50,y:75},{label:'LM',x:30,y:48},{label:'RM',x:70,y:48},{label:'LF',x:35,y:22},{label:'RF',x:65,y:22}],
+    '2-1-2':   [{label:'LD',x:30,y:75},{label:'RD',x:70,y:75},{label:'CM',x:50,y:48},{label:'LF',x:35,y:22},{label:'RF',x:65,y:22}],
+    '1-3-1':   [{label:'D',x:50,y:75},{label:'LM',x:20,y:48},{label:'CM',x:50,y:48},{label:'RM',x:80,y:48},{label:'FW',x:50,y:22}],
+    '3-1-1':   [{label:'LD',x:20,y:75},{label:'CD',x:50,y:78},{label:'RD',x:80,y:75},{label:'M',x:50,y:48},{label:'FW',x:50,y:22}],
+    '2-3':     [{label:'LD',x:30,y:72},{label:'RD',x:70,y:72},{label:'LF',x:25,y:25},{label:'CF',x:50,y:22},{label:'RF',x:75,y:25}],
+  },
   '7v7': {
     '2-3-1':   [{label:'LB',x:25,y:72},{label:'RB',x:75,y:72},{label:'LM',x:20,y:48},{label:'CM',x:50,y:45},{label:'RM',x:80,y:48},{label:'FW',x:50,y:22}],
     '3-2-1':   [{label:'LB',x:20,y:72},{label:'CB',x:50,y:75},{label:'RB',x:80,y:72},{label:'LM',x:32,y:45},{label:'RM',x:68,y:45},{label:'FW',x:50,y:22}],
@@ -1040,6 +1050,7 @@ const FORMATIONS = {
 const FORMATS = {
   '4v4':  { sport:'soccer', label:'4v4',  age:'U6',    onField:4,  hasGk:false, defaultHalf:10, defaultSub:5,  defaultSc:1, defaultFormation:'2-2' },
   '5v5':  { sport:'soccer', label:'5v5',  age:'Futsal / 5-aside', onField:5, hasGk:true, defaultHalf:20, defaultSub:2, defaultSc:2, defaultFormation:'1-2-1' },
+  '6v6':  { sport:'soccer', label:'6v6',  age:'Summer 6-aside', onField:6, hasGk:true, defaultHalf:20, defaultSub:5, defaultSc:2, defaultFormation:'2-2-1' },
   '7v7':  { sport:'soccer', label:'7v7',  age:'U8-9',  onField:7,  hasGk:true,  defaultHalf:20, defaultSub:5,  defaultSc:2, defaultFormation:'2-3-1' },
   '9v9':  { sport:'soccer', label:'9v9',  age:'U10-11',onField:9,  hasGk:true,  defaultHalf:25, defaultSub:8,  defaultSc:2, defaultFormation:'3-3-2' },
   '11v11':{ sport:'soccer', label:'11v11',age:'U12+',  onField:11, hasGk:true,  defaultHalf:45, defaultSub:15, defaultSc:2, defaultFormation:'4-4-2' },
@@ -1878,6 +1889,13 @@ const FORMATION_TIPS={
   // 5v5 — futsal / 5-aside (4 outfield + GK)
   '3-1':'Pyramid. Three at the back, one pivô. Defensive — soak pressure, hit on the break.',
   '1-3':'Pivot-heavy attack. One fixo, three forwards. Risky — use late when chasing a goal.',
+  // 6v6 — summer 6-aside (5 outfield + GK)
+  '2-2-1':'Standard 6v6. Balanced two-two-one. Hard to go wrong.',
+  '1-2-2':'Attacking — two strikers up top. Score-first, defend-on-the-counter mindset.',
+  '2-1-2':'Counter-attack. Solid back two, one playmaker, two forwards ready to break.',
+  '1-3-1':'Y-shape. Three midfielders dominate the centre — suits teams who can keep possession.',
+  '3-1-1':'Defensive. Three at the back, one mid, one striker. Good vs a stronger team.',
+  '2-3':'Flat attack. Two backs, three forwards — no midfield. Fast game, defend on the counter.',
   // 7v7
   '2-3-1':'The default junior 7v7 setup. Balanced — three mids own the middle. Good place to start.',
   '3-2-1':'Defensive. Three at the back, one striker. Easy to teach and hard to score against.',
@@ -1909,6 +1927,13 @@ const FORMATION_SHORTS={
   // 5v5 — futsal / 5-aside (4 outfield + GK)
   '3-1':'Pyramid · defensive',
   '1-3':'Attack · pivot heavy',
+  // 6v6 — summer 6-aside (5 outfield + GK)
+  '2-2-1':'Balanced default',
+  '1-2-2':'Attack-first',
+  '2-1-2':'Counter-attack',
+  '1-3-1':'Possession Y',
+  '3-1-1':'Defensive',
+  '2-3':'Flat attack',
   // 7v7
   '2-3-1':'Balanced default',
   '3-2-1':'Defensive',
