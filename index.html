@@ -581,7 +581,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </button>
     <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="refresh-cw" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Paired rotation</div>
-      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pairs swap on/off together. The pair with the most game time comes off — predictability + fair minutes in one.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('manual')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
       <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="target" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>I'll call them</div>
@@ -1957,7 +1957,7 @@ function renderFormationPicker(){
 // trigSub() chooses who comes off and on each interval.
 const SUB_STRATEGIES=[
   {key:'fair',  icon:'timer',  label:'Equal time',     color:'#00d4aa', desc:'Longest on-field player comes off; longest-benched comes on. Best for fair-play rules.'},
-  {key:'paired',icon:'refresh',label:'Paired rotation',color:'#5bc0de', desc:'Pre-grouped pairs swap on/off together at each interval. Predictable, easy to teach.'},
+  {key:'paired',icon:'refresh',label:'Paired rotation',color:'#5bc0de', desc:'Pre-grouped pairs swap on/off together — picks the pair with the most game time so groups stay together and minutes balance out.'},
   {key:'manual',icon:'target', label:"I'll call them",color:'#f0a500', desc:'No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.'}
 ];
 function renderSubStratPicker(){
@@ -2609,14 +2609,25 @@ function trigSub(){
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
-    // Paired rotation (default / legacy)
-    const pair=G.pairs[G.pairIdx % G.pairs.length];
-    off=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
-    on=G.bench.slice(0,off.length);
-    if(!off.length||!on.length){
+    // Paired rotation + equal time: pre-grouped pairs swap on/off together,
+    // and the pair with the most cumulative playing minutes is the one to
+    // come off — so groups stay together AND minutes balance out across the
+    // game. Bench picks the longest-benched (lowest minutes) to come on.
+    const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
+    const pairsByMinutes=G.pairs
+      .map(pair=>({
+        onFieldMembers:pair.on.filter(p=>onFieldElig.includes(p)),
+        totalMins:pair.on.reduce((s,p)=>s+(G.pt[avail[p]]||0),0)
+      }))
+      .filter(x=>x.onFieldMembers.length>0)
+      .sort((a,b)=>b.totalMins-a.totalMins);
+    if(pairsByMinutes.length>0){
+      off=pairsByMinutes[0].onFieldMembers;
+      const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+      on=sortedBench.slice(0,off.length);
+    } else {
       const c=Math.min(cfg.sc,G.bench.length);
-      const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-      off=of.slice(-c);on=G.bench.slice(0,c);
+      off=onFieldElig.slice(-c);on=G.bench.slice(0,c);
     }
     G.pairIdx++;
   } else {
