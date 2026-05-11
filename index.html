@@ -279,6 +279,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="teamList"></div>
     <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()">+ New Team</button>
     <button class="btn btn-o" id="historyBtn" style="margin-top:8px" onclick="showHistory()">Match History</button>
+    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><span style="font-size:16px">☕</span><span>Like this? Buy me a coffee</span></a>
   </div>
 </div>
 
@@ -1155,6 +1156,8 @@ function renderHome(){
   if(heading)heading.style.display=isLanding?'none':'';
   if(newBtn)newBtn.style.display=isLanding?'none':'';
   if(histBtn)histBtn.style.display=isLanding?'none':'';
+  const coffeeBtn=document.getElementById('coffeeBtn');
+  if(coffeeBtn)coffeeBtn.style.display=isLanding?'none':'flex';
   // Hide the small header brand while the big landing hero is showing
   if(hdrBrand)hdrBrand.style.visibility=isLanding?'hidden':'';
   if(hdrTagline)hdrTagline.style.display=isLanding?'none':'';
