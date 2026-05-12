@@ -425,6 +425,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div class="chip-grid" id="fmtGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <div id="fmtInfo" style="margin-top:8px;padding:10px;background:#16213e;border-radius:10px;font-size:12px;color:#888;text-align:center"></div>
 
+    <h2 style="margin-top:14px">Sub Strategy</h2>
+    <div style="font-size:12px;color:#888;margin-bottom:8px">What kind of coach are you today?</div>
+    <div id="subStratGrid" style="display:flex;flex-direction:column;gap:6px"></div>
+    <!-- Game Plan panel (visible when Full Control strategy is selected) -->
+    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border:1.5px solid #a78bfa;border-radius:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#a78bfa;font-size:13px;letter-spacing:.5px"><i data-lucide="clipboard-list" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i><span>Game Plan</span></div>
+        <button type="button" onclick="document.getElementById('planPhotoInput').click()" style="background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px"><i data-lucide="camera" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>SNAP MY PLAN</button>
+        <input type="file" id="planPhotoInput" accept="image/*" style="display:none" onchange="handlePlanPhoto(this)">
+      </div>
+      <div id="planPhotoStatus" style="display:none;margin-bottom:8px;font-size:12px;padding:8px 10px;border-radius:6px"></div>
+      <div style="font-size:11px;color:#999;margin-bottom:8px;line-height:1.4">Auto-suggested plan based on Equal-time fairness — tap any swap to override. Or snap a photo of your handwritten plan and we'll digitise it.</div>
+      <div id="planTimeline" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
     <h2 style="margin-top:14px">Formation</h2>
     <div class="chip-grid" id="formationGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <div id="formationTip" style="margin-top:8px;padding:10px 12px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.25);border-radius:8px;font-size:12px;color:#bbb;line-height:1.5;display:none"></div>
@@ -456,20 +471,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <div class="st-val" id="scV">2</div>
         <button class="st-btn" onclick="adj('sc',1)">+</button>
       </div>
-    </div>
-    <h2 style="margin-top:14px">Sub Strategy</h2>
-    <div style="font-size:12px;color:#888;margin-bottom:8px">How should the app pick who comes off and on?</div>
-    <div id="subStratGrid" style="display:flex;flex-direction:column;gap:6px"></div>
-    <!-- Game Plan panel (visible when Full Control strategy is selected) -->
-    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border:1.5px solid #a78bfa;border-radius:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#a78bfa;font-size:13px;letter-spacing:.5px"><i data-lucide="clipboard-list" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i><span>Game Plan</span></div>
-        <button type="button" onclick="document.getElementById('planPhotoInput').click()" style="background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px"><i data-lucide="camera" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>SNAP MY PLAN</button>
-        <input type="file" id="planPhotoInput" accept="image/*" style="display:none" onchange="handlePlanPhoto(this)">
-      </div>
-      <div id="planPhotoStatus" style="display:none;margin-bottom:8px;font-size:12px;padding:8px 10px;border-radius:6px"></div>
-      <div style="font-size:11px;color:#999;margin-bottom:8px;line-height:1.4">Auto-suggested plan based on Equal-time fairness — tap any swap to override. Or snap a photo of your handwritten plan and we'll digitise it.</div>
-      <div id="planTimeline" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
     <div id="gkSettingsSection" style="display:none">
       <h2 style="margin-top:14px">Goalkeepers</h2>
@@ -1091,6 +1092,21 @@ function getPlayerFoot(team,name){ return (team.foots&&team.foots[name])||'B'; }
 function setPlayerFoot(team,name,foot){
   if(!team.foots)team.foots={};
   team.foots[name]=foot;
+}
+// Safety net: if the AI slipped position letters into the name field
+// (e.g. "Lucy D" instead of name="Lucy" + position="D"), peel them off.
+// Returns {name, position} — position is the original parameter unless we
+// found a trailing abbreviation that wasn't already captured.
+function stripTrailingPosition(name,position){
+  if(!name||typeof name!=='string')return {name,position};
+  const POS_TOKENS=new Set(['D','B','CB','CD','LB','RB','M','CM','LM','RM','DM','AM','W','LW','RW','WNG','S','F','FW','ST','FWD','ATT','GK','K']);
+  const parts=name.trim().split(/\s+/);
+  if(parts.length<2)return {name:name.trim(),position};
+  const tail=parts[parts.length-1].toUpperCase().replace(/[^A-Z]/g,'');
+  if(POS_TOKENS.has(tail)){
+    return {name:parts.slice(0,-1).join(' '),position:position||tail};
+  }
+  return {name:name.trim(),position};
 }
 // Translate a handwritten position abbreviation (D / CD / LB / RM / S / etc.)
 // to our internal {tag, side} model. C-prefix means centre (side='B'); L/R
@@ -1978,9 +1994,14 @@ async function handleRosterPhoto(inputEl){
     }
     // Prefer the new structured `players` shape (name + position + number);
     // fall back to legacy `names`-only response.
-    const players=Array.isArray(data&&data.players)
+    let players=Array.isArray(data&&data.players)
       ? data.players.filter(p=>p&&typeof p.name==='string'&&p.name.trim().length>0)
       : (Array.isArray(data&&data.names)?data.names.filter(n=>typeof n==='string'&&n.trim().length>0).map(n=>({name:n.trim(),position:null,number:null})):[]);
+    // Safety net: strip trailing position letters the AI may have left in the name field
+    players=players.map(p=>{
+      const cleaned=stripTrailingPosition(p.name,p.position);
+      return {name:cleaned.name,position:cleaned.position,number:p.number};
+    });
     if(players.length===0){
       setRosterImportStatus('No names found. Try a clearer photo of just the names.','err');
       return;
