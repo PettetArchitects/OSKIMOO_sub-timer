@@ -733,15 +733,22 @@ async function sendMagicLink(){
     const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
     if(error){
       const m=(error.message||'').toLowerCase();
-      // Interpret the most common Supabase auth errors with plain-English copy
+      // Interpret the most common Supabase auth errors with plain-English copy.
+      // Two failure modes worth distinguishing from a generic "Error":
+      //   1. Duplicate-user race (DB error or users_email_partial_key)
+      //   2. Rate limit (Supabase or Resend) — needs a "wait a minute" hint
+      //   3. SMTP send failure (Resend test-mode / Supabase free-tier 2/hr cap)
       if(m.includes('database error')||m.includes('users_email_partial_key')){
         msg.textContent='If you got the email, your account is already set up — try the link in your inbox. Otherwise wait a minute and try again.';
         msg.style.color='#f0a500';
-      }else if(m.includes('rate limit')||m.includes('seconds')){
-        msg.textContent='Too many attempts. Please wait a minute and try again.';
+      }else if(m.includes('rate limit')||m.includes('over_email_send_rate_limit')||m.includes('seconds')){
+        msg.textContent='Too many sign-in emails just now. Please wait a minute and try again.';
+        msg.style.color='#f0a500';
+      }else if(m.includes('sending confirmation')||m.includes('sending email')||m.includes('email rate limit')){
+        msg.textContent='We hit our hourly email limit. Please wait a few minutes — Sean has been notified.';
         msg.style.color='#f0a500';
       }else{
-        msg.textContent='Error: '+error.message;
+        msg.textContent='Couldn’t send the link. Please try again in a minute.';
         msg.style.color='#e94560';
       }
     }else{
