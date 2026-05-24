@@ -635,6 +635,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">Subs</span>
     <!-- AFL pitch view toggle (portrait / landscape) — shown only for AFL. -->
     <span id="aflViewBtn" onclick="toggleAflView()" style="display:none;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px"></span>
+    <!-- AFL tilt control (portrait perspective only). -->
+    <span id="aflTiltCtrl" style="display:none;align-items:center;gap:6px;font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;padding:2px 6px;border:1px solid #333;border-radius:12px">
+      <button onclick="aflTiltAdj(-AFL_TILT_STEP)" style="background:none;border:none;color:#5bc0de;font-size:15px;font-weight:800;cursor:pointer;line-height:1;padding:0 2px">−</button>
+      <span id="aflTiltVal">Tilt</span>
+      <button onclick="aflTiltAdj(AFL_TILT_STEP)" style="background:none;border:none;color:#5bc0de;font-size:15px;font-weight:800;cursor:pointer;line-height:1;padding:0 2px">+</button>
+    </span>
     <!-- Contextual tip — rendered inline here by renderRoster (no longer a banner). -->
     <span id="modeHint" style="display:inline-flex;align-items:center"></span>
   </div>
@@ -1612,7 +1618,7 @@ function _li(){
 // SVG markings stay in true world coords (0..100). CSS rotateX + perspective on
 // .lu-plane tilts the whole SVG layer. Player tokens are positioned in screen
 // space via pitchPt() which mirrors the same CSS matrix in JS.
-const PITCH_TILT_DEG=45;            // gentle tilt for the 3D effect
+let PITCH_TILT_DEG=45;              // gentle tilt for the 3D effect (mutable: AFL overrides per render)
 const PITCH_PERSPECTIVE_PX=1500;    // matches CSS — foreshortening tapers FAR edge inward (no clipping)
 // _pitchDims is set by the rendering code right before tokens are placed.
 // When set, pitchPt projects through the matching CSS perspective matrix;
@@ -1635,7 +1641,13 @@ function adjustY(pos, isGk){
 // Plane height as a fraction of container height — must match the CSS rule
 // .lu-plane { height: X% }. Calibrated so the perspective-projected plane
 // exactly fills the container vertically.
-const PITCH_PLANE_HEIGHT_RATIO=2.40;
+let PITCH_PLANE_HEIGHT_RATIO=2.40;   // mutable: AFL recomputes for its tilt
+// AFL perspective tilt — adjustable. The CSS plane rotateX + height are set
+// inline per render and pitchPt is fed the matching tilt/ratio.
+const AFL_TILT_MIN=40, AFL_TILT_MAX=62, AFL_TILT_STEP=4;
+let aflTilt=(()=>{ try{return Math.min(AFL_TILT_MAX,Math.max(AFL_TILT_MIN,parseInt(localStorage.getItem('aflTilt'))||54));}catch(e){return 54;} })();
+function aflPlaneRatio(tiltDeg){ return 1.7/Math.cos(tiltDeg*Math.PI/180); }  // keeps the tilted plane ~filling the box (2.40 at 45°)
+function aflTiltAdj(d){ aflTilt=Math.max(AFL_TILT_MIN,Math.min(AFL_TILT_MAX,aflTilt+d)); try{localStorage.setItem('aflTilt',aflTilt);}catch(e){} renderG(); }
 
 function pitchPt(px,py){
   // Fall back to identity (raw position) if dims aren't ready — guarantees the
@@ -2003,12 +2015,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.0.8-beta';
+const APP_VERSION='v2.0.9-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.0.9-beta':{
+    title:'AFL tilt control',
+    items:[
+      'Steeper default 3D tilt on the AFL oval, plus a "− Tilt ° +" control to dial it (40°–62°)',
+      'Your tilt + view (portrait/landscape) choices are remembered'
+    ]
+  },
   'v2.0.8-beta':{
     title:'AFL pitch — real 3D perspective',
     items:[
@@ -4014,11 +4033,20 @@ function renderG(){
   }
   // AFL pitch view toggle — only for AFL.
   const avb=document.getElementById('aflViewBtn');
+  const atc=document.getElementById('aflTiltCtrl');
+  const _aflGame=getSport(currentTeam).key==='afl';
   if(avb){
-    if(getSport(currentTeam).key==='afl'){
+    if(_aflGame){
       avb.style.display='inline-flex';
       avb.innerHTML=`${ic('refresh',11)}<span>${aflView==='landscape'?'Landscape':'Portrait'}</span>`;
     } else { avb.style.display='none'; }
+  }
+  if(atc){
+    // Tilt control only in portrait (the rotateX perspective view).
+    if(_aflGame && aflView!=='landscape'){
+      atc.style.display='inline-flex';
+      document.getElementById('aflTiltVal').textContent=`Tilt ${aflTilt}°`;
+    } else { atc.style.display='none'; }
   }
 
   // Pitch visualization
@@ -5006,9 +5034,13 @@ function renderRoster(){
       pitch.innerHTML=aflPitchSvg();
     } else {
       pitch.style.aspectRatio='135 / 165';      // tall oval, tilted via the rotateX plane (like soccer)
-      pitch.innerHTML=`<div class="lu-plane">${aflPitchSvg()}</div>`;
+      // Adjustable tilt: feed pitchPt the matching tilt/ratio + set the CSS plane inline.
+      PITCH_TILT_DEG=aflTilt;
+      PITCH_PLANE_HEIGHT_RATIO=aflPlaneRatio(aflTilt);
+      pitch.innerHTML=`<div class="lu-plane" style="transform:rotateX(${aflTilt}deg);height:${(PITCH_PLANE_HEIGHT_RATIO*100).toFixed(0)}%">${aflPitchSvg()}</div>`;
     }
   } else {
+    PITCH_TILT_DEG=45; PITCH_PLANE_HEIGHT_RATIO=2.40;   // soccer defaults (CSS plane uses these)
     pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
   }
   // Append to DOM BEFORE reading pitch dimensions —
