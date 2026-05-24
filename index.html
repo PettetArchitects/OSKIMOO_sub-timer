@@ -621,15 +621,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="oppFmtGrid" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
   </div>
 
-  <!-- Subs coming on — moved to the TOP so the next-on players are glanceable
-       (thumb-zone layout: glance info up high, controls down low). -->
-  <div id="benchTop" style="flex-shrink:0;padding:2px 12px 4px;max-height:30dvh;overflow-y:auto"></div>
-
   <!-- Pitch — fills the middle, flexes to whatever space is left. -->
   <div id="pitchMid" style="flex:1;min-height:0;overflow:hidden;padding:6px 14px 2px;display:flex;flex-direction:column"></div>
 
-  <!-- Mode hint — what tapping a player does right now (sits just above the bar). -->
+  <!-- Mode hint — what tapping a player does right now. -->
   <div id="modeHint" style="flex-shrink:0;padding:2px 12px 0"></div>
+
+  <!-- Subs coming on — sits just above the bottom control bar (clear of the
+       pitch so it never overlaps the forward line / field tokens). -->
+  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:26dvh;overflow-y:auto"></div>
 
   <!-- Sub confirmation banner (hidden by default) — above the control bar. -->
   <div id="subBanner" style="display:none;flex-shrink:0;margin:6px 12px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
@@ -721,13 +721,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button class="btn btn-o" onclick="closeSoundPicker()" style="margin-top:14px">Done</button>
   </div>
 </div>
-<!-- Scorer picker: who scored the goal? -->
+<!-- Goal picker: two steps — who scored, then who assisted. -->
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
-    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="goal" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Who scored?</h2>
-    <div style="font-size:12px;color:#888;margin-bottom:10px">Tap the player who scored, or skip.</div>
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="goal" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i><span id="scorerTitleTxt">Who scored?</span></h2>
+    <div id="scorerSub" style="font-size:12px;color:#888;margin-bottom:10px">Tap the player who scored, or skip.</div>
     <div id="scorerGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;max-height:50vh;overflow-y:auto"></div>
-    <button class="btn btn-o" onclick="skipScorer()">Skip (no scorer recorded)</button>
+    <button class="btn btn-o" id="scorerSkipBtn" onclick="skipGoalStep()">Skip (no scorer recorded)</button>
   </div>
 </div>
 <div class="ov" id="htOv">
@@ -1821,12 +1821,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v1.10-beta';
+const APP_VERSION='v1.10.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v1.10.1-beta':{
+    title:'Assists + bench placement',
+    items:[
+      'Log who assisted each goal — after picking the scorer, tap who set it up (or "No assist"). Shows in the match log alongside the scorer.',
+      'Subs-coming-on moved to just above the bottom control bar so it no longer overlaps the field / forward line',
+      'Assists appear in both the live timeline and saved match history'
+    ]
+  },
   'v1.10-beta':{
     title:'Thumb-zone game screen',
     items:[
@@ -3555,13 +3563,26 @@ function adjScore(who,d){
   document.getElementById(who==='us'?'scoreUs':'scoreThem').textContent=G[key];
   saveActiveGame();
 }
-// Scorer-picker overlay flow
-let _scorerLogIdx=null;
+// Goal-picker overlay flow — two steps: who scored, then who assisted.
+let _scorerLogIdx=null;   // index of the goal entry in G.log being tagged
+let _goalStep='scorer';   // 'scorer' | 'assist'
+let _goalScorer=null;     // scorer's name, so they can't assist their own goal
 function promptScorer(logIdx){
   _scorerLogIdx=logIdx;
+  _goalStep='scorer';
+  _goalScorer=null;
+  renderGoalPicker();
+  document.getElementById('scorerOv').classList.add('show');
+}
+// Render the player grid for the current step (scorer or assist).
+function renderGoalPicker(){
+  const isAssist=_goalStep==='assist';
+  document.getElementById('scorerTitleTxt').textContent=isAssist?'Who assisted?':'Who scored?';
+  document.getElementById('scorerSub').textContent=isAssist?'Tap who set up the goal, or skip.':'Tap the player who scored, or skip.';
+  document.getElementById('scorerSkipBtn').textContent=isAssist?'No assist':'Skip (no scorer recorded)';
   const g=document.getElementById('scorerGrid');
   g.innerHTML='';
-  // Show all on-field players first (most likely scorers), then bench as a separator
+  // Show on-field players first (most likely), then bench under a separator.
   const onField=G.on||[];
   const bench=G.bench||[];
   [...onField,null,...bench].forEach(pIdx=>{
@@ -3575,29 +3596,48 @@ function promptScorer(logIdx){
       return;
     }
     const name=avail[pIdx];
+    if(isAssist && name===_goalScorer) return;   // can't assist your own goal
     const pos=currentTeam?(getPlayerPos(currentTeam,name)[0]||''):'';
     const c=document.createElement('div');
     c.className='chip';
     c.style.cssText='padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:2px';
     c.innerHTML=`<div style="font-size:13px;font-weight:700;color:#eee">${fn(name)}</div>
       ${pos?`<div style="font-size:10px;color:#888;font-weight:600">${pos}</div>`:''}`;
-    c.onclick=()=>chooseScorer(name);
+    c.onclick=()=> isAssist?chooseAssist(name):chooseScorer(name);
     g.appendChild(c);
   });
-  document.getElementById('scorerOv').classList.add('show');
+  _li();
 }
 function chooseScorer(name){
   if(_scorerLogIdx!=null&&G&&G.log[_scorerLogIdx]){
     G.log[_scorerLogIdx].scorer=name;
     saveActiveGame();
   }
+  _goalScorer=name;
+  _goalStep='assist';
+  // If there's nobody else who could have assisted, just finish here.
+  const others=[...(G.on||[]),...(G.bench||[])].filter(pIdx=>avail[pIdx]!==name);
+  if(!others.length){ closeGoalPicker(); return; }
+  renderGoalPicker();
+}
+function chooseAssist(name){
+  if(_scorerLogIdx!=null&&G&&G.log[_scorerLogIdx]){
+    G.log[_scorerLogIdx].assist=name;
+    saveActiveGame();
+  }
+  closeGoalPicker();
+}
+// Skip button: on the scorer step it abandons the whole tag; on the assist
+// step the scorer is already recorded, so it just closes (no assist).
+function skipGoalStep(){ closeGoalPicker(); }
+function closeGoalPicker(){
   document.getElementById('scorerOv').classList.remove('show');
   _scorerLogIdx=null;
+  _goalStep='scorer';
+  _goalScorer=null;
 }
-function skipScorer(){
-  document.getElementById('scorerOv').classList.remove('show');
-  _scorerLogIdx=null;
-}
+// Back-compat alias (was wired to the old skip button).
+function skipScorer(){ closeGoalPicker(); }
 
 function tog(){
   if(G.running){
@@ -4170,6 +4210,7 @@ function showSum(){
         icon=ic('goal',14,'#00d4aa');
         if(e.who==='us'){
           detail=e.scorer?`<span style="color:#00d4aa">${fn(e.scorer)} scored</span>`:`<span style="color:#00d4aa">${teamName} goal!</span>`;
+          if(e.assist) detail+=`<span style="color:#5bc0de"> · assist ${fn(e.assist)}</span>`;
         }else{
           detail=`<span style="color:#e94560">Opposition goal</span>`;
         }
@@ -4294,7 +4335,7 @@ function showMatchDetail(m){
       let icon='',detail='';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
-      else if(e.type==='goal'){icon=ic('goal',14,'#00d4aa');detail=e.who==='us'?(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`):'Opposition goal';}
+      else if(e.type==='goal'){icon=ic('goal',14,'#00d4aa');detail=e.who==='us'?(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`):'Opposition goal';if(e.who==='us'&&e.assist)detail+=` · assist ${fn(e.assist)}`;}
       else if(e.type==='halftime'||e.type==='period_end'){icon=ic('pause',14,'#888');detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}
       row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
       lc.appendChild(row);

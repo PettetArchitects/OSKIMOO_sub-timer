@@ -4,6 +4,18 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v1.10.1-beta — Assists + bench placement
+
+- 🅰️ **Assists on goals** — tagging a goal is now a two-step picker: who scored, then who assisted (or "No assist"). The scorer is excluded from the assist list, and the step is skipped automatically if no one else is available. Assists show in both the live timeline and the saved match-history log (`X scored · assist Y`).
+- 🪑 **Bench moved above the control bar** — the subs-coming-on strip now sits just above the bottom buttons instead of at the very top, so it no longer overlaps the pitch / forward line. Game-screen order is now: header → clock → formation → **pitch** → mode hint → **bench** → sub banner → bottom bar.
+
+### Architecture notes
+- Goal picker: `_goalStep` ('scorer'|'assist') + `_goalScorer` drive `renderGoalPicker()`, which repaints the shared `#scorerOv` grid per step. `chooseScorer()` records `log[idx].scorer` then advances to the assist step; `chooseAssist()` records `log[idx].assist`. `skipGoalStep()`/`closeGoalPicker()` reset state. `skipScorer()` kept as a back-compat alias.
+- Both log renderers append `· assist <name>` when `e.assist` is set on a `who==='us'` goal.
+- `#benchTop` relocated in the DOM below `#pitchMid`/`#modeHint`. `renderRoster()` still populates bench + hint before reading the pitch dimensions (they remain flex-shrink:0 siblings), so token projection is unaffected.
+
+---
+
 ## v1.10-beta — Thumb-zone game screen
 
 A layout overhaul for two-handed iPad use: controls drop to the thumb zone, the subs-coming-on move up top.
