@@ -28,8 +28,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* Layout */
 .app{width:100%;max-width:430px;height:100dvh;max-height:100dvh;overflow:hidden}
-@media(min-width:768px){.app{max-width:560px}}
-@media(min-width:1024px){.app{max-width:640px}}
+/* Let the app stretch to fit whatever device it's on — phone (full width),
+   tablet, or desktop. Soft caps at 1100px so things don't go absurd on huge
+   screens, but tablets and large phones now use most of the screen. */
+@media(min-width:768px){.app{max-width:900px}}
+@media(min-width:1024px){.app{max-width:1100px}}
 
 /* Inline icons (Lucide-style strokes) — replace emoji for a cleaner look */
 .ic{width:1em;height:1em;display:inline-block;vertical-align:-2px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -83,7 +86,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* Timer */
 .tmr{text-align:center;padding:20px 16px 14px;background:linear-gradient(180deg,#16213e,#1a1a2e)}
 .tmr-h{font-size:14px;color:#e94560;font-weight:700;text-transform:uppercase;letter-spacing:2px}
-.tmr-c{font-family:'DSEG',monospace;font-size:min(18vw,80px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:4px 0;line-height:1}
+.tmr-c{font-family:'DSEG',monospace;font-size:min(13vw,56px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:2px 0;line-height:1}
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
@@ -156,39 +159,62 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .pair-player.pair-sel{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.3)}
 .pair-swap{font-size:16px;color:#666;flex-shrink:0}
 
-/* Diagrammatic pitch — FIFA-style perspective tilt to reclaim vertical
-   space and give a broadcast feel. Cards counter-rotate so text stays
-   readable; the pitch markings recede into the distance. */
-.lu-pitch{position:relative;width:100%;max-width:none;margin:0 auto;aspect-ratio:3/2.1;max-height:55vh;background:linear-gradient(to top,rgba(120,180,140,.22),rgba(120,180,140,.06) 60%,rgba(0,0,0,.18));overflow:visible;clip-path:polygon(14% 0,86% 0,100% 100%,0 100%);border:none;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25);border-radius:0}
+/* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
+   .lu-pitch is the perspective frustum. .lu-plane is the tilted SVG ground.
+   Aspect ratio matches the visible footprint of the tilted plane at 45° tilt
+   (cos 45° ≈ 0.71 → 105/(68 × 0.71) ≈ 105/68 native ratio). */
+/* Bottom-pivoted iso tilt — the NEAR (bottom) edge anchors the layout.
+   Container width = near-edge width. Plane is taller than container so after
+   45° rotation around its bottom, the visible plane fills the container.
+   Plane height is calibrated for the perspective (1500px) so the projected
+   plane reaches the TOP of the container — no empty space above the pitch.
+   FAR (top) edge tapers inward via perspective foreshortening — no clipping. */
+/* Pitch sits in a flexible wrapper (.pitch-flex, flex:1) and is absolutely
+   centred inside it. inset:0 + margin:auto + aspect-ratio + max-width/height
+   = the largest 105:80 box that fits the available space, without breaking
+   the aspect ratio (the classic "fit aspect box in a flex cell" trick). */
+.pitch-flex{flex:1 1 0;min-height:0;position:relative}
+.lu-pitch{position:absolute;inset:0;margin:auto;aspect-ratio:105/80;max-width:100%;max-height:100%;background:transparent;border:none;overflow:visible;perspective:1500px;perspective-origin:50% 100%}
+.lu-plane{position:absolute;left:0;right:0;bottom:0;height:240%;transform-origin:50% 100%;transform:rotateX(45deg)}
+.lu-plane svg{width:100%;height:100%;position:absolute;inset:0}
+.lu-tokens{position:absolute;inset:0;pointer-events:none}
+.lu-tokens .fc{pointer-events:auto}
 .lu-pitch .pitch-lines,.lu-pitch .pitch-center,.lu-pitch .pitch-box-top,.lu-pitch .pitch-box-bot,.lu-pitch .pitch-goal-top,.lu-pitch .pitch-goal-bot{pointer-events:none}
 /* Silhouette + jersey overlay inside the player card */
-.fc-silhouette{width:28px;height:28px;color:rgba(255,255,255,.5);stroke-width:1.5}
-@media(min-width:768px){.fc-silhouette{width:32px;height:32px}}
-.fc-jersey{position:absolute;top:-4px;right:-4px;background:#0a1628;color:#5bc0de;border:1.5px solid #5bc0de;border-radius:10px;min-width:18px;height:18px;padding:0 4px;font-size:9px;font-weight:800;line-height:14px;text-align:center;font-variant-numeric:tabular-nums;box-shadow:0 1px 3px rgba(0,0,0,.5)}
-.fc-pos-chip{display:inline-block;font-size:9px;color:#888;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-top:1px;padding:1px 5px;background:rgba(0,0,0,.4);border-radius:3px}
-.fc-on .fc-pos-chip{color:#00d4aa;background:rgba(0,212,170,.12)}
-.fc-gk .fc-pos-chip{color:#e94560;background:rgba(233,69,96,.12)}
-.fc-mins{color:#555;font-size:10px;font-weight:600}
+/* v1.9 player pill — broadcast style:
+   shirt icon (no circle around it) with the jersey number ON the shirt;
+   below the shirt, a single label pill with [POS] [NAME] [mins] [↑sub] inline. */
+.fc-shirt{position:relative;width:44px;height:48px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+@media(min-width:768px){.fc-shirt{width:52px;height:56px}}
+.fc-shirt svg{width:100%;height:100%}
+.fc-shirt-num{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:900;color:currentColor;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+@media(min-width:768px){.fc-shirt-num{font-size:17px}}
+.fc-jersey{display:none}            /* old corner badge — replaced by .fc-shirt-num */
+.fc-mins{color:#94a3b8;font-size:10px;font-weight:600;margin-left:4px}
 
 /* FIFA player card on pitch */
 .fc{position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .fc:active{transform:translate(-50%,-50%) scale(.92)}
-.fc-card{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
-@media(min-width:768px){.fc-card{width:60px;height:60px}}
-.fc-on .fc-card{background:rgba(0,212,170,.12);border:1.5px solid #00d4aa}
-.fc-gk .fc-card{background:rgba(233,69,96,.12);border:1.5px solid #e94560}
-.fc-sel .fc-card{border-color:#fff !important;box-shadow:0 0 10px rgba(255,255,255,.4) !important;animation:fc-glow .8s ease-in-out infinite alternate}
-.fc-off .fc-card{border-color:#f0a500 !important;background:rgba(240,165,0,.12) !important}
+/* Shirt colour comes from CSS vars — set per state below */
+.fc-on .fc-shirt{color:#22c55e}
+.fc-gk .fc-shirt{color:#ec4899}   /* GK pink — distinct from amber 'about to sub' */
+.fc-off .fc-shirt{color:#f0a500}
+.fc-sel .fc-shirt{filter:drop-shadow(0 0 6px rgba(255,255,255,.8))}
+.fc-off .fc-label{background:rgba(40,25,5,.92);border-color:#f0a500}
 .fc-off .fc-name{color:#f0a500}
+.fc-off .fc-pos{color:#f0a500;background:rgba(240,165,0,.18)}
+/* Label pill — [POS] [NAME] [mins] [↑sub] inline below the shirt */
+.fc-label{display:inline-flex;align-items:center;gap:5px;background:rgba(10,22,40,.92);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:2px 6px;margin-top:3px;box-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap}
+.fc-pos{display:inline-block;font-size:9px;font-weight:900;letter-spacing:.6px;color:#22c55e;background:rgba(34,197,94,.18);border-radius:3px;padding:1px 4px;line-height:1;min-width:14px;text-align:center}
+.fc-gk .fc-pos{color:#ec4899;background:rgba(236,72,153,.18)}
 .fb-next .fb-card{border-color:#00d4aa !important;background:rgba(0,212,170,.12) !important}
 .fb-next .fb-name{color:#00d4aa}
 @keyframes fc-glow{from{box-shadow:0 0 8px rgba(255,255,255,.3)}to{box-shadow:0 0 14px rgba(255,255,255,.5)}}
-.fc-pos{display:none}
-.fc-num{font-size:16px;font-weight:900;line-height:1;letter-spacing:.5px}
-@media(min-width:768px){.fc-num{font-size:18px}}
-.fc-on .fc-num{color:#00d4aa}
-.fc-gk .fc-num{color:#e94560}
-.fc-name{font-size:11px;font-weight:700;color:#fff;margin-top:3px;text-shadow:0 1px 4px rgba(0,0,0,.8);white-space:nowrap;text-align:center;letter-spacing:.3px}
+/* .fc-pos is now styled above as a chip inside .fc-label (left of name) */
+.fc-pos-chip{display:none}  /* old position chip below the pill — no longer used */
+.fc-num{display:none}       /* old number element — replaced by .fc-shirt-num on the shirt */
+/* Name inside the pill — uppercase, bold, broadcast-graphic style */
+.fc-name{font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px;line-height:1}
 @media(min-width:768px){.fc-name{font-size:12px}}
 
 /* Bench strip — FIFA style */
@@ -580,8 +606,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button onclick="confSub()" style="width:100%;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px">SUBS DONE ✓</button>
   </div>
 
-  <!-- Roster: ON + BENCH — fills remaining space -->
-  <div id="rosterWrap" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 8px"></div>
+  <!-- Roster: ON + BENCH — fills remaining space.
+       overflow:hidden ensures the game screen never scrolls. The pitch's
+       max-height: calc(100dvh - 380px) reserves room for header + bench. -->
+  <div id="rosterWrap" style="flex:1;min-height:0;overflow:hidden;padding:10px 14px 6px;display:flex;flex-direction:column;gap:12px"></div>
 
   <!-- Hidden legacy elements -->
   <div id="pitchWrap" style="display:none"></div>
@@ -1451,25 +1479,177 @@ function _li(){
   setTimeout(()=>waitLucide((tries||0)+1),100);
 })(0);
 
-// Soccer pitch markings drawn as inline SVG so the goal boxes can taper in
-// perspective to match the trapezoidal pitch outline (clip-path on .lu-pitch).
-// preserveAspectRatio="none" lets the 100×100 viewBox stretch to fill any
-// container; vector-effect="non-scaling-stroke" keeps stroke width consistent.
-const SOCCER_PITCH_SVG=`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible">
-  <!-- Top goal box (the wide one) — narrower at top, wider at bottom -->
-  <polygon vector-effect="non-scaling-stroke" points="35,0 65,0 67,16 33,16" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
-  <!-- Top goal area (the small 6-yard) -->
-  <polygon vector-effect="non-scaling-stroke" points="43,0 57,0 58,6 42,6" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.2"/>
-  <!-- Bottom goal box — wider at bottom (closer), narrower at top -->
-  <polygon vector-effect="non-scaling-stroke" points="33,84 67,84 70,100 30,100" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
-  <!-- Bottom goal area -->
-  <polygon vector-effect="non-scaling-stroke" points="42,94 58,94 59,100 41,100" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.2"/>
-  <!-- Centre line — spans only the pitch width at y=50% (matches trapezoid taper) -->
-  <line vector-effect="non-scaling-stroke" x1="7" y1="50" x2="93" y2="50" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-  <!-- Centre circle as ellipse to look right in perspective -->
-  <ellipse vector-effect="non-scaling-stroke" cx="50" cy="50" rx="9" ry="3.5" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-  <circle cx="50" cy="50" r="0.6" fill="rgba(255,255,255,.4)"/>
-</svg>`;
+// One inline SVG that IS the pitch — outer trapezoid, grass gradient, and
+// every marking drawn in perspective. Player tokens are absolutely-
+// positioned divs on top (positioned in screen space, no 3D math).
+// preserveAspectRatio="none" stretches the 100×100 viewBox to the container;
+// vector-effect="non-scaling-stroke" keeps line widths consistent at any
+// container size.
+// ===== Two-point perspective projection =====
+// "True pitch" world coords are a 100×100 rectangle: x=0..100 across the
+// width, y=0 at the FAR goal line, y=100 at the NEAR goal line. We project
+// onto a trapezoid where the far edge spans PITCH_FAR_W of the canvas width
+// and the near edge spans PITCH_NEAR_W. Linear interpolation in y — same
+// formula every marking AND player token goes through, so they all align.
+// === v1.9 pitch projection ===
+// SVG markings stay in true world coords (0..100). CSS rotateX + perspective on
+// .lu-plane tilts the whole SVG layer. Player tokens are positioned in screen
+// space via pitchPt() which mirrors the same CSS matrix in JS.
+const PITCH_TILT_DEG=45;            // gentle tilt for the 3D effect
+const PITCH_PERSPECTIVE_PX=1500;    // matches CSS — foreshortening tapers FAR edge inward (no clipping)
+// _pitchDims is set by the rendering code right before tokens are placed.
+// When set, pitchPt projects through the matching CSS perspective matrix;
+// when null (e.g. during SVG construction or netball), it returns identity.
+let _pitchDims=null;
+// v1.9 — pull non-GK soccer players up the field. The bigger broadcast-style
+// pills can overlap when the back line sits too close to the GK at y=90, so
+// we compress the y range for outfield players. Forwards (y<30) get an extra
+// shove up so the FW row clears the MID row's pills. GK stays at y=90 right
+// on the goal line. Netball uses its own layout untouched.
+function adjustY(pos, isGk){
+  if(isGk || pos.label==='GK') return pos;
+  if(getSport(currentTeam).key==='netball') return pos;
+  let y=pos.y*0.85+4;
+  if(pos.y<30) y-=5;   // forward line: extra push to clear the midfield pills
+  return {...pos, y:Math.round(y*100)/100};
+}
+
+// Plane height as a fraction of container height — must match the CSS rule
+// .lu-plane { height: X% }. Calibrated so the perspective-projected plane
+// exactly fills the container vertically.
+const PITCH_PLANE_HEIGHT_RATIO=2.40;
+
+function pitchPt(px,py){
+  // Fall back to identity (raw position) if dims aren't ready — guarantees the
+  // token is always VISIBLE somewhere on the pitch rather than disappearing
+  // to NaN/0,0 when clientWidth/Height read as 0 on first paint.
+  if(!_pitchDims || !_pitchDims.w || !_pitchDims.h) return {x:px, y:py};
+  const {w:cw, h:ch}=_pitchDims;
+  const θ=PITCH_TILT_DEG*Math.PI/180;
+  const cosT=Math.cos(θ), sinT=Math.sin(θ);
+  // Plane is taller than container (height = ch × ratio). After rotation
+  // around its bottom edge + perspective, the visible plane fills the
+  // container exactly.
+  const planeH=ch*PITCH_PLANE_HEIGHT_RATIO;
+  // Distance UP from the pivot (bottom-centre of plane) in plane local px.
+  // py=100 → at pivot (distance 0). py=0 → at plane top (distance planeH).
+  const distFromPivot=(1-py/100)*planeH;
+  // After rotateX(θ) around pivot, point moves backward (negative z) and
+  // towards pivot in screen y. CSS y is positive-down so "up from pivot"
+  // is negative screen-y offset.
+  const z=-distFromPivot*sinT;
+  const screenYOffset=-distFromPivot*cosT;   // negative = above pivot
+  // CSS perspective with perspective-origin at 50% 100% (container bottom-centre).
+  const scale=isFinite(PITCH_PERSPECTIVE_PX)?(PITCH_PERSPECTIVE_PX/(PITCH_PERSPECTIVE_PX-z)):1;
+  const lx=(px-50)/100*cw;
+  const sxPx=cw/2+lx*scale;
+  const syPx=ch+screenYOffset*scale;   // pivot is at container bottom (y=ch)
+  return {x:(sxPx/cw)*100, y:(syPx/ch)*100};
+}
+// pitchRect is no longer projected — SVG sits on the rotated CSS plane.
+function pitchRect(x,y,w,h){
+  const f=n=>n.toFixed(2);
+  return `${f(x)},${f(y)} ${f(x+w)},${f(y)} ${f(x+w)},${f(y+h)} ${f(x)},${f(y+h)}`;
+}
+
+// Build the pitch SVG by feeding real-world rectangles through pitchRect().
+// Every dimension comes from FIFA Laws of the Game, converted from metres
+// into percentages of pitch width (m2px) or length (m2py). Pitch is 68m wide
+// × 105m long (standard professional dimensions).
+(function(){
+  const PITCH_LEN_M=105, PITCH_WID_M=68;
+  const m2px=m=>(m/PITCH_WID_M)*100;   // along x axis (% of pitch width)
+  const m2py=m=>(m/PITCH_LEN_M)*100;   // along y axis (% of pitch length)
+  // FIFA Laws of the Game spec dimensions
+  const PEN_W=m2px(40.32);   // penalty area 40.32m wide  → 59.3
+  const PEN_H=m2py(16.5);    // penalty area 16.5m deep   → 15.71
+  const GOAL_W=m2px(18.32);  // goal area 18.32m wide     → 26.94
+  const GOAL_H=m2py(5.5);    // goal area 5.5m deep       → 5.24
+  const CC_RX=m2px(9.15);    // centre circle radius 9.15m → 13.46% of width
+  const CC_RY=m2py(9.15);    //                            → 8.71% of length
+  const PEN_SPOT=m2py(11);   // penalty spot 11m from goal → 10.48
+  const GOAL_MOUTH=m2px(7.32); // goal mouth width 7.32m  → 10.76
+  const CORNER_R_X=m2px(1);  // corner arc 1m radius
+  const CORNER_R_Y=m2py(1);
+  const penTopX=(100-PEN_W)/2, goalTopX=(100-GOAL_W)/2;
+  const cl_l=pitchPt(0,50), cl_r=pitchPt(100,50);
+  const cc=pitchPt(50,50);
+  // Centre circle: project the chord at y=50 to get screen rx; ry isn't
+  // affected by horizontal taper (we don't foreshorten y here).
+  const cc_l=pitchPt(50-CC_RX,50), cc_r=pitchPt(50+CC_RX,50);
+  const ccRxScreen=(cc_r.x-cc_l.x)/2;
+  // Penalty arc: sample the circle and emit only the points outside the box.
+  // Centred on the penalty spot, radius 9.15m. The visible "D" pokes out past
+  // the top/bottom edge of the penalty area.
+  const arcPoints=(isTop)=>{
+    const cy=isTop?PEN_SPOT:(100-PEN_SPOT);
+    const boxEdge=isTop?PEN_H:(100-PEN_H);
+    const pts=[];
+    for(let i=0;i<=48;i++){
+      const a=(i/48)*Math.PI*2;
+      const wx=50+CC_RX*Math.cos(a);
+      const wy=cy+CC_RY*Math.sin(a);
+      if(isTop?wy>boxEdge:wy<boxEdge){
+        const p=pitchPt(wx,wy);
+        pts.push(`${p.x.toFixed(2)},${p.y.toFixed(2)}`);
+      }
+    }
+    return pts.join(' ');
+  };
+  // Penalty spot dot
+  const psT=pitchPt(50,PEN_SPOT), psB=pitchPt(50,100-PEN_SPOT);
+  // Corner arcs — 1m radius quarter circles at each corner. Sample 12 points
+  // through the appropriate quadrant and emit as a projected polyline.
+  const cornerArc=(cornerX,cornerY)=>{
+    const xDir=cornerX===0?1:-1;   // arc bulges INTO the pitch
+    const yDir=cornerY===0?1:-1;
+    const pts=[];
+    for(let i=0;i<=12;i++){
+      const a=(i/12)*Math.PI/2;
+      const wx=cornerX+xDir*CORNER_R_X*Math.cos(a);
+      const wy=cornerY+yDir*CORNER_R_Y*Math.sin(a);
+      const p=pitchPt(wx,wy);
+      pts.push(`${p.x.toFixed(2)},${p.y.toFixed(2)}`);
+    }
+    return pts.join(' ');
+  };
+  // Goal mouth — short bold tick on the goal line marking the goal posts
+  // (7.32m wide centred on x=50). Drawn just outside the field (y<0 / y>100)
+  // because overflow is visible.
+  const gmL=50-GOAL_MOUTH/2, gmR=50+GOAL_MOUTH/2;
+  const gmTopL=pitchPt(gmL,0), gmTopR=pitchPt(gmR,0);
+  const gmBotL=pitchPt(gmL,100), gmBotR=pitchPt(gmR,100);
+  // Line weights (v1.9) — heavier still: markings need to read clearly through
+  // the perspective tilt + gradient grass. Bumped on both width and opacity.
+  const SW_OUTER=1.4, SW_BOX=1.2, SW_LINE=1.0, SW_GOAL=2.0;
+  const spotAspect=(PITCH_WID_M/PITCH_LEN_M);   // 0.648
+  const spotRx=1.1, spotRy=(spotRx*spotAspect).toFixed(3);
+  window.SOCCER_PITCH_SVG=`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible">
+    <defs>
+      <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(20,40,30,.45)"/>
+        <stop offset="55%" stop-color="rgba(80,140,100,.18)"/>
+        <stop offset="100%" stop-color="rgba(140,200,150,.32)"/>
+      </linearGradient>
+    </defs>
+    <polygon vector-effect="non-scaling-stroke" points="${pitchRect(0,0,100,100)}" fill="url(#grass)" stroke="rgba(255,255,255,.65)" stroke-width="${SW_OUTER}"/>
+    <polygon vector-effect="non-scaling-stroke" points="${pitchRect(penTopX,0,PEN_W,PEN_H)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_BOX}"/>
+    <polygon vector-effect="non-scaling-stroke" points="${pitchRect(penTopX,100-PEN_H,PEN_W,PEN_H)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_BOX}"/>
+    <polygon vector-effect="non-scaling-stroke" points="${pitchRect(goalTopX,0,GOAL_W,GOAL_H)}" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="${SW_BOX}"/>
+    <polygon vector-effect="non-scaling-stroke" points="${pitchRect(goalTopX,100-GOAL_H,GOAL_W,GOAL_H)}" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="${SW_BOX}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${arcPoints(true)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_BOX}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${arcPoints(false)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_BOX}"/>
+    <line vector-effect="non-scaling-stroke" x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,.55)" stroke-width="${SW_LINE}"/>
+    <ellipse vector-effect="non-scaling-stroke" cx="50" cy="50" rx="${CC_RX}" ry="${CC_RY}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_BOX}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${cornerArc(0,0)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_LINE}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${cornerArc(100,0)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_LINE}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${cornerArc(0,100)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_LINE}"/>
+    <polyline vector-effect="non-scaling-stroke" points="${cornerArc(100,100)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${SW_LINE}"/>
+    <line vector-effect="non-scaling-stroke" x1="${gmL.toFixed(2)}" y1="0" x2="${gmR.toFixed(2)}" y2="0" stroke="rgba(255,255,255,.9)" stroke-width="${SW_GOAL}"/>
+    <line vector-effect="non-scaling-stroke" x1="${gmL.toFixed(2)}" y1="100" x2="${gmR.toFixed(2)}" y2="100" stroke="rgba(255,255,255,.9)" stroke-width="${SW_GOAL}"/>
+  </svg>`;
+})();
+const SOCCER_PITCH_SVG=window.SOCCER_PITCH_SVG;
 
 const SOUND_PACKS={
   classic:{label:'Classic',icon:'activity',desc:'Quick beeps',
@@ -1601,12 +1781,24 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v1.8-beta';
+const APP_VERSION='v1.9-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v1.9-beta':{
+    title:'3D pitch + jersey pills',
+    items:[
+      'Soccer pitch now rendered in 3D perspective — tilted with depth foreshortening (broadcast-cam feel)',
+      'Players shown as jersey shirts with their number on the shirt, position + name below',
+      'Set your line-up right on the pitch — before kickoff, tap two players to swap positions (GK too)',
+      'Bench laid out as a grid — Next on / +5′ / +10′ columns so you can see the whole rotation',
+      'Goalkeeper shirt is pink so it never clashes with the amber "about to sub" colour',
+      'Undo Last Sub button in the bench header to instantly revert a mistaken swap',
+      'Heavier pitch line work + cleaner markings (no distracting centre/penalty dots)'
+    ]
+  },
   'v1.8-beta':{
     title:'Full Control + Game Plan',
     items:[
@@ -2971,9 +3163,20 @@ function renderLineupPitch(){
   const _luSport=getSport(currentTeam);
   pitch.className='lu-pitch'+(_luSport.key==='netball'?' np-netball':'');
   pitch.style.cssText='aspect-ratio:auto;width:100%;max-width:none;height:100%';
-  pitch.innerHTML=_luSport.key==='netball'
-    ? `<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`
-    : SOCCER_PITCH_SVG;
+  // Netball stays top-down (CSS-based markings, no tilt).
+  // Soccer uses the tilted .lu-plane (SVG inside it) so the field gets perspective.
+  if(_luSport.key==='netball'){
+    pitch.innerHTML=`<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`;
+  } else {
+    pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
+  }
+  // Token positions will be projected through pitchPt() — set _pitchDims so
+  // makeFCCard's projection math knows the actual container size. Need to
+  // append to DOM first to read clientWidth/Height.
+  pw.appendChild(pitch);
+  if(_luSport.key!=='netball'){
+    _pitchDims={w:pitch.clientWidth, h:pitch.clientHeight};
+  }
 
   // Build on-field player cards
   if(fmt.hasGk && gk1!==null){
@@ -3006,7 +3209,7 @@ function renderLineupPitch(){
       }
     });
   }
-  pw.appendChild(pitch);
+  _pitchDims=null;   // reset so subsequent (non-pitch) pitchPt calls return identity
 
   // Bench strip
   const bw=document.getElementById('luBenchWrap');
@@ -3036,12 +3239,28 @@ function renderLineupPitch(){
   }
 }
 
+// Shirt icon SVG — outline + light fill in team colour (currentColor).
+// The jersey number is embedded as an SVG <text> element so it scales with the
+// shirt and stays perfectly centred on the body (regardless of pill size).
+function shirtSvg(num){
+  // Body of the shirt sits y≈11..26.5; centre y≈19. Number anchored there.
+  const numText=num?`<text x="12" y="20.5" text-anchor="middle" font-size="11" font-weight="900" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">${num}</text>`:'';
+  return `<svg viewBox="0 0 24 28"><path d="M8.5 1.5L7 2 2 4.5 1 9.5 4.5 11 5 26.5 19 26.5 19.5 11 23 9.5 22 4.5 17 2 15.5 1.5 14 4 13 5 11 5 10 4 Z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18" stroke-linejoin="round" stroke-linecap="round"/>${numText}</svg>`;
+}
+// Backwards-compatible: SHIRT_SVG is the shirt with no number. Use shirtSvg(num) when number is known.
+const SHIRT_SVG=shirtSvg('');
+
 function makeFCCard(pos, name, isGk, isSel, isOff){
   const el=document.createElement('div');
   el.className='fc '+(isGk?'fc-gk':'fc-on')+(isSel?' fc-sel':'')+(isOff?' fc-off':'');
-  el.style.left=pos.x+'%';
-  el.style.top=pos.y+'%';
-  el.innerHTML=`<div class="fc-card"><div class="fc-pos">${pos.label}</div><div class="fc-num">${pos.label}</div></div><div class="fc-name">${fn(name)}</div>`;
+  const adj=adjustY(pos,isGk);
+  const proj=(getSport(currentTeam).key==='netball')?{x:adj.x,y:adj.y}:pitchPt(adj.x,adj.y);
+  el.style.left=proj.x+'%';
+  el.style.top=proj.y+'%';
+  const jersey=currentTeam?getPlayerNumber(currentTeam,name):'';
+  // Shirt with jersey number ON it (rendered inside SVG so it's perfectly centred).
+  // Position chip sits LEFT of name in the label pill.
+  el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(name)}</span></div>`;
   return el;
 }
 
@@ -3532,6 +3751,43 @@ function moveBenchDown(pIdx){
   saveActiveGame();
   renderG();
 }
+// === Tap-to-swap on the game field (before kickoff) ===
+// Before the clock starts, tapping two on-field players swaps their positions
+// so the coach can set the starting line-up right on the pitch. Once the game
+// is running, tapping a player triggers an injury sub instead.
+let fieldSwapSel=null;
+function tapFieldPlayer(pIdx, isGk){
+  // After kickoff → injury-sub flow (existing behaviour). GK can't be injury-subbed.
+  if(G.secs>0 || G.running){
+    if(!isGk && G.bench.length>0) injurySub(pIdx);
+    return;
+  }
+  // Pre-kickoff → swap two players' positions on the field.
+  if(fieldSwapSel===null){
+    fieldSwapSel=pIdx;
+  } else if(fieldSwapSel===pIdx){
+    fieldSwapSel=null;            // tapped the same player → deselect
+  } else {
+    swapFieldPositions(fieldSwapSel, pIdx);
+    fieldSwapSel=null;
+    saveActiveGame();
+  }
+  renderG();
+}
+function swapFieldPositions(a, b){
+  // Swap their slots in G.on (slot order maps to formation positions).
+  const i=G.on.indexOf(a), j=G.on.indexOf(b);
+  if(i>=0&&j>=0){ const t=G.on[i]; G.on[i]=G.on[j]; G.on[j]=t; }
+  // Transfer the GK role if one of the swapped players was the keeper.
+  if(G.gk===a) G.gk=b;
+  else if(G.gk===b) G.gk=a;
+  // Keep paired-rotation groups consistent if they reference these players.
+  if(G.pairs&&G.pairs.length){
+    G.pairs.forEach(pair=>{
+      pair.on=pair.on.map(p=>p===a?b:(p===b?a:p));
+    });
+  }
+}
 function injurySub(pIdx){
   if(!G||!G.bench.length)return;
   if(G.ps&&document.getElementById('subBanner').style.display!=='none')return;
@@ -3976,6 +4232,16 @@ function renderRoster(){
   const positions=getPositions();
   const {nextOff,nextOn,swapMap}=getNextSwap();
 
+  // Pre-kickoff hint: tell the coach they can set the line-up by tapping players.
+  if(G && G.secs===0 && !G.running){
+    const hint=document.createElement('div');
+    hint.style.cssText='flex:0 0 auto;text-align:center;font-size:11px;font-weight:700;letter-spacing:.5px;color:'+(fieldSwapSel!==null?'#fff':'#5bc0de')+';background:rgba(91,192,222,.1);border:1px solid rgba(91,192,222,.3);border-radius:8px;padding:6px 10px';
+    hint.innerHTML=fieldSwapSel!==null
+      ? `${ic('move',12,'#fff')} Tap another player to swap positions`
+      : `${ic('hand',12,'#5bc0de')} Tap two players to swap their starting positions`;
+    rw.appendChild(hint);
+  }
+
   // Build position-to-player mapping so we can look up positions by player index
   let playerSlots=[];
   const posForPlayer={}; // pIdx -> position label
@@ -3998,16 +4264,34 @@ function renderRoster(){
     });
   }
 
-  // PITCH DIAGRAM — replaces the on-field list
-  const pitchC=document.createElement('div');
-  pitchC.style.cssText='padding:4px 0 6px';
+  // PITCH DIAGRAM — replaces the on-field list. Pitch goes directly into
+  // rosterWrap (a flex column) so it can flex-grow to fill available height.
   const pitch=document.createElement('div');
   const _gSport=getSport(currentTeam);
   pitch.className='lu-pitch'+(_gSport.key==='netball'?' np-netball':'');
   pitch.style.cssText='width:100%;border-radius:6px';
-  pitch.innerHTML=_gSport.key==='netball'
-    ? `<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`
-    : SOCCER_PITCH_SVG;
+  if(_gSport.key==='netball'){
+    pitch.innerHTML=`<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`;
+  } else {
+    pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
+  }
+  // Append to DOM BEFORE reading pitch dimensions —
+  // detached elements have clientWidth/Height = 0, which would NaN the projection.
+  // Pitch goes inside a flex wrapper so it fits the available space at the
+  // correct aspect ratio (see .pitch-flex / .lu-pitch CSS).
+  const pitchFlex=document.createElement('div');
+  pitchFlex.className='pitch-flex';
+  pitchFlex.appendChild(pitch);
+  rw.appendChild(pitchFlex);
+  if(_gSport.key!=='netball'){
+    _pitchDims={w:pitch.clientWidth, h:pitch.clientHeight};
+    // First-paint race: if the pitch hasn't been laid out yet (cw or ch is 0),
+    // schedule a re-render on next frame so tokens land in the right place.
+    if(!_pitchDims.w || !_pitchDims.h){
+      requestAnimationFrame(()=>renderRoster());
+      return;
+    }
+  }
 
   playerSlots.forEach(({pos,pIdx,isGk})=>{
     const isOff=nextOff.has(pIdx);
@@ -4020,13 +4304,22 @@ function renderRoster(){
       }
     }
     const el=document.createElement('div');
-    el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'');
-    el.style.cssText=`left:${pos.x}%;top:${pos.y}%;position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center`;
-    const subLine=isOff&&replacedBy!==null?`<div style="font-size:10px;font-weight:700;color:#00d4aa;margin-top:2px">↑ ${fn(avail[replacedBy])}</div>`:'';
+    const isSwapSel=(fieldSwapSel===pIdx);
+    el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'');
+    const _adj=adjustY(pos,isGk);
+    const _proj=(_gSport.key==='netball')?{x:_adj.x,y:_adj.y}:pitchPt(_adj.x,_adj.y);
+    el.style.cssText=`left:${_proj.x}%;top:${_proj.y}%;position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center`;
+    // Sub indicator sits inline in the name pill, to the right with the arrow.
+    const subInline=isOff&&replacedBy!==null?`<span class="fc-mins" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
     const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
-    const jerseyBadge=jersey?`<div class="fc-jersey">${jersey}</div>`:'';
-    el.innerHTML=`<div class="fc-card"><svg class="fc-silhouette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>${jerseyBadge}</div><div class="fc-name">${fn(avail[pIdx])} <span class="fc-mins">${mins}′</span></div><div class="fc-pos-chip">${pos.label}</div>${subLine}`;
-    if(!isGk && G.bench.length>0) el.onclick=()=>injurySub(pIdx);
+    // Shirt with number ON it (rendered inside SVG so it's perfectly centred).
+    el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
+    // Pre-kickoff: any player tappable to swap positions. After kickoff:
+    // only outfield players tappable (injury sub). GK isn't injury-subbed.
+    if((G.secs===0 && !G.running) || (!isGk && G.bench.length>0)){
+      el.onclick=()=>tapFieldPlayer(pIdx, isGk);
+      el.style.cursor='pointer';
+    }
     pitch.appendChild(el);
   });
 
@@ -4054,47 +4347,65 @@ function renderRoster(){
           }
         }
       }
+      // Apply same y-compression to opp markers so they line up with our players
+      const _oppAdj=_isNetballGame?{x:oppX,y:oppY}:adjustY({label:p.label,x:oppX,y:oppY},p.label==='GK');
+      const _oppProj=_isNetballGame?{x:_oppAdj.x,y:_oppAdj.y}:pitchPt(_oppAdj.x,_oppAdj.y);
       const op=document.createElement('div');
-      op.style.cssText=`position:absolute;left:${oppX}%;top:${oppY}%;transform:translate(-50%,-50%);z-index:1;width:22px;height:22px;border-radius:50%;background:rgba(120,120,140,.18);border:1px dashed rgba(180,180,200,.45);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(200,200,220,.6);letter-spacing:.5px;pointer-events:none`;
+      op.style.cssText=`position:absolute;left:${_oppProj.x}%;top:${_oppProj.y}%;transform:translate(-50%,-50%);z-index:1;width:22px;height:22px;border-radius:50%;background:rgba(120,120,140,.18);border:1px dashed rgba(180,180,200,.45);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(200,200,220,.6);letter-spacing:.5px;pointer-events:none`;
       op.textContent=p.label;
       pitch.appendChild(op);
     });
   }
+  _pitchDims=null;   // reset so subsequent pitchPt calls return identity
 
-  pitchC.appendChild(pitch);
-  rw.appendChild(pitchC);
-
-  // BENCH section
+  // BENCH section — single wrapper so label + grid stay tightly grouped.
+  // The 18px gap from rosterWrap only separates this section from the pitch.
   if(G.bench.length){
+    const benchSection=document.createElement('div');
+    benchSection.style.cssText='display:flex;flex-direction:column;gap:6px';
     const bLbl=document.createElement('div');
-    bLbl.style.cssText='display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:0 2px';
+    bLbl.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:0 2px';
     bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`+(
       G.lastSub
         ? `<button onclick="undoLastSub()" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px" title="Revert the last sub">${ic('undo-2',11,'#f0a500')}UNDO LAST SUB</button>`
         : ''
     );
-    rw.appendChild(bLbl);
+    benchSection.appendChild(bLbl);
 
     // Pair-rotation mode swaps pre-grouped pairs as units, so reordering an
-    // individual bench player has no effect. Hide reorder arrows in that mode
-    // to avoid implying a control that doesn't actually do anything.
+    // individual bench player has no effect. Hide reorder arrows in that mode.
     const allowReorder=G.subStrategy!=='paired';
-    G.bench.forEach((pIdx,bIdx)=>{
+
+    // Split bench into WAVES — each column is one sub cycle.
+    // Wave 0 = next on (emerald). Subsequent waves get amber/dimmer labels.
+    // Wave size = cfg.sc (players per sub). For AFL with sc=5 and a 20-player
+    // bench, this gives 4 waves and the grid auto-fits as many columns as
+    // the viewport width supports (min 190px per column).
+    const sc=Math.max(1, cfg.sc||1);
+    const waves=[];
+    for(let i=0;i<G.bench.length;i+=sc){
+      waves.push(G.bench.slice(i, i+sc));
+    }
+    const nextOnList=waves[0]||[];
+    const laterList =G.bench.slice(sc);   // for the indexOf / first/last check below
+
+    function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
-      const isNext=nextOn.has(pIdx);
-      const isFirst=bIdx===0;
-      const isLast=bIdx===G.bench.length-1;
-      // Find who this player replaces and what position they'll take
       const replacesP=swapMap?swapMap[pIdx]:undefined;
       const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
       const row=document.createElement('div');
       const bgC=isNext?'#0a1a16':'#0a1628';
       const borderC=isNext?'#00d4aa':'#1e2a45';
       const glow=isNext?'box-shadow:0 0 8px rgba(0,212,170,.3);':'';
-      row.style.cssText=`display:flex;align-items:center;padding:8px 10px;background:${bgC};border:1.5px solid ${borderC};border-radius:8px;margin-bottom:3px;${glow}`;
+      row.style.cssText=`display:flex;align-items:center;padding:5px 8px;background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}`;
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
       const posLabel=isNext&&takesPos?takesPos:'SUB';
+      // Reorder arrows operate on the FULL G.bench list, so we need the
+      // player's index in that array — not their index in the split column.
+      const benchIdx=G.bench.indexOf(pIdx);
+      const isFirst=benchIdx===0;
+      const isLast=benchIdx===G.bench.length-1;
       const arrowBtn=(dir,disabled)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
       const reorderHtml=allowReorder
         ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${arrowBtn('up',isFirst)}${arrowBtn('down',isLast)}</div>`
@@ -4102,16 +4413,47 @@ function renderRoster(){
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
-        <div style="width:28px;height:28px;border-radius:6px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:8px">${posLabel}</div>
+        <div style="width:24px;height:24px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',12,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:11px;color:#f0a500;font-weight:600;margin-top:1px">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:13px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',11,'#00d4aa'):''}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:10px;color:#f0a500;font-weight:600;margin-top:1px;line-height:1.1">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
-        <div style="font-size:12px;font-weight:700;color:#555;font-variant-numeric:tabular-nums">${mins}′</div>
+        <div style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
       `;
-      rw.appendChild(row);
-    });
+      return row;
+    }
+
+    // Grid container — auto-fit columns based on available width.
+    // Single wave (no "later" players) → flat single column, no headers.
+    const grid=document.createElement('div');
+    const useGrid=waves.length>1;
+    grid.style.cssText=useGrid
+      ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start'
+      : 'display:flex;flex-direction:column;gap:4px';
+
+    if(useGrid){
+      // One column per wave; label tags show "Next on" / "+5'" / "+10'" / ...
+      // using cfg.sf (sub interval) to project when each wave lands.
+      waves.forEach((waveList,waveIdx)=>{
+        const isNext=waveIdx===0;
+        const labelText=isNext?'Next on':`+${(cfg.sf||5)*waveIdx}'`;
+        const labelColour=isNext?'#00d4aa':(waveIdx===1?'#f0a500':'#888');
+        const col=document.createElement('div');
+        col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0';
+        const tag=document.createElement('div');
+        tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
+        tag.textContent=labelText;
+        col.appendChild(tag);
+        waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,isNext)));
+        grid.appendChild(col);
+      });
+    } else {
+      // Single wave — no labels, just stack the pills
+      nextOnList.forEach((pIdx,i)=>grid.appendChild(makeBenchPill(pIdx,i,true)));
+    }
+    benchSection.appendChild(grid);
+    rw.appendChild(benchSection);
   }
 
 }
