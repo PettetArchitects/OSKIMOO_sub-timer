@@ -1828,12 +1828,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v1.11.1-beta';
+const APP_VERSION='v1.11.2-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v1.11.2-beta':{
+    title:'2nd-half line-up ready',
+    items:[
+      'At halftime the recommended rotation is applied automatically, so the pitch already shows your 2nd-half line-up — ready to start',
+      'Tweak it during the break with Swap, or tap Undo to revert the auto-rotation',
+      'Equal-time + Paired only; Manual and Full-control leave the subs to you'
+    ]
+  },
   'v1.11.1-beta':{
     title:'Inline halftime',
     items:[
@@ -4240,8 +4248,18 @@ function advH(){
   // G.half holds the period number (1..N). After the final period, show summary.
   if(G.half<sport.periodCount){
     G.atBreak=true;
-    if(navigator.vibrate)navigator.vibrate([200,100,200]);
-    try{playSubAlert();}catch(e){}
+    // Get the 2nd-half line-up READY: auto-apply the recommended rotation so the
+    // pitch already shows who's on for the next period. Undoable during the
+    // break (Undo button), and the coach can still Swap/sub before starting.
+    // Skip for manual / full-control — those coaches drive their own subs.
+    const strat=G.subStrategy||'fair';
+    if((strat==='fair'||strat==='paired') && G.bench.length){
+      trigSub();           // stage the recommended off/on (plays the break alert)
+      if(G.ps) confSub();  // apply it so the pitch shows the 2nd-half XI
+    } else {
+      if(navigator.vibrate)navigator.vibrate([200,100,200]);
+      try{playSubAlert();}catch(e){}
+    }
     saveActiveGame();
     renderG();
   }else showSum();
