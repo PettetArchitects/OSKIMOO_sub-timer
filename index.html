@@ -173,12 +173,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* In-game action dashboard — mode buttons (Swap / Keeper / Injury / Undo).
    Shares the soft-UI language: subtle gradient, soft shadow, top highlight. */
-.gd-btn{flex:1;padding:9px 4px;border-radius:var(--r-sm);border:1.5px solid #2a3550;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise)}
+.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:1.5px solid #2a3550;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise);text-align:center;line-height:1.05}
 .gd-btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
-.gd-btn svg{width:17px;height:17px}
+.gd-btn svg{width:19px;height:19px}
 .gd-btn.active{background:linear-gradient(180deg,rgba(91,192,222,.22),rgba(91,192,222,.1));border-color:#5bc0de;color:#5bc0de;box-shadow:0 0 10px rgba(91,192,222,.3), inset 0 1px 0 rgba(255,255,255,.08)}
 #gdInjury.active{background:linear-gradient(180deg,rgba(233,69,96,.22),rgba(233,69,96,.1));border-color:#e94560;color:#e94560;box-shadow:0 0 10px rgba(233,69,96,.3), inset 0 1px 0 rgba(255,255,255,.08)}
 .gd-btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+/* Bottom-bar primary actions — START / PAUSE / SUB. Coloured to stand out from
+   the soft-UI secondary buttons while keeping the same stacked nav-item shape.
+   Slightly wider (flex:1.5) since they're the most-used controls. */
+.gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border-color:#0a9d83;color:#06231d;font-size:13px}
+.gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));border-color:#e94560;color:#ff7088;font-size:13px}
+.gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);border-color:#d98c00;color:#1a1a2e;font-size:13px}
+.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg{width:21px;height:21px}
 
 /* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
    .lu-pitch is the perspective frustum. .lu-plane is the tilted SVG ground.
@@ -614,35 +621,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="oppFmtGrid" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center"></div>
   </div>
 
-  <!-- Controls -->
-  <div style="display:flex;gap:6px;padding:4px 12px 6px;flex-shrink:0">
-    <button class="btn btn-g" id="ppB" onclick="tog()" style="margin:0;flex:1;padding:12px;font-size:16px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="play" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i>START</button>
-    <button class="btn" id="subB" onclick="manualSub()" style="margin:0;flex:1;padding:12px;font-size:14px;border-radius:10px;background:linear-gradient(180deg,#ffb52e,#ec9c00);color:#1a1a2e;font-weight:800">SUB</button>
+  <!-- Subs coming on — moved to the TOP so the next-on players are glanceable
+       (thumb-zone layout: glance info up high, controls down low). -->
+  <div id="benchTop" style="flex-shrink:0;padding:2px 12px 4px;max-height:30dvh;overflow-y:auto"></div>
+
+  <!-- Pitch — fills the middle, flexes to whatever space is left. -->
+  <div id="pitchMid" style="flex:1;min-height:0;overflow:hidden;padding:6px 14px 2px;display:flex;flex-direction:column"></div>
+
+  <!-- Mode hint — what tapping a player does right now (sits just above the bar). -->
+  <div id="modeHint" style="flex-shrink:0;padding:2px 12px 0"></div>
+
+  <!-- Sub confirmation banner (hidden by default) — above the control bar. -->
+  <div id="subBanner" style="display:none;flex-shrink:0;margin:6px 12px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
+    <div id="subBannerSwaps" style="margin-bottom:8px"></div>
+    <button onclick="confSub()" style="width:100%;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px">SUBS DONE ✓</button>
   </div>
 
-  <!-- Action dashboard — pick a mode, then tap player(s) on the pitch.
-       Swap (move positions / change keeper) / Injury (off + replace) / Edit / Undo. -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:0 12px 8px;flex-shrink:0">
+  <!-- Bottom control bar — ALL actions live here in the thumb zone.
+       START / SUB are colour-emphasised; Swap / Injury / Edit Players / Undo
+       follow as soft-UI nav items. One unified row (gameDash id kept so
+       renderGameDash still finds it). -->
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
+    <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
+    <button class="gd-btn gd-sub" id="subB" onclick="manualSub()"></button>
     <button class="gd-btn" id="gdSwap" onclick="setGameMode('swap')"></button>
     <button class="gd-btn" id="gdInjury" onclick="setGameMode('injury')"></button>
     <button class="gd-btn" id="gdEdit" onclick="editTeamFromGame()"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
   </div>
 
-  <!-- Sub confirmation banner (hidden by default) -->
-  <div id="subBanner" style="display:none;flex-shrink:0;margin:0 12px 6px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
-    <div id="subBannerSwaps" style="margin-bottom:8px"></div>
-    <button onclick="confSub()" style="width:100%;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px">SUBS DONE ✓</button>
-  </div>
-
-  <!-- Roster: ON + BENCH — fills remaining space.
-       overflow:hidden ensures the game screen never scrolls. The pitch's
-       max-height: calc(100dvh - 380px) reserves room for header + bench. -->
-  <div id="rosterWrap" style="flex:1;min-height:0;overflow:hidden;padding:10px 14px 6px;display:flex;flex-direction:column;gap:12px"></div>
-
   <!-- Hidden legacy elements -->
   <div id="pitchWrap" style="display:none"></div>
   <div id="benchWrap" style="display:none"></div>
+  <div id="rosterWrap" style="display:none"></div>
   <div id="nsp" style="display:none"></div>
 </div>
 
@@ -1810,12 +1821,22 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v1.9.2-beta';
+const APP_VERSION='v1.10-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v1.10-beta':{
+    title:'Thumb-zone game screen',
+    items:[
+      'All controls moved to one bottom bar — START, SUB, Swap, Injury, Edit Players, Undo — right where your thumbs sit on an iPad',
+      'Subs coming on moved to the top of the screen so the next players on are always glanceable',
+      'START and SUB are colour-emphasised (green / amber) so the primary actions stand out in the bar',
+      'Pitch now fills the middle and flexes to whatever space is left; works in portrait and landscape',
+      'Removed the duplicate in-bench Undo — Undo now lives only in the bottom bar'
+    ]
+  },
   'v1.9.2-beta':{
     title:'Edit button + clearer sub mode',
     items:[
@@ -3441,9 +3462,8 @@ function renderG(){
     ni.textContent='All subs done this half';
   }
   const pb=document.getElementById('ppB');
-  pb.innerHTML=G.running?(ic('pause',16)+'PAUSE'):(ic('play',16)+'START');
-  pb.style.display='inline-flex';pb.style.alignItems='center';pb.style.justifyContent='center';pb.style.gap='6px';
-  pb.className=G.running?'btn btn-o':'btn btn-g';
+  pb.innerHTML=G.running?(ic('pause',21)+'<span>PAUSE</span>'):(ic('play',21)+'<span>START</span>');
+  pb.className=G.running?'gd-btn gd-pause':'gd-btn gd-go';
 
   // Score
   document.getElementById('scoreUs').textContent=G.scoreUs;
@@ -3851,6 +3871,10 @@ function tapBenchForInjury(pIdx){
 function renderGameDash(){
   const dash=document.getElementById('gameDash');
   if(!dash) return;
+  // SUB primary button — stacked icon+label to match the nav bar. Its disabled
+  // state is managed in renderG(); here we just paint the content once.
+  const subB=document.getElementById('subB');
+  if(subB && !subB.querySelector('span')){ subB.innerHTML=`${ic('refresh',21)}<span>SUB</span>`; }
   [['gdSwap','swap','move','Swap'],['gdInjury','injury','bandage','Injury']]
     .forEach(([id,mode,icon,label])=>{
       const el=document.getElementById(id);
@@ -4327,30 +4351,19 @@ function getNextSwap(){
 }
 
 function renderRoster(){
-  const rw=document.getElementById('rosterWrap');
-  rw.innerHTML='';
+  // New thumb-zone layout: bench (subs coming on) at the TOP, pitch in the
+  // MIDDLE, all controls in the bottom bar. We populate the bench + hint
+  // (both flex-shrink:0 siblings) BEFORE reading the pitch dimensions, so the
+  // pitch's flex height is final when pitchPt() projects the player tokens.
+  const benchTop=document.getElementById('benchTop');
+  const pitchMid=document.getElementById('pitchMid');
+  const hintC=document.getElementById('modeHint');
+  if(benchTop) benchTop.innerHTML='';
+  if(pitchMid) pitchMid.innerHTML='';
+  if(hintC) hintC.innerHTML='';
   const fmtDef=FORMATS[curFmt];
   const positions=getPositions();
   const {nextOff,nextOn,swapMap}=getNextSwap();
-
-  // Mode hint — tells the coach what tapping a player will do right now.
-  if(G){
-    let hintHtml=null, hintCol='#5bc0de';
-    if(gameMode==='injury'){
-      if(injuryOffSel!==null){ hintCol='#e94560'; hintHtml=`${ic('arrow-down',12,'#e94560')} ${fn(avail[injuryOffSel])} off — tap a bench player to bring on`; }
-      else { hintCol='#e94560'; hintHtml=`${ic('bandage',12,'#e94560')} Tap the injured player`; }
-    } else if(fieldSwapSel!==null){
-      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} Tap another player to swap (tap the keeper to change GK)`;
-    } else {
-      hintHtml=`${ic('hand',12,'#5bc0de')} Tap two players to swap — including the keeper to change GK`;
-    }
-    if(hintHtml){
-      const hint=document.createElement('div');
-      hint.style.cssText=`flex:0 0 auto;text-align:center;font-size:11px;font-weight:700;letter-spacing:.5px;color:${hintCol};background:${hintCol==='#e94560'?'rgba(233,69,96,.1)':'rgba(91,192,222,.1)'};border:1px solid ${hintCol==='#e94560'?'rgba(233,69,96,.3)':'rgba(91,192,222,.3)'};border-radius:8px;padding:6px 10px`;
-      hint.innerHTML=hintHtml;
-      rw.appendChild(hint);
-    }
-  }
 
   // Build position-to-player mapping so we can look up positions by player index
   let playerSlots=[];
@@ -4374,8 +4387,29 @@ function renderRoster(){
     });
   }
 
-  // PITCH DIAGRAM — replaces the on-field list. Pitch goes directly into
-  // rosterWrap (a flex column) so it can flex-grow to fill available height.
+  // ===== BENCH (subs coming on) — rendered at the TOP =====
+  renderBenchInto(benchTop, swapMap, posForPlayer);
+
+  // ===== MODE HINT — what tapping a player does right now (above the bar) =====
+  if(G && hintC){
+    let hintHtml=null, hintCol='#5bc0de';
+    if(gameMode==='injury'){
+      if(injuryOffSel!==null){ hintCol='#e94560'; hintHtml=`${ic('arrow-down',12,'#e94560')} ${fn(avail[injuryOffSel])} off — tap a bench player to bring on`; }
+      else { hintCol='#e94560'; hintHtml=`${ic('bandage',12,'#e94560')} Tap the injured player`; }
+    } else if(fieldSwapSel!==null){
+      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} Tap another player to swap (tap the keeper to change GK)`;
+    } else {
+      hintHtml=`${ic('hand',12,'#5bc0de')} Tap two players to swap — including the keeper to change GK`;
+    }
+    if(hintHtml){
+      const hint=document.createElement('div');
+      hint.style.cssText=`text-align:center;font-size:11px;font-weight:700;letter-spacing:.5px;color:${hintCol};background:${hintCol==='#e94560'?'rgba(233,69,96,.1)':'rgba(91,192,222,.1)'};border:1px solid ${hintCol==='#e94560'?'rgba(233,69,96,.3)':'rgba(91,192,222,.3)'};border-radius:8px;padding:6px 10px`;
+      hint.innerHTML=hintHtml;
+      hintC.appendChild(hint);
+    }
+  }
+
+  // ===== PITCH DIAGRAM — middle, fills the remaining space =====
   const pitch=document.createElement('div');
   const _gSport=getSport(currentTeam);
   pitch.className='lu-pitch'+(_gSport.key==='netball'?' np-netball':'');
@@ -4392,7 +4426,7 @@ function renderRoster(){
   const pitchFlex=document.createElement('div');
   pitchFlex.className='pitch-flex';
   pitchFlex.appendChild(pitch);
-  rw.appendChild(pitchFlex);
+  pitchMid.appendChild(pitchFlex);
   if(_gSport.key!=='netball'){
     _pitchDims={w:pitch.clientWidth, h:pitch.clientHeight};
     // First-paint race: if the pitch hasn't been laid out yet (cw or ch is 0),
@@ -4465,19 +4499,19 @@ function renderRoster(){
     });
   }
   _pitchDims=null;   // reset so subsequent pitchPt calls return identity
+}
 
-  // BENCH section — single wrapper so label + grid stay tightly grouped.
-  // The 18px gap from rosterWrap only separates this section from the pitch.
-  if(G.bench.length){
+// Bench (subs coming on) — extracted from renderRoster so it can be rendered
+// into the TOP strip independently of the pitch. The dashboard's Undo button
+// now lives in the bottom bar, so the old in-bench "UNDO LAST SUB" pill is gone.
+function renderBenchInto(container, swapMap, posForPlayer){
+  if(!container || !G || !G.bench.length) return;
+  {
     const benchSection=document.createElement('div');
     benchSection.style.cssText='display:flex;flex-direction:column;gap:6px';
     const bLbl=document.createElement('div');
-    bLbl.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:0 2px';
-    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`+(
-      G.lastSub
-        ? `<button onclick="undoLastSub()" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px" title="Revert the last sub">${ic('undo-2',11,'#f0a500')}UNDO LAST SUB</button>`
-        : ''
-    );
+    bLbl.style.cssText='padding:0 2px';
+    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`;
     benchSection.appendChild(bLbl);
 
     // Pair-rotation mode swaps pre-grouped pairs as units, so reordering an
@@ -4565,9 +4599,8 @@ function renderRoster(){
       nextOnList.forEach((pIdx,i)=>grid.appendChild(makeBenchPill(pIdx,i,true)));
     }
     benchSection.appendChild(grid);
-    rw.appendChild(benchSection);
+    container.appendChild(benchSection);
   }
-
 }
 
 // Legacy alias — renderG calls renderPitch
