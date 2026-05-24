@@ -1,6 +1,6 @@
 # Sub Timer — AFL Mode Spec
 
-**Status:** research complete, build not started · **Target version:** v2.0-beta
+**Status:** Phases 1–2 shipped in v2.0-beta (sport + 10 age formats + oval pitch + positions, top-down). Remaining: senior rotation cap (§7), goals/behinds scoring, per-format tier A/B position depth (§3), polish (§8 Phase 5). · **Target version:** v2.0-beta
 **Scope:** add Australian Rules Football as a third sport, alongside Soccer and Netball.
 
 ---

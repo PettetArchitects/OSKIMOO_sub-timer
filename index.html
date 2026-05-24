@@ -203,6 +203,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    the aspect ratio (the classic "fit aspect box in a flex cell" trick). */
 .pitch-flex{flex:1 1 0;min-height:0;position:relative}
 .lu-pitch{position:absolute;inset:0;margin:auto;aspect-ratio:105/80;max-width:100%;max-height:100%;background:transparent;border:none;overflow:visible;perspective:1500px;perspective-origin:50% 100%}
+.lu-pitch.np-afl{aspect-ratio:135/165}  /* AFL oval — portrait field proportions (135m wide × 165m long) */
 .lu-plane{position:absolute;left:0;right:0;bottom:0;height:240%;transform-origin:50% 100%;transform:rotateX(45deg)}
 .lu-plane svg{width:100%;height:100%;position:absolute;inset:0}
 .lu-tokens{position:absolute;inset:0;pointer-events:none}
@@ -1145,6 +1146,14 @@ const SPORTS={
     periodShort:q=>`Q${q}`,
     breakLabels:{1:'QUARTER TIME',2:'HALF TIME',3:'THREE-QUARTER TIME'},
     formats:['nb-set','nb-go','nb-junior','nb-open']
+  },
+  afl:{
+    key:'afl',label:'AFL',icon:'aflBall',available:true,
+    positions:['FB','HB','C','W','HF','FF','RUC','R'],   // simplified tags for the editor
+    periodCount:4,             // quarters (reuse netball logic)
+    periodShort:q=>`Q${q}`,
+    breakLabels:{1:'QUARTER TIME',2:'HALF TIME',3:'THREE-QUARTER TIME'},
+    formats:['afl-auskick','afl-9','afl-10','afl-11','afl-12','afl-13','afl-14','afl-15','afl-16','afl-senior']
   }
 };
 function getSport(team){
@@ -1410,6 +1419,47 @@ const FORMATIONS = {
   'nb-open':   { 'standard':[{label:'GS',x:50,y:14},{label:'GA',x:35,y:30},{label:'WA',x:65,y:30},{label:'C',x:50,y:50},{label:'WD',x:35,y:70},{label:'GD',x:65,y:70},{label:'GK',x:50,y:86}] }
 };
 
+// ===== AFL formations (oval pitch; y is the length axis — backs at y≈88, forwards at y≈12). =====
+// Shared layouts assigned to each age format below (avoids repeating the arrays).
+const AFL_F18 = [
+  {label:'FB',  x:50,y:88},{label:'BPL', x:30,y:85},{label:'BPR', x:70,y:85},
+  {label:'CHB', x:50,y:72},{label:'HBFL',x:25,y:70},{label:'HBFR',x:75,y:70},
+  {label:'C',   x:50,y:50},{label:'WL',  x:18,y:50},{label:'WR',  x:82,y:50},
+  {label:'CHF', x:50,y:28},{label:'HFFL',x:25,y:30},{label:'HFFR',x:75,y:30},
+  {label:'FF',  x:50,y:12},{label:'FPL', x:30,y:15},{label:'FPR', x:70,y:15},
+  {label:'RUC', x:50,y:40},{label:'RR',  x:42,y:55},{label:'R',   x:58,y:55}
+];
+const AFL_F15 = [
+  {label:'FB', x:50,y:87},{label:'BPL',x:28,y:84},{label:'BPR',x:72,y:84},
+  {label:'CHB',x:50,y:70},{label:'HBL',x:25,y:68},{label:'HBR',x:75,y:68},
+  {label:'RUC',x:50,y:50},{label:'WL', x:20,y:52},{label:'WR', x:80,y:52},
+  {label:'CHF',x:50,y:30},{label:'HFL',x:25,y:32},{label:'HFR',x:75,y:32},
+  {label:'FF', x:50,y:13},{label:'FPL',x:30,y:16},{label:'FPR',x:70,y:16}
+];
+const AFL_F12 = [
+  {label:'FB', x:50,y:88},{label:'BL', x:28,y:82},{label:'BR', x:72,y:82},
+  {label:'CHB',x:50,y:66},
+  {label:'C',  x:50,y:50},{label:'WL', x:24,y:50},{label:'WR', x:76,y:50},
+  {label:'CHF',x:50,y:34},
+  {label:'FF', x:50,y:12},{label:'FL', x:28,y:18},{label:'FR', x:72,y:18},
+  {label:'RUC',x:50,y:42}
+];
+const AFL_F6 = [
+  {label:'B',x:35,y:80},{label:'B',x:65,y:80},
+  {label:'C',x:35,y:50},{label:'C',x:65,y:50},
+  {label:'F',x:35,y:20},{label:'F',x:65,y:20}
+];
+FORMATIONS['afl-auskick']={'6':AFL_F6};
+FORMATIONS['afl-9']={'12':AFL_F12};
+FORMATIONS['afl-10']={'12':AFL_F12};
+FORMATIONS['afl-11']={'15':AFL_F15};
+FORMATIONS['afl-12']={'15':AFL_F15};
+FORMATIONS['afl-13']={'full-18':AFL_F18};
+FORMATIONS['afl-14']={'full-18':AFL_F18};
+FORMATIONS['afl-15']={'full-18':AFL_F18};
+FORMATIONS['afl-16']={'full-18':AFL_F18};
+FORMATIONS['afl-senior']={'full-18':AFL_F18};
+
 const FORMATS = {
   '4v4':  { sport:'soccer', label:'4v4',  age:'U6',    onField:4,  hasGk:false, defaultHalf:10, defaultSub:5,  defaultSc:1, defaultFormation:'2-2' },
   '5v5':  { sport:'soccer', label:'5v5',  age:'Futsal / 5-aside', onField:5, hasGk:true, defaultHalf:20, defaultSub:2, defaultSc:2, defaultFormation:'1-2-1' },
@@ -1422,6 +1472,17 @@ const FORMATS = {
   'nb-go':     { sport:'netball', label:'GO',     age:'U10 · 9-10 yrs', onField:7, hasGk:false, defaultHalf:10, defaultSub:5, defaultSc:1, defaultFormation:'standard' },
   'nb-junior': { sport:'netball', label:'Junior', age:'U13 · 11-13 yrs',onField:7, hasGk:false, defaultHalf:12, defaultSub:6, defaultSc:1, defaultFormation:'standard' },
   'nb-open':   { sport:'netball', label:'Open',   age:'Senior · 14+',   onField:7, hasGk:false, defaultHalf:15, defaultSub:7, defaultSc:1, defaultFormation:'standard' },
+  // AFL — periods are quarters, defaultHalf is the per-quarter length in minutes. No GK.
+  'afl-auskick':{ sport:'afl', label:'Auskick', age:'U5-8',  onField:6,  hasGk:false, defaultHalf:10, defaultSub:5, defaultSc:2, defaultFormation:'6' },
+  'afl-9':      { sport:'afl', label:'U9',      age:'U9',    onField:12, hasGk:false, defaultHalf:10, defaultSub:5, defaultSc:3, defaultFormation:'12' },
+  'afl-10':     { sport:'afl', label:'U10',     age:'U10',   onField:12, hasGk:false, defaultHalf:12, defaultSub:5, defaultSc:3, defaultFormation:'12' },
+  'afl-11':     { sport:'afl', label:'U11',     age:'U11',   onField:15, hasGk:false, defaultHalf:15, defaultSub:6, defaultSc:3, defaultFormation:'15' },
+  'afl-12':     { sport:'afl', label:'U12',     age:'U12',   onField:15, hasGk:false, defaultHalf:15, defaultSub:6, defaultSc:3, defaultFormation:'15' },
+  'afl-13':     { sport:'afl', label:'U13',     age:'U13',   onField:18, hasGk:false, defaultHalf:18, defaultSub:6, defaultSc:3, defaultFormation:'full-18' },
+  'afl-14':     { sport:'afl', label:'U14',     age:'U14',   onField:18, hasGk:false, defaultHalf:18, defaultSub:6, defaultSc:3, defaultFormation:'full-18' },
+  'afl-15':     { sport:'afl', label:'U15',     age:'U15',   onField:18, hasGk:false, defaultHalf:20, defaultSub:6, defaultSc:3, defaultFormation:'full-18' },
+  'afl-16':     { sport:'afl', label:'U16',     age:'U16',   onField:18, hasGk:false, defaultHalf:20, defaultSub:6, defaultSc:3, defaultFormation:'full-18' },
+  'afl-senior': { sport:'afl', label:'Senior',  age:'Open',  onField:18, hasGk:false, defaultHalf:20, defaultSub:6, defaultSc:5, defaultFormation:'full-18' },
 };
 
 // Helper to get current formation positions (including GK if applicable)
@@ -1496,7 +1557,9 @@ const ICON_CUSTOM={
   // forming the classic three-panel ball pattern. Inlined here so it
   // doesn't depend on the Lucide CDN finishing — and so it renders
   // reliably even at 14-22px sizes on slow connections.
-  netball:'<circle cx="12" cy="12" r="10"/><path d="M11.1 7.1a16.55 16.55 0 0 1 10.9 4"/><path d="M12 12a12.6 12.6 0 0 1-8.7 5"/><path d="M16.8 13.6a16.55 16.55 0 0 1-9 7.5"/><path d="M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10"/><path d="M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5"/>'
+  netball:'<circle cx="12" cy="12" r="10"/><path d="M11.1 7.1a16.55 16.55 0 0 1 10.9 4"/><path d="M12 12a12.6 12.6 0 0 1-8.7 5"/><path d="M16.8 13.6a16.55 16.55 0 0 1-9 7.5"/><path d="M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10"/><path d="M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5"/>',
+  // AFL Sherrin — rotated oval with a centre seam + cross-laces.
+  aflBall:'<ellipse cx="12" cy="12" rx="5.5" ry="9.5" transform="rotate(45 12 12)"/><line x1="8.2" y1="15.8" x2="15.8" y2="8.2"/><line x1="9.7" y1="13.1" x2="11" y2="14.4"/><line x1="11.4" y1="11.4" x2="12.7" y2="12.7"/><line x1="13.1" y1="9.7" x2="14.4" y2="11"/>'
 };
 function ic(name,size,color){
   const s=size||14,c=color||'currentColor';
@@ -1553,7 +1616,8 @@ let _pitchDims=null;
 // on the goal line. Netball uses its own layout untouched.
 function adjustY(pos, isGk){
   if(isGk || pos.label==='GK') return pos;
-  if(getSport(currentTeam).key==='netball') return pos;
+  const _sk=getSport(currentTeam).key;
+  if(_sk==='netball'||_sk==='afl') return pos;   // top-down sports: no perspective compression
   let y=pos.y*0.85+4;
   if(pos.y<30) y-=5;   // forward line: extra push to clear the midfield pills
   return {...pos, y:Math.round(y*100)/100};
@@ -1696,6 +1760,86 @@ function pitchRect(x,y,w,h){
 })();
 const SOCCER_PITCH_SVG=window.SOCCER_PITCH_SVG;
 
+// === AFL oval pitch ===
+// Adapted from the cabinet-projection prototype. Rendered top-down (TILT=90 →
+// identity projection) in portrait (goals top & bottom, length = y axis). The
+// .lu-pitch.np-afl box carries the 135/165 field aspect ratio, so the unit
+// circle in the 100×100 viewBox displays as a correctly-proportioned oval and
+// real-metre squares stay square — no "egg".
+function aflPitchSvg(){
+  const TILT=90, DEPTH_AXIS='x';
+  const FIELD_LEN_M=165, FIELD_WID_M=135;
+  const along_len=m=>(m/FIELD_LEN_M)*100, along_wid=m=>(m/FIELD_WID_M)*100;
+  function tiltPt(wx,wy){ const c=Math.cos((90-TILT)*Math.PI/180);
+    return DEPTH_AXIS==='y' ? {x:wx,y:50+(wy-50)*c} : {x:50+(wx-50)*c,y:wy}; }
+  function sampleEllipse(cx,cy,rx,ry,n=128,from=0,to=Math.PI*2){
+    const pts=[]; for(let i=0;i<=n;i++){ const a=from+(to-from)*(i/n);
+      const p=tiltPt(cx+rx*Math.cos(a),cy+ry*Math.sin(a)); pts.push(`${p.x.toFixed(2)},${p.y.toFixed(2)}`);} return pts.join(' '); }
+  function rectPts(x,y,w,h){ const a=tiltPt(x,y),b=tiltPt(x+w,y),c=tiltPt(x+w,y+h),d=tiltPt(x,y+h);
+    const f=n=>n.toFixed(2); return `${f(a.x)},${f(a.y)} ${f(b.x)},${f(b.y)} ${f(c.x)},${f(c.y)} ${f(d.x)},${f(d.y)}`; }
+  const OVAL_RX=50,OVAL_RY=50;
+  const CS_lenSide=along_len(50), CS_widSide=along_wid(50);
+  const CS_w=DEPTH_AXIS==='y'?CS_lenSide:CS_widSide;
+  const CS_h=DEPTH_AXIS==='y'?CS_widSide:CS_lenSide;
+  const CC_OUT_rx=DEPTH_AXIS==='y'?along_len(5):along_wid(5);
+  const CC_OUT_ry=DEPTH_AXIS==='y'?along_wid(5):along_len(5);
+  const CC_IN_rx=DEPTH_AXIS==='y'?along_len(1.5):along_wid(1.5);
+  const CC_IN_ry=DEPTH_AXIS==='y'?along_wid(1.5):along_len(1.5);
+  const ARC_rx=DEPTH_AXIS==='y'?along_len(50):along_wid(50);
+  const ARC_ry=DEPTH_AXIS==='y'?along_wid(50):along_len(50);
+  const GS_deep_world=DEPTH_AXIS==='y'?along_len(9):along_wid(9);
+  const GS_wide_world=DEPTH_AXIS==='y'?along_wid(6.4):along_len(6.4);
+  const GOAL_OFF=DEPTH_AXIS==='y'?along_wid(3.2):along_len(3.2);
+  const BEHIND_OFF=DEPTH_AXIS==='y'?along_wid(9.6):along_len(9.6);
+  function goalEnd(which){
+    const isNear=(which==='right'||which==='bottom');
+    const baseCoord=isNear?100:0;
+    if(DEPTH_AXIS==='y'){
+      return { line:{x1:baseCoord,y1:50-BEHIND_OFF,x2:baseCoord,y2:50+BEHIND_OFF},
+        square:{x:isNear?baseCoord-GS_deep_world:baseCoord,y:50-GS_wide_world/2,w:GS_deep_world,h:GS_wide_world},
+        arc:{cx:baseCoord,cy:50,fromA:isNear?Math.PI/2:-Math.PI/2,toA:isNear?3*Math.PI/2:Math.PI/2},
+        posts:{lineX:baseCoord,tickOut:isNear?baseCoord+1.5:baseCoord-1.5} };
+    } else {
+      return { line:{x1:50-BEHIND_OFF,y1:baseCoord,x2:50+BEHIND_OFF,y2:baseCoord},
+        square:{x:50-GS_wide_world/2,y:isNear?baseCoord-GS_deep_world:baseCoord,w:GS_wide_world,h:GS_deep_world},
+        arc:{cx:50,cy:baseCoord,fromA:isNear?Math.PI:0,toA:isNear?2*Math.PI:Math.PI},
+        posts:{lineY:baseCoord,tickOut:isNear?baseCoord+1.5:baseCoord-1.5} };
+    }
+  }
+  const gA=DEPTH_AXIS==='y'?goalEnd('left'):goalEnd('top');
+  const gB=DEPTH_AXIS==='y'?goalEnd('right'):goalEnd('bottom');
+  function postTicks(g){
+    const offsets=[-BEHIND_OFF,-GOAL_OFF,GOAL_OFF,BEHIND_OFF];
+    if(DEPTH_AXIS==='y'){
+      return offsets.map(dy=>{ const a=tiltPt(g.posts.lineX,50+dy),b=tiltPt(g.posts.tickOut,50+dy);
+        return `<line vector-effect="non-scaling-stroke" x1="${a.x.toFixed(2)}" y1="${a.y.toFixed(2)}" x2="${b.x.toFixed(2)}" y2="${b.y.toFixed(2)}" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>`; }).join('');
+    } else {
+      return offsets.map(dx=>{ const a=tiltPt(50+dx,g.posts.lineY),b=tiltPt(50+dx,g.posts.tickOut);
+        return `<line vector-effect="non-scaling-stroke" x1="${a.x.toFixed(2)}" y1="${a.y.toFixed(2)}" x2="${b.x.toFixed(2)}" y2="${b.y.toFixed(2)}" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>`; }).join('');
+    }
+  }
+  let bisL,bisR;
+  if(DEPTH_AXIS==='y'){ bisL=tiltPt(50,50-CC_OUT_ry); bisR=tiltPt(50,50+CC_OUT_ry); }
+  else { bisL=tiltPt(50-CC_OUT_rx,50); bisR=tiltPt(50+CC_OUT_rx,50); }
+  const gl=g=>`<line vector-effect="non-scaling-stroke" x1="${tiltPt(g.line.x1,g.line.y1).x.toFixed(2)}" y1="${tiltPt(g.line.x1,g.line.y1).y.toFixed(2)}" x2="${tiltPt(g.line.x2,g.line.y2).x.toFixed(2)}" y2="${tiltPt(g.line.x2,g.line.y2).y.toFixed(2)}" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/>`;
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible">
+    <defs><clipPath id="aflOvalClip"><polygon points="${sampleEllipse(50,50,OVAL_RX,OVAL_RY)}"/></clipPath></defs>
+    <polygon points="${sampleEllipse(50,50,OVAL_RX,OVAL_RY)}" fill="rgba(255,255,255,.015)" stroke="rgba(255,255,255,.4)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    <g clip-path="url(#aflOvalClip)">
+      <polygon vector-effect="non-scaling-stroke" points="${rectPts(50-CS_w/2,50-CS_h/2,CS_w,CS_h)}" fill="none" stroke="rgba(255,255,255,.26)" stroke-width="1"/>
+      <polygon vector-effect="non-scaling-stroke" points="${sampleEllipse(50,50,CC_OUT_rx,CC_OUT_ry,64)}" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1"/>
+      <polygon vector-effect="non-scaling-stroke" points="${sampleEllipse(50,50,CC_IN_rx,CC_IN_ry,32)}" fill="none" stroke="rgba(255,255,255,.36)" stroke-width="1"/>
+      <line vector-effect="non-scaling-stroke" x1="${bisL.x.toFixed(2)}" y1="${bisL.y.toFixed(2)}" x2="${bisR.x.toFixed(2)}" y2="${bisR.y.toFixed(2)}" stroke="rgba(255,255,255,.26)" stroke-width="1"/>
+      <polyline vector-effect="non-scaling-stroke" points="${sampleEllipse(gA.arc.cx,gA.arc.cy,ARC_rx,ARC_ry,96,gA.arc.fromA,gA.arc.toA)}" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+      <polyline vector-effect="non-scaling-stroke" points="${sampleEllipse(gB.arc.cx,gB.arc.cy,ARC_rx,ARC_ry,96,gB.arc.fromA,gB.arc.toA)}" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+      <polygon vector-effect="non-scaling-stroke" points="${rectPts(gA.square.x,gA.square.y,gA.square.w,gA.square.h)}" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.2"/>
+      <polygon vector-effect="non-scaling-stroke" points="${rectPts(gB.square.x,gB.square.y,gB.square.w,gB.square.h)}" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.2"/>
+      ${gl(gA)}${gl(gB)}
+    </g>
+    ${postTicks(gA)}${postTicks(gB)}
+  </svg>`;
+}
+
 const SOUND_PACKS={
   classic:{label:'Classic',icon:'activity',desc:'Quick beeps',
     sub:(c,t)=>{[0,0.3,0.6].forEach(o=>{const s=c.createOscillator(),g=c.createGain();s.connect(g);g.connect(c.destination);s.type='square';s.frequency.setValueAtTime(880,t+o);g.gain.setValueAtTime(0.2,t+o);g.gain.setValueAtTime(0.2,t+o+0.12);g.gain.exponentialRampToValueAtTime(0.01,t+o+0.15);s.start(t+o);s.stop(t+o+0.18);});},
@@ -1829,12 +1973,21 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v1.11.3-beta';
+const APP_VERSION='v2.0-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.0-beta':{
+    title:'AFL mode',
+    items:[
+      'Australian Rules Football added as a third sport — create an AFL team from New Team',
+      'Age formats from Auskick through to Senior (12 / 15 / 18 a-side), 4 quarters with inline quarter/half/three-quarter-time breaks',
+      'Oval pitch with centre square, 50m arcs, goal squares and posts — correctly proportioned (no GK)',
+      'All the usual sub strategies, line-up-on-the-pitch, injury subs and team settings work for AFL too'
+    ]
+  },
   'v1.11.3-beta':{
     title:'Formation button',
     items:[
@@ -4090,7 +4243,8 @@ function renderGameDash(){
   // netball (fixed positions). 'active' while the picker is open.
   const gf=document.getElementById('gdFormation');
   if(gf){
-    const isNb=getSport(currentTeam).key==='netball';
+    const _sk=getSport(currentTeam).key;
+    const isNb=_sk==='netball'||_sk==='afl';   // fixed/single formation — hide the button
     if(isNb){ gf.style.display='none'; }
     else{
       gf.style.display='';
@@ -4596,10 +4750,15 @@ function renderRoster(){
   // ===== PITCH DIAGRAM — middle, fills the remaining space =====
   const pitch=document.createElement('div');
   const _gSport=getSport(currentTeam);
-  pitch.className='lu-pitch'+(_gSport.key==='netball'?' np-netball':'');
+  const _isAfl=_gSport.key==='afl';
+  const _isNb=_gSport.key==='netball';
+  const _topDown=_isNb||_isAfl;   // top-down sports: tokens use raw x/y%, no perspective
+  pitch.className='lu-pitch'+(_isNb?' np-netball':'')+(_isAfl?' np-afl':'');
   pitch.style.cssText='width:100%;border-radius:6px';
-  if(_gSport.key==='netball'){
+  if(_isNb){
     pitch.innerHTML=`<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`;
+  } else if(_isAfl){
+    pitch.innerHTML=aflPitchSvg();
   } else {
     pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
   }
@@ -4611,7 +4770,7 @@ function renderRoster(){
   pitchFlex.className='pitch-flex';
   pitchFlex.appendChild(pitch);
   pitchMid.appendChild(pitchFlex);
-  if(_gSport.key!=='netball'){
+  if(!_topDown){
     _pitchDims={w:pitch.clientWidth, h:pitch.clientHeight};
     // First-paint race: if the pitch hasn't been laid out yet (cw or ch is 0),
     // schedule a re-render on next frame so tokens land in the right place.
@@ -4635,7 +4794,7 @@ function renderRoster(){
     const isSwapSel=(fieldSwapSel===pIdx);
     el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'');
     const _adj=adjustY(pos,isGk);
-    const _proj=(_gSport.key==='netball')?{x:_adj.x,y:_adj.y}:pitchPt(_adj.x,_adj.y);
+    const _proj=_topDown?{x:_adj.x,y:_adj.y}:pitchPt(_adj.x,_adj.y);
     el.style.cssText=`left:${_proj.x}%;top:${_proj.y}%;position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center`;
     // Sub indicator sits inline in the name pill, to the right with the arrow.
     const subInline=isOff&&replacedBy!==null?`<span class="fc-mins" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
@@ -4674,8 +4833,8 @@ function renderRoster(){
         }
       }
       // Apply same y-compression to opp markers so they line up with our players
-      const _oppAdj=_isNetballGame?{x:oppX,y:oppY}:adjustY({label:p.label,x:oppX,y:oppY},p.label==='GK');
-      const _oppProj=_isNetballGame?{x:_oppAdj.x,y:_oppAdj.y}:pitchPt(_oppAdj.x,_oppAdj.y);
+      const _oppAdj=_topDown?{x:oppX,y:oppY}:adjustY({label:p.label,x:oppX,y:oppY},p.label==='GK');
+      const _oppProj=_topDown?{x:_oppAdj.x,y:_oppAdj.y}:pitchPt(_oppAdj.x,_oppAdj.y);
       const op=document.createElement('div');
       op.style.cssText=`position:absolute;left:${_oppProj.x}%;top:${_oppProj.y}%;transform:translate(-50%,-50%);z-index:1;width:22px;height:22px;border-radius:50%;background:rgba(120,120,140,.18);border:1px dashed rgba(180,180,200,.45);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(200,200,220,.6);letter-spacing:.5px;pointer-events:none`;
       op.textContent=p.label;
