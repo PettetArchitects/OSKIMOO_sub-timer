@@ -203,10 +203,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    the aspect ratio (the classic "fit aspect box in a flex cell" trick). */
 .pitch-flex{flex:1 1 0;min-height:0;position:relative}
 .lu-pitch{position:absolute;inset:0;margin:auto;aspect-ratio:105/80;max-width:100%;max-height:100%;background:transparent;border:none;overflow:visible;perspective:1500px;perspective-origin:50% 100%}
-/* AFL oval — portrait isometric: the 165 m length is foreshortened well below a
-   flat top-down so it clearly reads as a tilted-back ground (cabinet projection,
-   no "egg"). 135 wide / ~118 (≈ 165·0.72) gives a distinctly raked oval. */
-.lu-pitch.np-afl{aspect-ratio:135/118}
+/* AFL oval — portrait, camera-behind-goal (tall oval, goals top & bottom). True
+   field aspect; the width foreshortening is baked into aflProject (cabinet tilt),
+   so the oval sits tall with its sides drawn in slightly (no egg). */
+.lu-pitch.np-afl{aspect-ratio:135/165}
 .lu-plane{position:absolute;left:0;right:0;bottom:0;height:240%;transform-origin:50% 100%;transform:rotateX(45deg)}
 .lu-plane svg{width:100%;height:100%;position:absolute;inset:0}
 .lu-tokens{position:absolute;inset:0;pointer-events:none}
@@ -1773,14 +1773,17 @@ const SOCCER_PITCH_SVG=window.SOCCER_PITCH_SVG;
 // .lu-pitch.np-afl box carries the 135/165 field aspect ratio, so the unit
 // circle in the 100×100 viewBox displays as a correctly-proportioned oval and
 // real-metre squares stay square — no "egg".
-// AFL pitch — PORTRAIT (attack up/down, like the soccer pitch). The oval is
-// drawn top-down here; the cabinet foreshortening (the tilted-ground / isometric
-// look, no egg) is applied uniformly via the .lu-pitch.np-afl box aspect-ratio,
-// so markings AND %-positioned tokens foreshorten together while shirts stay
-// upright. aflProject is identity (the box does the tilt).
-function aflProject(wx,wy){ return {x:wx, y:wy}; }
+// AFL pitch — PORTRAIT, camera behind the goal (the tested prototype): a TALL
+// oval, goals top & bottom, with the WIDTH gently foreshortened by the cabinet
+// tilt (cos(90−tilt)). An oval projects to an oval (no egg). The same projection
+// places markings AND player tokens; shirts stay upright.
+const AFL_TILT=66, AFL_DEPTH='x';   // 'x' = compress width (camera behind goal)
+function aflProject(wx,wy){
+  const c=Math.cos((90-AFL_TILT)*Math.PI/180);
+  return AFL_DEPTH==='y' ? {x:wx, y:50+(wy-50)*c} : {x:50+(wx-50)*c, y:wy};
+}
 function aflPitchSvg(){
-  const TILT=90, DEPTH_AXIS='x';
+  const TILT=AFL_TILT, DEPTH_AXIS=AFL_DEPTH;
   const FIELD_LEN_M=165, FIELD_WID_M=135;
   const along_len=m=>(m/FIELD_LEN_M)*100, along_wid=m=>(m/FIELD_WID_M)*100;
   function tiltPt(wx,wy){ const c=Math.cos((90-TILT)*Math.PI/180);
@@ -1986,12 +1989,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.0.5-beta';
+const APP_VERSION='v2.0.6-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.0.6-beta':{
+    title:'AFL oval — correct angle',
+    items:[
+      'AFL oval now matches the design prototype: portrait, camera-behind-goal — a tall oval with the width drawn in (goals top & bottom)',
+      'Players sit in the proper AFL structure with no overlap'
+    ]
+  },
   'v2.0.5-beta':{
     title:'AFL scoring (goals & behinds)',
     items:[
