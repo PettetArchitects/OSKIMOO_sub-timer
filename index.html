@@ -1017,12 +1017,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App picks the longest-on player to come off and the longest-benched to come on. Best for fair-play rules.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="refresh-cw" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Paired rotation</div>
+      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="refresh-cw" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Matched pairs</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pairs swap on/off together. The pair with the most game time comes off — predictability + fair minutes in one.</div>
     </button>
-    <button class="chip" onclick="pickSubStrategy('manual')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
-      <div style="font-weight:800;color:#f0a500;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="target" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>I'll call them</div>
-      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who.</div>
+    <button class="chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
+      <div style="font-weight:800;color:#a78bfa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pick when subs fire. Tap SUB on the fly, or pre-build a full Plan in the planner — same strategy, different degree of detail.</div>
     </button>
   </div>
 </div>
@@ -1458,6 +1458,9 @@ function resumeActiveGame(){
   // resetHalf has something to restore (best-effort: current state, not
   // true kickoff state since that wasn't recorded).
   if(G && !G._halfStart) snapshotHalfStart();
+  // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
+  if(G && G.subStrategy==='manual') G.subStrategy='planned';
+  if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
   showScr('s4');
   renderG();
   renderSoundPicker(); // initialise the alert-chip label on the game screen
@@ -2776,7 +2779,7 @@ const HOME_TIPS=[
   {icon:'swap',title:'Tap two players to swap positions',desc:"Short-tap any on-field player, then tap another to swap their positions — keeper included. A quick fix for rebalancing a line mid-half."},
   {icon:'refresh',title:'Undo a sub mistake',desc:"After confirming a swap, an UNDO LAST SUB pill appears next to the bench. Reverts the swap and rewinds the minutes."},
   {icon:'arrowUp',title:'Reorder who comes on next',desc:"Up/down chevrons next to each bench player let you promote or demote them in the sub queue."},
-  {icon:'timer',title:'Choose a sub strategy',desc:"On Settings, pick Equal-time, Paired rotation, or Manual. Each picks differently who comes off and on at sub time."},
+  {icon:'timer',title:'Choose a sub strategy',desc:"In Sub Settings (or the Plan icon), pick Equal-time, Matched, Manual, or Custom. Each picks who comes off and on at sub time differently."},
   {icon:'goal',title:'Tag who scored each goal',desc:"When you add a goal, pick the scorer from the on-field players. Shows up in your match log."},
   {icon:'cloud',title:'Sync across devices',desc:"Sign in (top-right). Your teams and match history follow you to any phone or iPad."}
 ];
@@ -2812,12 +2815,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.30-beta';
+const APP_VERSION='v2.7.31-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.31-beta':{
+    title:'Paired → Matched, Manual merged into Custom',
+    items:[
+      '"Paired" renamed to "Matched" everywhere user-facing (start-of-game picker, Sub Settings grid, Sub Order tabs + info line, home tip, picker hero card). Internal key stays \'paired\' so saved games still work.',
+      'Manual and Custom merged into a single "Custom" strategy — the difference between them was just degree of detail. With no plan, tap SUB to fire (old Manual). With a plan, the planned events auto-fire at their time (old Custom). Either way, the app suggests off/on for any unplanned slot. Existing games saved on the old \'manual\' key migrate to \'planned\' on resume.'
+    ]
+  },
   'v2.7.30-beta':{
     title:'Plan icon: clipboard, not hamburger lines',
     items:['Top-right Plan button now uses a clipboard-with-checklist icon (matches the "planned" strategy iconography) instead of the list-with-dots — too easy to confuse with the ☰ menu top-left.']
@@ -4375,9 +4385,9 @@ function renderFormationPicker(){
 // trigSub() chooses who comes off and on each interval.
 const SUB_STRATEGIES=[
   {key:'fair',    icon:'timer',    label:'Equal time',    color:'#00d4aa', stance:'I just want everyone to play.',         desc:'App picks the longest on-field player to come off, and longest-benched to come on. Best for fair-play rules. (Ted Lasso energy.)'},
-  {key:'paired',  icon:'refresh',  label:'Paired rotation',color:'#5bc0de',stance:'Keep my pairs together.',                desc:'Pre-grouped pairs swap on/off together. Picks the pair with the most game time so groups stay together AND minutes balance. (Ancelotti at the school dropoff.)'},
-  {key:'manual',  icon:'target',   label:"I'll call them",color:'#f0a500', stance:"I'll call them as I see them.",          desc:'No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who. (Klopp on the touchline.)'},
-  {key:'planned', icon:'clipboard',label:'Custom',        color:'#a78bfa', stance:'I plan every sub before kickoff.',       warning:'Use with caution — game day rarely goes to plan.', desc:"Auto-generates a fair plan you can tweak — or snap a photo of your notebook and we'll digitise it. (Pep Guardiola, but for U8s.)"}
+  {key:'paired',  icon:'refresh',  label:'Matched',        color:'#5bc0de',stance:'Keep my matched pairs together.',         desc:'Pre-grouped matched pairs swap on/off together. Picks the pair with the most game time so groups stay together AND minutes balance. (Ancelotti at the school dropoff.)'},
+  // v2.7.31: Manual merged into Custom. Tap SUB on the fly (low-detail) or pre-build a plan (high-detail) — same key.
+  {key:'planned', icon:'clipboard',label:'Custom',        color:'#a78bfa', stance:'I want control over when subs fire.',    desc:"Pick when subs fire. Tap SUB live, or pre-build a Plan in the planner — same strategy, different degree of detail. App still tracks minutes and suggests who if you haven't planned that slot."}
 ];
 function renderSubStratPicker(){
   const g=document.getElementById('subStratGrid');
@@ -5443,8 +5453,17 @@ function tickLoop(now){
     const ns=nxtST();
     if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
       G.sd.push(ns);
-      // Manual strategy: don't auto-pop the sub banner — coach taps SUB when they want
-      if(G.subStrategy!=='manual')trigSub();
+      // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
+      // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
+      // for any sub time; planned only when there's a matching plan event. Empty-plan
+      // 'planned' behaves like the old Manual — coach taps SUB to fire.
+      const strat=G.subStrategy||'fair';
+      let autoFire=(strat==='fair'||strat==='paired');
+      if(strat==='planned' && G.subPlan && G.subPlan.events){
+        const curMin=Math.floor(G.secs/60);
+        autoFire=G.subPlan.events.some(ev=>ev.type==='sub' && ev.half===G.half && ev.timeInHalf===curMin);
+      }
+      if(autoFire) trigSub();
     }
     if(G.secs>=cfg.hm*60){
       G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
@@ -6632,8 +6651,7 @@ function renderSsStratGrid(){
   if(!grid||!G) return;
   const opts=[
     {k:'fair',   icon:'timer',     label:'Equal',   color:'#00d4aa'},
-    {k:'paired', icon:'refresh',   label:'Paired',  color:'#5bc0de'},
-    {k:'manual', icon:'target',    label:'Manual',  color:'#f0a500'},
+    {k:'paired', icon:'refresh',   label:'Matched', color:'#5bc0de'},
     {k:'planned',icon:'clipboard', label:'Custom',  color:'#a78bfa'}
   ];
   grid.innerHTML=opts.map(o=>{
@@ -6710,8 +6728,7 @@ function renderSubOrderTabs(){
   const live=G.subStrategy||'fair';
   const opts=[
     {k:'fair',   label:'Equal'},
-    {k:'paired', label:'Paired'},
-    {k:'manual', label:'Manual'},
+    {k:'paired', label:'Matched'},
     {k:'planned',label:'Custom'}
   ];
   wrap.innerHTML=opts.map(o=>{
@@ -6741,7 +6758,7 @@ function renderSubOrder(){
   const list=document.getElementById('subOrderList');
   if(!info||!list||!G) return;
   const strat=_subOrderStrat||G.subStrategy||'fair';
-  const stratLabels={fair:'Equal time',paired:'Paired',manual:'Manual (suggested order)',planned:'Custom plan'};
+  const stratLabels={fair:'Equal time',paired:'Matched',planned:'Custom'};
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const sport=getSport(currentTeam);
   const periodCount=sport.periodCount||2;
