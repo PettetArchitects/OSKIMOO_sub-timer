@@ -1024,6 +1024,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- v2.7.36: Team action menu — opens when a team card on the home screen is tapped. -->
+<div class="ov" id="teamActionOv" onclick="if(event.target===this)closeTeamActions()">
+  <div class="ab" style="border-color:#5bc0de;max-width:360px;text-align:left">
+    <h2 id="teamActionTitle" style="text-align:center;color:#5bc0de;font-size:18px;margin-bottom:16px"></h2>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="teamActionPlayNow()" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:10px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="play" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Play now<span style="display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:2px">Pick who's here · kick off</span></span></button>
+      <button onclick="teamActionPlanAhead()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(167,139,250,.14);border:1.5px solid #a78bfa;border-radius:10px;color:#a78bfa;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="clipboard" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Plan ahead<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Set format, formation + sub plan before kickoff</span></span></button>
+      <button onclick="teamActionPastGames()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(91,192,222,.1);border:1.5px solid #5bc0de;border-radius:10px;color:#5bc0de;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="history" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Past games<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Match history for this team</span></span></button>
+      <button onclick="teamActionEdit()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:none;border:1px solid #2a3550;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left;margin-top:4px"><i data-lucide="pencil" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit team</button>
+    </div>
+    <button class="btn btn-o" style="margin-top:12px" onclick="closeTeamActions()">Cancel</button>
+  </div>
+</div>
+
 <!-- Bulk position-tag picker — opens when a position chip in the editor hint is tapped -->
 <div class="ov" id="bulkTagOv">
   <div class="ab" style="max-width:380px;max-height:80vh;overflow-y:auto;text-align:left">
@@ -2879,12 +2893,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.35-beta';
+const APP_VERSION='v2.7.36-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.36-beta':{
+    title:'Cleaner squad page + tap-team action menu',
+    items:[
+      'Squad page (Who\'s here) — chips are just name + tick / cross now. Position tags removed from this view (they belong in the team editor; on the day only who\'s present matters).',
+      'Tap a team card on the home screen and a small action menu opens: Play now (kick off straight away), Plan ahead (jump into the settings + plan), Past games (match history filtered to this team), Edit team. Previously the tap went straight to the squad picker.',
+      'Past games heading shows the team name when filtered.'
+    ]
+  },
   'v2.7.35-beta':{
     title:'Plan overlay opens automatically on game start',
     items:[
@@ -3597,10 +3619,47 @@ function renderHome(){
       <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="color:#5bc0de;flex-shrink:0;display:flex">${ic(_spt.icon,22)}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p></div></div>
       <div style="display:flex;gap:6px;flex-shrink:0">${actionBtns}</div>
     </div>`;
-    d.onclick=()=>{canPlay?selectTeam(t.id):editTeamScreen(t.id);};
+    d.onclick=()=>{canPlay?openTeamActions(t.id):editTeamScreen(t.id);};
     c.appendChild(d);
   });
   _li();
+}
+
+// v2.7.36 — Team action overlay (Play Now / Plan Ahead / Past Games / Edit).
+// Replaces the old "tap card → straight to squad picker" route so the coach
+// can also step into pre-game planning or match history from the same place.
+let _teamActionId=null;
+function openTeamActions(id){
+  _teamActionId=id;
+  const t=teams.find(x=>x.id==id);
+  if(!t) return;
+  document.getElementById('teamActionTitle').textContent=t.name.toUpperCase();
+  document.getElementById('teamActionOv').classList.add('show');
+  _li();
+}
+function closeTeamActions(){ document.getElementById('teamActionOv').classList.remove('show'); _teamActionId=null; }
+function teamActionPlayNow(){
+  const id=_teamActionId; closeTeamActions();
+  if(id!=null) selectTeam(id);              // existing flow → s1 squad picker
+}
+function teamActionPlanAhead(){
+  const id=_teamActionId; closeTeamActions();
+  if(id==null) return;
+  // Set up team state as if we were starting a game, then route into Settings
+  // (s2) so the coach can configure format / formation / sub plan ahead of time.
+  selectTeam(id);
+  // selectTeam already moved us to s1; chain into goSettings (which pulls the
+  // squad and renders the settings screen) on the next tick to avoid mid-render.
+  setTimeout(()=>{ if(typeof goSettings==='function') goSettings(); }, 0);
+}
+function teamActionPastGames(){
+  const id=_teamActionId; closeTeamActions();
+  if(id==null) return;
+  if(typeof showHistory==='function') showHistory(id);
+}
+function teamActionEdit(){
+  const id=_teamActionId; closeTeamActions();
+  if(id!=null) editTeamScreen(id);
 }
 
 function selectTeam(id){
@@ -4224,9 +4283,13 @@ function renderS1(){
     const c=document.createElement('div');
     const isOut=!sel.has(i);
     c.className='chip'+(isOut?'':' sel');
-    if(isOut){c.style.opacity='0.4';c.style.textDecoration='line-through';}
-    const ptags=posTagsHTML(getPlayerPos(currentTeam,name),true);
-    c.innerHTML=fn(name)+(ptags?'<br>'+ptags:'');
+    // v2.7.36: cleaner squad chips — just the name + tick / cross. Position
+    // tags belong in the team editor; on the day, who's here is the only thing
+    // that matters. Lots fewer pixels per chip → more chips per page.
+    c.style.cssText=isOut
+      ?'opacity:0.45;text-decoration:line-through;padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px'
+      :'padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px';
+    c.innerHTML=`<span>${fn(name)}</span><span style="color:${isOut?'#666':'#00d4aa'};font-size:13px">${isOut?'×':'✓'}</span>`;
     c.onclick=()=>{sel.has(i)?sel.delete(i):sel.add(i);renderS1();};
     g.appendChild(c);
   });
@@ -6199,11 +6262,19 @@ function saveMatch(){
   if(btn){btn.textContent='Saved ✓';btn.disabled=true;btn.style.opacity='.5';}
 }
 
-function showHistory(){
-  const matches=loadMatches();
+function showHistory(filterTeamId){
+  // v2.7.36: optional filter — Past Games from the team-action menu only shows
+  // matches saved against that team.name (saved matches don't carry team.id, so
+  // we look up the team name from the id and match by string).
+  let team=null;
+  if(filterTeamId!=null) team=teams.find(t=>t.id==filterTeamId);
+  const all=loadMatches();
+  const matches=team?all.filter(m=>m.team===team.name):all;
   const c=document.getElementById('historyList');c.innerHTML='';
+  const heading=document.querySelector('#s6 h1');
+  if(heading) heading.textContent=team?team.name.toUpperCase()+' · HISTORY':'MATCH HISTORY';
   if(!matches.length){
-    c.innerHTML='<div style="text-align:center;color:#666;padding:40px 16px">No matches saved yet</div>';
+    c.innerHTML='<div style="text-align:center;color:#666;padding:40px 16px">'+(team?'No matches saved for this team yet':'No matches saved yet')+'</div>';
     showScr('s6');return;
   }
   matches.forEach(m=>{
