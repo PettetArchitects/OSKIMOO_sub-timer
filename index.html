@@ -100,19 +100,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .tmr-h{font-size:14px;color:#e94560;font-weight:700;text-transform:uppercase;letter-spacing:2px}
 .tmr-c{font-family:'DSEG',monospace;font-size:min(13vw,56px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:2px 0;line-height:1}
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
-/* Next-sub countdown digit display — same font/size, slimmer (no centiseconds) and green by default. */
-.tmr-c.tmr-sub{font-size:min(10vw,44px);letter-spacing:1.5px;color:#00d4aa}
-/* iPhone / narrow-portrait: stack each team's label above its ± / score
-   controls, shrink the digits, and pad the top bar so it clears the ✕. */
+/* Next-sub countdown digit display — SAME size as the main clock now (v2.7.3) so the two read as a matched pair. Green by default. */
+.tmr-c.tmr-sub{letter-spacing:1.5px;color:#00d4aa}
+/* iPhone / narrow-portrait: tighten the stacked score header so it clears
+   the absolutely-positioned ✕ end-game button. Stacking itself is now the
+   default in renderScore (not media-query-gated). */
 @media(max-width:480px){
   #s4 > div:first-child{padding-left:40px!important;padding-right:40px!important}
-  #s4 #scoreArea{gap:8px!important;align-items:center!important}
-  #s4 .team-block{flex-direction:column!important;gap:2px!important}
-  #s4 .team-label{font-size:10px!important;letter-spacing:.5px!important;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #s4 #scoreArea{gap:8px!important}
+  #s4 .team-label{font-size:10px!important;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #s4 .team-controls{gap:4px!important}
   #s4 .team-controls > button{width:24px!important;height:24px!important;font-size:14px!important}
   #s4 .team-score{font-size:26px!important;min-width:22px!important}
-  #s4 .score-colon{font-size:22px!important;margin:0 2px!important;align-self:center!important}
+  #s4 .score-colon{font-size:20px!important;margin:0 2px!important}
 }
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
@@ -246,7 +246,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
-.gd-btn.at-end{order:999}
+/* .at-end removed in v2.7.3 — both end buttons now stay in fixed HTML order. */
 .gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg,.gd-btn.gd-reset svg{width:21px;height:21px}
 
 /* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
@@ -730,17 +730,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="scoreArea" style="display:flex;align-items:center;gap:6px"></div>
   </div>
 
-  <!-- Clock + next-sub countdown side-by-side, period label underneath. The
-       countdown is hidden in breaks-only mode; nsi only carries non-redundant
-       status (e.g. "No subs available") — the "Next sub at" text was dropped
-       in v2.4.4 because the green countdown digit display says the same thing. -->
+  <!-- Clock + next-sub countdown side-by-side, each with its OWN label
+       directly underneath (v2.7.3) so coaches can read "1ST HALF" under the
+       game time and "NEXT SUB" under the countdown without ambiguity.
+       The countdown group is hidden in breaks-only mode / no bench / etc. -->
   <div style="text-align:center;padding:12px 0 4px;flex-shrink:0">
-    <div style="display:flex;align-items:center;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
-      <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
-      <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa;display:none">05:00</div>
+    <div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
+        <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
+      </div>
+      <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:6px">
+        <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
+        <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
+      </div>
     </div>
-    <div id="hLbl" style="margin-top:6px;font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
-    <div id="nsi" style="margin-top:2px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
+    <div id="nsi" style="margin-top:6px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
   </div>
 
   <!-- Pitch — fills the middle, flexes to whatever space is left. -->
@@ -782,13 +787,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
+  <!-- v2.7.3 layout: SUB/RESET fixed far left, PAUSE/START fixed far right, sub-management buttons (Formation, View, Edit, Undo) in between. Both end buttons stay in place; only their labels morph. -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
-    <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn" id="gdView" onclick="cycleView()"></button>
     <button class="gd-btn" id="gdEdit" onclick="editTeamFromGame()"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
+    <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
   <!-- Hidden legacy elements -->
@@ -2568,12 +2574,21 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.2-beta';
+const APP_VERSION='v2.7.3-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.3-beta':{
+    title:'Per-clock labels + matched heights + fixed-position SUB / PAUSE',
+    items:[
+      'Period label (1ST HALF / Q2 / etc.) sits under the game clock; new NEXT SUB title under the green countdown. Title colour follows the countdown urgency (amber inside 30s, red inside 10s)',
+      'Both clocks now render at the same height — the sub countdown was smaller before; now it reads as a matched pair next to the game clock',
+      'Score header always stacks each team\'s label above its score + ± buttons, not just on iPhone — reads like a scoreboard at every viewport',
+      'Bottom bar layout settled: SUB / RESET fixed on the far left, PAUSE / START fixed on the far right. Sub-management buttons (Formation, View, Edit Team, Undo) sit between them. The end buttons no longer slide between positions when you pause or resume'
+    ]
+  },
   'v2.7.2-beta':{
     title:'Tap to swap, long-press for injury — popup is gone',
     items:[
@@ -4690,10 +4705,8 @@ function renderG(){
   // Score
   renderScore();
 
-  // Primary button (ppB) — sits on the far left when running (PAUSE), slides to
-  // the far right when paused (START), iPhone-Stopwatch-style.
-  const ppBtn=document.getElementById('ppB');
-  if(ppBtn) ppBtn.classList.toggle('at-end', !G.running);
+  // v2.7.3 layout: ppB and subB stay in fixed positions (far right / far left).
+  // Their labels morph but they don't move. iPhone-Stopwatch-style.
 
   // Secondary button (subB) — morphs between SUB (when running / at break) and
   // RESET (when paused mid-half). Double-tap confirm (TAP AGAIN) for RESET.
@@ -4786,17 +4799,17 @@ function renderScore(){
     };
     area.innerHTML=`${col('us','#00d4aa')}<span style="color:#444;font-size:24px;font-weight:300;align-self:flex-start;margin-top:18px">:</span>${col('them','#e94560')}`;
   } else {
-    // Each side wraps label + (−/score/+) in its own .team-block. On mobile
-    // the media query stacks the label above the controls so nothing collides.
-    const block=(who,colr,lbl,scoreVal)=>`<div class="team-block" style="display:flex;align-items:center;gap:6px">
-      <span class="team-label" style="font-size:13px;color:#888;font-weight:700">${lbl}</span>
+    // v2.7.3: each side ALWAYS stacks (label above score+buttons) — not just on
+    // mobile. Reads like a scoreboard, and the iPad layout has plenty of room.
+    const block=(who,colr,lbl,scoreVal)=>`<div class="team-block" style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <span class="team-label" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px">${lbl}</span>
       <div class="team-controls" style="display:flex;align-items:center;gap:6px">
         <button onclick="adjScore('${who}',-1)" style="${sBtn}">−</button>
-        <span class="team-score" style="font-size:40px;font-weight:800;color:${colr};min-width:30px;text-align:center;font-variant-numeric:tabular-nums">${scoreVal}</span>
+        <span class="team-score" style="font-size:34px;font-weight:800;color:${colr};min-width:26px;text-align:center;font-variant-numeric:tabular-nums;line-height:1">${scoreVal}</span>
         <button onclick="adjScore('${who}',1)" style="${sBtn}">+</button>
       </div>
     </div>`;
-    area.innerHTML=`${block('us','#00d4aa',teamName,G.scoreUs)}<span class="score-colon" style="color:#444;font-size:32px;font-weight:300;margin:0 4px">:</span>${block('them','#e94560','THEM',G.scoreThem)}`;
+    area.innerHTML=`${block('us','#00d4aa',teamName,G.scoreUs)}<span class="score-colon" style="color:#444;font-size:28px;font-weight:300;margin:0 4px;align-self:flex-end;padding-bottom:4px">:</span>${block('them','#e94560','THEM',G.scoreThem)}`;
   }
   _li();
 }
@@ -4984,12 +4997,18 @@ function resetHalf(){
 // Hidden when there are no rolling subs (breaks-only mode, empty bench, or the time has elapsed).
 function updateClkSub(){
   const cs=document.getElementById('clkSub'); if(!cs||!G) return;
+  // Show/hide the whole "NEXT SUB" group (countdown + title) so the title
+  // disappears when there's no upcoming sub (breaks-only, empty bench, time elapsed).
+  const grp=document.getElementById('clkSubGrp');
   const ns=typeof nxtST==='function'?nxtST():null;
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){ cs.style.display='none'; return; }
+  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){ if(grp) grp.style.display='none'; return; }
   const d=ns-G.secs, m=Math.floor(d/60), s=d%60;
-  cs.style.display='';
+  if(grp) grp.style.display='flex';
   cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   cs.className='tmr-c tmr-sub'+(d<=10?' alert':(d<=30?' warn':''));
+  // Title colour follows the countdown urgency so it reads at-a-glance.
+  const lbl=document.getElementById('clkSubLbl');
+  if(lbl) lbl.style.color=d<=10?'#e94560':(d<=30?'#f0a500':'#00d4aa');
 }
 let _lastWholeSec=-1;
 function tickLoop(now){
