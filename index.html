@@ -860,6 +860,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
     <div id="pitchMid" style="flex:1;min-height:0;overflow:hidden;padding:6px 14px 2px;display:flex;flex-direction:column"></div>
     <button id="viewToggle" onclick="cycleView()" aria-label="Cycle camera view" style="display:none;position:absolute;bottom:8px;left:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
+    <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
+    <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
   </div>
 
   <!-- Formation / strategy / sound pills + the contextual tap-tip — one combined
@@ -898,13 +900,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
-  <!-- v2.7.28 layout: Plan moved to the top-right icon. Dashboard is back to four buttons. -->
-  <!-- Running:  [SUB]   [Undo] [Formation] [PAUSE] -->
-  <!-- Paused:   [RESET] [Undo] [Formation] [START] -->
+  <!-- v2.7.29 layout: Formation toggle moved onto the pitch overlay (bottom-right). Dashboard is three buttons. -->
+  <!-- Running:  [SUB]   [Undo] [PAUSE] -->
+  <!-- Paused:   [RESET] [Undo] [START] -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
-    <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
@@ -2810,12 +2811,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.28-beta';
+const APP_VERSION='v2.7.29-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.29-beta':{
+    title:'Formation toggle moves onto the pitch (bottom-right)',
+    items:[
+      'Formation toggle moved off the bottom dashboard onto the pitch as a small overlay button at the bottom-right — mirror of the View toggle bottom-left.',
+      'Bottom dashboard shrinks to three buttons: [SUB / RESET] [Undo] [PAUSE / START].',
+      'Hidden for netball / AFL (fixed single formation).'
+    ]
+  },
   'v2.7.28-beta':{
     title:'Plan icon back at the top-right corner',
     items:[
@@ -5733,18 +5742,21 @@ function renderGameDash(){
   const dash=document.getElementById('gameDash');
   if(!dash) return;
   // SUB / RESET morphing button — fully managed by renderG() so we don't paint anything here.
-  // Formation button — shows the current formation; opens the picker. Hidden for
-  // netball (fixed positions). 'active' while the picker is open.
-  const gf=document.getElementById('gdFormation');
-  if(gf){
+  // v2.7.29: Formation toggle is the pitch-overlay button (#fmtToggle). Shows the
+  // current formation; opens the picker. Hidden for sports with a fixed single
+  // formation (netball / AFL). Active styling when the picker is open.
+  const fmt=document.getElementById('fmtToggle');
+  if(fmt){
     const _sk=getSport(currentTeam).key;
-    const isNb=_sk==='netball'||_sk==='afl';   // fixed/single formation — hide the button
-    if(isNb){ gf.style.display='none'; }
+    const isNb=_sk==='netball'||_sk==='afl';
+    if(isNb){ fmt.style.display='none'; }
     else{
-      gf.style.display='';
+      fmt.style.display='inline-flex';
       const open=document.getElementById('gameFmtPicker')&&document.getElementById('gameFmtPicker').style.display!=='none';
-      gf.className='gd-btn'+(open?' active':'');
-      gf.innerHTML=`${ic('layout-grid',17)}<span>${curFormation||'Formation'}</span>`;
+      fmt.style.borderColor=open?'#5bc0de':'#2a3550';
+      fmt.style.color=open?'#5bc0de':'#9fb3c8';
+      fmt.style.background=open?'rgba(91,192,222,.16)':'rgba(13,18,30,.85)';
+      fmt.innerHTML=`${ic('layout-grid',13)}<span>${curFormation||'Formation'}</span>`;
     }
   }
   // Swap + Injury are no longer permanent buttons — tap a player on the field
