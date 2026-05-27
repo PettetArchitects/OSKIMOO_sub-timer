@@ -100,6 +100,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .tmr-h{font-size:14px;color:#e94560;font-weight:700;text-transform:uppercase;letter-spacing:2px}
 .tmr-c{font-family:'DSEG',monospace;font-size:min(13vw,56px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:2px 0;line-height:1}
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
+/* Next-sub countdown digit display — same font/size, slimmer (no centiseconds) and green by default. */
+.tmr-c.tmr-sub{font-size:min(10vw,44px);letter-spacing:1.5px;color:#00d4aa}
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
 .nxt{font-size:13px;color:#888;margin-top:4px}.nxt strong{color:#00d4aa}
@@ -227,8 +229,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* Sub animations — use filter/opacity (not transform) so the per-frame projection scale isn't fought. */
 @keyframes pillEnterGlow{0%{filter:drop-shadow(0 0 0 rgba(34,197,94,0));opacity:0.25}25%{filter:drop-shadow(0 0 22px rgba(34,197,94,1));opacity:1}100%{filter:drop-shadow(0 0 0 rgba(34,197,94,0));opacity:1}}
 @keyframes pillExitGlow{0%{filter:drop-shadow(0 0 0 rgba(233,69,96,0))}30%{filter:drop-shadow(0 0 18px rgba(233,69,96,.95))}100%{filter:drop-shadow(0 0 0 rgba(233,69,96,0))}}
+@keyframes pillSwapGlow{0%{filter:drop-shadow(0 0 0 rgba(91,192,222,0))}40%{filter:drop-shadow(0 0 18px rgba(91,192,222,.95))}100%{filter:drop-shadow(0 0 0 rgba(91,192,222,0))}}
 .afl3d-overlay .fc-just-on{animation:pillEnterGlow 1.6s ease-out}
 .afl3d-overlay .fc-bench3d.fc-just-off{animation:pillExitGlow 1.6s ease-out;opacity:1!important;filter:saturate(1)!important}
+.afl3d-overlay .fc-just-swap{animation:pillSwapGlow 1.1s ease-out}
 .afl3d-views{position:absolute;left:8px;top:8px;display:flex;gap:5px;z-index:5}
 .afl3d-views button{pointer-events:auto;background:rgba(13,18,30,.82);border:1px solid #2a3550;color:#9fb3c8;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit;backdrop-filter:blur(4px)}
 .afl3d-views button.active{border-color:#5bc0de;color:#5bc0de;background:rgba(91,192,222,.16)}
@@ -655,9 +659,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </div>
   </div>
 
-  <!-- Clock -->
+  <!-- Clock + next-sub countdown side-by-side (both same digital style). The countdown is hidden in breaks-only mode. -->
   <div style="text-align:center;padding:12px 0 4px;flex-shrink:0">
-    <div class="tmr-c" id="clk" style="margin:0;line-height:1;width:100%;display:block">00:00.00</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
+      <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00.00</div>
+      <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa;display:none">05:00</div>
+    </div>
     <div id="nsi" style="margin-top:4px;font-size:14px;color:#888;font-weight:600;letter-spacing:.3px"></div>
   </div>
 
@@ -2105,7 +2112,7 @@ const afl3d={
     const camera=new THREE.PerspectiveCamera(42, W/H, 1, 3000);
     const controls=new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan=false; controls.enableDamping=true; controls.dampingFactor=0.12;
-    controls.minDistance=80; controls.maxDistance=600; controls.minPolarAngle=0.04; controls.maxPolarAngle=1.46;
+    controls.minDistance=80; controls.maxDistance=600; controls.minPolarAngle=0.04; controls.maxPolarAngle=1.18;   // ~22° min elevation so the view never gets so oblique pills overlap or markings flatten
     // Once the user drags/pinches, they've left the preset — drop the highlight (setView fires 'change', not 'start', so presets stay lit).
     controls.addEventListener('start', ()=>{ if(this.viewsEl) [...this.viewsEl.querySelectorAll('button[data-v]')].forEach(b=>b.classList.remove('active')); });
     // Capture drawing-buffer dimensions before any line materials are created — Line2 shaders need this resolution to compute pixel widths.
@@ -2395,12 +2402,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.4.0-beta';
+const APP_VERSION='v2.4.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.4.1-beta':{
+    title:'Sub countdown clock + swap animation + tidy orbit',
+    items:[
+      'Next-sub countdown shown next to the game clock — same digital style, green by default, amber inside 30s, red inside 10s',
+      'Swap animation: tap two players to swap and they both pulse cyan to confirm the change',
+      'Camera can no longer tilt to extreme oblique angles (stays at least ~22° above horizontal) so the view always reads cleanly'
+    ]
+  },
   'v2.4.0-beta':{
     title:'Sub animation + cleaner views + coffee up top',
     items:[
@@ -4432,6 +4447,7 @@ function renderG(){
       ni.style.display='inline-flex'; ni.style.alignItems='center'; ni.style.gap='5px'; ni.style.justifyContent='center';
     } else if(ns!==null&&G.bench.length>0){
       ni.innerHTML=`Next sub at <span style="color:#00d4aa;font-weight:700">${fmt(ns)}</span>`;
+      updateClkSub();
     } else if(!G.bench.length){
       ni.textContent='No subs available';
     } else {
@@ -4494,6 +4510,7 @@ function renderG(){
   // Pitch visualization
   renderPitch();
   renderGameDash();
+  updateClkSub();   // ensure the next-sub countdown reflects the current state (breaks-only / no bench / time remaining)
   _li();
 }
 
@@ -4678,6 +4695,17 @@ function tog(){
   saveActiveGame();
   renderG();
 }
+// Live update of the "next sub" countdown shown next to the main game clock (same digital style, green by default, amber<30s, red<10s).
+// Hidden when there are no rolling subs (breaks-only mode, empty bench, or the time has elapsed).
+function updateClkSub(){
+  const cs=document.getElementById('clkSub'); if(!cs||!G) return;
+  const ns=typeof nxtST==='function'?nxtST():null;
+  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){ cs.style.display='none'; return; }
+  const d=ns-G.secs, m=Math.floor(d/60), s=d%60;
+  cs.style.display='';
+  cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  cs.className='tmr-c tmr-sub'+(d<=10?' alert':(d<=30?' warn':''));
+}
 let _lastWholeSec=-1;
 function tickLoop(now){
   if(!G.running)return;
@@ -4706,6 +4734,7 @@ function tickLoop(now){
   const subBannerUp=G.ps&&document.getElementById('subBanner').style.display!=='none';
   if(subBannerUp){ce.className='tmr-c sub-now';}
   else if(!cfg.breaksOnly){const ns=nxtST();if(ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}}
+  updateClkSub();
   G.raf=requestAnimationFrame(tickLoop);
 }
 
@@ -4917,6 +4946,9 @@ function tapFieldPlayer(pIdx, isGk){
   } else if(fieldSwapSel===pIdx){
     fieldSwapSel=null;        // tapped same player → deselect
   } else {
+    // Flag both swapped players so the 3D viewer pulses them cyan — quick visual confirmation that the swap happened.
+    window._justSwapped={ names:new Set([avail[fieldSwapSel], avail[pIdx]]), t:Date.now() };
+    setTimeout(()=>{ window._justSwapped=null; if(typeof renderG==='function') renderG(); }, 1200);
     swapFieldPositions(fieldSwapSel, pIdx);
     fieldSwapSel=null;
     saveActiveGame();
@@ -5467,7 +5499,8 @@ function renderRoster(){
 
   // ===== 3D pitch viewer (AFL oval / soccer & netball rectangles) — Three.js. Pills are HTML over the canvas. =====
   if(_use3d){
-    const _js=window._justSubbed;   // {inNames, offNames, t} or null — drives the green/red pulse on freshly subbed pills
+    const _js=window._justSubbed;        // sub pulse: green-on, red-off
+    const _jsw=window._justSwapped;      // swap pulse: cyan on both swapped pills
     afl3d.update(pitchMid, (add, addBench)=>{
       // Field players
       playerSlots.forEach(({pos,pIdx,isGk})=>{
@@ -5478,7 +5511,8 @@ function renderRoster(){
         const el=document.createElement('div');
         const isSwapSel=(fieldSwapSel===pIdx);
         const justOn=_js&&_js.inNames.has(avail[pIdx]);
-        el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'');
+        const justSwap=_jsw&&_jsw.names.has(avail[pIdx]);
+        el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'')+(justSwap?' fc-just-swap':'');
         el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
         const subInline=isOff&&replacedBy!==null?`<span class="fc-mins" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
