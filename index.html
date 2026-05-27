@@ -118,6 +118,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      Larger viewports keep it for the at-a-glance "who's coming on for whom". */
   #s4 .fc-sub-in{display:none!important}
 }
+
+/* v2.7.12 — landscape phone layout. Portrait is the primary game-day stance,
+   but coaches do rotate. Without this rule the bottom dashboard + bench eat
+   most of the short viewport and the pitch becomes useless. Solution:
+   - Move #gameDash from a bottom bar to a fixed right-side rail (vertical column).
+   - Pad #s4 right so the rest of the layout doesn't slide under the rail.
+   - Compress the top bar, clock area, mode-hint row, and bench to claw back
+     vertical pixels for the pitch.
+   Activates only for landscape with a short viewport (<= 500px tall) so iPads
+   and desktop landscape are untouched. */
+@media(orientation:landscape) and (max-height:500px){
+  #s4{position:relative!important;padding-right:88px!important;box-sizing:border-box!important}
+  #s4 > div:first-child{padding:6px 36px!important}
+  #s4 #gameMenuBtn{top:4px!important;left:6px!important;width:24px!important;height:24px!important}
+  #s4 #gameMenu{top:32px!important;left:6px!important}
+  /* Clocks: compact font + tight padding so they don't dominate the short height. */
+  #s4 .tmr-c{font-size:34px!important;letter-spacing:1.5px!important}
+  #s4 > div:nth-child(3){padding:4px 0 2px!important}
+  #s4 #hLbl,#s4 #clkSubLbl{font-size:10px!important;letter-spacing:1px!important;margin-top:2px!important}
+  #s4 #nsi{margin-top:2px!important;font-size:10px!important;min-height:0!important}
+  /* Mode-hint pill row (formation strategy + AFL controls + hint) — tuck the
+     padding so the pitch starts higher. */
+  #s4 #fmtRow{padding:2px 8px 0!important}
+  /* Bench list: cap height so it doesn't crowd out the pitch. */
+  #s4 #benchTop{max-height:18dvh!important;padding:2px 12px!important}
+  /* Right-side dashboard rail. Vertical stack of icon+label buttons. */
+  #s4 #gameDash{
+    position:absolute!important;right:0;top:0;bottom:0;width:88px;
+    flex-direction:column!important;
+    border-top:none!important;border-left:1px solid #243049;
+    padding:8px calc(8px + env(safe-area-inset-right)) 8px 8px!important;
+    gap:6px!important;
+    background:linear-gradient(180deg,#141a2e,#0f1422);
+  }
+  #s4 #gameDash .gd-btn{flex:1!important;width:100%;min-height:0!important;font-size:10px!important}
+  #s4 #gameDash .gd-btn.gd-go,#s4 #gameDash .gd-btn.gd-pause,
+  #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:11px!important}
+  #s4 #gameDash .gd-btn svg{width:18px!important;height:18px!important}
+}
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
 
@@ -2590,12 +2629,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.11-beta';
+const APP_VERSION='v2.7.12-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.12-beta':{
+    title:'Landscape phone: dashboard moves to a right-side rail',
+    items:[
+      'On landscape phones (short viewport ≤ 500px tall) the bottom dashboard is now a vertical rail on the right of the screen, freeing the pitch to fill the width',
+      'Top bar, clocks, and bench are compressed in landscape so the pitch keeps a usable amount of vertical space',
+      'Portrait and tablet layouts are unchanged — only triggers on phone-landscape proportions'
+    ]
+  },
   'v2.7.11-beta':{
     title:'Dropped the "drag · pinch · tap" hint',
     items:['Removed the small hint text in the top-right of the pitch — the gesture is discoverable enough without it.']
