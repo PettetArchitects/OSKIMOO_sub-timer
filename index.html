@@ -199,7 +199,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border-color:#0a9d83;color:#06231d;font-size:13px}
 .gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));border-color:#e94560;color:#ff7088;font-size:13px}
 .gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);border-color:#d98c00;color:#1a1a2e;font-size:13px}
-.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg{width:21px;height:21px}
+.gd-btn.gd-reset{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));border-color:rgba(233,69,96,.6);color:#ff7088;font-size:13px}
+.gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
+/* Stopwatch-style positioning: PAUSE sits on the far left when running;
+   when paused, START slides to the far right via flex order. */
+.gd-btn.at-end{order:999}
+.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg,.gd-btn.gd-reset svg{width:21px;height:21px}
 
 /* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
    .lu-pitch is the perspective frustum. .lu-plane is the tilted SVG ground.
@@ -722,7 +727,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
-    <button class="gd-btn gd-sub" id="subB" onclick="manualSub()"></button>
+    <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn" id="gdInjury" onclick="setGameMode('injury')"></button>
     <button class="gd-btn" id="gdEdit" onclick="editTeamFromGame()"></button>
@@ -1190,6 +1195,10 @@ function resumeActiveGame(){
   setDisplayNameList(avail);
   luOrd=s.luOrd;rotPairs=s.rotPairs;
   G=s.G;
+  // Backfill the half-start snapshot for games saved before v2.4.5 so
+  // resetHalf has something to restore (best-effort: current state, not
+  // true kickoff state since that wasn't recorded).
+  if(G && !G._halfStart) snapshotHalfStart();
   showScr('s4');
   renderG();
   renderSoundPicker(); // initialise the alert-chip label on the game screen
@@ -2414,12 +2423,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.4.4-beta';
+const APP_VERSION='v2.4.5-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.4.5-beta':{
+    title:'iPhone-Stopwatch layout — START right, PAUSE left, RESET on the SUB slot',
+    items:[
+      'Primary button slides to the far right when paused (big green START) and back to the far left when running (PAUSE) — same one-thumb logic as the iPhone Stopwatch',
+      'SUB slot doubles as RESET when the clock is paused — restores the half\'s clock, on-field XI, bench, GK and playing-time back to kickoff. Requires a TAP AGAIN confirm so you can\'t fat-finger it'
+    ]
+  },
   'v2.4.4-beta':{
     title:'One-tap subs + period label below the clock',
     items:[
@@ -4418,9 +4434,25 @@ function startGame(){
     log:[{type:'sub_strategy',time:0,strategy:cfg.subStrategy||'fair'}],
     startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
+  snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
   renderG();showScr('s4');
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   saveActiveGame();
+}
+
+// Snapshot the state at the start of the current half so resetHalf() can
+// restore on-field / bench / GK / playing-time / pair rotation back to kickoff.
+// Called from startGame (1st period) and startNextPeriod (subsequent periods).
+function snapshotHalfStart(){
+  if(!G) return;
+  G._halfStart={
+    on:[...G.on],
+    bench:[...G.bench],
+    gk:G.gk,
+    pt:{...G.pt},
+    pairs:(G.pairs||[]).map(p=>({on:[...p.on]})),
+    pairIdx:G.pairIdx||0
+  };
 }
 function pickSubStrategy(strat){
   if(!G)return;
@@ -4497,12 +4529,31 @@ function renderG(){
   // Score
   renderScore();
 
-  // Sub button state
+  // Primary button (ppB) — sits on the far left when running (PAUSE), slides to
+  // the far right when paused (START), iPhone-Stopwatch-style.
+  const ppBtn=document.getElementById('ppB');
+  if(ppBtn) ppBtn.classList.toggle('at-end', !G.running);
+
+  // Secondary button (subB) — morphs between SUB (when running / at break) and
+  // RESET (when paused mid-half). Double-tap confirm (TAP AGAIN) for RESET.
   const subBtn=document.getElementById('subB');
   if(subBtn){
-    const canSub=G.bench.length>0;
-    subBtn.disabled=!canSub;
-    subBtn.style.opacity=canSub?'1':'0.4';
+    const inResetMode=!G.running && !G.atBreak;
+    if(inResetMode){
+      const hasProgress=G.secs>0 || G.elapsedMs>0;
+      subBtn.disabled=!hasProgress;
+      subBtn.style.opacity=hasProgress?'1':'0.4';
+      subBtn.className='gd-btn gd-reset'+(_resetArmed?' armed':'');
+      subBtn.innerHTML=`${ic('rotate-ccw',21)}<span>${_resetArmed?'TAP AGAIN':'RESET'}</span>`;
+      subBtn.onclick=resetHalf;
+    } else {
+      const canSub=G.bench.length>0;
+      subBtn.disabled=!canSub;
+      subBtn.style.opacity=canSub?'1':'0.4';
+      subBtn.className='gd-btn gd-sub';
+      subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
+      subBtn.onclick=manualSub;
+    }
   }
 
   // (Our formation now shows on the bottom-bar Formation button — see renderGameDash.)
@@ -4730,6 +4781,41 @@ function tog(){
     G.lastTs=performance.now();G.running=true;
     G.raf=requestAnimationFrame(tickLoop);
   }
+  _resetArmed=false;   // any other action disarms the reset two-tap
+  saveActiveGame();
+  renderG();
+}
+
+// Stopwatch-style RESET on the second slot. First tap arms (button turns red
+// "TAP AGAIN"); second tap within 2.5s restores the half to its kickoff
+// snapshot — clock, on-field XI, bench, GK, playing time, pair rotation.
+// Scores and the game log carry over (we just append a 'reset_half' entry).
+let _resetArmed=false;
+let _resetTimer=null;
+function resetHalf(){
+  if(!G || G.running || G.atBreak) return;
+  if(!G._halfStart) return;                 // nothing to restore
+  if(G.secs===0 && G.elapsedMs===0) return; // already at kickoff
+  if(!_resetArmed){
+    _resetArmed=true;
+    if(_resetTimer) clearTimeout(_resetTimer);
+    _resetTimer=setTimeout(()=>{ _resetArmed=false; _resetTimer=null; renderG(); }, 2500);
+    renderG();   // paint the armed state
+    return;
+  }
+  if(_resetTimer){ clearTimeout(_resetTimer); _resetTimer=null; }
+  _resetArmed=false;
+  const s=G._halfStart;
+  G.on=[...s.on];
+  G.bench=[...s.bench];
+  G.gk=s.gk;
+  G.pt={...s.pt};
+  G.pairs=s.pairs.map(p=>({on:[...p.on]}));
+  G.pairIdx=s.pairIdx;
+  G.secs=0; G.elapsedMs=0; G.lastTs=null; G.sd=[];
+  G.lastSub=null;
+  G.ps=null;
+  G.log.push({type:'reset_half',half:G.half,time:0});
   saveActiveGame();
   renderG();
 }
@@ -4917,6 +5003,7 @@ function manualSub(){
   if(!G||!G.bench.length)return;
   // If sub banner already showing, ignore
   if(G.ps&&document.getElementById('subBanner').style.display!=='none')return;
+  _resetArmed=false;
   trigSub();
   renderG();
 }
@@ -4995,10 +5082,7 @@ function tapBenchForInjury(pIdx){
 function renderGameDash(){
   const dash=document.getElementById('gameDash');
   if(!dash) return;
-  // SUB primary button — stacked icon+label to match the nav bar. Its disabled
-  // state is managed in renderG(); here we just paint the content once.
-  const subB=document.getElementById('subB');
-  if(subB && !subB.querySelector('span')){ subB.innerHTML=`${ic('refresh',21)}<span>SUB</span>`; }
+  // SUB / RESET morphing button — fully managed by renderG() so we don't paint anything here.
   // Formation button — shows the current formation; opens the picker. Hidden for
   // netball (fixed positions). 'active' while the picker is open.
   const gf=document.getElementById('gdFormation');
@@ -5208,6 +5292,7 @@ function startNextPeriod(){
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
   G.lastSub=null;   // undo doesn't cross the period boundary
   G.atBreak=false;
+  snapshotHalfStart();   // fresh baseline for resetHalf within the new period
   // Kick off the next period straight away — one tap.
   G.lastTs=performance.now();G.running=true;
   G.raf=requestAnimationFrame(tickLoop);
