@@ -112,7 +112,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    the absolutely-positioned ✕ end-game button. Stacking itself is now the
    default in renderScore (not media-query-gated). */
 @media(max-width:480px){
-  #s4 > div:first-child{padding-left:54px!important;padding-right:40px!important}
+  /* v2.7.28: room for both top-left hamburger AND top-right Plan icon. */
+  #s4 > div:first-child{padding-left:54px!important;padding-right:54px!important}
   #s4 #scoreArea{gap:8px!important}
   #s4 .team-label{font-size:10px!important;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #s4 .team-controls{gap:4px!important}
@@ -814,7 +815,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </div>
     <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
     <div id="scoreArea" style="display:flex;align-items:center;gap:6px"></div>
-    <!-- v2.7.22: subOrder button moved out of the top-right onto the bottom dashboard (#gdPlan) — it's a key feature and belongs in the thumb zone. -->
+    <!-- v2.7.28: Plan button returned to top-right of the score header (was on the bottom dashboard in v2.7.22-27). -->
+    <button id="subOrderBtn" onclick="openSubOrder()" aria-label="Sub Plan" title="Sub Plan" style="position:absolute;top:6px;right:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    </button>
   </div>
 
   <!-- Clock + next-sub countdown side-by-side, each with its OWN label
@@ -894,13 +898,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
-  <!-- v2.7.25 layout: SUB stays as SUB (manual trigger). PLAN button sits in the middle. -->
-  <!-- Running:  [SUB]   [Undo] [Plan] [Formation] [PAUSE] -->
-  <!-- Paused:   [RESET] [Undo] [Plan] [Formation] [START] -->
+  <!-- v2.7.28 layout: Plan moved to the top-right icon. Dashboard is back to four buttons. -->
+  <!-- Running:  [SUB]   [Undo] [Formation] [PAUSE] -->
+  <!-- Paused:   [RESET] [Undo] [Formation] [START] -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
-    <button class="gd-btn" id="gdPlan" onclick="openSubOrder()"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
@@ -2807,12 +2810,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.27-beta';
+const APP_VERSION='v2.7.28-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.28-beta':{
+    title:'Plan icon back at the top-right corner',
+    items:[
+      'Plan icon moved off the bottom dashboard back to the top-right of the score header (mirror of the ☰ hamburger top-left).',
+      'Bottom dashboard shrinks to four buttons: [SUB / RESET] [Undo] [Formation] [PAUSE / START].'
+    ]
+  },
   'v2.7.27-beta':{
     title:'Sub frequency + group-size steppers on the Plan page',
     items:[
@@ -5744,13 +5754,7 @@ function renderGameDash(){
   // v2.7.9: View cycle moved off the dashboard onto a bottom-left overlay on the pitch.
   updateViewToggle();
   // Edit Team lives in the hamburger menu now (v2.7.9) — no dashboard button.
-  // v2.7.25: dedicated Plan button — opens the Sub Order overlay. Label is just "Plan"
-  // (one consistent name); the strategy mode formerly called "Plan" is now "Custom".
-  const planBtn=document.getElementById('gdPlan');
-  if(planBtn){
-    planBtn.innerHTML=`${ic('list',17)}<span>Plan</span>`;
-    planBtn.className='gd-btn';
-  }
+  // v2.7.28: gdPlan removed — Plan icon is back at top-right of the score header.
   const undo=document.getElementById('gdUndo');
   if(undo){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
