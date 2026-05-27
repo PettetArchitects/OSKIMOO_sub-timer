@@ -2103,7 +2103,7 @@ const afl3d={
     this._resW=renderer.domElement.width||W; this._resH=renderer.domElement.height||H;
     this._lineMats=[];
     this.groundGrp=this.buildGround(); scene.add(this.groundGrp);
-    this._fitMargin=1.06; this._pillScale=0.95; this._fitD=null;
+    this._fitMargin=1.06; this._pillScale=1.18; this._fitD=null;
     this.scene=scene; this._buildFitPts(); this._syncLineRes();
     wrap.appendChild(renderer.domElement); wrap.appendChild(overlay);
     // View buttons + hint
@@ -2131,7 +2131,7 @@ const afl3d={
     this.view=name; if(!this.camera) return;
     // Presets define only a DIRECTION (elevation/azimuth); the distance is auto-fitted so the oval fills the box.
     // top is nudged off the exact zenith (z) so the length axis stays vertical and OrbitControls keeps a defined azimuth (no gimbal flip).
-    const P={behind:[0,0.64,1], side:[1,0.5,0], top:[0,1,0.18]}[name]||[0,0.64,1];
+    const P={behind:[0,0.64,1], side:[1,0.85,0.05], top:[0,1,0.18]}[name]||[0,0.64,1];
     const dir=new THREE.Vector3(P[0],P[1],P[2]).normalize();
     // Hard-reset the orbit frame: restore up, place camera along dir, re-aim. Without the up reset a prior near-vertical view leaves the azimuth rotated.
     this.camera.up.set(0,1,0);
@@ -2197,8 +2197,9 @@ const afl3d={
       p.el.style.left=((v.x*0.5+0.5)*W)+'px';
       p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
       // Icons live on the field: scale by camera distance to THIS pill — zoom in → bigger, nearer pills → bigger (true perspective).
+      // Floor raised so pills stay readable when zoomed out to the auto-fit framing.
       let s=this._pillScale*baseD/Math.max(1,camPos.distanceTo(world));
-      s=Math.max(0.5,Math.min(2.2,s));
+      s=Math.max(0.78,Math.min(2.4,s));
       p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
     });
     // Bench pills are already in world space (placed along the sideline) — same projection + perspective scaling.
@@ -2210,7 +2211,7 @@ const afl3d={
       p.el.style.left=((v.x*0.5+0.5)*W)+'px';
       p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
       let s=this._pillScale*baseD/Math.max(1,camPos.distanceTo(world));
-      s=Math.max(0.45,Math.min(1.9,s*0.9));    // bench slightly smaller than field
+      s=Math.max(0.65,Math.min(2.1,s*0.95));    // bench slightly smaller than field
       p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
     });
   },
@@ -2376,12 +2377,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.3.0-beta';
+const APP_VERSION='v2.3.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.3.1-beta':{
+    title:'Bigger players + broadcast-angle Side view',
+    items:[
+      'Player pills are noticeably bigger at the default fit (and don\'t shrink to tiny when you zoom out)',
+      'Side view default is now a more elevated broadcast-style angle'
+    ]
+  },
   'v2.3.0-beta':{
     title:'Bench on the sideline + bolder lines',
     items:[
