@@ -337,6 +337,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-pos{font-size:8px;min-width:11px;padding:1px 3px}
 .afl3d-overlay .fc-name{font-size:9px;letter-spacing:.2px}
 .afl3d-overlay .fc-mins{font-size:8px;margin-left:3px}
+/* v2.7.18: shrink AFL pills — 18 on field vs 11 soccer / 7 netball means much
+   tighter spacing. The wrap gets data-sport from init/setSport. */
+.afl3d-wrap[data-sport="afl"] .fc-shirt{width:22px!important;height:26px!important}
+.afl3d-wrap[data-sport="afl"] .fc-shirt-num{font-size:8px!important}
+.afl3d-wrap[data-sport="afl"] .fc-label{padding:0 3px!important;gap:2px!important;margin-top:0!important}
+.afl3d-wrap[data-sport="afl"] .fc-pos{font-size:7px!important;min-width:9px!important;padding:0 2px!important}
+.afl3d-wrap[data-sport="afl"] .fc-name{font-size:8px!important;letter-spacing:0!important}
+.afl3d-wrap[data-sport="afl"] .fc-mins{font-size:7px!important;margin-left:2px!important}
 .afl3d-overlay .fc-bench3d{opacity:0.6;filter:saturate(.45)}
 .afl3d-overlay .fc-bench3d.fc-bench3d-next{opacity:1;filter:drop-shadow(0 0 6px rgba(34,197,94,.7))}
 .afl3d-overlay .fc-bench3d.fc-bench3d-next .fc-name{color:#22c55e}
@@ -2291,6 +2299,7 @@ const afl3d={
     if(!this.DIMS[key]) key='afl';
     if(key===this.sport && this.groundGrp) return false;
     this.sport=key; this.FIELD_W=this.DIMS[key].W; this.FIELD_L=this.DIMS[key].L;
+    if(this.wrap) this.wrap.dataset.sport=key;          // v2.7.18: CSS pill sizing follows the sport
     if(this.scene){
       if(this.groundGrp) this.scene.remove(this.groundGrp);
       this._lineMats=[];                                 // drop old materials before rebuilding ground
@@ -2305,6 +2314,7 @@ const afl3d={
     container.style.position='relative';   // confine the absolute wrap to this clean zone (no clipping over other UI)
     const W=container.clientWidth||320, H=container.clientHeight||320;
     const wrap=document.createElement('div'); wrap.className='afl3d-wrap';
+    wrap.dataset.sport=this.sport||'afl';   // v2.7.18: CSS keys off this for sport-specific pill sizing
     const overlay=document.createElement('div'); overlay.className='afl3d-overlay';
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
@@ -2728,12 +2738,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.17-beta';
+const APP_VERSION='v2.7.18-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.18-beta':{
+    title:'Smaller AFL pills, position bibs for netball, no ↑Incoming on the pill',
+    items:[
+      'AFL on-field pills shrunk (18 players is much more crowded than soccer\'s 11) — shirt 22×26, font 7-8px. Sport-aware via data-sport on the pitch wrap',
+      'Netball pills now show the position letters (GS / GA / WA / C / WD / GD / GK) on the shirt itself like a real bib — and the duplicate position chip below is dropped',
+      'The "↑Incoming" badge inside outgoing-player pills is GONE on every screen — the bench list below already shows who\'s coming on for whom'
+    ]
+  },
   'v2.7.17-beta':{
     title:'AFL rotation freed + proper Settings screen + Help',
     items:[
@@ -4754,10 +4772,19 @@ function renderLineupPitch(){
 // Shirt icon SVG — outline + light fill in team colour (currentColor).
 // The jersey number is embedded as an SVG <text> element so it scales with the
 // shirt and stays perfectly centred on the body (regardless of pill size).
-function shirtSvg(num){
-  // Body of the shirt sits y≈11..26.5; centre y≈19. Number anchored there.
-  const numText=num?`<text x="12" y="20.5" text-anchor="middle" font-size="11" font-weight="900" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">${num}</text>`:'';
-  return `<svg viewBox="0 0 24 28"><path d="M8.5 1.5L7 2 2 4.5 1 9.5 4.5 11 5 26.5 19 26.5 19.5 11 23 9.5 22 4.5 17 2 15.5 1.5 14 4 13 5 11 5 10 4 Z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18" stroke-linejoin="round" stroke-linecap="round"/>${numText}</svg>`;
+function shirtSvg(num,bib){
+  // Body of the shirt sits y≈11..26.5; centre y≈19. v2.7.18: netball passes
+  // bib=position letters (GS/GA/WA/C/WD/GD/GK) instead of a number — the
+  // chest bib IS the canonical identifier in netball.
+  let inner='';
+  if(bib){
+    // Netball-bib mode: render the position letters large across the chest.
+    const fs=bib.length>=3?7:bib.length===2?9:10;
+    inner=`<text x="12" y="20.5" text-anchor="middle" font-size="${fs}" font-weight="900" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif" letter-spacing="-0.2">${bib}</text>`;
+  } else if(num){
+    inner=`<text x="12" y="20.5" text-anchor="middle" font-size="11" font-weight="900" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif">${num}</text>`;
+  }
+  return `<svg viewBox="0 0 24 28"><path d="M8.5 1.5L7 2 2 4.5 1 9.5 4.5 11 5 26.5 19 26.5 19.5 11 23 9.5 22 4.5 17 2 15.5 1.5 14 4 13 5 11 5 10 4 Z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18" stroke-linejoin="round" stroke-linecap="round"/>${inner}</svg>`;
 }
 // Backwards-compatible: SHIRT_SVG is the shirt with no number. Use shirtSvg(num) when number is known.
 const SHIRT_SVG=shirtSvg('');
@@ -6100,9 +6127,17 @@ function renderRoster(){
         // v2.7.14: skip the "↑Incoming" badge entirely on narrow viewports.
         // matchMedia is more reliable than window.innerWidth on iOS where
         // innerWidth can stale across rotations / PWA standalone mode.
-        const subInline=(isOff&&replacedBy!==null && !(window.matchMedia&&window.matchMedia('(max-width:480px)').matches))?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
+        // v2.7.18: badge removed entirely from on-field pill — the bench list below
+// already shows "Cooper for Jack at FB" so the duplicate ↑Incoming on the
+// crowded pill was just noise (and CSS / JS guards kept losing to caching).
+const subInline='';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
-        el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
+        // v2.7.18: for netball the chest BIB IS the position label — render position
+        // letters on the shirt and drop the duplicate fc-pos chip from the label below.
+        const _isNb=_3dSport==='netball';
+        const shirtInner=_isNb?shirtSvg('',pos.label):shirtSvg(jersey);
+        const posChip=_isNb?'':`<span class="fc-pos">${pos.label}</span>`;
+        el.innerHTML=`<div class="fc-shirt">${shirtInner}</div><div class="fc-label">${posChip}<span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
         // tap = swap (handled in click); long-press = injury (handled by pointer timer).
         el.onpointerdown=(e)=>fieldPillPointerDown(e,pIdx,isGk);
         el.onpointermove=fieldPillPointerMove;
