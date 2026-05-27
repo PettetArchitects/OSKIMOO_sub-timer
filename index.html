@@ -246,11 +246,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
-/* v2.7.4: state-based dashboard position swap.
-   - Paused (HTML order, no classes):   [RESET] [Formation] [View] [Edit] [Undo] [START]
-   - Running (ppB.at-start + subB.at-end): [PAUSE] [Formation] [View] [Edit] [Undo] [SUB]
-   Both end buttons swap together when you start/pause; middle stays put. */
+/* v2.7.6 layout:
+   - Paused (HTML order, no classes):     [RESET] [Undo] [Formation] [View] [Edit] [START]
+   - Running (ppB.at-start, subB.at-end, gdUndo.at-end-1): [PAUSE] [Formation] [View] [Edit] [Undo] [SUB]
+   Undo always sits adjacent to the SUB/RESET button so all sub-related controls cluster together. */
 .gd-btn.at-start{order:-1}
+.gd-btn.at-end-1{order:998}
 .gd-btn.at-end{order:999}
 .gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg,.gd-btn.gd-reset svg{width:21px;height:21px}
 
@@ -792,13 +793,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
-  <!-- v2.7.3 layout: SUB/RESET fixed far left, PAUSE/START fixed far right, sub-management buttons (Formation, View, Edit, Undo) in between. Both end buttons stay in place; only their labels morph. -->
+  <!-- v2.7.6 layout: Undo lives next to SUB/RESET. HTML order pairs subB↔gdUndo so they sit
+       together in the paused state; in the running state both get at-end* classes so they slide
+       to the far right together. ppB anchors the opposite end. -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
+    <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn" id="gdView" onclick="cycleView()"></button>
     <button class="gd-btn" id="gdEdit" onclick="editTeamFromGame()"></button>
-    <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
@@ -2579,12 +2582,18 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.5-beta';
+const APP_VERSION='v2.7.6-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.6-beta':{
+    title:'Undo Sub clusters with SUB / RESET',
+    items:[
+      'Undo now sits adjacent to SUB / RESET in both states — running: [PAUSE] [Formation] [View] [Edit] [Undo] [SUB], paused: [RESET] [Undo] [Formation] [View] [Edit] [START]. All sub-related controls cluster together.'
+    ]
+  },
   'v2.7.5-beta':{
     title:'Tap the empty pitch to cancel a swap or injury selection',
     items:['Once you\'ve tapped a player to arm a swap, or long-pressed for an injury sub, an empty-pitch tap now cancels and clears the armed mode']
@@ -5378,7 +5387,9 @@ function renderGameDash(){
   if(undo){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
     undo.disabled=!(G&&G.lastSub);
-    undo.className='gd-btn';
+    // v2.7.6: Undo slides to the right with subB when in SUB mode so it always sits adjacent.
+    const subRight=!!(G && G.running);   // matches subB.at-end condition
+    undo.className='gd-btn'+(subRight?' at-end-1':'');
   }
   _li();
 }
