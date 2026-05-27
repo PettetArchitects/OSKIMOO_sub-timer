@@ -6,6 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
+<!-- v2.7.14: tell iOS Safari / PWA standalone to always revalidate the HTML so
+     coaches don't get stuck on a cached old version. vercel.json also sets
+     Cache-Control: must-revalidate at the CDN edge for /index.html. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Sub Timer</title>
 <!-- Favicon + iOS Add to Home Screen icon (PNG — iOS doesn't reliably render SVG apple-touch-icon) -->
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
@@ -2639,12 +2645,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.13-beta';
+const APP_VERSION='v2.7.14-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.14-beta':{
+    title:'Force fresh HTML + harder mobile pill guard',
+    items:[
+      'vercel.json now sets Cache-Control: must-revalidate on /index.html so iOS Safari can\'t serve a stale build (this was why the ↑Incoming badge kept appearing despite the fix)',
+      'Switched the mobile guard from window.innerWidth to matchMedia (\'(max-width:480px)\') — more reliable on iOS standalone PWA mode'
+    ]
+  },
   'v2.7.13-beta':{
     title:'Settings in the hamburger + landscape bench rail',
     items:[
@@ -5985,9 +5998,10 @@ function renderRoster(){
         const justSwap=_jsw&&_jsw.names.has(avail[pIdx]);
         el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'')+(justSwap?' fc-just-swap':'');
         el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
-        // v2.7.10: skip the "↑Incoming" badge entirely on narrow viewports — CSS hide in v2.7.9
-// wasn't holding up consistently against iOS PWA cache + .afl3d-overlay specificity.
-const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
+        // v2.7.14: skip the "↑Incoming" badge entirely on narrow viewports.
+        // matchMedia is more reliable than window.innerWidth on iOS where
+        // innerWidth can stale across rotations / PWA standalone mode.
+        const subInline=(isOff&&replacedBy!==null && !(window.matchMedia&&window.matchMedia('(max-width:480px)').matches))?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
         // tap = swap (handled in click); long-press = injury (handled by pointer timer).
