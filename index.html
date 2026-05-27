@@ -218,8 +218,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-pos{font-size:8px;min-width:11px;padding:1px 3px}
 .afl3d-overlay .fc-name{font-size:9px;letter-spacing:.2px}
 .afl3d-overlay .fc-mins{font-size:8px;margin-left:3px}
-.afl3d-overlay .fc-bench3d{opacity:0.7;filter:saturate(.55)}
-.afl3d-overlay .fc-bench3d.fc-bench3d-next{opacity:0.95;filter:none}
+.afl3d-overlay .fc-bench3d{opacity:0.6;filter:saturate(.45)}
+.afl3d-overlay .fc-bench3d.fc-bench3d-next{opacity:1;filter:drop-shadow(0 0 6px rgba(34,197,94,.7))}
+.afl3d-overlay .fc-bench3d.fc-bench3d-next .fc-name{color:#22c55e}
+.afl3d-overlay .fc-bench3d.fc-bench3d-next .fc-label{border-color:rgba(34,197,94,.55);box-shadow:0 0 0 1px rgba(34,197,94,.4)}
 .afl3d-overlay .fc-bench3d .fc-shirt{width:26px;height:30px}
 .afl3d-overlay .fc-bench3d .fc-name{font-size:8px}
 .afl3d-views{position:absolute;left:8px;top:8px;display:flex;gap:5px;z-index:5}
@@ -2131,7 +2133,7 @@ const afl3d={
     this.view=name; if(!this.camera) return;
     // Presets define only a DIRECTION (elevation/azimuth); the distance is auto-fitted so the oval fills the box.
     // top is nudged off the exact zenith (z) so the length axis stays vertical and OrbitControls keeps a defined azimuth (no gimbal flip).
-    const P={behind:[0,0.64,1], side:[1,0.85,0.05], top:[0,1,0.18]}[name]||[0,0.64,1];
+    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.18]}[name]||[0,0.64,1];
     const dir=new THREE.Vector3(P[0],P[1],P[2]).normalize();
     // Hard-reset the orbit frame: restore up, place camera along dir, re-aim. Without the up reset a prior near-vertical view leaves the azimuth rotated.
     this.camera.up.set(0,1,0);
@@ -2229,13 +2231,17 @@ const afl3d={
     this.overlay.innerHTML=''; this.pills=[]; this.benchPills=[];
     const rx=this.FIELD_W/2, rz=this.FIELD_L/2;
     const addField=(el,x,y)=>{ this.overlay.appendChild(el); this.pills.push({el,x,y}); };
-    // Bench pills: world position along the right touchline, clustered around centre (real benches sit by the halfway line).
-    const addBench=(el,i,total)=>{
+    // Bench pills: world position along the right touchline. Each sub wave is grouped shoulder-to-shoulder with a gap between waves,
+    // and the whole line-up is centred on the halfway line (next-on group sits in the middle, later waves flanking outward).
+    const addBench=(el,i,total,sc)=>{
       this.overlay.appendChild(el);
-      const t=total<=1?0.5:i/(total-1);
       const wx=rx+8;                          // just outside the right sideline
-      const wy=2.5;                           // slight standing height
-      const wz=-rz*0.3 + t*(rz*0.6);          // tighter spread — 30% each side of halfway
+      const wy=2.5;
+      const gap=10, waveGap=7;                // intra-wave pill spacing, extra space between waves
+      const sub=Math.max(1, sc||1);
+      const naturalPos=p=>p*gap + Math.floor(p/sub)*waveGap;
+      const maxNatural=total<=1?0:naturalPos(total-1);
+      const wz=naturalPos(i) - maxNatural/2;
       this.benchPills.push({el, wx, wy, wz});
     };
     buildPill(addField, addBench);
@@ -2377,12 +2383,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.3.2-beta';
+const APP_VERSION='v2.3.3-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.3.3-beta':{
+    title:'Next-on group + straight side view',
+    items:[
+      'Next-on bench players now glow emerald and group shoulder-to-shoulder, separated from later subs by a small gap',
+      'Side view is now perfectly perpendicular to the touchline (no more slight angle)'
+    ]
+  },
   'v2.3.2-beta':{
     title:'Tighter bench line-up',
     items:['Bench pills now cluster nearer the halfway line on the sideline, like a real interchange bench']
@@ -5457,7 +5470,7 @@ function renderRoster(){
           el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:1;display:flex;flex-direction:column;align-items:center';
           const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
           el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span></div>`;
-          addBench(el, i, G.bench.length);
+          addBench(el, i, G.bench.length, sc);
         });
       }
     }, _3dSport);
