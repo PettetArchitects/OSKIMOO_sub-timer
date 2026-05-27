@@ -2579,12 +2579,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.4-beta';
+const APP_VERSION='v2.7.5-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.5-beta':{
+    title:'Tap the empty pitch to cancel a swap or injury selection',
+    items:['Once you\'ve tapped a player to arm a swap, or long-pressed for an injury sub, an empty-pitch tap now cancels and clears the armed mode']
+  },
   'v2.7.4-beta':{
     title:'Dashboard buttons swap sides on play/pause',
     items:[
@@ -6137,6 +6141,23 @@ renderHome();
 initCloudAuth();
 _li(); // materialise initial-page <i data-lucide> placeholders once Lucide is in
 maybeShowWhatsNew(); // fire the changelog modal if this is a new version for this device
+
+// v2.7.5: tap an empty area of the pitch to cancel an armed swap selection or
+// in-progress injury sub. The pill click handlers stop here (target.closest
+// '.fc' check) so this only fires on background taps.
+{
+  const pm=document.getElementById('pitchMid');
+  if(pm){
+    pm.addEventListener('click',(e)=>{
+      if(e.target.closest('.fc')) return;                       // a player pill was tapped
+      if(fieldSwapSel===null && injuryOffSel===null) return;    // nothing armed
+      fieldSwapSel=null;
+      injuryOffSel=null;
+      gameMode='swap';
+      renderG();
+    });
+  }
+}
 
 // v2.7.0 — yank the launch splash once its fade-out animation has played.
 // The CSS animation 'launch-fade' totals 1.6s (700ms hold + 900ms fade); we
