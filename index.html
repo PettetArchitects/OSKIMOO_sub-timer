@@ -192,8 +192,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .nb-circle-bot{position:absolute;left:50%;bottom:0;width:65%;aspect-ratio:2/1;border:1px solid rgba(255,255,255,.28);border-bottom:none;border-radius:50% 50% 0 0/100% 100% 0 0;transform:translateX(-50%);pointer-events:none}
 .nb-centre-circle{position:absolute;left:50%;top:50%;width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.28);transform:translate(-50%,-50%);pointer-events:none}
 
-/* Overlay */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+/* Overlay — z-index 9000 sits above the 3D player pills (afl3d.projectPills
+   assigns per-pill z-index up to ~2000 by camera distance). 100 was getting
+   beaten by the pills and they'd hang over any action popup — fixed in v2.7.1. */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9000;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .ov.show{display:flex}
 .ab{background:#16213e;border:3px solid #e94560;border-radius:16px;padding:24px;width:100%;max-width:380px;text-align:center}
 .ab h2{font-size:22px;color:#e94560;margin-bottom:16px}
@@ -2576,12 +2578,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.0-beta';
+const APP_VERSION='v2.7.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.1-beta':{
+    title:'Fix: player pills no longer hang over the popup',
+    items:['Bumped overlay z-index above the 3D pitch pills — the SWAP / INJURY popup (and every other modal) now sits cleanly above the players']
+  },
   'v2.7.0-beta':{
     title:'Motion pass — launch splash, onboarding stagger, dialog fade, sync pulse',
     items:[
