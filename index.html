@@ -1008,22 +1008,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 <!-- Per-player action popup removed in v2.7.2 — replaced by tap=swap, long-press=injury directly on the field pill. -->
 
-<!-- Sub strategy chooser — shown once at game start so coach picks how subs should behave -->
+<!-- v2.7.34: Auto vs Custom chooser. Auto handles equal-time + matched-pair behaviour (group size from cfg.sc); Custom = pre-built Plan. -->
 <div class="ov" id="subStratOv">
   <div class="ab" style="max-width:360px;text-align:left">
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
-    <button class="chip" onclick="pickSubStrategy('fair')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Equal time</div>
-      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App picks the longest-on player to come off and the longest-benched to come on. Best for fair-play rules.</div>
-    </button>
-    <button class="chip" onclick="pickSubStrategy('paired')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
-      <div style="font-weight:800;color:#5bc0de;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="refresh-cw" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Matched pairs</div>
-      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pairs swap on/off together. The pair with the most game time comes off — predictability + fair minutes in one.</div>
+    <button class="chip" onclick="pickSubStrategy('auto')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+      <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Auto</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App handles sub timing + selection. Longest-on comes off; longest-benched comes on. Tweak frequency + grouping anytime from the steppers on the Plan page.</div>
     </button>
     <button class="chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
       <div style="font-weight:800;color:#a78bfa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
-      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">Pick when subs fire. Tap SUB on the fly, or pre-build a full Plan in the planner — same strategy, different degree of detail.</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">You decide when subs fire. Tap SUB live, or pre-build a full Plan in the Plan page — same strategy, different degree of detail.</div>
     </button>
   </div>
 </div>
@@ -2883,12 +2879,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.33-beta';
+const APP_VERSION='v2.7.34-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.34-beta':{
+    title:'Strategy collapsed to AUTO / CUSTOM',
+    items:[
+      'Strategy picker collapsed from three options (Equal, Matched, Custom) down to two: AUTO and CUSTOM. AUTO covers both Equal-time and Matched-pair behaviour automatically — the frequency / group-size steppers on the Plan page decide which Auto variant you get.',
+      'Internal strategy keys (\'fair\' / \'paired\' / \'planned\') are unchanged so saved games keep working — the UI maps to/from the toggle for you.'
+    ]
+  },
   'v2.7.33-beta':{
     title:'🏀 Basketball arrives',
     items:[
@@ -5156,8 +5159,10 @@ function snapshotHalfStart(){
 }
 function pickSubStrategy(strat){
   if(!G)return;
-  G.subStrategy=strat;
-  G.log.push({type:'sub_strategy',time:0,strategy:strat});
+  // v2.7.34: toggle keys ('auto'/'planned') resolved to internal strategy here.
+  const internal=(strat==='auto'&&typeof toggleToStrat==='function')?toggleToStrat('auto'):(strat==='planned'?'planned':strat);
+  G.subStrategy=internal;
+  G.log.push({type:'sub_strategy',time:0,strategy:internal});
   document.getElementById('subStratOv').classList.remove('show');
   saveActiveGame();
   renderG();
@@ -6741,21 +6746,38 @@ function clkAdj(k,d){
 function renderSsStratGrid(){
   const grid=document.getElementById('ssStratGrid');
   if(!grid||!G) return;
+  // v2.7.34: Auto vs Custom. Auto picks the off/on for you using equal-time +
+  // group size from the frequency / grouping steppers; Custom = pre-built plan.
+  // Matched is no longer a separate strategy — group size (cfg.sc) drives the
+  // matched-pair behaviour inside Auto.
   const opts=[
-    {k:'fair',   icon:'timer',     label:'Equal',   color:'#00d4aa'},
-    {k:'paired', icon:'refresh',   label:'Matched', color:'#5bc0de'},
-    {k:'planned',icon:'clipboard', label:'Custom',  color:'#a78bfa'}
+    {k:'auto',   icon:'timer',     label:'Auto',   color:'#00d4aa'},
+    {k:'planned',icon:'clipboard', label:'Custom', color:'#a78bfa'}
   ];
+  const live=stratToToggle(G.subStrategy);
   grid.innerHTML=opts.map(o=>{
-    const sel=(G.subStrategy===o.k);
+    const sel=(live===o.k);
     return `<button onclick="ssSetStrat('${o.k}')" style="padding:10px;border-radius:8px;border:1.5px solid ${sel?o.color:'#2a3550'};background:${sel?o.color+'1a':'transparent'};color:${sel?o.color:'#9fb3c8'};font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit">${ic(o.icon,15,sel?o.color:'#9fb3c8')}${o.label}</button>`;
   }).join('');
   _li();
 }
+// v2.7.34: map any historical strategy key onto the new two-state toggle.
+function stratToToggle(s){ return s==='planned'?'planned':'auto'; }
+// v2.7.34: pick the right internal strategy when the user taps Auto. If the
+// team has paired groups (cfg.sc > 1 AND G.pairs has any entries), keep matched
+// logic; otherwise use plain fair (equal-time). Custom always maps to planned.
+function toggleToStrat(k){
+  if(k==='planned') return 'planned';
+  return (G && G.pairs && G.pairs.length>0)?'paired':'fair';
+}
 function ssSetStrat(strat){
   if(!G) return;
-  G.subStrategy=strat;
-  G.log.push({type:'sub_strategy',time:G.secs||0,strategy:strat});
+  // v2.7.34: callers pass the toggle key ('auto'|'planned'); resolve to the internal
+  // strategy ('fair'|'paired'|'planned') here so the rest of the engine keeps
+  // working unchanged. Direct internal keys also pass through (compatibility).
+  const internal=(strat==='auto')?toggleToStrat('auto'):(strat==='planned'?'planned':strat);
+  G.subStrategy=internal;
+  G.log.push({type:'sub_strategy',time:G.secs||0,strategy:internal});
   renderSsStratGrid();
 }
 
@@ -6766,7 +6788,8 @@ function ssSetStrat(strat){
 let _subOrderStrat=null;   // currently previewed strategy (null = use live G.subStrategy)
 function openSubOrder(){
   if(!G) return;
-  _subOrderStrat=G.subStrategy||'fair';
+  // v2.7.34: tabs work in toggle space (auto/planned), not internal strategies.
+  _subOrderStrat=stratToToggle(G.subStrategy||'fair');
   renderSubOrderTabs();
   renderSubOrderControls();
   renderSubOrderSuggestion();
@@ -6817,15 +6840,16 @@ function closeSubOrder(){ document.getElementById('subOrderOv').classList.remove
 function renderSubOrderTabs(){
   const wrap=document.getElementById('subOrderTabs');
   if(!wrap||!G) return;
-  const live=G.subStrategy||'fair';
+  // v2.7.34: AUTO / CUSTOM toggle only — Equal and Matched fold into Auto and
+  // the frequency / grouping steppers below drive which Auto variant fires.
+  const liveToggle=stratToToggle(G.subStrategy||'fair');
   const opts=[
-    {k:'fair',   label:'Equal'},
-    {k:'paired', label:'Matched'},
+    {k:'auto',   label:'Auto'},
     {k:'planned',label:'Custom'}
   ];
   wrap.innerHTML=opts.map(o=>{
     const active=(_subOrderStrat===o.k);
-    const isLive=(live===o.k);
+    const isLive=(liveToggle===o.k);
     return `<button onclick="subOrderPick('${o.k}')" style="flex:1;padding:9px 4px;background:${active?'#5bc0de1a':'transparent'};color:${active?'#5bc0de':'#9fb3c8'};border:1.5px solid ${active?'#5bc0de':'transparent'};border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
   }).join('');
 }
@@ -6834,7 +6858,8 @@ function subOrderPick(strat){
   renderSubOrderTabs();
   renderSubOrder();
   const btn=document.getElementById('subOrderApplyBtn');
-  if(btn) btn.style.display=(strat!==(G&&G.subStrategy))?'block':'none';
+  // v2.7.34: compare against the live toggle, not the internal strategy.
+  if(btn) btn.style.display=(strat!==stratToToggle(G&&G.subStrategy))?'block':'none';
 }
 function subOrderApply(){
   if(!G||!_subOrderStrat) return;
@@ -6849,7 +6874,10 @@ function renderSubOrder(){
   const info=document.getElementById('subOrderInfo');
   const list=document.getElementById('subOrderList');
   if(!info||!list||!G) return;
-  const strat=_subOrderStrat||G.subStrategy||'fair';
+  // v2.7.34: _subOrderStrat is now a toggle key (auto|planned); resolve to internal
+  // strategy ('fair'|'paired'|'planned') for the projection simulator.
+  const toggle=_subOrderStrat||stratToToggle(G.subStrategy||'fair');
+  const strat=(toggle==='auto')?toggleToStrat('auto'):'planned';
   const stratLabels={fair:'Equal time',paired:'Matched',planned:'Custom'};
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const sport=getSport(currentTeam);
