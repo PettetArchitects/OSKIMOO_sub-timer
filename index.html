@@ -146,6 +146,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 #clkArea > div:first-child > div{flex-direction:row!important;gap:6px!important;align-items:baseline!important}
   #s4 .tmr-c{font-size:24px!important;letter-spacing:1px!important}
   #s4 #hLbl,#s4 #clkSubLbl{font-size:9px!important;letter-spacing:.8px!important;margin-top:0!important}
+  /* v2.7.23: inline clock steppers hidden in landscape — the modal (hamburger ▸ Sub Settings) is the right place to tweak when vertical pixels are scarce. */
+  #s4 .clk-stepper{display:none!important}
   /* nsi (mini status line) hidden in this compact header. */
   #s4 #nsi{display:none!important}
   /* Mode-hint pill row tightened. */
@@ -823,13 +825,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        up into the header so timer+score share one row. -->
   <div id="clkArea" style="text-align:center;padding:12px 0 4px;flex-shrink:0">
     <div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
         <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
+        <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
+        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
+          <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
+          <span id="clkHmV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">10</span>
+          <span style="opacity:.7">min half</span>
+          <button onclick="clkAdj('hm',1)" aria-label="Longer half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+        </div>
       </div>
-      <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:6px">
+      <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
         <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
+        <!-- v2.7.23: inline sub-frequency editor under the sub countdown. -->
+        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
+          <button onclick="clkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
+          <span id="clkSfV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">5</span>
+          <span style="opacity:.7">min subs</span>
+          <button onclick="clkAdj('sf',1)" aria-label="Sub less often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+        </div>
       </div>
     </div>
     <div id="nsi" style="margin-top:6px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
@@ -2770,12 +2786,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.22-beta';
+const APP_VERSION='v2.7.23-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.23-beta':{
+    title:'Edit half length + sub frequency right under each clock',
+    items:[
+      'Small − / + steppers under the game clock and the next-sub countdown let you tweak the half length and sub frequency without opening the Sub Settings modal',
+      'Changes apply to the running clock immediately and stay in sync with the modal\'s steppers',
+      'Hidden in landscape phone (clock area is too tight) — use the hamburger ▸ Sub Settings there'
+    ]
+  },
   'v2.7.22-beta':{
     title:'Plan button on dashboard + smaller soccer pills + roomier zoom',
     items:[
@@ -4997,6 +5021,9 @@ function renderG(){
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(curMs/1000));
   ce.className='tmr-c';
+  // v2.7.23: keep the inline clk-area steppers in sync with cfg on every render.
+  const _hmV=document.getElementById('clkHmV'); if(_hmV&&cfg) _hmV.textContent=cfg.hm;
+  const _sfV=document.getElementById('clkSfV'); if(_sfV&&cfg) _sfV.textContent=cfg.sf;
   const ni=document.getElementById('nsi');
   const pb=document.getElementById('ppB');
   const ns=nxtST();
@@ -6515,6 +6542,16 @@ function ssAdj(k,d){
   if(k==='sf') cfg.sf=Math.max(2,Math.min(15,cfg.sf+d));
   if(k==='sc') cfg.sc=Math.max(1,Math.min(4,cfg.sc+d));
   document.getElementById('ss'+k.charAt(0).toUpperCase()+k.slice(1)+'V').textContent=cfg[k];
+  // v2.7.23: keep the inline clk-area stepper in sync if the value is mirrored there.
+  const ce=document.getElementById('clk'+k.charAt(0).toUpperCase()+k.slice(1)+'V');
+  if(ce) ce.textContent=cfg[k];
+}
+
+// v2.7.23: tweak cfg from the steppers directly under each clock. Same clamp ranges as ssAdj; saves + re-renders so the next-sub countdown / period clock pick up the change live.
+function clkAdj(k,d){
+  ssAdj(k,d);
+  if(typeof saveActiveGame==='function') saveActiveGame();
+  if(typeof renderG==='function') renderG();
 }
 // v2.7.16: sub-strategy 2x2 grid inside the Sub Settings modal. Tapping a
 // chip swaps G.subStrategy and re-paints; the modal stays open so the coach
