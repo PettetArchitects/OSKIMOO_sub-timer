@@ -381,7 +381,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:9px;color:#1a1a2e;font-weight:800;letter-spacing:1px;vertical-align:middle;background:#f0a500;padding:2px 5px;border-radius:3px;margin-left:2px">BETA</span><span id="verTag" style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;vertical-align:middle;margin-left:6px"></span></h1>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Buy me a coffee" title="Like Sub Timer? Buy me a coffee" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="coffee" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
+        <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Donate to keep this app going" title="Donate to keep this app going" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="heart" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
         <button onclick="openSettings()" aria-label="Settings" title="Settings" style="background:none;color:#888;border:1px solid #444;border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><i data-lucide="settings" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
         <div id="authChip"></div>
       </div>
@@ -419,8 +419,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
       <button class="btn btn-o" id="historyBtn" onclick="showHistory()" style="flex:1;margin-top:0">Match History</button>
     </div>
-    <!-- Bottom coffee CTA removed in v2.4 — there's a coffee icon in the top header now (always visible). -->
-    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
+    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><i data-lucide="heart" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span>Donate to keep this app going</span></a>
     <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><i data-lucide="message-square" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i><span>Send feedback or feature ideas</span></button>
     <div style="text-align:center;font-size:10px;color:#555;margin-top:14px;letter-spacing:.5px;line-height:1.4">This is a beta — please tell me what's broken or missing.</div>
   </div>
@@ -2200,41 +2199,85 @@ const afl3d={
     };
     this.raf=requestAnimationFrame(tick);
   },
+  // Capture each pill's CURRENT world position keyed by player name — used by confSub to set the "from" point of the sub-swap tween before the state mutates.
+  snapshotPositions(){
+    const map=new Map();
+    if(!this.pills) return map;
+    this.pills.forEach(p=>{ if(p.name) map.set(p.name, this.worldOf(p.x,p.y,8).clone()); });
+    this.benchPills.forEach(p=>{ if(p.name) map.set(p.name, new THREE.Vector3(p.wx,p.wy,p.wz)); });
+    return map;
+  },
+  // Resolve a pill's current world position, honouring any active sub-swap tween (incoming pulls outgoing across — arc + ease-in-out).
+  _pillWorld(pill, target){
+    if(!pill.tween) return target;
+    const t=Math.min(1, (performance.now() - pill.tween.t0) / pill.tween.duration);
+    if(t>=1){ pill.tween=null; return target; }
+    const e=0.5 - 0.5*Math.cos(t*Math.PI);                      // smoothstep ease in/out
+    const out=new THREE.Vector3().lerpVectors(pill.tween.from, target, e);
+    out.y += Math.sin(t*Math.PI) * 5;                           // small arc — gives the swap an arcing path, not a flat slide
+    return out;
+  },
   projectPills(){
     if(!this.overlay||!this.camera) return;
     const W=this.overlay.clientWidth, H=this.overlay.clientHeight;
     const camPos=this.camera.position;
     const baseD=this._fitD||camPos.distanceTo(this.controls.target);
+    // Pass 1 — project every pill to its raw screen position + scale + depth (no overlap correction yet).
+    const items=[];
+    const projOne=(world, minScale, maxScale, scaleK)=>{
+      const v=world.clone().project(this.camera);
+      if(v.z>1) return null;
+      const sx=((v.x*0.5+0.5)*W), sy=((-v.y*0.5+0.5)*H);
+      const dist=camPos.distanceTo(world);
+      let s=this._pillScale*baseD/Math.max(1,dist)*(scaleK||1);
+      s=Math.max(minScale,Math.min(maxScale,s));
+      return {sx, sy, s, dist};
+    };
     this.pills.forEach(p=>{
-      // Floating pill height — at oblique camera angles, this lift separates a player's pill from the pill of someone standing behind them.
-      const world=this.worldOf(p.x,p.y,8);
-      const v=world.clone().project(this.camera);
-      if(v.z>1){ p.el.style.display='none'; return; }
-      p.el.style.display='';
-      p.el.style.left=((v.x*0.5+0.5)*W)+'px';
-      p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
-      // Icons live on the field: scale by camera distance to THIS pill — zoom in → bigger, nearer pills → bigger (true perspective).
-      const dist=camPos.distanceTo(world);
-      let s=this._pillScale*baseD/Math.max(1,dist);
-      s=Math.max(0.78,Math.min(2.4,s));
-      p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
-      // Nearer pills sit above farther ones so overlap reads clearly even at very oblique angles.
-      p.el.style.zIndex=String(2000-Math.round(dist));
+      const target=this.worldOf(p.x,p.y,8);
+      const world=this._pillWorld(p, target);
+      const r=projOne(world, 0.78, 2.4, 1);
+      items.push(r?{p, r, kind:'field'}:null);
     });
-    // Bench pills are already in world space (placed along the sideline) — same projection + perspective scaling.
     this.benchPills.forEach(p=>{
-      const world=new THREE.Vector3(p.wx,p.wy,p.wz);
-      const v=world.clone().project(this.camera);
-      if(v.z>1){ p.el.style.display='none'; return; }
-      p.el.style.display='';
-      p.el.style.left=((v.x*0.5+0.5)*W)+'px';
-      p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
-      const dist=camPos.distanceTo(world);
-      let s=this._pillScale*baseD/Math.max(1,dist);
-      s=Math.max(0.65,Math.min(2.1,s*0.95));    // bench slightly smaller than field
-      p.el.style.zIndex=String(1000-Math.round(dist));  // bench always below on-field pills (different range)
-      p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
+      const target=new THREE.Vector3(p.wx,p.wy,p.wz);
+      const world=this._pillWorld(p, target);
+      const r=projOne(world, 0.65, 2.1, 0.95);
+      items.push(r?{p, r, kind:'bench'}:null);
     });
+    // Pass 2 — soft-repel any pair of pills that are too close on screen (the "allergic to overlap" behaviour).
+    // 4 relaxation iterations keep the spread stable without snapping; bench pills repel each other and on-field pills.
+    const live=items.filter(Boolean);
+    for(let it=0;it<4;it++){
+      for(let i=0;i<live.length;i++){
+        const a=live[i].r;
+        for(let j=i+1;j<live.length;j++){
+          const b=live[j].r;
+          const dx=b.sx-a.sx, dy=b.sy-a.sy;
+          const d=Math.sqrt(dx*dx+dy*dy)||0.001;
+          const minD=42*(a.s+b.s)*0.5;
+          if(d<minD){
+            const push=(minD-d)*0.5;
+            const ux=dx/d, uy=dy/d;
+            a.sx-=ux*push; a.sy-=uy*push;
+            b.sx+=ux*push; b.sy+=uy*push;
+          }
+        }
+      }
+    }
+    // Pass 3 — apply the (possibly nudged) positions to the DOM. Nearer pills sit above farther ones so overlap reads clearly.
+    let idx=0;
+    const apply=(p, it, kind)=>{
+      if(!it){ p.el.style.display='none'; return; }
+      const {sx,sy,s,dist}=it.r;
+      p.el.style.display='';
+      p.el.style.left=sx+'px';
+      p.el.style.top=sy+'px';
+      p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
+      p.el.style.zIndex=String((kind==='field'?2000:1000)-Math.round(dist));
+    };
+    this.pills.forEach(p=>apply(p, items[idx++], 'field'));
+    this.benchPills.forEach(p=>apply(p, items[idx++], 'bench'));
   },
   update(container, buildPill, sport){
     if(!this.ready()) return false;
@@ -2246,13 +2289,18 @@ const afl3d={
     // Size the renderer to the (now-settled) zone — bench/hint are already laid out — then re-fit the surface to it.
     const w=this.wrap.clientWidth, h=this.wrap.clientHeight;
     if(w&&h){ this.renderer.setSize(w,h); this.camera.aspect=w/h; this.camera.updateProjectionMatrix(); this._resW=this.renderer.domElement.width; this._resH=this.renderer.domElement.height; this._syncLineRes(); this.autoFit(); }
-    // Rebuild pills (field + sideline bench).
+    // Rebuild pills (field + sideline bench). Each new pill picks up a tween "from" position when an active sub-swap
+    // animation snapshot has its name — that's how the incoming bench player visually pulls the outgoing field player off.
     this.overlay.innerHTML=''; this.pills=[]; this.benchPills=[];
     const rx=this.FIELD_W/2, rz=this.FIELD_L/2;
-    const addField=(el,x,y)=>{ this.overlay.appendChild(el); this.pills.push({el,x,y}); };
+    const snap=(window._justSubbed && window._justSubbed.snap) || null;
+    const t0=(window._justSubbed && window._justSubbed.t0) || 0;
+    const dur=(window._justSubbed && window._justSubbed.duration) || 850;
+    const tweenIfMoved=(name)=>{ if(snap && name && snap.has(name)) return {from:snap.get(name), t0, duration:dur}; return null; };
+    const addField=(el,x,y,name)=>{ this.overlay.appendChild(el); this.pills.push({el,x,y,name,tween:tweenIfMoved(name)}); };
     // Bench pills: world position along the right touchline. Each sub wave is grouped shoulder-to-shoulder with a gap between waves,
     // and the whole line-up is centred on the halfway line (next-on group sits in the middle, later waves flanking outward).
-    const addBench=(el,i,total,sc)=>{
+    const addBench=(el,i,total,sc,name)=>{
       this.overlay.appendChild(el);
       const wx=rx+8;                          // just outside the right sideline
       const wy=2.5;
@@ -2261,7 +2309,7 @@ const afl3d={
       const naturalPos=p=>p*gap + Math.floor(p/sub)*waveGap;
       const maxNatural=total<=1?0:naturalPos(total-1);
       const wz=naturalPos(i) - maxNatural/2;
-      this.benchPills.push({el, wx, wy, wz});
+      this.benchPills.push({el, wx, wy, wz, name, tween:tweenIfMoved(name)});
     };
     buildPill(addField, addBench);
     this.projectPills(); _li();
@@ -2402,12 +2450,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.4.1-beta';
+const APP_VERSION='v2.5.0-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.5.0-beta':{
+    title:'Subs that actually move + pills that repel + Donate',
+    items:[
+      'Tap SUB and the incoming bench player slides onto the field while the player they\'re replacing slides off to the bench — they cross paths on an arc, eased in and out (Disney timing + arc principles)',
+      'Player pills now repel each other on screen — if two would overlap, they push apart until they sit clearly',
+      'The donate CTA now says "Donate to keep this app going" and the heart icon sits up top'
+    ]
+  },
   'v2.4.1-beta':{
     title:'Sub countdown clock + swap animation + tidy orbit',
     items:[
@@ -5054,6 +5110,9 @@ function injurySub(pIdx, replacementIdx){
 function confSub(){
   if(!G.ps)return;
   const{off,on}=G.ps;
+  // Snapshot every pill's CURRENT world position before mutating G — those become the "from" points so the new pills can tween from where they were (bench→field for incoming, field→bench for outgoing), pulling each other across.
+  const _animSnap=(typeof afl3d!=='undefined' && afl3d.snapshotPositions)?afl3d.snapshotPositions():null;
+  const _animT0=performance.now(), _animDur=850;
   // Snapshot the pre-swap state so the coach can undo this sub if they tapped
   // by mistake. Only the most recent sub is undoable — a new sub overwrites
   // this snapshot, and halftime/period-end clears it (different period =
@@ -5091,9 +5150,8 @@ function confSub(){
     });
   }
   G.ps=null;
-  // Flag the just-subbed players so the 3D viewer can pulse-highlight them (green = coming on, red = going off).
-  // The renderRoster pass picks these up by player name; cleared after the animation duration so the next render is clean.
-  window._justSubbed={ inNames:new Set(on.map(p=>avail[p])), offNames:new Set(off.map(p=>avail[p])), t:Date.now() };
+  // Flag the just-subbed players so the 3D viewer can pulse-highlight (green/red) AND tween (incoming pulls outgoing across — bench↔field swap).
+  window._justSubbed={ inNames:new Set(on.map(p=>avail[p])), offNames:new Set(off.map(p=>avail[p])), snap:_animSnap, t0:_animT0, duration:_animDur, t:Date.now() };
   setTimeout(()=>{ window._justSubbed=null; if(typeof renderG==='function') renderG(); }, 1700);
   document.getElementById('subBanner').style.display='none';
   document.getElementById('subOv').classList.remove('show');
@@ -5518,7 +5576,7 @@ function renderRoster(){
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
         el.onclick=()=>tapFieldPlayer(pIdx,isGk);
-        add(el, pos.x, pos.y);   // pos.x=width%, pos.y=length% → afl3d.worldOf
+        add(el, pos.x, pos.y, avail[pIdx]);   // name lets afl3d match this pill to its pre-sub position for the swap tween
       });
       // Bench players lined up along the sideline (visual context — the interactive bench list lives below the pitch).
       if(G && G.bench && G.bench.length && addBench){
@@ -5532,7 +5590,7 @@ function renderRoster(){
           el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:1;display:flex;flex-direction:column;align-items:center';
           const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
           el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span></div>`;
-          addBench(el, i, G.bench.length, sc);
+          addBench(el, i, G.bench.length, sc, avail[pIdx]);
         });
       }
     }, _3dSport);
