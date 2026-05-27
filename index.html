@@ -918,11 +918,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="nsp" style="display:none"></div>
 </div>
 
-<!-- v2.7.20: Sub Order overlay. Strategy tabs at the top so a coach can PREVIEW the projected sub order under any strategy (Equal/Paired/Manual/Plan) without committing to it. Tap "Use this" on a non-active tab to switch. -->
+<!-- v2.7.40: Sub Order overlay. Toolbar at the top holds the primary actions (close + Edit Lineup) so they're always reachable without scrolling the sub list. Strategy tabs sit below. -->
 <div class="ov" id="subOrderOv" onclick="if(event.target===this)closeSubOrder()">
   <div class="ab" style="border-color:#00d4aa;max-width:440px;text-align:left;max-height:90dvh;overflow-y:auto">
-    <h2 style="text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="list" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Sub Order</h2>
-    <div id="subOrderTabs" style="display:flex;gap:4px;margin:12px 0 8px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px"></div>
+    <!-- Top toolbar — sticky at the top of the (scrolling) overlay so Done + Lineup are always in reach. -->
+    <div style="position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;margin:-2px -2px 10px;padding:8px 2px;background:#16213e;border-bottom:1px solid rgba(91,192,222,.2)">
+      <button onclick="closeSubOrder()" aria-label="Done" title="Done — back to dashboard" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(233,69,96,.12);border:1px solid #e94560;color:#ff7088;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="check" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Done</button>
+      <h2 style="flex:1;text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-size:18px"><i data-lucide="list" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Sub Plan</h2>
+      <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" aria-label="Edit Lineup" title="Edit Lineup &amp; Formation" style="display:none;align-items:center;gap:6px;padding:8px 12px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="grid-3x3" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Lineup</button>
+    </div>
+    <div id="subOrderTabs" style="display:flex;gap:4px;margin:4px 0 8px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px"></div>
     <!-- v2.7.27: sub-frequency + group-size steppers right here on the Plan page so coaches don't have to bounce out to Sub Settings. -->
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <div style="flex:1;display:flex;align-items:center;justify-content:space-between;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.3);border-radius:8px;padding:6px 10px">
@@ -949,9 +954,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subOrderInfo" style="font-size:12px;color:#888;text-align:center;margin:0 0 12px"></div>
     <div id="subOrderList"></div>
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:10px;padding:12px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:14px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
-    <!-- v2.7.39: Lineup editor entry — visible only in CUSTOM. AUTO doesn't need a separate lineup step (app picks for you); CUSTOM pulls them apart so coaches can edit positions / formation / GK / matched pairs as a sibling of the sub list. -->
-    <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" style="display:none;width:100%;margin-top:10px;padding:14px;background:rgba(167,139,250,.14);border:1.5px solid #a78bfa;border-radius:10px;color:#a78bfa;font-size:14px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;gap:8px"><i data-lucide="grid-3x3" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit Lineup &amp; Formation</button>
-    <button class="btn btn-o" style="margin-top:10px" onclick="closeSubOrder()">Done — tap START on the dashboard</button>
+    <!-- v2.7.40: Done + Edit Lineup buttons moved to the top toolbar above. -->
   </div>
 </div>
 
@@ -2895,12 +2898,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.39-beta';
+const APP_VERSION='v2.7.40-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.40-beta':{
+    title:'Plan page: sticky top toolbar',
+    items:['Done + Lineup buttons moved off the bottom of the Plan overlay (where you had to scroll past the whole sub list to reach them) into a sticky top toolbar that stays visible while you scroll the sub timeline. Title shrunk into the toolbar to keep the chrome tight.']
+  },
   'v2.7.39-beta':{
     title:'AUTO combines, CUSTOM pulls apart — Lineup editor on the Plan page',
     items:[
