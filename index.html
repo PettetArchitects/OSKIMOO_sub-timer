@@ -863,6 +863,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="viewToggle" onclick="cycleView()" aria-label="Cycle camera view" style="display:none;position:absolute;bottom:8px;left:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
     <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
     <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
+    <!-- v2.7.32: Formation picker is now a VERTICAL popup floating just above the fmtToggle button so it doesn't push the pitch upward when it opens. -->
+    <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:140px;max-height:60dvh;overflow-y:auto;z-index:31">
+      <div id="gameFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
+    </div>
   </div>
 
   <!-- Formation / strategy / sound pills + the contextual tap-tip — one combined
@@ -897,10 +901,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        START / SUB are colour-emphasised; Swap / Injury / Edit Players / Undo
        follow as soft-UI nav items. One unified row (gameDash id kept so
        renderGameDash still finds it). -->
-  <!-- Formation picker — opens just above the control bar, next to the Formation button. -->
-  <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
-    <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
-  </div>
+  <!-- v2.7.32: gameFmtPicker moved INTO the pitch wrapper above #fmtToggle as a vertical popup; no longer takes a row above the dashboard. -->
   <!-- v2.7.29 layout: Formation toggle moved onto the pitch overlay (bottom-right). Dashboard is three buttons. -->
   <!-- Running:  [SUB]   [Undo] [PAUSE] -->
   <!-- Paused:   [RESET] [Undo] [START] -->
@@ -2815,12 +2816,17 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.31-beta';
+const APP_VERSION='v2.7.32-beta';
+// v2.7.32 changelog appended below for clarity.
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.32-beta':{
+    title:'Formation picker: vertical popup next to the toggle',
+    items:['Formation picker no longer pushes the pitch upward when it opens. Floats as a vertical popup just above the Formation toggle on the bottom-right of the pitch — each formation is a full-width row with key + short description. Tap outside to dismiss.']
+  },
   'v2.7.31-beta':{
     title:'Paired → Matched, Manual merged into Custom',
     items:[
@@ -5570,10 +5576,11 @@ function toggleGameFormation(){
     const forms=FORMATIONS[curFmt];
     Object.keys(forms).forEach(k=>{
       const c=document.createElement('div');
-      c.className='chip'+(curFormation===k?' sel':'');
-      c.style.cssText='padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:84px';
+      // v2.7.32: vertical-popup row — full-width tap target with the formation key + a short description.
+      const sel=(curFormation===k);
+      c.style.cssText=`display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;background:${sel?'rgba(91,192,222,.16)':'transparent'};border:1px solid ${sel?'#5bc0de':'transparent'}`;
       const short=FORMATION_SHORTS[k]||'';
-      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:#888;font-weight:500;line-height:1.1">${short}</div>`:''}`;
+      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px;color:${sel?'#5bc0de':'#eee'};min-width:34px">${k}</div>${short?`<div style="font-size:10px;color:#888;font-weight:500;line-height:1.2;flex:1;text-align:right">${short}</div>`:''}`;
       c.onclick=()=>{ selectGameFormation(k); };
       g.appendChild(c);
     });
@@ -6582,6 +6589,12 @@ document.addEventListener('click',(e)=>{
   const gm=document.getElementById('gameMenu');
   if(gm && gm.style.display==='block' && !e.target.closest('#gameMenu, #gameMenuBtn')){
     gm.style.display='none';
+  }
+  // v2.7.32: same for the floating Formation popup — tap outside dismisses it.
+  const fp=document.getElementById('gameFmtPicker');
+  if(fp && fp.style.display==='block' && !e.target.closest('#gameFmtPicker, #fmtToggle')){
+    fp.style.display='none';
+    if(typeof renderGameDash==='function') renderGameDash();
   }
   if(fieldSwapSel===null && injuryOffSel===null) return;     // nothing armed
   // Keep these clickables out of the cancel path — they're part of the armed flow:
