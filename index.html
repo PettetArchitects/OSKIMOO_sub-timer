@@ -2207,14 +2207,45 @@ const afl3d={
     this.benchPills.forEach(p=>{ if(p.name) map.set(p.name, new THREE.Vector3(p.wx,p.wy,p.wz)); });
     return map;
   },
-  // Resolve a pill's current world position, honouring any active sub-swap tween (incoming pulls outgoing across — arc + ease-in-out).
+  // Resolve a pill's current world position, honouring any active sub-swap tween.
+  // INCOMING pill: arc onto the field with a small overshoot at arrival (Disney follow-through — looks like impact).
+  // OUTGOING pill: gets SHOVED past its bench landing by the incoming player, then settles back — the "pushed off" feel.
   _pillWorld(pill, target){
     if(!pill.tween) return target;
     const t=Math.min(1, (performance.now() - pill.tween.t0) / pill.tween.duration);
     if(t>=1){ pill.tween=null; return target; }
-    const e=0.5 - 0.5*Math.cos(t*Math.PI);                      // smoothstep ease in/out
-    const out=new THREE.Vector3().lerpVectors(pill.tween.from, target, e);
-    out.y += Math.sin(t*Math.PI) * 5;                           // small arc — gives the swap an arcing path, not a flat slide
+    const from=pill.tween.from;
+    const out=new THREE.Vector3();
+    if(pill.tween.isOff){
+      // Direction of motion (from → target), used to push past the bench landing along the same vector.
+      const dir=new THREE.Vector3().subVectors(target,from);
+      const len=dir.length()||1; dir.multiplyScalar(1/len);
+      const overshoot=Math.min(22, len*0.18);           // how far past target the pill is shoved
+      const push=target.clone().addScaledVector(dir, overshoot);
+      if(t<0.7){
+        // Travel from start → push-past-target — accelerating (ease-in) so the shove reads as a hit.
+        const tA=t/0.7, e=tA*tA*(3-2*tA);               // smoothstep-ish
+        out.lerpVectors(from, push, e);
+      } else {
+        // Settle back from push → target — quick cosine ease.
+        const tB=(t-0.7)/0.3, e=0.5-0.5*Math.cos(tB*Math.PI);
+        out.lerpVectors(push, target, e);
+      }
+    } else {
+      // Incoming player: smooth ease-in-out with a brief overshoot just past the field slot before settling.
+      const dir=new THREE.Vector3().subVectors(target,from);
+      const len=dir.length()||1; dir.multiplyScalar(1/len);
+      const overshoot=Math.min(10, len*0.08);
+      const beyond=target.clone().addScaledVector(dir, overshoot);
+      if(t<0.78){
+        const tA=t/0.78, e=0.5-0.5*Math.cos(tA*Math.PI);
+        out.lerpVectors(from, beyond, e);
+      } else {
+        const tB=(t-0.78)/0.22, e=0.5-0.5*Math.cos(tB*Math.PI);
+        out.lerpVectors(beyond, target, e);
+      }
+    }
+    out.y += Math.sin(t*Math.PI) * 5;                   // shared arc through the air — gives both pills weight
     return out;
   },
   projectPills(){
@@ -2296,7 +2327,12 @@ const afl3d={
     const snap=(window._justSubbed && window._justSubbed.snap) || null;
     const t0=(window._justSubbed && window._justSubbed.t0) || 0;
     const dur=(window._justSubbed && window._justSubbed.duration) || 850;
-    const tweenIfMoved=(name)=>{ if(snap && name && snap.has(name)) return {from:snap.get(name), t0, duration:dur}; return null; };
+    const offNames=(window._justSubbed && window._justSubbed.offNames) || null;
+    const tweenIfMoved=(name)=>{
+      if(!snap || !name || !snap.has(name)) return null;
+      // isOff = "this player just came OFF the field" — used by _pillWorld to shove them past their bench landing for follow-through.
+      return {from:snap.get(name), t0, duration:dur, isOff:!!(offNames && offNames.has(name))};
+    };
     const addField=(el,x,y,name)=>{ this.overlay.appendChild(el); this.pills.push({el,x,y,name,tween:tweenIfMoved(name)}); };
     // Bench pills: world position along the right touchline. Each sub wave is grouped shoulder-to-shoulder with a gap between waves,
     // and the whole line-up is centred on the halfway line (next-on group sits in the middle, later waves flanking outward).
@@ -2450,12 +2486,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.5.0-beta';
+const APP_VERSION='v2.5.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.5.1-beta':{
+    title:'Sub: incoming player pushes outgoing off',
+    items:['Incoming bench player now physically shoves the outgoing player past their bench spot, who then settles back — applies follow-through and timing principles for impact']
+  },
   'v2.5.0-beta':{
     title:'Subs that actually move + pills that repel + Donate',
     items:[
