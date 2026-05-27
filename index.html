@@ -894,12 +894,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
-  <!-- v2.7.24 layout: yellow primary button is now PLAN (opens Sub Order). Subs auto-apply at sub time so the manual SUB trigger is gone.
-       Running:  [PLAN] [Undo] [Formation] [PAUSE]
-       Paused:   [RESET] [Undo] [Formation] [START] -->
+  <!-- v2.7.25 layout: SUB stays as SUB (manual trigger). PLAN button sits in the middle. -->
+  <!-- Running:  [SUB]   [Undo] [Plan] [Formation] [PAUSE] -->
+  <!-- Paused:   [RESET] [Undo] [Plan] [Formation] [START] -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
+    <button class="gd-btn" id="gdPlan" onclick="openSubOrder()"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
@@ -2786,12 +2787,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.24-beta';
+const APP_VERSION='v2.7.25-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.25-beta':{
+    title:'SUB stays SUB; Plan is its own middle dashboard button',
+    items:[
+      'Misread the rename ask in v2.7.24 — reverted. The yellow primary button is the manual SUB trigger again.',
+      'Dedicated Plan button restored to the middle of the bottom dashboard (label always "Plan", icon list). Opens the Sub Order overlay.',
+      'Dashboard: [SUB / RESET] [Undo] [Plan] [Formation] [PAUSE / START]. The strategy formerly called "Plan / Full control" stays renamed to Custom inside the picker — that was the right rename.'
+    ]
+  },
   'v2.7.24-beta':{
     title:'SUB button renamed PLAN; "Plan" strategy renamed Custom',
     items:[
@@ -5086,14 +5095,14 @@ function renderG(){
       subBtn.innerHTML=`${ic('rotate-ccw',21)}<span>${_resetArmed?'TAP AGAIN':'RESET'}</span>`;
       subBtn.onclick=resetHalf;
     } else {
-      // v2.7.24: manual SUB renamed to PLAN — opens the Sub Order overlay. Subs already
-      // auto-apply at sub time (v2.4.4), so the yellow primary button is now the entry
-      // to the planner instead of a redundant manual-fire button.
-      subBtn.disabled=false;
-      subBtn.style.opacity='1';
+      // v2.7.25: SUB button reverted (manual sub trigger). A separate Plan
+      // button (#gdPlan) opens the Sub Order overlay.
+      const canSub=G.bench.length>0;
+      subBtn.disabled=!canSub;
+      subBtn.style.opacity=canSub?'1':'0.4';
       subBtn.className='gd-btn gd-sub';
-      subBtn.innerHTML=`${ic('list',21)}<span>PLAN</span>`;
-      subBtn.onclick=openSubOrder;
+      subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
+      subBtn.onclick=manualSub;
     }
   }
 
@@ -5701,7 +5710,13 @@ function renderGameDash(){
   // v2.7.9: View cycle moved off the dashboard onto a bottom-left overlay on the pitch.
   updateViewToggle();
   // Edit Team lives in the hamburger menu now (v2.7.9) — no dashboard button.
-  // v2.7.24: gdPlan removed — the yellow primary button (subB) is now PLAN itself.
+  // v2.7.25: dedicated Plan button — opens the Sub Order overlay. Label is just "Plan"
+  // (one consistent name); the strategy mode formerly called "Plan" is now "Custom".
+  const planBtn=document.getElementById('gdPlan');
+  if(planBtn){
+    planBtn.innerHTML=`${ic('list',17)}<span>Plan</span>`;
+    planBtn.className='gd-btn';
+  }
   const undo=document.getElementById('gdUndo');
   if(undo){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
