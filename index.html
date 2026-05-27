@@ -303,7 +303,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    View cycle button on the bottom dashboard (#gdView). Kept the DOM nodes so
    afl3d.setView can still toggle their .active class without null checks. */
 .afl3d-views{display:none}
-.afl3d-hint{position:absolute;right:8px;top:10px;font-size:9px;color:#5a6b82;letter-spacing:.3px;pointer-events:none;z-index:5}
+/* .afl3d-hint removed in v2.7.11 — the "drag · pinch · tap" hint is gone. */
 .lu-plane{position:absolute;left:0;right:0;bottom:0;height:240%;transform-origin:50% 100%;transform:rotateX(45deg)}
 .lu-plane svg{width:100%;height:100%;position:absolute;inset:0}
 .lu-tokens{position:absolute;inset:0;pointer-events:none}
@@ -2235,8 +2235,7 @@ const afl3d={
     lockB.onclick=()=>{ this.locked=!this.locked; this.controls.enableRotate=!this.locked; this.controls.enableZoom=!this.locked; lockB.textContent=this.locked?'🔒':'🔓'; lockB.classList.toggle('active',this.locked); };
     views.appendChild(lockB);
     wrap.appendChild(views);
-    const hint=document.createElement('div'); hint.className='afl3d-hint'; hint.textContent='drag · pinch · tap';
-    wrap.appendChild(hint);
+    // "drag · pinch · tap" hint removed in v2.7.11 — the gesture is discoverable enough.
     container.appendChild(wrap);
     this.renderer=renderer; this.scene=scene; this.camera=camera; this.controls=controls; this.wrap=wrap; this.overlay=overlay; this.viewsEl=views;
     this.setView(this.view);
@@ -2591,12 +2590,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.10-beta';
+const APP_VERSION='v2.7.11-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.11-beta':{
+    title:'Dropped the "drag · pinch · tap" hint',
+    items:['Removed the small hint text in the top-right of the pitch — the gesture is discoverable enough without it.']
+  },
   'v2.7.10-beta':{
     title:'Mobile pill: properly drop the ↑Incoming badge',
     items:['v2.7.9 CSS hide wasn\'t holding up on iOS — now the markup is skipped at render time when viewport ≤ 480px, so the badge can\'t appear at all on iPhone-width screens.']
