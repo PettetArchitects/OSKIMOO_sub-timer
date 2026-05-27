@@ -224,6 +224,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-bench3d.fc-bench3d-next .fc-label{border-color:rgba(34,197,94,.55);box-shadow:0 0 0 1px rgba(34,197,94,.4)}
 .afl3d-overlay .fc-bench3d .fc-shirt{width:26px;height:30px}
 .afl3d-overlay .fc-bench3d .fc-name{font-size:8px}
+/* Sub animations — use filter/opacity (not transform) so the per-frame projection scale isn't fought. */
+@keyframes pillEnterGlow{0%{filter:drop-shadow(0 0 0 rgba(34,197,94,0));opacity:0.25}25%{filter:drop-shadow(0 0 22px rgba(34,197,94,1));opacity:1}100%{filter:drop-shadow(0 0 0 rgba(34,197,94,0));opacity:1}}
+@keyframes pillExitGlow{0%{filter:drop-shadow(0 0 0 rgba(233,69,96,0))}30%{filter:drop-shadow(0 0 18px rgba(233,69,96,.95))}100%{filter:drop-shadow(0 0 0 rgba(233,69,96,0))}}
+.afl3d-overlay .fc-just-on{animation:pillEnterGlow 1.6s ease-out}
+.afl3d-overlay .fc-bench3d.fc-just-off{animation:pillExitGlow 1.6s ease-out;opacity:1!important;filter:saturate(1)!important}
 .afl3d-views{position:absolute;left:8px;top:8px;display:flex;gap:5px;z-index:5}
 .afl3d-views button{pointer-events:auto;background:rgba(13,18,30,.82);border:1px solid #2a3550;color:#9fb3c8;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit;backdrop-filter:blur(4px)}
 .afl3d-views button.active{border-color:#5bc0de;color:#5bc0de;background:rgba(91,192,222,.16)}
@@ -372,6 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:9px;color:#1a1a2e;font-weight:800;letter-spacing:1px;vertical-align:middle;background:#f0a500;padding:2px 5px;border-radius:3px;margin-left:2px">BETA</span><span id="verTag" style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;vertical-align:middle;margin-left:6px"></span></h1>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Buy me a coffee" title="Like Sub Timer? Buy me a coffee" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="coffee" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
         <button onclick="openSettings()" aria-label="Settings" title="Settings" style="background:none;color:#888;border:1px solid #444;border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><i data-lucide="settings" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
         <div id="authChip"></div>
       </div>
@@ -409,7 +415,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
       <button class="btn btn-o" id="historyBtn" onclick="showHistory()" style="flex:1;margin-top:0">Match History</button>
     </div>
-    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);border-radius:10px;color:#ffc428;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;letter-spacing:.3px"><i data-lucide="coffee" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span>Like this? Buy me a coffee</span></a>
+    <!-- Bottom coffee CTA removed in v2.4 — there's a coffee icon in the top header now (always visible). -->
+    <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
     <button id="feedbackBtn" onclick="openFeedback()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:none;border:1px dashed #444;border-radius:10px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.3px"><i data-lucide="message-square" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i><span>Send feedback or feature ideas</span></button>
     <div style="text-align:center;font-size:10px;color:#555;margin-top:14px;letter-spacing:.5px;line-height:1.4">This is a beta — please tell me what's broken or missing.</div>
   </div>
@@ -2133,7 +2140,7 @@ const afl3d={
     this.view=name; if(!this.camera) return;
     // Presets define only a DIRECTION (elevation/azimuth); the distance is auto-fitted so the oval fills the box.
     // top is nudged off the exact zenith (z) so the length axis stays vertical and OrbitControls keeps a defined azimuth (no gimbal flip).
-    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.18]}[name]||[0,0.64,1];
+    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.04]}[name]||[0,0.64,1];
     const dir=new THREE.Vector3(P[0],P[1],P[2]).normalize();
     // Hard-reset the orbit frame: restore up, place camera along dir, re-aim. Without the up reset a prior near-vertical view leaves the azimuth rotated.
     this.camera.up.set(0,1,0);
@@ -2192,17 +2199,20 @@ const afl3d={
     const camPos=this.camera.position;
     const baseD=this._fitD||camPos.distanceTo(this.controls.target);
     this.pills.forEach(p=>{
-      const world=this.worldOf(p.x,p.y,3.5);
+      // Floating pill height — at oblique camera angles, this lift separates a player's pill from the pill of someone standing behind them.
+      const world=this.worldOf(p.x,p.y,8);
       const v=world.clone().project(this.camera);
       if(v.z>1){ p.el.style.display='none'; return; }
       p.el.style.display='';
       p.el.style.left=((v.x*0.5+0.5)*W)+'px';
       p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
       // Icons live on the field: scale by camera distance to THIS pill — zoom in → bigger, nearer pills → bigger (true perspective).
-      // Floor raised so pills stay readable when zoomed out to the auto-fit framing.
-      let s=this._pillScale*baseD/Math.max(1,camPos.distanceTo(world));
+      const dist=camPos.distanceTo(world);
+      let s=this._pillScale*baseD/Math.max(1,dist);
       s=Math.max(0.78,Math.min(2.4,s));
       p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
+      // Nearer pills sit above farther ones so overlap reads clearly even at very oblique angles.
+      p.el.style.zIndex=String(2000-Math.round(dist));
     });
     // Bench pills are already in world space (placed along the sideline) — same projection + perspective scaling.
     this.benchPills.forEach(p=>{
@@ -2212,8 +2222,10 @@ const afl3d={
       p.el.style.display='';
       p.el.style.left=((v.x*0.5+0.5)*W)+'px';
       p.el.style.top=((-v.y*0.5+0.5)*H)+'px';
-      let s=this._pillScale*baseD/Math.max(1,camPos.distanceTo(world));
+      const dist=camPos.distanceTo(world);
+      let s=this._pillScale*baseD/Math.max(1,dist);
       s=Math.max(0.65,Math.min(2.1,s*0.95));    // bench slightly smaller than field
+      p.el.style.zIndex=String(1000-Math.round(dist));  // bench always below on-field pills (different range)
       p.el.style.transform='translate(-50%,-50%) scale('+s.toFixed(3)+')';
     });
   },
@@ -2383,12 +2395,21 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.3.3-beta';
+const APP_VERSION='v2.4.0-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.4.0-beta':{
+    title:'Sub animation + cleaner views + coffee up top',
+    items:[
+      'Tap SUB and the incoming players pulse green on the field, while the outgoing ones pulse red on the bench — see your swap, not just read it',
+      'Player pills now float above the field and z-stack by depth, so they stay readable at low/oblique angles instead of clobbering each other',
+      'Top view is now a true top-down look',
+      'Buy-me-a-coffee moved to the top header — always one tap away'
+    ]
+  },
   'v2.3.3-beta':{
     title:'Next-on group + straight side view',
     items:[
@@ -5038,6 +5059,10 @@ function confSub(){
     });
   }
   G.ps=null;
+  // Flag the just-subbed players so the 3D viewer can pulse-highlight them (green = coming on, red = going off).
+  // The renderRoster pass picks these up by player name; cleared after the animation duration so the next render is clean.
+  window._justSubbed={ inNames:new Set(on.map(p=>avail[p])), offNames:new Set(off.map(p=>avail[p])), t:Date.now() };
+  setTimeout(()=>{ window._justSubbed=null; if(typeof renderG==='function') renderG(); }, 1700);
   document.getElementById('subBanner').style.display='none';
   document.getElementById('subOv').classList.remove('show');
   saveActiveGame();
@@ -5442,6 +5467,7 @@ function renderRoster(){
 
   // ===== 3D pitch viewer (AFL oval / soccer & netball rectangles) — Three.js. Pills are HTML over the canvas. =====
   if(_use3d){
+    const _js=window._justSubbed;   // {inNames, offNames, t} or null — drives the green/red pulse on freshly subbed pills
     afl3d.update(pitchMid, (add, addBench)=>{
       // Field players
       playerSlots.forEach(({pos,pIdx,isGk})=>{
@@ -5451,7 +5477,8 @@ function renderRoster(){
         if(isOff&&swapMap){ for(const [b,f] of Object.entries(swapMap)){ if(parseInt(f)===pIdx) replacedBy=parseInt(b); } }
         const el=document.createElement('div');
         const isSwapSel=(fieldSwapSel===pIdx);
-        el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'');
+        const justOn=_js&&_js.inNames.has(avail[pIdx]);
+        el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'');
         el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
         const subInline=isOff&&replacedBy!==null?`<span class="fc-mins" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
@@ -5464,9 +5491,10 @@ function renderRoster(){
         const sc=Math.max(1, cfg.sc||1);
         G.bench.forEach((pIdx,i)=>{
           const isNext=i<sc;
+          const justOff=_js&&_js.offNames.has(avail[pIdx]);
           const mins=Math.floor(G.pt[avail[pIdx]]/60);
           const el=document.createElement('div');
-          el.className='fc fc-bench3d'+(isNext?' fc-bench3d-next':'');
+          el.className='fc fc-bench3d'+(isNext?' fc-bench3d-next':'')+(justOff?' fc-just-off':'');
           el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:1;display:flex;flex-direction:column;align-items:center';
           const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
           el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span></div>`;
