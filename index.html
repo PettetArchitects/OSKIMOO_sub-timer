@@ -806,18 +806,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button class="btn btn-g" onclick="confSub()" style="margin-top:16px">Got it ✓</button>
   </div>
 </div>
-<!-- Per-player action picker — opens when an on-field player is tapped.
-     Replaces the old permanent Swap / Injury buttons on the dashboard. -->
-<div class="ov" id="playerActionOv" onclick="if(event.target===this)closePlayerActions()">
-  <div class="ab" style="border-color:#5bc0de;max-width:340px">
-    <h2 id="playerActionName" style="color:#5bc0de;font-size:18px;margin-bottom:14px"></h2>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button id="playerActionSwap" onclick="chooseSwap()" style="padding:14px;background:linear-gradient(180deg,rgba(91,192,222,.2),rgba(91,192,222,.06));border:1.5px solid #5bc0de;border-radius:10px;color:#5bc0de;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit"><i data-lucide="arrow-left-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>SWAP POSITIONS</button>
-      <button id="playerActionInjury" onclick="chooseInjury()" style="padding:14px;background:linear-gradient(180deg,rgba(233,69,96,.18),rgba(233,69,96,.05));border:1.5px solid #e94560;border-radius:10px;color:#ff7088;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit"><i data-lucide="bandage" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>INJURY</button>
-      <button onclick="closePlayerActions()" style="padding:10px;background:none;border:1px solid #444;border-radius:8px;color:#888;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;font-family:inherit">Cancel</button>
-    </div>
-  </div>
-</div>
+<!-- Per-player action popup removed in v2.7.2 — replaced by tap=swap, long-press=injury directly on the field pill. -->
+
 <!-- Sub strategy chooser — shown once at game start so coach picks how subs should behave -->
 <div class="ov" id="subStratOv">
   <div class="ab" style="max-width:360px;text-align:left">
@@ -2538,8 +2528,8 @@ function showScr(id){
 const HOME_TIPS=[
   {icon:'camera',title:'Add players from a photo',desc:"Open the team editor and tap Auto-fill from photo. Reads names straight off your roster sheet."},
   {icon:'target',title:'Position tags drive smart subs',desc:"Tag each player GK/DEF/MID/etc. The app swaps players into positions they actually play."},
-  {icon:'bandage',title:'Injury? Tap the player on the pitch',desc:"Mid-game, tapping any on-field player triggers an injury swap. Choose 'out for game' if they can't return."},
-  {icon:'swap',title:'Tap two players to swap positions',desc:"In Swap mode, tap any two on-field players to switch their positions — keeper included. Same trick rebalances a line mid-half."},
+  {icon:'bandage',title:'Injury? Long-press the player',desc:"Hold any on-field player for half a second — the app triggers an injury sub. Tap a bench player to bring on, then choose 'out for game' or back-to-bench."},
+  {icon:'swap',title:'Tap two players to swap positions',desc:"Short-tap any on-field player, then tap another to swap their positions — keeper included. A quick fix for rebalancing a line mid-half."},
   {icon:'refresh',title:'Undo a sub mistake',desc:"After confirming a swap, an UNDO LAST SUB pill appears next to the bench. Reverts the swap and rewinds the minutes."},
   {icon:'arrowUp',title:'Reorder who comes on next',desc:"Up/down chevrons next to each bench player let you promote or demote them in the sub queue."},
   {icon:'timer',title:'Choose a sub strategy',desc:"On Settings, pick Equal-time, Paired rotation, or Manual. Each picks differently who comes off and on at sub time."},
@@ -2578,12 +2568,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.1-beta';
+const APP_VERSION='v2.7.2-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.2-beta':{
+    title:'Tap to swap, long-press for injury — popup is gone',
+    items:[
+      'Short tap on any on-field player arms a swap — tap another player to complete it',
+      'Long-press (½ second) on a player triggers an injury sub — short haptic buzz confirms, then tap a bench player to bring on',
+      'Removed the per-player action popup — the gesture is the action'
+    ]
+  },
   'v2.7.1-beta':{
     title:'Fix: player pills no longer hang over the popup',
     items:['Bumped overlay z-index above the 3D pitch pills — the SWAP / INJURY popup (and every other modal) now sits cleanly above the players']
@@ -5217,14 +5215,15 @@ function setGameMode(m){
   renderG();
 }
 
-// Tap on an on-field player. Two paths:
-//   1. Mid-swap (fieldSwapSel already set) → complete the swap with this player.
-//   2. Otherwise → open the per-player action popup (Swap / Injury / Cancel).
-// The popup replaces the old permanent Swap / Injury dashboard buttons.
-let _pendingActionIdx=null, _pendingActionIsGk=false;
+// On-field player interactions (v2.7.2):
+//   • Short tap   → swap mode for this player (tap another to complete).
+//   • Long press  → injury sub (tap a bench player to bring on).
+// Replaces the v2.4.6/v2.7.1 popup — the gesture is the action.
+const LONG_PRESS_MS=500;
+let _lpTimer=null, _lpFired=false, _lpStartX=0, _lpStartY=0;
+
 function tapFieldPlayer(pIdx, isGk){
-  // Mid-swap completion still works without going through the popup so a
-  // two-tap swap stays fluid: tap player A → SWAP → tap player B.
+  // Mid-swap completion: tap a second on-field player to finish the swap.
   if(fieldSwapSel!==null){
     if(fieldSwapSel===pIdx){
       fieldSwapSel=null;
@@ -5238,48 +5237,44 @@ function tapFieldPlayer(pIdx, isGk){
     renderG();
     return;
   }
-  // Default: open the action popup for this player.
-  openPlayerActions(pIdx, isGk);
+  // Default short tap: arm swap mode for this player.
+  fieldSwapSel=pIdx;
+  renderG();
 }
 
-function openPlayerActions(pIdx, isGk){
-  if(!G) return;
-  _pendingActionIdx=pIdx;
-  _pendingActionIsGk=!!isGk;
-  const ov=document.getElementById('playerActionOv');
-  const nameEl=document.getElementById('playerActionName');
-  const injBtn=document.getElementById('playerActionInjury');
-  if(nameEl) nameEl.textContent=fn(avail[pIdx])+(isGk?' (GK)':'');
-  // Injury option: needs a bench player to bring on, and GK injuries go through
-  // the keeper-change flow instead (not supported here).
-  if(injBtn){
-    const canInjure=!isGk && G.bench.length>0;
-    injBtn.disabled=!canInjure;
-    injBtn.style.opacity=canInjure?'1':'0.4';
+// Long-press triggers an injury sub for the held player. Hooked up to the
+// field-pill onpointerdown/up/cancel/move pair so taps still fire onclick.
+function fieldPillPointerDown(e, pIdx, isGk){
+  _lpFired=false;
+  _lpStartX=e.clientX; _lpStartY=e.clientY;
+  if(_lpTimer) clearTimeout(_lpTimer);
+  // GK injury goes through the keeper-change flow, not here. Empty bench = no replacement available.
+  if(isGk || !G || !G.bench.length) return;
+  _lpTimer=setTimeout(()=>{
+    _lpTimer=null;
+    _lpFired=true;
+    if(navigator.vibrate) navigator.vibrate(45);
+    gameMode='injury';
+    injuryOffSel=pIdx;
+    fieldSwapSel=null;
+    renderG();
+  }, LONG_PRESS_MS);
+}
+function fieldPillPointerMove(e){
+  // Cancel the long-press if the finger drifts more than ~10px (it's a drag/orbit gesture).
+  if(_lpTimer && (Math.abs(e.clientX-_lpStartX)>10 || Math.abs(e.clientY-_lpStartY)>10)){
+    clearTimeout(_lpTimer); _lpTimer=null;
   }
-  if(ov) ov.classList.add('show');
-  _li();
 }
-function closePlayerActions(){
-  _pendingActionIdx=null;
-  _pendingActionIsGk=false;
-  const ov=document.getElementById('playerActionOv');
-  if(ov) ov.classList.remove('show');
+function fieldPillPointerUp(e, pIdx, isGk){
+  if(_lpTimer){ clearTimeout(_lpTimer); _lpTimer=null; }
+  // If the long-press already fired, suppress the click that follows.
+  if(_lpFired){ e.preventDefault(); e.stopPropagation(); _lpFired=false; }
 }
-function chooseSwap(){
-  if(_pendingActionIdx===null) return;
-  fieldSwapSel=_pendingActionIdx;
-  closePlayerActions();
-  renderG();
-}
-function chooseInjury(){
-  if(_pendingActionIdx===null) return;
-  if(_pendingActionIsGk) return;
-  if(!G.bench.length) return;
-  gameMode='injury';
-  injuryOffSel=_pendingActionIdx;
-  closePlayerActions();
-  renderG();
+function fieldPillClick(e, pIdx, isGk){
+  // The pointerup handler eats the click when the long-press fired.
+  if(_lpFired){ _lpFired=false; return; }
+  tapFieldPlayer(pIdx, isGk);
 }
 
 // Injury mode: after tapping the injured player, tapping a bench player picks
@@ -5859,7 +5854,12 @@ function renderRoster(){
         const subInline=isOff&&replacedBy!==null?`<span class="fc-mins" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
-        el.onclick=()=>tapFieldPlayer(pIdx,isGk);
+        // tap = swap (handled in click); long-press = injury (handled by pointer timer).
+        el.onpointerdown=(e)=>fieldPillPointerDown(e,pIdx,isGk);
+        el.onpointermove=fieldPillPointerMove;
+        el.onpointerup=(e)=>fieldPillPointerUp(e,pIdx,isGk);
+        el.onpointercancel=()=>{ if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;} _lpFired=false; };
+        el.onclick=(e)=>fieldPillClick(e,pIdx,isGk);
         add(el, pos.x, pos.y, avail[pIdx]);   // name lets afl3d match this pill to its pre-sub position for the swap tween
       });
       // Bench rendering on the sideline removed in v2.4.3 — duplicated the dedicated
@@ -5940,9 +5940,12 @@ function renderRoster(){
     const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
     // Shirt with number ON it (rendered inside SVG so it's perfectly centred).
     el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
-    // All field players tappable — the active dashboard mode (swap / keeper /
-    // injury) decides what the tap does. tapFieldPlayer guards GK per mode.
-    el.onclick=()=>tapFieldPlayer(pIdx, isGk);
+    // Tap = swap, long-press = injury (same gesture as the 3D pill above).
+    el.onpointerdown=(e)=>fieldPillPointerDown(e,pIdx,isGk);
+    el.onpointermove=fieldPillPointerMove;
+    el.onpointerup=(e)=>fieldPillPointerUp(e,pIdx,isGk);
+    el.onpointercancel=()=>{ if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;} _lpFired=false; };
+    el.onclick=(e)=>fieldPillClick(e,pIdx,isGk);
     el.style.cursor='pointer';
     pitch.appendChild(el);
   });
