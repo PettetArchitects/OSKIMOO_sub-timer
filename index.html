@@ -949,6 +949,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subOrderInfo" style="font-size:12px;color:#888;text-align:center;margin:0 0 12px"></div>
     <div id="subOrderList"></div>
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:10px;padding:12px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:14px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
+    <!-- v2.7.39: Lineup editor entry — visible only in CUSTOM. AUTO doesn't need a separate lineup step (app picks for you); CUSTOM pulls them apart so coaches can edit positions / formation / GK / matched pairs as a sibling of the sub list. -->
+    <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" style="display:none;width:100%;margin-top:10px;padding:14px;background:rgba(167,139,250,.14);border:1.5px solid #a78bfa;border-radius:10px;color:#a78bfa;font-size:14px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;gap:8px"><i data-lucide="grid-3x3" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit Lineup &amp; Formation</button>
     <button class="btn btn-o" style="margin-top:10px" onclick="closeSubOrder()">Done — tap START on the dashboard</button>
   </div>
 </div>
@@ -2893,12 +2895,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.38-beta';
+const APP_VERSION='v2.7.39-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.39-beta':{
+    title:'AUTO combines, CUSTOM pulls apart — Lineup editor on the Plan page',
+    items:[
+      'AUTO = the app handles both sub timing AND player allocation. Nothing else to set up; just confirm and play. The Plan overlay shows the read-only sub list.',
+      'CUSTOM = pulls allocation out of the merge. The Plan overlay now shows an "Edit Lineup & Formation" button (visible only in CUSTOM) that drops you into the lineup editor — positions, formation, GK, matched pairs. Sub list stays the canonical surface across both modes.',
+      'Team action menu — "Plan ahead" now lands you in CUSTOM with the Lineup button visible. "Play now" stays AUTO. Same Plan overlay either way.'
+    ]
+  },
   'v2.7.38-beta':{
     title:'Team cards always open the action menu',
     items:[
@@ -3659,13 +3669,13 @@ function teamActionPlayNow(){
 function teamActionPlanAhead(){
   const id=_teamActionId; closeTeamActions();
   if(id==null) return;
-  // Set up team state as if we were starting a game, then route into Settings
-  // (s2) so the coach can configure format / formation / sub plan ahead of time.
+  // v2.7.39: Plan ahead drops the coach onto the squad page in CUSTOM intent.
+  // We mark a one-shot flag that startFromSquad checks, so when the Plan overlay
+  // opens it lands on the CUSTOM tab (Edit Lineup button visible) instead of AUTO.
   selectTeam(id);
-  // selectTeam already moved us to s1; chain into goSettings (which pulls the
-  // squad and renders the settings screen) on the next tick to avoid mid-render.
-  setTimeout(()=>{ if(typeof goSettings==='function') goSettings(); }, 0);
+  _planAheadCustom=true;
 }
+let _planAheadCustom=false;
 function teamActionPastGames(){
   const id=_teamActionId; closeTeamActions();
   if(id==null) return;
@@ -4356,11 +4366,11 @@ function startFromSquad(){
   avail=[...sel].map(i=>currentTeam.players[i]);
   setDisplayNameList(avail);
   cfg.subPlanStale=true;
+  // v2.7.39: if the coach reached squad via "Plan ahead" they want CUSTOM upfront —
+  // flip the cfg strategy to planned so the Plan overlay opens with the Lineup
+  // button visible. The flag is single-shot.
+  if(_planAheadCustom){ cfg.subStrategy='planned'; _planAheadCustom=false; }
   quickStart();
-  // v2.7.35: open the Plan overlay over the (paused) game screen so the coach
-  // confirms Auto / Custom + reviews the projected sub timeline before kickoff.
-  // Sub Settings steppers (sub-every-X min, players per sub) and the strategy
-  // tabs all live in there. Tapping Done dismisses — coach then taps START.
   if(typeof openSubOrder==='function') setTimeout(openSubOrder, 0);
 }
 function goSettings(){
@@ -6892,6 +6902,9 @@ function openSubOrder(){
   renderSubOrderControls();
   renderSubOrderSuggestion();
   renderSubOrder();
+  // v2.7.39: Lineup editor button visibility follows the active toggle.
+  const lb=document.getElementById('subOrderLineupBtn');
+  if(lb) lb.style.display=(_subOrderStrat==='planned')?'inline-flex':'none';
   document.getElementById('subOrderOv').classList.add('show');
   _li();
 }
@@ -6935,6 +6948,17 @@ function renderSubOrderSuggestion(){
     Roster of ${N} · ${onF} on field · ${B} on bench · ${P} swap${P>1?'s':''} per sub.<br>${verdict}`;
 }
 function closeSubOrder(){ document.getElementById('subOrderOv').classList.remove('show'); _subOrderStrat=null; }
+// v2.7.39: jump from the Plan overlay into the full Lineup editor (#s3).
+// Used in CUSTOM mode where the coach explicitly wants to set positions /
+// formation / GK / matched pairs. The s3 "Back" + "Start Game" both already
+// know how to route, so coming out of s3 lands back on the game screen and
+// the coach can re-open the Plan icon to see the updated projection.
+function openLineupFromPlan(){
+  closeSubOrder();
+  if(typeof renderS3==='function') renderS3();
+  showScr('s3');
+}
+
 function renderSubOrderTabs(){
   const wrap=document.getElementById('subOrderTabs');
   if(!wrap||!G) return;
@@ -6958,6 +6982,9 @@ function subOrderPick(strat){
   const btn=document.getElementById('subOrderApplyBtn');
   // v2.7.34: compare against the live toggle, not the internal strategy.
   if(btn) btn.style.display=(strat!==stratToToggle(G&&G.subStrategy))?'block':'none';
+  // v2.7.39: Lineup editor button only shows in CUSTOM — AUTO has nothing to edit (app picks).
+  const lb=document.getElementById('subOrderLineupBtn');
+  if(lb) lb.style.display=(strat==='planned')?'inline-flex':'none';
 }
 function subOrderApply(){
   if(!G||!_subOrderStrat) return;
