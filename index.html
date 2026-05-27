@@ -2893,12 +2893,18 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.36-beta';
+const APP_VERSION='v2.7.37-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.37-beta':{
+    title:'Fix: basketball team setup screen was broken',
+    items:[
+      'When tapping the 5v5 card for a basketball team, the team editor was throwing a ReferenceError because of a leftover `isNb` variable in renderEditTeamPrefs + renderFmtPicker from the v2.7.33 quarter-language rewrite. Reintroduced the variable and routed the "Quarter Length / Minutes per quarter" copy through the broader quarters flag so basketball reads correctly too.'
+    ]
+  },
   'v2.7.36-beta':{
     title:'Cleaner squad page + tap-team action menu',
     items:[
@@ -3891,6 +3897,7 @@ function renderEditTeamPrefs(){
   const sport=getSport(editingTeam);
   // v2.7.33: netball + basketball + AFL all play quarters; soccer/futsal halves.
   const isQ=sport.key==='netball'||sport.key==='basketball'||sport.key==='afl';
+  const isNb=sport.key==='netball';   // v2.7.37: kept as a separate flag — formation block hides for netball only
   const periodWord=isQ?'Quarter length':'Half length';
   const periodUnit=isQ?'min / quarter':'min / half';
   host.innerHTML='';
@@ -4410,6 +4417,7 @@ function renderFmtPicker(){
   const f=FORMATS[curFmt];
   const _spt=getSport(currentTeam);
   const isQ=_spt.key==='netball'||_spt.key==='basketball'||_spt.key==='afl';
+  const isNb=_spt.key==='netball';   // v2.7.37: kept for the legacy "halves" copy below — only netball used the original phrasing
   const periodWord=isQ?'min quarters':_spt.key==='soccer'?'min halves':'min periods';
   document.getElementById('fmtInfo').innerHTML=
     `<strong style="color:#00d4aa">${f.label}</strong> · ${f.age} · ${f.onField} on field` +
@@ -4418,11 +4426,11 @@ function renderFmtPicker(){
   // Sport-aware period-length labels
   const ph=document.getElementById('periodLengthHeading');
   const pl=document.getElementById('periodLengthLabel');
-  if(ph)ph.textContent=isNb?'Quarter Length':'Half Length';
-  if(pl)pl.textContent=isNb?'Minutes per quarter':'Minutes per half';
+  if(ph)ph.textContent=isQ?'Quarter Length':'Half Length';
+  if(pl)pl.textContent=isQ?'Minutes per quarter':'Minutes per half';
   // Sport-aware sub-frequency hint
   const sfh=document.getElementById('subFreqHint');
-  if(sfh)sfh.textContent=isNb
+  if(sfh)sfh.textContent=isQ
     ?"Continuous across all quarters — cadence doesn't restart at quarter time."
     :"Continuous across both halves — cadence doesn't restart at halftime.";
 }
