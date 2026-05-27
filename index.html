@@ -894,12 +894,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameFmtPicker" style="display:none;flex-shrink:0;padding:6px 12px;border-top:1px solid #243049;background:#10162a">
     <div id="gameFmtGrid" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
   </div>
-  <!-- v2.7.22 layout: Plan added (sub-order/strategy view — key feature, lives in the thumb zone).
-       [SUB/RESET] [Undo] [Plan] [Formation] [PAUSE/START]. -->
+  <!-- v2.7.24 layout: yellow primary button is now PLAN (opens Sub Order). Subs auto-apply at sub time so the manual SUB trigger is gone.
+       Running:  [PLAN] [Undo] [Formation] [PAUSE]
+       Paused:   [RESET] [Undo] [Formation] [START] -->
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
-    <button class="gd-btn" id="gdPlan" onclick="openSubOrder()"></button>
     <button class="gd-btn" id="gdFormation" onclick="toggleGameFormation()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
@@ -2786,12 +2786,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.23-beta';
+const APP_VERSION='v2.7.24-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.24-beta':{
+    title:'SUB button renamed PLAN; "Plan" strategy renamed Custom',
+    items:[
+      'Subs already auto-fire — the yellow primary button isn\'t a manual SUB trigger anymore. Renamed to PLAN; tapping opens the Sub Order overlay. Bottom bar shrinks back to four buttons: [PLAN / RESET] [Undo] [Formation] [PAUSE / START].',
+      'Inside the Sub Order overlay (and Sub Settings + start-of-game strategy chooser), the strategy formerly called "Plan / Full control" is now Custom — avoids the confusing collision with the Plan button name.'
+    ]
+  },
   'v2.7.23-beta':{
     title:'Edit half length + sub frequency right under each clock',
     items:[
@@ -4303,7 +4310,7 @@ const SUB_STRATEGIES=[
   {key:'fair',    icon:'timer',    label:'Equal time',    color:'#00d4aa', stance:'I just want everyone to play.',         desc:'App picks the longest on-field player to come off, and longest-benched to come on. Best for fair-play rules. (Ted Lasso energy.)'},
   {key:'paired',  icon:'refresh',  label:'Paired rotation',color:'#5bc0de',stance:'Keep my pairs together.',                desc:'Pre-grouped pairs swap on/off together. Picks the pair with the most game time so groups stay together AND minutes balance. (Ancelotti at the school dropoff.)'},
   {key:'manual',  icon:'target',   label:"I'll call them",color:'#f0a500', stance:"I'll call them as I see them.",          desc:'No auto-prompts. Tap SUB when you want a swap. App still tracks minutes and suggests who. (Klopp on the touchline.)'},
-  {key:'planned', icon:'clipboard',label:'Full control',  color:'#a78bfa', stance:'I plan every sub before kickoff.',       warning:'Use with caution — game day rarely goes to plan.', desc:"Auto-generates a fair plan you can tweak — or snap a photo of your notebook and we'll digitise it. (Pep Guardiola, but for U8s.)"}
+  {key:'planned', icon:'clipboard',label:'Custom',        color:'#a78bfa', stance:'I plan every sub before kickoff.',       warning:'Use with caution — game day rarely goes to plan.', desc:"Auto-generates a fair plan you can tweak — or snap a photo of your notebook and we'll digitise it. (Pep Guardiola, but for U8s.)"}
 ];
 function renderSubStratPicker(){
   const g=document.getElementById('subStratGrid');
@@ -5079,12 +5086,14 @@ function renderG(){
       subBtn.innerHTML=`${ic('rotate-ccw',21)}<span>${_resetArmed?'TAP AGAIN':'RESET'}</span>`;
       subBtn.onclick=resetHalf;
     } else {
-      const canSub=G.bench.length>0;
-      subBtn.disabled=!canSub;
-      subBtn.style.opacity=canSub?'1':'0.4';
+      // v2.7.24: manual SUB renamed to PLAN — opens the Sub Order overlay. Subs already
+      // auto-apply at sub time (v2.4.4), so the yellow primary button is now the entry
+      // to the planner instead of a redundant manual-fire button.
+      subBtn.disabled=false;
+      subBtn.style.opacity='1';
       subBtn.className='gd-btn gd-sub';
-      subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
-      subBtn.onclick=manualSub;
+      subBtn.innerHTML=`${ic('list',21)}<span>PLAN</span>`;
+      subBtn.onclick=openSubOrder;
     }
   }
 
@@ -5692,15 +5701,7 @@ function renderGameDash(){
   // v2.7.9: View cycle moved off the dashboard onto a bottom-left overlay on the pitch.
   updateViewToggle();
   // Edit Team lives in the hamburger menu now (v2.7.9) — no dashboard button.
-  // v2.7.22: Plan button paints the current strategy short label so coaches can read
-  // the active mode at a glance (Equal / Paired / Manual / Plan). Tap opens Sub Order.
-  const planBtn=document.getElementById('gdPlan');
-  if(planBtn){
-    const stratMap={'fair':{icon:'timer',label:'Equal'},'paired':{icon:'refresh',label:'Paired'},'manual':{icon:'target',label:'Manual'},'planned':{icon:'clipboard',label:'Plan'}};
-    const s=stratMap[G&&G.subStrategy]||stratMap.fair;
-    planBtn.innerHTML=`${ic(s.icon,17)}<span>${s.label}</span>`;
-    planBtn.className='gd-btn';
-  }
+  // v2.7.24: gdPlan removed — the yellow primary button (subB) is now PLAN itself.
   const undo=document.getElementById('gdUndo');
   if(undo){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
@@ -6563,7 +6564,7 @@ function renderSsStratGrid(){
     {k:'fair',   icon:'timer',     label:'Equal',   color:'#00d4aa'},
     {k:'paired', icon:'refresh',   label:'Paired',  color:'#5bc0de'},
     {k:'manual', icon:'target',    label:'Manual',  color:'#f0a500'},
-    {k:'planned',icon:'clipboard', label:'Plan',    color:'#a78bfa'}
+    {k:'planned',icon:'clipboard', label:'Custom',  color:'#a78bfa'}
   ];
   grid.innerHTML=opts.map(o=>{
     const sel=(G.subStrategy===o.k);
@@ -6623,7 +6624,7 @@ function renderSubOrderTabs(){
     {k:'fair',   label:'Equal'},
     {k:'paired', label:'Paired'},
     {k:'manual', label:'Manual'},
-    {k:'planned',label:'Plan'}
+    {k:'planned',label:'Custom'}
   ];
   wrap.innerHTML=opts.map(o=>{
     const active=(_subOrderStrat===o.k);
@@ -6652,7 +6653,7 @@ function renderSubOrder(){
   const list=document.getElementById('subOrderList');
   if(!info||!list||!G) return;
   const strat=_subOrderStrat||G.subStrategy||'fair';
-  const stratLabels={fair:'Equal time',paired:'Paired',manual:'Manual (suggested order)',planned:'Full control plan'};
+  const stratLabels={fair:'Equal time',paired:'Paired',manual:'Manual (suggested order)',planned:'Custom plan'};
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const sport=getSport(currentTeam);
   const periodCount=sport.periodCount||2;
