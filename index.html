@@ -2376,6 +2376,7 @@ const HOME_TIPS=[
   {icon:'camera',title:'Add players from a photo',desc:"Open the team editor and tap Auto-fill from photo. Reads names straight off your roster sheet."},
   {icon:'target',title:'Position tags drive smart subs',desc:"Tag each player GK/DEF/MID/etc. The app swaps players into positions they actually play."},
   {icon:'bandage',title:'Injury? Tap the player on the pitch',desc:"Mid-game, tapping any on-field player triggers an injury swap. Choose 'out for game' if they can't return."},
+  {icon:'swap',title:'Tap two players to swap positions',desc:"In Swap mode, tap any two on-field players to switch their positions — keeper included. Same trick rebalances a line mid-half."},
   {icon:'refresh',title:'Undo a sub mistake',desc:"After confirming a swap, an UNDO LAST SUB pill appears next to the bench. Reverts the swap and rewinds the minutes."},
   {icon:'arrowUp',title:'Reorder who comes on next',desc:"Up/down chevrons next to each bench player let you promote or demote them in the sub queue."},
   {icon:'timer',title:'Choose a sub strategy',desc:"On Settings, pick Equal-time, Paired rotation, or Manual. Each picks differently who comes off and on at sub time."},
@@ -2414,12 +2415,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.4.2-beta';
+const APP_VERSION='v2.4.3-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.4.3-beta':{
+    title:'Quieter pitch — one bench, no in-game reminder',
+    items:[
+      'Sideline bench pills removed — they duplicated the dedicated bench list below the pitch',
+      'The "tap two to swap" reminder no longer sits on the game screen; it lives in the home-page tips carousel where new users will find it'
+    ]
+  },
   'v2.4.2-beta':{
     title:'iPhone fit — no more clipped header or clock',
     items:[
@@ -5499,7 +5507,9 @@ function renderRoster(){
   renderBenchInto(benchTop, swapMap, posForPlayer);
 
   // ===== MODE HINT — what tapping a player does right now. Rendered inline as
-  // a tinted chip inside the formation/strategy pill row (#modeHint span). =====
+  // a tinted chip inside the formation/strategy pill row (#modeHint span).
+  // Only shown during an active action (injury / mid-swap) — the idle
+  // "tap two to swap" reminder lives in the home tips carousel instead. =====
   if(G && hintC){
     let hintHtml=null, hintCol='#5bc0de';
     if(gameMode==='injury'){
@@ -5507,9 +5517,8 @@ function renderRoster(){
       else { hintCol='#e94560'; hintHtml=`${ic('bandage',12,'#e94560')} Tap the injured player`; }
     } else if(fieldSwapSel!==null){
       hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} Tap another to swap (incl. keeper)`;
-    } else {
-      hintHtml=`${ic('hand',12,'#5bc0de')} Tap two to swap (incl. keeper)`;
     }
+    hintC.innerHTML='';
     if(hintHtml){
       const tintBg=hintCol==='#e94560'?'rgba(233,69,96,.1)':(hintCol==='#fff'?'rgba(255,255,255,.08)':'rgba(91,192,222,.1)');
       const tintBd=hintCol==='#e94560'?'rgba(233,69,96,.35)':(hintCol==='#fff'?'rgba(255,255,255,.25)':'rgba(91,192,222,.35)');
@@ -5540,21 +5549,8 @@ function renderRoster(){
         el.onclick=()=>tapFieldPlayer(pIdx,isGk);
         add(el, pos.x, pos.y);   // pos.x=width%, pos.y=length% → afl3d.worldOf
       });
-      // Bench players lined up along the sideline (visual context — the interactive bench list lives below the pitch).
-      if(G && G.bench && G.bench.length && addBench){
-        const sc=Math.max(1, cfg.sc||1);
-        G.bench.forEach((pIdx,i)=>{
-          const isNext=i<sc;
-          const justOff=_js&&_js.offNames.has(avail[pIdx]);
-          const mins=Math.floor(G.pt[avail[pIdx]]/60);
-          const el=document.createElement('div');
-          el.className='fc fc-bench3d'+(isNext?' fc-bench3d-next':'')+(justOff?' fc-just-off':'');
-          el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:1;display:flex;flex-direction:column;align-items:center';
-          const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
-          el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span></div>`;
-          addBench(el, i, G.bench.length, sc);
-        });
-      }
+      // Bench rendering on the sideline removed in v2.4.3 — duplicated the dedicated
+      // bench section below the pitch. Bench lives only in #benchTop now.
     }, _3dSport);
     return;
   }
