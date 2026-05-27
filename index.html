@@ -119,17 +119,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 .fc-sub-in{display:none!important}
 }
 
-/* v2.7.12 — landscape phone layout. Portrait is the primary game-day stance,
-   but coaches do rotate. Without this rule the bottom dashboard + bench eat
-   most of the short viewport and the pitch becomes useless. Solution:
-   - Move #gameDash from a bottom bar to a fixed right-side rail (vertical column).
-   - Pad #s4 right so the rest of the layout doesn't slide under the rail.
-   - Compress the top bar, clock area, mode-hint row, and bench to claw back
-     vertical pixels for the pitch.
-   Activates only for landscape with a short viewport (<= 500px tall) so iPads
-   and desktop landscape are untouched. */
+/* v2.7.12 / v2.7.13 — landscape phone layout. Portrait is the primary game-day
+   stance, but coaches do rotate. Without this rule the bottom dashboard + bench
+   eat the short viewport and the pitch becomes useless. Solution:
+   - Right rail (200px) holds BOTH the bench (top) and the dashboard (bottom).
+   - #s4 padding-right keeps the rest of the layout out from under the rail.
+   - Top bar, clock area, mode-hint row all compressed.
+   - Bench cards stack as a single column inside the rail (overrides the grid).
+   Triggers only for landscape with a short viewport (<= 500px tall). */
 @media(orientation:landscape) and (max-height:500px){
-  #s4{position:relative!important;padding-right:88px!important;box-sizing:border-box!important}
+  #s4{position:relative!important;padding-right:200px!important;box-sizing:border-box!important}
   #s4 > div:first-child{padding:6px 36px!important}
   #s4 #gameMenuBtn{top:4px!important;left:6px!important;width:24px!important;height:24px!important}
   #s4 #gameMenu{top:32px!important;left:6px!important}
@@ -138,23 +137,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 > div:nth-child(3){padding:4px 0 2px!important}
   #s4 #hLbl,#s4 #clkSubLbl{font-size:10px!important;letter-spacing:1px!important;margin-top:2px!important}
   #s4 #nsi{margin-top:2px!important;font-size:10px!important;min-height:0!important}
-  /* Mode-hint pill row (formation strategy + AFL controls + hint) — tuck the
-     padding so the pitch starts higher. */
   #s4 #fmtRow{padding:2px 8px 0!important}
-  /* Bench list: cap height so it doesn't crowd out the pitch. */
-  #s4 #benchTop{max-height:18dvh!important;padding:2px 12px!important}
-  /* Right-side dashboard rail. Vertical stack of icon+label buttons. */
+  /* Bench moves into the top half of the right rail. */
+  #s4 #benchTop{
+    position:absolute!important;right:0;top:0;width:200px;bottom:230px;
+    max-height:none!important;
+    padding:6px 8px calc(6px + env(safe-area-inset-right))!important;
+    overflow-y:auto;
+    border-left:1px solid #243049;
+    background:linear-gradient(180deg,#0f1422,#141a2e);
+  }
+  /* Force bench into a single stacked column regardless of wave count, so cards fit the 200px rail. */
+  #s4 #benchTop > div > div[style*="grid-template-columns"]{
+    display:flex!important;flex-direction:column!important;gap:6px!important;
+  }
+  /* Dashboard occupies the bottom of the rail. */
   #s4 #gameDash{
-    position:absolute!important;right:0;top:0;bottom:0;width:88px;
+    position:absolute!important;right:0;bottom:0;width:200px;height:230px;
     flex-direction:column!important;
-    border-top:none!important;border-left:1px solid #243049;
+    border-top:1px solid #243049;border-left:1px solid #243049;
     padding:8px calc(8px + env(safe-area-inset-right)) 8px 8px!important;
     gap:6px!important;
     background:linear-gradient(180deg,#141a2e,#0f1422);
   }
-  #s4 #gameDash .gd-btn{flex:1!important;width:100%;min-height:0!important;font-size:10px!important}
+  #s4 #gameDash .gd-btn{flex:1!important;width:100%;min-height:0!important;font-size:11px!important}
   #s4 #gameDash .gd-btn.gd-go,#s4 #gameDash .gd-btn.gd-pause,
-  #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:11px!important}
+  #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:12px!important}
   #s4 #gameDash .gd-btn svg{width:18px!important;height:18px!important}
 }
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
@@ -773,9 +781,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="gameMenuBtn" onclick="toggleGameMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:8px;left:10px;width:28px;height:28px;border-radius:8px;border:1px solid #444;background:none;color:#aaa;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div id="gameMenu" style="display:none;position:absolute;top:42px;left:10px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.6);padding:6px;min-width:170px;z-index:50">
+    <div id="gameMenu" style="display:none;position:absolute;top:42px;left:10px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.6);padding:6px;min-width:180px;z-index:50">
       <button onclick="closeGameMenu();editTeamFromGame()" style="width:100%;padding:10px 12px;background:none;border:none;color:#9fb3c8;font-size:13px;font-weight:700;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:10px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit Team</button>
-      <button onclick="closeGameMenu();abandonGame()" style="width:100%;padding:10px 12px;background:none;border:none;color:#ff7088;font-size:13px;font-weight:700;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:10px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
+      <button onclick="closeGameMenu();openSettings()" style="width:100%;padding:10px 12px;background:none;border:none;color:#9fb3c8;font-size:13px;font-weight:700;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:10px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+      <div style="height:1px;background:#243049;margin:4px 0"></div>
+      <button onclick="closeGameMenu();abandonGame()" style="width:100%;padding:10px 12px;background:none;border:none;color:#ff7088;font-size:13px;font-weight:700;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:10px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
     <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
     <div id="scoreArea" style="display:flex;align-items:center;gap:6px"></div>
@@ -2629,12 +2639,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.12-beta';
+const APP_VERSION='v2.7.13-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.13-beta':{
+    title:'Settings in the hamburger + landscape bench rail',
+    items:[
+      'Hamburger menu: Edit Team / Settings / End game — separated so coaches can jump to settings without going through the team-roster page',
+      'Landscape phone: bench moves to the top of the right rail, dashboard sits below it — pitch fills the rest of the screen instead of being squeezed below a bottom bar'
+    ]
+  },
   'v2.7.12-beta':{
     title:'Landscape phone: dashboard moves to a right-side rail',
     items:[
