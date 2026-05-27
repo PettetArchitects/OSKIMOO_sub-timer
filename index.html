@@ -2591,12 +2591,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.9-beta';
+const APP_VERSION='v2.7.10-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.10-beta':{
+    title:'Mobile pill: properly drop the ↑Incoming badge',
+    items:['v2.7.9 CSS hide wasn\'t holding up on iOS — now the markup is skipped at render time when viewport ≤ 480px, so the badge can\'t appear at all on iPhone-width screens.']
+  },
   'v2.7.9-beta':{
     title:'Hamburger menu, Subs on dashboard, View overlay, mobile pill cleanup',
     items:[
@@ -5914,7 +5918,9 @@ function renderRoster(){
         const justSwap=_jsw&&_jsw.names.has(avail[pIdx]);
         el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'')+(justSwap?' fc-just-swap':'');
         el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
-        const subInline=isOff&&replacedBy!==null?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
+        // v2.7.10: skip the "↑Incoming" badge entirely on narrow viewports — CSS hide in v2.7.9
+// wasn't holding up consistently against iOS PWA cache + .afl3d-overlay specificity.
+const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
         // tap = swap (handled in click); long-press = injury (handled by pointer timer).
@@ -5999,7 +6005,9 @@ function renderRoster(){
     else { _proj=pitchPt(_adj.x,_adj.y); }   // soccer + AFL portrait (rotateX perspective)
     el.style.cssText=`left:${_proj.x}%;top:${_proj.y}%;position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center`;
     // Sub indicator sits inline in the name pill, to the right with the arrow.
-    const subInline=isOff&&replacedBy!==null?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
+    // v2.7.10: skip the "↑Incoming" badge entirely on narrow viewports — CSS hide in v2.7.9
+// wasn't holding up consistently against iOS PWA cache + .afl3d-overlay specificity.
+const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class="fc-mins fc-sub-in" style="color:#22c55e">↑${fn(avail[replacedBy])}</span>`:'';
     const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
     // Shirt with number ON it (rendered inside SVG so it's perfectly centred).
     el.innerHTML=`<div class="fc-shirt">${shirtSvg(jersey)}</div><div class="fc-label"><span class="fc-pos">${pos.label}</span><span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span>${subInline}</div>`;
