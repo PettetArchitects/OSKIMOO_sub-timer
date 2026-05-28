@@ -45,13 +45,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ic-lg{width:1.4em;height:1.4em}
 .ic-xl{width:1.8em;height:1.8em}
 
-.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:calc(34px + env(safe-area-inset-top));z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
-/* v2.7.75: app-wide TOP brand bar — SUB TIMER logo + name + version centred, visible on every page. Pairs with the bottom tab bar as the two persistent anchors of the app. */
-#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;height:34px;padding-top:env(safe-area-inset-top);background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
+.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:calc(44px + env(safe-area-inset-top));z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+/* v2.7.82: home's .hdr removed entirely — brand bar IS the only header. Tagline + quote moved into the brand bar area below. */
+#home > .hdr{display:none}
+/* The per-screen hamburger buttons (homeMenuBtn, gameMenuBtn, planMenuBtn) are superseded by the single brand-bar #globalMenuBtn. Hide them but keep their dropdown menus in the DOM so the global hamburger can still trigger them. */
+#homeMenuBtn,#gameMenuBtn,#planMenuBtn{display:none!important}
+/* Per-screen dropdowns now anchor below the brand bar instead of below the (hidden) per-screen button. */
+#homeMenu,#gameMenu,#planMenu{top:calc(48px + env(safe-area-inset-top))!important;left:8px!important}
+/* v2.7.82: persistent app header — hamburger LEFT, logo CENTRE, version RIGHT. Single bar across every page. */
+#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:44px;padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
+#appBrandBar .ab-center{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;min-width:0}
 #appBrandBar .ab-logo{width:14px;height:21px}
 #appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
 #appBrandBar .ab-beta{font-size:8px;font-weight:800;letter-spacing:1px;color:#1a1a2e;background:#f0a500;padding:1px 4px;border-radius:2px}
-#appBrandBar .ab-ver{font-size:9px;color:#888;font-weight:600;letter-spacing:.4px}
+#appBrandBar .ab-ver{font-size:10px;color:#888;font-weight:600;letter-spacing:.4px;min-width:54px;text-align:right;padding-right:4px}
+#globalMenuBtn{width:36px;height:36px;border-radius:8px;border:1px solid #2a3550;background:none;color:#9fb3c8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
 /* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
 .btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
@@ -59,7 +67,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
 .btb-btn svg{width:22px;height:22px}
 /* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
-.scr{padding-top:calc(34px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
+.scr{padding-top:calc(44px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
 #s4.active,#subOrderOv.active{padding-bottom:0}
 /* v2.7.80: landing pages don't show the tab bar, so they don't need the bottom reservation either. */
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
@@ -572,7 +580,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
       </div>
     </div>
-    <!-- v2.7.81: standalone quote card removed — daily quote now lives inside the home .hdr (#hdrQuote). -->
+    <!-- v2.7.82: home .hdr removed entirely; tagline / daily quote now sit here at the top of the body. -->
+    <div style="text-align:center;margin-bottom:14px;padding:4px 8px 0">
+      <div id="hdrTaglineTop" style="font-size:13px;color:#9fb3c8;font-weight:600">Smart Subs for grassroots coaches</div>
+      <div id="hdrQuoteTop" style="display:none;font-size:13px;color:#eee;font-weight:600;font-style:italic;line-height:1.35"></div>
+    </div>
     <div id="quoteCard" style="display:none"></div>
     <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px">
@@ -1171,18 +1183,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 </div><!-- /app -->
 
-<!-- v2.7.75: app-wide top brand bar + bottom tab bar — the two persistent anchors of the app. -->
+<!-- v2.7.82: persistent app header — hamburger LEFT, logo CENTRE, version RIGHT. The brand bar IS the header now; per-screen .hdr below it only carries screen-specific content. -->
 <div id="appBrandBar">
-  <svg class="ab-logo logo-anim" viewBox="0 0 40 60" aria-hidden="true">
-    <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
-    <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
-    <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
-    <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
-    <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
-    <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
-  </svg>
-  <span class="ab-name">SUB TIMER</span>
-  <span class="ab-beta">BETA</span>
+  <button id="globalMenuBtn" onclick="toggleGlobalMenu(event)" aria-label="Menu" title="Menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="ab-center">
+    <svg class="ab-logo logo-anim" viewBox="0 0 40 60" aria-hidden="true">
+      <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
+      <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
+      <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
+      <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
+      <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
+      <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
+    </svg>
+    <span class="ab-name">SUB TIMER</span>
+    <span class="ab-beta">BETA</span>
+  </div>
   <span class="ab-ver" id="abVer"></span>
 </div>
 <div id="bottomTabBar"></div>
@@ -3107,12 +3124,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.81-beta';
+const APP_VERSION='v2.7.82-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.82-beta':{
+    title:'One header: hamburger LEFT · logo CENTRE · version RIGHT',
+    items:[
+      'Two-headers-stacked look gone — home\'s .hdr collapsed entirely. Brand bar at the top of the viewport is now the single app header: hamburger on the left, SUB TIMER logo + BETA badge centred, version tag on the right.',
+      'Single brand-bar hamburger routes to the right per-screen menu (Home → Settings + Sign in · Game → Edit Team / Settings / End game · Plan → Edit Team / Settings / Save plan / Lineup / End game). The old per-screen hamburger buttons are hidden — their dropdowns still exist and pop below the brand bar from the global trigger.',
+      'Tagline + daily coach quote moved to a small centred row at the TOP of the home body (no longer competing with the brand bar for header real estate).'
+    ]
+  },
   'v2.7.81-beta':{
     title:'Home cleanup: persistent hamburger top-left, donate floats bottom-right, quote merged into header',
     items:[
@@ -4076,19 +4101,18 @@ function renderHome(){
     if(isLanding)tipsCard.style.display='none';
     else renderTip();
   }
-  // v2.7.81: quote moved INTO the home header (#hdrQuote). Tagline shows on first
-  // landing; once the coach has teams, the daily quote replaces it. Standalone
-  // quoteCard stays hidden — only #hdrQuote / #hdrTagline render. hdrTagline
-  // is declared above (line ~4064); reusing that reference here.
-  const hdrQuote=document.getElementById('hdrQuote');
-  if(hdrTagline) hdrTagline.style.display=isLanding?'':'none';
-  if(hdrQuote){
-    if(isLanding){ hdrQuote.style.display='none'; }
+  // v2.7.82: tagline + daily quote moved to the TOP of the home body (#hdrTaglineTop / #hdrQuoteTop).
+  // Tagline shows on first landing; once the coach has teams, the daily quote replaces it.
+  const taglineTop=document.getElementById('hdrTaglineTop');
+  const quoteTop=document.getElementById('hdrQuoteTop');
+  if(taglineTop) taglineTop.style.display=isLanding?'':'none';
+  if(quoteTop){
+    if(isLanding){ quoteTop.style.display='none'; }
     else {
       const dayIdx=Math.floor((new Date()).setHours(0,0,0,0)/86400000)%COACH_QUOTES.length;
       const [text,by]=COACH_QUOTES[dayIdx];
-      hdrQuote.innerHTML=`${text} <span style="opacity:.6;font-style:normal;font-weight:600">— ${by}</span>`;
-      hdrQuote.style.display='';
+      quoteTop.innerHTML=`${text} <span style="opacity:.6;font-style:normal;font-weight:600">— ${by}</span>`;
+      quoteTop.style.display='';
     }
   }
   // Donate FAB — bottom-right floating, only when on the home page.
@@ -8237,6 +8261,17 @@ function toggleHomeMenu(ev){
 function closeHomeMenu(){
   const m=document.getElementById('homeMenu');
   if(m) m.style.display='none';
+}
+// v2.7.82 — single brand-bar hamburger routes to the right per-screen menu.
+function toggleGlobalMenu(ev){
+  if(ev) ev.stopPropagation();
+  const home=document.getElementById('home');
+  if(home&&home.classList.contains('active')){ toggleHomeMenu(ev); return; }
+  const plan=document.getElementById('subOrderOv');
+  if(plan&&plan.classList.contains('active')){ togglePlanMenu(ev); return; }
+  const game=document.getElementById('s4');
+  if(game&&game.classList.contains('active')){ toggleGameMenu(ev); return; }
+  // No menu wired for the other screens (sport picker, grade picker, team editor, lineup) — silent no-op.
 }
 
 // v2.7.55 — Plan-page version of clkAdj for the dual-clock steppers. Reuses
