@@ -915,25 +915,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- v2.7.43: Plan is a full screen now (was a modal). More breathing room for a dense list of swaps; uses the same .scr pattern as squad / lineup. -->
 <div id="subOrderOv" class="scr" style="height:100dvh;overflow:hidden;flex-direction:column">
-  <!-- v2.7.58: top toolbar now mirrors the game screen — hamburger menu top-left
-       (Done sits inside the menu as "Back to game" alongside Edit Team / Sub Settings
-       / Settings / End game so the same single anchor exists on every page). Title
-       centred; Save + Lineup chips stay top-right for Plan-specific actions. -->
-  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#16213e;border-bottom:1px solid rgba(91,192,222,.25);flex-shrink:0;position:relative">
-    <button id="planMenuBtn" onclick="togglePlanMenu(event)" aria-label="Menu" title="Menu" style="width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0">
+  <!-- v2.7.59: top toolbar mirrors the game screen exactly — hamburger absolute
+       top-left, title centred, Back-to-game absolute top-right (same 6px/8px corner
+       coords as the game-screen Sub Plan clipboard, inverse action). Save + Lineup
+       (CUSTOM-only) moved into the hamburger menu so the top bar reads identical to
+       the game-screen score header. -->
+  <div style="display:flex;align-items:center;justify-content:center;padding:10px 12px;background:#16213e;border-bottom:1px solid rgba(91,192,222,.25);flex-shrink:0;position:relative;min-height:58px">
+    <button id="planMenuBtn" onclick="togglePlanMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div id="planMenu" style="display:none;position:absolute;top:54px;left:12px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
-      <button onclick="closePlanMenu();closeSubOrder()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back to game</button>
-      <button onclick="closePlanMenu();editTeamFromGame&&editTeamFromGame()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit Team</button>
+    <div id="planMenu" style="display:none;position:absolute;top:50px;left:8px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
+      <button onclick="closePlanMenu();editTeamFromGame&&editTeamFromGame()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit Team</button>
       <button onclick="closePlanMenu();openSubSettings&&openSubSettings()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Sub Settings</button>
       <button onclick="closePlanMenu();openSettings&&openSettings()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+      <!-- v2.7.59: Save / Lineup live INSIDE the menu in CUSTOM mode. Hidden in AUTO (nothing to save / no lineup to edit through the AUTO picker). -->
+      <div id="planMenuCustomGroup" style="display:none">
+        <div style="height:1px;background:#243049;margin:4px 0"></div>
+        <button id="subOrderSaveBtn" onclick="closePlanMenu();saveCurrentPlanPrompt()" style="width:100%;padding:13px 14px;background:none;border:none;color:#a78bfa;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>Save plan profile</button>
+        <button id="subOrderLineupBtn" onclick="closePlanMenu();openLineupFromPlan()" style="width:100%;padding:13px 14px;background:none;border:none;color:#a78bfa;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;margin-top:2px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Edit Lineup</button>
+      </div>
       <div style="height:1px;background:#243049;margin:4px 0"></div>
       <button onclick="closePlanMenu();abandonGame&&abandonGame()" style="width:100%;padding:13px 14px;background:none;border:none;color:#ff7088;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
-    <h2 style="flex:1;text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-size:18px"><i data-lucide="list" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Sub Plan</h2>
-    <button id="subOrderSaveBtn" onclick="saveCurrentPlanPrompt()" aria-label="Save as plan profile" title="Save current as a plan profile" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="bookmark-plus" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Save</button>
-    <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" aria-label="Edit Lineup" title="Edit Lineup &amp; Formation" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="grid-3x3" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Lineup</button>
+    <h2 style="text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-size:18px"><i data-lucide="list" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Sub Plan</h2>
+    <!-- v2.7.59: Back-to-game button. Same absolute corner (top:6px right:8px) + same
+         38x38 dimensions as the game screen's #subOrderBtn (clipboard). Tapping it
+         exits the Plan page back to the live game — inverse of the action that opens
+         the Plan page from there. -->
+    <button id="planBackBtn" onclick="closeSubOrder()" aria-label="Back to game" title="Back to game" style="position:absolute;top:6px;right:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
   </div>
   <!-- v2.7.56: Clock anchor — pinned page header right under the toolbar so the
        game time + sub-every readouts (+ scrub controls + LIVE indicator) live in
@@ -2926,12 +2937,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.58-beta';
+const APP_VERSION='v2.7.59-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.59-beta':{
+    title:'Plan-page clock matches the game clock; Back-to-game mirrors the Plan button position',
+    items:[
+      'Clock on the Plan page now uses the same .tmr-c sizing as the game-screen clock — min(13vw, 56px) — so it reads as the same anchor across both pages instead of a smaller variant.',
+      'Back-to-game button moved to the top-right corner (38×38, 6px/8px offset) — the exact mirror of the Sub Plan clipboard button on the game screen that opens the Plan page. Tap there to open the Plan, tap there to leave it.',
+      'Save plan profile + Edit Lineup moved into the hamburger menu (CUSTOM-only group) so the top bar reads cleanly with just hamburger · title · back-button — same shape as the game-screen header.'
+    ]
+  },
   'v2.7.58-beta':{
     title:'Plan page matches the game screen — hamburger top-left, dash tiles at the bottom',
     items:[
@@ -7147,9 +7166,10 @@ function openSubOrder(){
   // inline into the dual-clock scrub bar) — same toggle handles AUTO showing them.
   const ts=document.getElementById('planTopSteppers');
   if(ts) ts.style.display=(_subOrderStrat==='planned')?'none':'flex';
-  // v2.7.39: Lineup editor button visibility follows the active toggle.
-  const lb=document.getElementById('subOrderLineupBtn');
-  if(lb) lb.style.display=(_subOrderStrat==='planned')?'inline-flex':'none';
+  // v2.7.59: CUSTOM-only Save + Lineup actions now live in the hamburger menu —
+  // hide the whole group in AUTO so the menu reads cleanly.
+  const customGroup=document.getElementById('planMenuCustomGroup');
+  if(customGroup) customGroup.style.display=(_subOrderStrat==='planned')?'block':'none';
   // v2.7.46: saved-profile chips visibility also follows the toggle.
   renderPlanProfiles();
   // v2.7.43: full-page screen instead of an overlay so the dense sub list has real estate.
@@ -7524,9 +7544,9 @@ function subOrderPick(strat){
   // v2.7.55: CUSTOM mode hides the top steppers (controls move into the clock bar).
   const ts=document.getElementById('planTopSteppers');
   if(ts) ts.style.display=(strat==='planned')?'none':'flex';
-  // Lineup editor only shows in CUSTOM — AUTO has nothing to edit (app picks).
-  const lb=document.getElementById('subOrderLineupBtn');
-  if(lb) lb.style.display=(strat==='planned')?'inline-flex':'none';
+  // v2.7.59: CUSTOM-only menu items (Save / Lineup) toggle via the group wrapper now.
+  const customGroup=document.getElementById('planMenuCustomGroup');
+  if(customGroup) customGroup.style.display=(strat==='planned')?'block':'none';
   // Saved-profile chips also CUSTOM-only.
   renderPlanProfiles();
   if(typeof saveActiveGame==='function') saveActiveGame();
@@ -7700,11 +7720,12 @@ function renderPlanClockAnchor(){
   const tColor=st.isLive?'#00d4aa':'#5bc0de';
   const isCustom=(_subOrderStrat==='planned');
   if(isCustom){
-    // Dual DSEG clocks — mirrors the game-screen header but no score.
+    // v2.7.59: dual DSEG clocks now use the SAME .tmr-c sizing as the game-screen
+    // clock (min(13vw, 56px)) — anchor consistency across the two pages.
     const hmV=cfg.hm||0, sfV=cfg.sf||0;
     host.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-        <div id="planScrubClock" style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:${tColor};font-variant-numeric:tabular-nums">${fmtTime(st.time)}</div>
+        <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:${tColor}">${fmtTime(st.time)}</div>
         <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="planClkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -7714,7 +7735,7 @@ function renderPlanClockAnchor(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-        <div style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:#00d4aa;font-variant-numeric:tabular-nums">${fmtTime((cfg.sf||0)*60)}</div>
+        <div class="tmr-c" style="margin:0;line-height:1;color:#00d4aa">${fmtTime((cfg.sf||0)*60)}</div>
         <div style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">SUB EVERY</div>
         <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
           <button onclick="planClkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -7726,10 +7747,11 @@ function renderPlanClockAnchor(){
     </div>`;
     return;
   }
-  // AUTO mode — single compact clock + period chip.
-  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:12px">
-    <span style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:${tColor};text-transform:uppercase;background:${st.isLive?'rgba(0,212,170,.08)':'rgba(91,192,222,.08)'};padding:4px 10px;border:1px solid ${st.isLive?'rgba(0,212,170,.3)':'rgba(91,192,222,.3)'};border-radius:4px;white-space:nowrap">${periodLbl(st.period)}</span>
-    <span id="planScrubClock" style="font-family:'DSEG',monospace;font-size:28px;color:${tColor};font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums">${fmtTime(st.time)}</span>
+  // AUTO mode — single .tmr-c clock + period chip below (same shape as the
+  // game-screen header, just with one clock instead of two).
+  host.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:${tColor}">${fmtTime(st.time)}</div>
+    <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
   </div>`;
 }
 function renderPlanControlBand(){
