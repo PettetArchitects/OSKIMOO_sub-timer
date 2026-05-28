@@ -953,6 +953,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="subOrderSuggestion" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc;display:none"></div>
+    <!-- v2.7.48: starting-XI + bench overview so the coach sees the whole roster status at a glance — not just the swap rows. -->
+    <div id="planRosterOverview" style="margin-bottom:14px"></div>
     <div id="subOrderInfo" style="font-size:13px;color:#888;text-align:center;margin:0 0 14px"></div>
     <div id="subOrderList"></div>
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
@@ -2899,12 +2901,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.47-beta';
+const APP_VERSION='v2.7.48-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.48-beta':{
+    title:'Toggle commits on tap + full roster overview on the Plan page',
+    items:[
+      'The Plan-page AUTO / CUSTOM toggle now commits immediately on tap. The old "Use this strategy" button at the bottom of the sub list was easy to miss, so the toggle felt frozen on Equal-time — fixed.',
+      'New "On field · N / On bench · N" overview at the top of the Plan page. Shows every player on the current roster — green chips for the starting XI (GK badge highlighted), amber chips for everyone benched. Gives the whole-game picture at a glance instead of just the swap rows.'
+    ]
+  },
   'v2.7.47-beta':{
     title:'Squad page: pick AUTO or a saved plan up-front',
     items:[
@@ -6999,6 +7008,7 @@ function openSubOrder(){
   renderSubOrderTabs();
   renderSubOrderControls();
   renderSubOrderSuggestion();
+  renderPlanRosterOverview();
   renderSubOrder();
   // v2.7.39: Lineup editor button visibility follows the active toggle.
   const lb=document.getElementById('subOrderLineupBtn');
@@ -7143,6 +7153,28 @@ function renderPlanProfiles(){
   _li();
 }
 
+// v2.7.48 — full-roster overview at the top of the Plan page. Shows the
+// starting XI (currently on the field) + everyone on the bench at the start
+// of the current period. Helps the coach spot anyone who's been forgotten,
+// and gives the full picture of who's available beyond just swap rows.
+function renderPlanRosterOverview(){
+  const host=document.getElementById('planRosterOverview');
+  if(!host||!G||!avail) return;
+  const onIdx=G.on||[], benchIdx=G.bench||[];
+  const onChips=onIdx.map(i=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.35);border-radius:14px;font-size:12px;font-weight:700;color:#00d4aa">${fn(avail[i])}${(G.gk===i)?' <span style="font-size:9px;color:#e94560;letter-spacing:.5px;font-weight:800">GK</span>':''}</span>`).join('');
+  const benchChips=benchIdx.map(i=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.35);border-radius:14px;font-size:12px;font-weight:700;color:#f0a500">${fn(avail[i])}</span>`).join('');
+  host.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+    <div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;margin-bottom:6px;text-transform:uppercase">On field · ${onIdx.length}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${onChips||'<span style="font-size:12px;color:#666">—</span>'}</div>
+    </div>
+    <div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${benchChips||'<span style="font-size:12px;color:#666">no subs available</span>'}</div>
+    </div>
+  </div>`;
+}
+
 function openLineupFromPlan(){
   closeSubOrder();
   if(typeof renderS3==='function') renderS3();
@@ -7166,17 +7198,23 @@ function renderSubOrderTabs(){
   }).join('');
 }
 function subOrderPick(strat){
+  // v2.7.48: tab tap commits immediately. The old "Use this strategy" Apply
+  // button at the bottom of the sub list was easy to miss (scroll past the
+  // whole timeline), so the toggle felt frozen on AUTO. Now switching is one
+  // tap. ssSetStrat handles the toggle→internal mapping + log entry.
   _subOrderStrat=strat;
+  if(typeof ssSetStrat==='function') ssSetStrat(strat);
   renderSubOrderTabs();
   renderSubOrder();
   const btn=document.getElementById('subOrderApplyBtn');
-  // v2.7.34: compare against the live toggle, not the internal strategy.
-  if(btn) btn.style.display=(strat!==stratToToggle(G&&G.subStrategy))?'block':'none';
-  // v2.7.39: Lineup editor only shows in CUSTOM — AUTO has nothing to edit (app picks).
+  if(btn) btn.style.display='none';     // never needed now
+  // Lineup editor only shows in CUSTOM — AUTO has nothing to edit (app picks).
   const lb=document.getElementById('subOrderLineupBtn');
   if(lb) lb.style.display=(strat==='planned')?'inline-flex':'none';
-  // v2.7.46: saved-profile chips also CUSTOM-only.
+  // Saved-profile chips also CUSTOM-only.
   renderPlanProfiles();
+  if(typeof saveActiveGame==='function') saveActiveGame();
+  if(typeof renderG==='function') renderG();
 }
 function subOrderApply(){
   if(!G||!_subOrderStrat) return;
