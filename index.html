@@ -922,6 +922,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="subOrderSaveBtn" onclick="saveCurrentPlanPrompt()" aria-label="Save as plan profile" title="Save current as a plan profile" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="bookmark-plus" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Save</button>
     <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" aria-label="Edit Lineup" title="Edit Lineup &amp; Formation" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="grid-3x3" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Lineup</button>
   </div>
+  <!-- v2.7.56: Clock anchor — pinned page header right under the toolbar so the
+       game time + sub-every readouts (+ scrub controls + LIVE indicator) live in
+       the SAME spot no matter what's below (profiles, equal-time tile, formation
+       chips, etc. all shift around). Anchored outside the scrollable body so it
+       stays put while the coach scrolls through the sub timeline. -->
+  <div id="planClockAnchor" style="background:#0c1627;border-bottom:1px solid #1e2a45;padding:10px 14px;flex-shrink:0"></div>
   <!-- Scrollable body — full-page real estate for the strategy controls + the sub timeline. -->
   <div style="flex:1;min-height:0;overflow-y:auto;padding:14px 16px;max-width:1200px;width:100%;margin:0 auto;box-sizing:border-box">
     <div id="subOrderTabs" style="display:flex;gap:4px;margin:0 0 12px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px"></div>
@@ -959,6 +965,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subOrderList"></div>
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
   </div>
+  <!-- v2.7.56: Bottom control band — game-simulation playback controls (◀ step back,
+       LIVE jump-to-now, step forward ▶) anchored to the bottom of the page so they're
+       always reachable while the coach scrolls the sub timeline. The mirror to the
+       clock anchor up top — page header is the readout, page footer is the controls. -->
+  <div id="planControlBand" style="background:#0c1627;border-top:1px solid #1e2a45;padding:10px 14px;flex-shrink:0"></div>
 </div>
 
 <!-- v2.7.17: full Settings overlay — Sound, Account, Feedback, Help. Replaces the old openSettings() shortcut into the sound picker. -->
@@ -2902,12 +2913,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.55-beta';
+const APP_VERSION='v2.7.56-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.56-beta':{
+    title:'Plan page: clock anchored up top, simulation controls anchored at the bottom',
+    items:[
+      'Clock anchor — the game time / SUB EVERY readouts now live in a page-level header pinned right under the Done · Sub Plan · Save · Lineup toolbar. Same fixed spot whether you\'re in AUTO or CUSTOM, whether profiles/equal-time/formation chips are showing or not. CUSTOM shows the dual DSEG clock with steppers; AUTO shows a compact single clock + period chip.',
+      'Control band — game-simulation playback controls (◀ step back · LIVE · step forward ▶ · state label) now anchored to the BOTTOM of the page. Always reachable while you scroll through the sub timeline; mirrors the clock anchor up top (readout above, controls below).',
+      'Scrolling the long sub list no longer makes the clock or the controls disappear — both stay put as you read through the full game plan.'
+    ]
+  },
   'v2.7.55-beta':{
     title:'Plan page CUSTOM: tactical-board layout — landscape pitch, dual clock up top, formation chips along the bottom',
     items:[
@@ -7299,12 +7318,15 @@ function renderPlanRosterOverview(){
   const pitchH=isCustom?'560px':'420px';
   const topChipsHtml=isCustom?'':`<div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"></div>`;
   const bottomChipsHtml=isCustom?`<div style="padding:10px 12px;border-top:1px solid #1e2a45;background:rgba(91,192,222,.03)"><div id="planFormationChips" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div></div>`:'';
+  // v2.7.56: scrub bar moved OUT of the field card into the page-level clock anchor
+  // + bottom control band (rendered separately). The card now flows: header (on-field
+  // count + maybe top-right formation chips) → pitch → optional bottom formation row →
+  // bench strip.
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px">
       <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
       ${topChipsHtml}
     </div>
-    <div id="planScrubBar" style="padding:8px 12px;border-top:1px solid #16213e;background:rgba(91,192,222,.04)"></div>
     <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
     ${bottomChipsHtml}
     <div style="padding:8px 12px">
@@ -7591,33 +7613,35 @@ function planScrubJump(idx){
   renderSubOrder();
 }
 
-// Render the scrub control bar. AUTO mode shows a compact single-clock + step buttons
-// (preview-focused). CUSTOM mode mirrors the game-screen header — dual DSEG clocks
-// (game time + sub-every) with their inline steppers — so the Plan page reads like
-// a tactical board the coach BUILDS in, not just a preview.
+// v2.7.56 — Plan-page scrub UI is now SPLIT across two page-level anchors:
+//   • #planClockAnchor  (top, just under the toolbar) — clock readouts only.
+//                        CUSTOM = dual DSEG clocks (game time + SUB EVERY) with
+//                        inline half-length / sub-freq steppers; AUTO = single
+//                        compact clock + period chip.
+//   • #planControlBand  (bottom, always-pinned footer) — game-simulation playback
+//                        controls (◀ LIVE ▶) so the coach can step through the
+//                        plan at any time without scrolling.
+// Both render off the same getPlanScrubState() so they stay in sync.
 function renderPlanScrubBar(){
-  const host=document.getElementById('planScrubBar');
+  renderPlanClockAnchor();
+  renderPlanControlBand();
+}
+function renderPlanClockAnchor(){
+  const host=document.getElementById('planClockAnchor');
   if(!host||!G) return;
   const sport=getSport(currentTeam);
   const periodLbl=p=>sport.periodShort?sport.periodShort(p):('Period '+p);
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const st=getPlanScrubState();
   if(!st){ host.innerHTML=''; return; }
-  const canPrev=st.idx>0;
-  const canNext=st.idx<st.total;
-  const stepLabel=st.isLive
-    ?(st.total?`Live · ${st.total} sub${st.total===1?'':'s'} ahead — tap ▶ to step through`:'Live — no upcoming subs')
-    :`After sub ${st.idx} of ${st.total}`;
   const tColor=st.isLive?'#00d4aa':'#5bc0de';
   const isCustom=(_subOrderStrat==='planned');
   if(isCustom){
-    // v2.7.55: dual-clock layout — mirrors the game-screen header. Left = current
-    // scrub time + period label + half-length stepper; Right = sub-every value
-    // (green) + sub-freq stepper. Scrub controls (◀ LIVE ▶) tuck below.
+    // Dual DSEG clocks — mirrors the game-screen header but no score.
     const hmV=cfg.hm||0, sfV=cfg.sf||0;
     host.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-        <div style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:${tColor};font-variant-numeric:tabular-nums">${fmtTime(st.time)}</div>
+        <div id="planScrubClock" style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:${tColor};font-variant-numeric:tabular-nums">${fmtTime(st.time)}</div>
         <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
         <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="planClkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -7636,26 +7660,31 @@ function renderPlanScrubBar(){
           <button onclick="planClkAdj('sf',1)" aria-label="Sub less often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
         </div>
       </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px">
-      <button onclick="planScrubStep(-1)" aria-label="Step back" ${canPrev?'':'disabled'} style="width:32px;height:32px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:15px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
-      <button onclick="planScrubLive()" aria-label="Jump to live" ${st.isLive?'disabled':''} style="padding:5px 10px;background:${st.isLive?'rgba(0,212,170,.06)':'rgba(0,212,170,.16)'};border:1px solid ${st.isLive?'#0a3a31':'#00d4aa'};color:${st.isLive?'#3a4760':'#00d4aa'};border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:${st.isLive?'default':'pointer'};font-family:inherit">LIVE</button>
-      <button onclick="planScrubStep(1)" aria-label="Step forward" ${canNext?'':'disabled'} style="width:32px;height:32px;border-radius:50%;background:${canNext?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:15px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
-      <span style="font-size:11px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-left:6px">${stepLabel}</span>
     </div>`;
     return;
   }
-  // AUTO mode — compact single-clock + step buttons (existing preview layout).
-  host.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <button onclick="planScrubStep(-1)" aria-label="Step back" title="Previous sub" ${canPrev?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
-    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0">
-      <span style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:${tColor};text-transform:uppercase;background:${st.isLive?'rgba(0,212,170,.08)':'rgba(91,192,222,.08)'};padding:3px 8px;border:1px solid ${st.isLive?'rgba(0,212,170,.3)':'rgba(91,192,222,.3)'};border-radius:4px;white-space:nowrap">${periodLbl(st.period)}</span>
-      <span id="planScrubClock" style="font-family:'DSEG',monospace;font-size:22px;color:${tColor};font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums">${fmtTime(st.time)}</span>
-    </div>
-    <button onclick="planScrubLive()" aria-label="Jump to live" title="Jump back to live" ${st.isLive?'disabled':''} style="padding:6px 11px;background:${st.isLive?'rgba(0,212,170,.06)':'rgba(0,212,170,.16)'};border:1px solid ${st.isLive?'#0a3a31':'#00d4aa'};color:${st.isLive?'#3a4760':'#00d4aa'};border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:${st.isLive?'default':'pointer'};font-family:inherit">LIVE</button>
-    <button onclick="planScrubStep(1)" aria-label="Step forward" title="Next sub" ${canNext?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canNext?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
-  </div>
-  <div style="text-align:center;font-size:11px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-top:6px">${stepLabel}</div>`;
+  // AUTO mode — single compact clock + period chip.
+  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:12px">
+    <span style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:${tColor};text-transform:uppercase;background:${st.isLive?'rgba(0,212,170,.08)':'rgba(91,192,222,.08)'};padding:4px 10px;border:1px solid ${st.isLive?'rgba(0,212,170,.3)':'rgba(91,192,222,.3)'};border-radius:4px;white-space:nowrap">${periodLbl(st.period)}</span>
+    <span id="planScrubClock" style="font-family:'DSEG',monospace;font-size:28px;color:${tColor};font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums">${fmtTime(st.time)}</span>
+  </div>`;
+}
+function renderPlanControlBand(){
+  const host=document.getElementById('planControlBand');
+  if(!host||!G) return;
+  const st=getPlanScrubState();
+  if(!st){ host.innerHTML=''; return; }
+  const canPrev=st.idx>0;
+  const canNext=st.idx<st.total;
+  const stepLabel=st.isLive
+    ?(st.total?`Live · ${st.total} sub${st.total===1?'':'s'} ahead`:'Live — no upcoming subs')
+    :`After sub ${st.idx} of ${st.total}`;
+  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
+    <button onclick="planScrubStep(-1)" aria-label="Step back" title="Previous sub" ${canPrev?'':'disabled'} style="width:42px;height:42px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.18)':'rgba(91,192,222,.04)'};border:1.5px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:18px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
+    <button onclick="planScrubLive()" aria-label="Jump to live" title="Jump back to live" ${st.isLive?'disabled':''} style="padding:8px 16px;background:${st.isLive?'rgba(0,212,170,.06)':'rgba(0,212,170,.2)'};border:1.5px solid ${st.isLive?'#0a3a31':'#00d4aa'};color:${st.isLive?'#3a4760':'#00d4aa'};border-radius:8px;font-size:13px;font-weight:800;letter-spacing:.6px;cursor:${st.isLive?'default':'pointer'};font-family:inherit">LIVE</button>
+    <button onclick="planScrubStep(1)" aria-label="Step forward" title="Next sub" ${canNext?'':'disabled'} style="width:42px;height:42px;border-radius:50%;background:${canNext?'rgba(91,192,222,.18)':'rgba(91,192,222,.04)'};border:1.5px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:18px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
+    <span style="font-size:12px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-left:4px">${stepLabel}</span>
+  </div>`;
 }
 
 // v2.7.55 — Plan-page version of clkAdj for the dual-clock steppers. Reuses
