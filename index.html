@@ -3017,12 +3017,18 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.76-beta';
+const APP_VERSION='v2.7.77-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.77-beta':{
+    title:'Resume "Game in progress" inlined into the matching team card',
+    items:[
+      'Standalone "GAME IN PROGRESS" banner removed from the home page — it was visually colliding with the gradient header strip above it. The team that owns the active game now gets a green accent border + inline "Game in progress · Q1 · 0:00 · 0-0" meta line + Resume / Discard buttons right on its card. Tapping anywhere on the card resumes; per-card buttons keep the discard path safe.'
+    ]
+  },
   'v2.7.76-beta':{
     title:'No more identical "Untitled Team" rows — auto-named from sport + format',
     items:[
@@ -3924,21 +3930,9 @@ function renderHome(){
   // Resume banner
   const rb=document.getElementById('resumeBanner');
   const active=loadActiveGame();
-  if(rb){
-    if(active){
-      const t=teams.find(x=>x.id===active.teamId);
-      const _spt=getSport(t);
-      const periodLbl=active.G?_spt.periodShort(active.G.half||1):'';
-      const mins=active.G?Math.floor((active.G.elapsedMs||0)/60000):0;
-      const secs=active.G?Math.floor(((active.G.elapsedMs||0)%60000)/1000):0;
-      const score=active.G?`${active.G.scoreUs}-${active.G.scoreThem}`:'';
-      const teamName=t?t.name:'(team deleted)';
-      document.getElementById('resumeBannerInfo').textContent=`${teamName} · ${periodLbl} · ${mins}:${String(secs).padStart(2,'0')} · ${score}`;
-      rb.style.display='';
-    } else {
-      rb.style.display='none';
-    }
-  }
+  // v2.7.77: standalone resume banner is gone — the "Game in progress" affordance now lives
+  // INSIDE the matching team card (green accent border + inline Resume / Discard buttons).
+  if(rb) rb.style.display='none';
   // Toggle footer buttons + heading visibility based on state
   const heading=document.getElementById('teamsHeading');
   const newBtn=document.getElementById('newTeamBtn');
@@ -4008,17 +4002,36 @@ function renderHome(){
     const fmtLabel=t.format&&FORMATS[t.format]?FORMATS[t.format].label:null;
     const _spt=getSport(t);
     const canPlay=t.format&&FORMATS[t.format]&&t.players.length>=FORMATS[t.format].onField;
+    // v2.7.77: if THIS team owns the active game, decorate the card with a green
+    // accent + inline Resume button. Replaces the separate "GAME IN PROGRESS"
+    // banner that used to stack above the team list and visually collide with
+    // the home header gradient.
+    const hasActive=active && active.teamId===t.id;
+    let inProgressLine='';
+    if(hasActive){
+      d.style.cssText='border:1.5px solid #00d4aa;box-shadow:0 0 0 4px rgba(0,212,170,.08)';
+      const periodLbl=active.G?_spt.periodShort(active.G.half||1):'';
+      const mins=active.G?Math.floor((active.G.elapsedMs||0)/60000):0;
+      const secs=active.G?Math.floor(((active.G.elapsedMs||0)%60000)/1000):0;
+      const score=active.G?`${active.G.scoreUs}-${active.G.scoreThem}`:'';
+      inProgressLine=`<div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-top:4px">Game in progress · ${periodLbl} · ${mins}:${String(secs).padStart(2,'0')} · ${score}</div>`;
+    }
     // v2.7.38: replaced the inline Start button with a chevron — the whole card
     // taps into the action menu (Play now / Plan ahead / Past games / Edit).
-    // The Start shortcut was bypassing the menu and confusing the flow.
-    const actionBtns=canPlay
-      ? `<button onclick="event.stopPropagation();openTeamActions('${t.id}')" style="background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;flex-shrink:0" title="Team actions">${ic('chevron-right',16)}</button>`
-      : `<button onclick="event.stopPropagation();editTeamScreen('${t.id}')" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0" title="Finish team setup">Set up</button>`;
+    let actionBtns;
+    if(hasActive){
+      actionBtns=`<button onclick="event.stopPropagation();discardActiveGame()" style="background:none;color:#7d8a9c;border:1px solid #2a3550;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0" title="Discard the in-progress game">Discard</button>
+                  <button onclick="event.stopPropagation();resumeActiveGame()" style="background:#00d4aa;color:#06231d;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0" title="Resume the in-progress game">Resume ${ic('play',13,'#06231d')}</button>`;
+    } else {
+      actionBtns=canPlay
+        ? `<button onclick="event.stopPropagation();openTeamActions('${t.id}')" style="background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;flex-shrink:0" title="Team actions">${ic('chevron-right',16)}</button>`
+        : `<button onclick="event.stopPropagation();editTeamScreen('${t.id}')" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0" title="Finish team setup">Set up</button>`;
+    }
     d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="color:#5bc0de;flex-shrink:0;display:flex">${ic(_spt.icon,22)}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p></div></div>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="color:#5bc0de;flex-shrink:0;display:flex">${ic(_spt.icon,22)}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p>${inProgressLine}</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0">${actionBtns}</div>
     </div>`;
-    d.onclick=()=>{canPlay?openTeamActions(t.id):editTeamScreen(t.id);};
+    d.onclick=()=>{ if(hasActive){ resumeActiveGame(); return; } canPlay?openTeamActions(t.id):editTeamScreen(t.id); };
     c.appendChild(d);
   });
   _li();
