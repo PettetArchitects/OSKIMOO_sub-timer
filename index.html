@@ -45,15 +45,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ic-lg{width:1.4em;height:1.4em}
 .ic-xl{width:1.8em;height:1.8em}
 
-.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:0;z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:calc(34px + env(safe-area-inset-top));z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+/* v2.7.75: app-wide TOP brand bar — SUB TIMER logo + name + version centred, visible on every page. Pairs with the bottom tab bar as the two persistent anchors of the app. */
+#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;height:34px;padding-top:env(safe-area-inset-top);background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
+#appBrandBar .ab-logo{width:14px;height:21px}
+#appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
+#appBrandBar .ab-beta{font-size:8px;font-weight:800;letter-spacing:1px;color:#1a1a2e;background:#f0a500;padding:1px 4px;border-radius:2px}
+#appBrandBar .ab-ver{font-size:9px;color:#888;font-weight:600;letter-spacing:.4px}
 /* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
 .btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
 .btb-btn{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px;background:transparent;border:none;border-radius:14px;color:#7d8a9c;font-size:10px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;min-width:62px}
 .btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
 .btb-btn svg{width:22px;height:22px}
-/* Scrollable screens (home, sport picker, etc.) leave room for the fixed tab bar at the bottom. s4/subOrderOv handle their own offset via their bottom-band inline padding. */
-.scr{padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
+/* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
+.scr{padding-top:calc(34px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
 #s4.active,#subOrderOv.active{padding-bottom:0}
 .hdr h1{font-size:18px;font-weight:700;letter-spacing:1px}
 .hdr .sub{font-size:11px;color:#aaa;margin-top:1px}
@@ -530,18 +536,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== HOME: TEAM SELECT ===== -->
 <div id="home" class="scr active">
   <div class="hdr" style="position:relative">
-    <!-- v2.7.73: brand centred in the top bar; right-side buttons (donate, settings, auth) absolute-positioned top-right so they don't push the brand off-centre. -->
-    <div id="hdrBrand" style="display:flex;align-items:center;justify-content:center;gap:10px;min-width:0">
-      <svg class="logo-anim" viewBox="0 0 40 60" width="22" height="33" aria-hidden="true" style="flex-shrink:0;display:block">
-        <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
-        <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
-        <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
-        <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
-        <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
-        <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
-      </svg>
-      <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:9px;color:#1a1a2e;font-weight:800;letter-spacing:1px;vertical-align:middle;background:#f0a500;padding:2px 5px;border-radius:3px;margin-left:2px">BETA</span><span id="verTag" style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;vertical-align:middle;margin-left:6px"></span></h1>
-    </div>
+    <!-- v2.7.75: SUB TIMER brand moved to the body-level #appBrandBar (top of every page). Home's hdr stays for the tagline + the right-side action buttons. -->
+    <div id="hdrBrand" style="display:none"></div>
     <div style="position:absolute;top:50%;right:16px;transform:translateY(-50%);display:flex;align-items:center;gap:8px">
       <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Donate to keep this app going" title="Donate to keep this app going" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="heart" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
       <button onclick="openSettings()" aria-label="Settings" title="Settings" style="background:none;color:#888;border:1px solid #444;border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><i data-lucide="settings" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
@@ -1157,7 +1153,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 </div><!-- /app -->
 
-<!-- v2.7.71: app-wide bottom tab bar — true anchor visible on every screen. -->
+<!-- v2.7.75: app-wide top brand bar + bottom tab bar — the two persistent anchors of the app. -->
+<div id="appBrandBar">
+  <svg class="ab-logo logo-anim" viewBox="0 0 40 60" aria-hidden="true">
+    <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
+    <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
+    <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
+    <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
+    <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
+    <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
+  </svg>
+  <span class="ab-name">SUB TIMER</span>
+  <span class="ab-beta">BETA</span>
+  <span class="ab-ver" id="abVer"></span>
+</div>
 <div id="bottomTabBar"></div>
 
 
@@ -2993,12 +3002,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.74-beta';
+const APP_VERSION='v2.7.75-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.75-beta':{
+    title:'SUB TIMER brand bar pinned at the very top of every page',
+    items:[
+      'SUB TIMER logo + BETA chip + version now lives in a body-level top brand bar (#appBrandBar) — position:fixed at the top of the viewport, visible on every screen, always in the same centred spot. Pairs with the bottom tab bar (v2.7.71) as the two persistent app anchors.',
+      'Screens add top padding to clear the brand bar; the home-screen logo block is removed since it\'s now in the global bar.'
+    ]
+  },
   'v2.7.74-beta':{
     title:'Game tab uses a sport-aware ball icon (was play triangle — confusing)',
     items:[
@@ -7168,7 +7184,7 @@ function maybeShowWhatsNew(){
 // Stamp the running version next to the BETA tag in the persistent header.
 // (Landing hero version is baked directly into the renderHome template since
 // the hero element doesn't exist in the DOM until renderHome paints.)
-{const _v=APP_VERSION.replace(/-beta$/,''),_el=document.getElementById('verTag');if(_el)_el.textContent=_v;}
+{const _v=APP_VERSION.replace(/-beta$/,'');const _el=document.getElementById('verTag');if(_el)_el.textContent=_v;const _ab=document.getElementById('abVer');if(_ab)_ab.textContent=_v;}
 renderHome();
 initCloudAuth();
 _li(); // materialise initial-page <i data-lucide> placeholders once Lucide is in
