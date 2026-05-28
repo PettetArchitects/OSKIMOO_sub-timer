@@ -2913,12 +2913,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.56-beta';
+const APP_VERSION='v2.7.57-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.57-beta':{
+    title:'Plan page field controls now match the game screen',
+    items:[
+      'Field view controls (Behind / Side / Top + lock) sit in the same place on the Plan-page pitch as they do during the live game — afl3d\'s built-in overlay buttons, top-left of the canvas. No more forced landscape view; whatever angle you picked on the game screen carries over.',
+      'Formation toggle moved to a small button at the bottom-right of the field — same look and behaviour as the game-screen #fmtToggle. Tap it to pop up the formation picker; tap a formation to apply, tap outside to dismiss.',
+      'Dropped the chip strip below the field (replaced by the in-pitch toggle) so the pitch reads cleaner and matches the live-game experience.'
+    ]
+  },
   'v2.7.56-beta':{
     title:'Plan page: clock anchored up top, simulation controls anchored at the bottom',
     items:[
@@ -6976,6 +6984,13 @@ document.addEventListener('click',(e)=>{
     fp.style.display='none';
     if(typeof renderGameDash==='function') renderGameDash();
   }
+  // v2.7.57: same for the Plan-page formation popup.
+  const pfp=document.getElementById('planFmtPicker');
+  if(pfp && pfp.style.display==='block' && !e.target.closest('#planFmtPicker, #planFmtToggle')){
+    pfp.style.display='none';
+    const t=document.getElementById('planFmtToggle');
+    if(t){ t.style.borderColor='#2a3550'; t.style.color='#9fb3c8'; t.style.background='rgba(13,18,30,.85)'; }
+  }
   if(fieldSwapSel===null && injuryOffSel===null) return;     // nothing armed
   // Keep these clickables out of the cancel path — they're part of the armed flow:
   //   .fc       — field player pill (swap targets)
@@ -7172,10 +7187,6 @@ function closeSubOrder(){
   // v2.7.53: tear down the live-clock ticker so it doesn't keep firing after the page closes.
   if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
   _planTimeline=null; _planScrubIdx=0;
-  // v2.7.55: clear the landscape ('top-h') view that CUSTOM mode sets so the
-  // game screen lands on the default 'behind' perspective. setView runs as part
-  // of the next afl3d.update via init's setView(this.view) — we set view first.
-  if(typeof afl3d!=='undefined' && afl3d.view==='top-h') afl3d.view='behind';
   // v2.7.54: hop the 3D pitch back. afl3d was last pointed at #planFieldWrap by
   // renderPlanField3D — without this call the game screen's #pitchMid keeps its
   // orphaned canvas (frozen frame, stale pills at last-projected coords). renderG
@@ -7308,33 +7319,33 @@ function renderPlanRosterOverview(){
   // same getPlanScrubState() so the pitch, bench strip and counters never drift.
   const st=getPlanScrubState()||{on:G.on||[], bench:G.bench||[]};
   const onIdx=st.on, benchIdx=st.bench;
-  // v2.7.55: CUSTOM mode promotes the pitch to a tactical-board layout —
-  //   • game-style dual clock pinned to the top (current scrub time + sub-every),
-  //   • field goes landscape (top-down 'top-h' view) + much taller,
-  //   • formation chips slide to a full-width row BELOW the pitch (was top-right of card),
-  //   • score is never shown (we're planning, not playing).
-  // AUTO mode keeps the compact preview layout (scrub bar + portrait pitch + chips top-right).
+  // v2.7.57: leave the pitch's view controls (afl3d's Behind/Side/Top + lock,
+  // top-left of the canvas) and formation toggle (bottom-right of the field)
+  // EXACTLY where they sit on the game screen. CUSTOM still gets a taller pitch
+  // (560px vs 420px) for tactical-board feel, but the controls + camera defaults
+  // mirror s4. No more chip strip below the field, no more forced top-down view.
   const isCustom=(_subOrderStrat==='planned');
   const pitchH=isCustom?'560px':'420px';
-  const topChipsHtml=isCustom?'':`<div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"></div>`;
-  const bottomChipsHtml=isCustom?`<div style="padding:10px 12px;border-top:1px solid #1e2a45;background:rgba(91,192,222,.03)"><div id="planFormationChips" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div></div>`:'';
-  // v2.7.56: scrub bar moved OUT of the field card into the page-level clock anchor
-  // + bottom control band (rendered separately). The card now flows: header (on-field
-  // count + maybe top-right formation chips) → pitch → optional bottom formation row →
-  // bench strip.
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px">
       <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
-      ${topChipsHtml}
     </div>
-    <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
-    ${bottomChipsHtml}
+    <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45">
+      <!-- v2.7.57: in-pitch formation toggle mirroring game-screen #fmtToggle. -->
+      <button id="planFmtToggle" onclick="togglePlanFormation()" aria-label="Change formation" title="Change formation" style="position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);display:inline-flex;align-items:center;gap:6px;z-index:30;font-family:inherit"><i data-lucide="layout-grid" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i><span>${curFormation||'Formation'}</span></button>
+      <div id="planFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:140px;max-height:60dvh;overflow-y:auto;z-index:31">
+        <div id="planFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+    </div>
     <div style="padding:8px 12px">
       <div id="planBenchCount" style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
       <div id="planBenchChips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
   </div>`;
-  renderPlanFormationChips();
+  // Hide formation toggle when the sport offers only one formation.
+  const formCount=Object.keys(FORMATIONS[curFmt]||{}).length;
+  const ft=document.getElementById('planFmtToggle');
+  if(ft) ft.style.display=(formCount>1)?'inline-flex':'none';
   renderPlanScrubBar();
   renderPlanField3D();
   renderPlanBenchChips();
@@ -7401,11 +7412,37 @@ function renderPlanField3D(){
       add(el, pos.x, pos.y, avail[pIdx]);
     });
   }, _3dSport);
-  // v2.7.55: CUSTOM mode = top-down LANDSCAPE view (long axis horizontal across
-  // the screen) — tactical-board feel. AUTO mode keeps the default 'behind'
-  // perspective the preview was shipped with.
-  const wantView=(_subOrderStrat==='planned')?'top-h':'behind';
-  if(afl3d.view!==wantView) afl3d.setView(wantView);
+  // v2.7.57: don't force a camera angle — afl3d already exposes Behind/Side/Top
+  // + lock buttons in the canvas overlay (top-left), same as on the game screen.
+  // Whatever view the coach last picked persists across container hops.
+}
+// v2.7.57 — Plan-page formation toggle. Mirrors the game-view toggleGameFormation
+// but targets the Plan-page popup so it pops up above the in-pitch button.
+function togglePlanFormation(){
+  const p=document.getElementById('planFmtPicker');
+  if(!p) return;
+  if(p.style.display==='none'){
+    const g=document.getElementById('planFmtGrid');
+    if(!g) return;
+    g.innerHTML='';
+    const forms=FORMATIONS[curFmt]||{};
+    Object.keys(forms).forEach(k=>{
+      const c=document.createElement('div');
+      const sel=(curFormation===k);
+      c.style.cssText=`display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;background:${sel?'rgba(91,192,222,.16)':'transparent'};border:1px solid ${sel?'#5bc0de':'transparent'}`;
+      const short=(typeof FORMATION_SHORTS!=='undefined' && FORMATION_SHORTS[k])||'';
+      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px;color:${sel?'#5bc0de':'#eee'};min-width:34px">${k}</div>${short?`<div style="font-size:10px;color:#888;font-weight:500;line-height:1.2;flex:1;text-align:right">${short}</div>`:''}`;
+      c.onclick=()=>{ setPlanFormation(k); p.style.display='none'; };
+      g.appendChild(c);
+    });
+    p.style.display='block';
+    const t=document.getElementById('planFmtToggle');
+    if(t){ t.style.borderColor='#5bc0de'; t.style.color='#5bc0de'; t.style.background='rgba(91,192,222,.16)'; }
+  } else {
+    p.style.display='none';
+    const t=document.getElementById('planFmtToggle');
+    if(t){ t.style.borderColor='#2a3550'; t.style.color='#9fb3c8'; t.style.background='rgba(13,18,30,.85)'; }
+  }
 }
 function setPlanFormation(name){
   if(!FORMATIONS[curFmt]||!FORMATIONS[curFmt][name]) return;
