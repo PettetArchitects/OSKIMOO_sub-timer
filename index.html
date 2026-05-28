@@ -4078,8 +4078,8 @@ function renderHome(){
   }
   // v2.7.81: quote moved INTO the home header (#hdrQuote). Tagline shows on first
   // landing; once the coach has teams, the daily quote replaces it. Standalone
-  // quoteCard stays hidden — only #hdrQuote / #hdrTagline render.
-  const hdrTagline=document.getElementById('hdrTagline');
+  // quoteCard stays hidden — only #hdrQuote / #hdrTagline render. hdrTagline
+  // is declared above (line ~4064); reusing that reference here.
   const hdrQuote=document.getElementById('hdrQuote');
   if(hdrTagline) hdrTagline.style.display=isLanding?'':'none';
   if(hdrQuote){
