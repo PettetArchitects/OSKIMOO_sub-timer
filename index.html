@@ -930,8 +930,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase;margin-right:2px">Profiles</span>
       <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
     </div>
-    <!-- Sub-frequency + group-size steppers. -->
-    <div style="display:flex;gap:8px;margin-bottom:12px">
+    <!-- Sub-frequency + group-size steppers. Hidden in CUSTOM mode (v2.7.55) — the
+         dual-clock scrub bar at the top of the pitch card replaces these. -->
+    <div id="planTopSteppers" style="display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1;display:flex;align-items:center;justify-content:space-between;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.3);border-radius:8px;padding:8px 12px">
         <span style="font-size:12px;color:#00d4aa;font-weight:700;letter-spacing:.3px">Sub every</span>
         <span style="display:inline-flex;align-items:center;gap:8px">
@@ -2520,7 +2521,8 @@ const afl3d={
     this.view=name; if(!this.camera) return;
     // Presets define only a DIRECTION (elevation/azimuth); the distance is auto-fitted so the oval fills the box.
     // top is nudged off the exact zenith (z) so the length axis stays vertical and OrbitControls keeps a defined azimuth (no gimbal flip).
-    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.04]}[name]||[0,0.64,1];
+    // v2.7.55: 'top-h' is top-down with the offset along X instead of Z — that flips screen-up to point along world X, making the field's long axis (Z) appear horizontal. Used by the Plan page in CUSTOM mode for a tactical board view.
+    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.04], 'top-h':[0.04,1,0]}[name]||[0,0.64,1];
     const dir=new THREE.Vector3(P[0],P[1],P[2]).normalize();
     // Hard-reset the orbit frame: restore up, place camera along dir, re-aim. Without the up reset a prior near-vertical view leaves the azimuth rotated.
     this.camera.up.set(0,1,0);
@@ -2900,12 +2902,21 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.54-beta';
+const APP_VERSION='v2.7.55-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.55-beta':{
+    title:'Plan page CUSTOM: tactical-board layout — landscape pitch, dual clock up top, formation chips along the bottom',
+    items:[
+      'CUSTOM mode now reads like a tactical board: a game-style dual clock pinned to the top (current scrub time + SUB EVERY countdown, with the half-length and sub-freq steppers right under each clock), pitch in a landscape top-down view, formation chips spread along the bottom of the field card.',
+      'Pitch container grows from 420px to 560px in CUSTOM so the field has real real-estate; field is rendered with a new top-down landscape camera (added \'top-h\' afl3d view — long axis runs horizontally across the screen).',
+      'The standalone Sub-every / Players-per-sub row up the page is hidden in CUSTOM — those controls are now inline under the clocks. AUTO mode keeps the compact preview layout (portrait pitch, chips top-right, single-clock scrub bar).',
+      'Returning to the game screen restores the default \'behind\' camera so you don\'t land on the live game looking straight down.'
+    ]
+  },
   'v2.7.54-beta':{
     title:'Play Now goes straight to the game + pitch no longer freezes after Done',
     items:[
@@ -7072,6 +7083,10 @@ function openSubOrder(){
   renderSubOrderSuggestion();
   renderPlanRosterOverview();
   renderSubOrder();
+  // v2.7.55: CUSTOM mode hides the standalone top steppers (their controls move
+  // inline into the dual-clock scrub bar) — same toggle handles AUTO showing them.
+  const ts=document.getElementById('planTopSteppers');
+  if(ts) ts.style.display=(_subOrderStrat==='planned')?'none':'flex';
   // v2.7.39: Lineup editor button visibility follows the active toggle.
   const lb=document.getElementById('subOrderLineupBtn');
   if(lb) lb.style.display=(_subOrderStrat==='planned')?'inline-flex':'none';
@@ -7138,6 +7153,10 @@ function closeSubOrder(){
   // v2.7.53: tear down the live-clock ticker so it doesn't keep firing after the page closes.
   if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
   _planTimeline=null; _planScrubIdx=0;
+  // v2.7.55: clear the landscape ('top-h') view that CUSTOM mode sets so the
+  // game screen lands on the default 'behind' perspective. setView runs as part
+  // of the next afl3d.update via init's setView(this.view) — we set view first.
+  if(typeof afl3d!=='undefined' && afl3d.view==='top-h') afl3d.view='behind';
   // v2.7.54: hop the 3D pitch back. afl3d was last pointed at #planFieldWrap by
   // renderPlanField3D — without this call the game screen's #pitchMid keeps its
   // orphaned canvas (frozen frame, stale pills at last-projected coords). renderG
@@ -7270,13 +7289,24 @@ function renderPlanRosterOverview(){
   // same getPlanScrubState() so the pitch, bench strip and counters never drift.
   const st=getPlanScrubState()||{on:G.on||[], bench:G.bench||[]};
   const onIdx=st.on, benchIdx=st.bench;
+  // v2.7.55: CUSTOM mode promotes the pitch to a tactical-board layout —
+  //   • game-style dual clock pinned to the top (current scrub time + sub-every),
+  //   • field goes landscape (top-down 'top-h' view) + much taller,
+  //   • formation chips slide to a full-width row BELOW the pitch (was top-right of card),
+  //   • score is never shown (we're planning, not playing).
+  // AUTO mode keeps the compact preview layout (scrub bar + portrait pitch + chips top-right).
+  const isCustom=(_subOrderStrat==='planned');
+  const pitchH=isCustom?'560px':'420px';
+  const topChipsHtml=isCustom?'':`<div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"></div>`;
+  const bottomChipsHtml=isCustom?`<div style="padding:10px 12px;border-top:1px solid #1e2a45;background:rgba(91,192,222,.03)"><div id="planFormationChips" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div></div>`:'';
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px">
       <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
-      <div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"></div>
+      ${topChipsHtml}
     </div>
     <div id="planScrubBar" style="padding:8px 12px;border-top:1px solid #16213e;background:rgba(91,192,222,.04)"></div>
-    <div id="planFieldWrap" style="height:420px;position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
+    <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
+    ${bottomChipsHtml}
     <div style="padding:8px 12px">
       <div id="planBenchCount" style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
       <div id="planBenchChips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
@@ -7349,6 +7379,11 @@ function renderPlanField3D(){
       add(el, pos.x, pos.y, avail[pIdx]);
     });
   }, _3dSport);
+  // v2.7.55: CUSTOM mode = top-down LANDSCAPE view (long axis horizontal across
+  // the screen) — tactical-board feel. AUTO mode keeps the default 'behind'
+  // perspective the preview was shipped with.
+  const wantView=(_subOrderStrat==='planned')?'top-h':'behind';
+  if(afl3d.view!==wantView) afl3d.setView(wantView);
 }
 function setPlanFormation(name){
   if(!FORMATIONS[curFmt]||!FORMATIONS[curFmt][name]) return;
@@ -7401,6 +7436,9 @@ function subOrderPick(strat){
   renderSubOrder();
   const btn=document.getElementById('subOrderApplyBtn');
   if(btn) btn.style.display='none';     // never needed now
+  // v2.7.55: CUSTOM mode hides the top steppers (controls move into the clock bar).
+  const ts=document.getElementById('planTopSteppers');
+  if(ts) ts.style.display=(strat==='planned')?'none':'flex';
   // Lineup editor only shows in CUSTOM — AUTO has nothing to edit (app picks).
   const lb=document.getElementById('subOrderLineupBtn');
   if(lb) lb.style.display=(strat==='planned')?'inline-flex':'none';
@@ -7553,9 +7591,10 @@ function planScrubJump(idx){
   renderSubOrder();
 }
 
-// Render the scrub control bar: period chip · DSEG clock · LIVE button + step arrows.
-// Sits inside the On-field card above the 3D pitch so it visually anchors what
-// the pitch is showing.
+// Render the scrub control bar. AUTO mode shows a compact single-clock + step buttons
+// (preview-focused). CUSTOM mode mirrors the game-screen header — dual DSEG clocks
+// (game time + sub-every) with their inline steppers — so the Plan page reads like
+// a tactical board the coach BUILDS in, not just a preview.
 function renderPlanScrubBar(){
   const host=document.getElementById('planScrubBar');
   if(!host||!G) return;
@@ -7570,6 +7609,43 @@ function renderPlanScrubBar(){
     ?(st.total?`Live · ${st.total} sub${st.total===1?'':'s'} ahead — tap ▶ to step through`:'Live — no upcoming subs')
     :`After sub ${st.idx} of ${st.total}`;
   const tColor=st.isLive?'#00d4aa':'#5bc0de';
+  const isCustom=(_subOrderStrat==='planned');
+  if(isCustom){
+    // v2.7.55: dual-clock layout — mirrors the game-screen header. Left = current
+    // scrub time + period label + half-length stepper; Right = sub-every value
+    // (green) + sub-freq stepper. Scrub controls (◀ LIVE ▶) tuck below.
+    const hmV=cfg.hm||0, sfV=cfg.sf||0;
+    host.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:${tColor};font-variant-numeric:tabular-nums">${fmtTime(st.time)}</div>
+        <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
+          <button onclick="planClkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
+          <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${hmV}</span>
+          <span style="opacity:.7">min half</span>
+          <button onclick="planClkAdj('hm',1)" aria-label="Longer half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-family:'DSEG',monospace;font-size:min(9vw,44px);font-weight:bold;letter-spacing:2px;line-height:1;color:#00d4aa;font-variant-numeric:tabular-nums">${fmtTime((cfg.sf||0)*60)}</div>
+        <div style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">SUB EVERY</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
+          <button onclick="planClkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
+          <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${sfV}</span>
+          <span style="opacity:.7">min subs</span>
+          <button onclick="planClkAdj('sf',1)" aria-label="Sub less often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px">
+      <button onclick="planScrubStep(-1)" aria-label="Step back" ${canPrev?'':'disabled'} style="width:32px;height:32px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:15px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
+      <button onclick="planScrubLive()" aria-label="Jump to live" ${st.isLive?'disabled':''} style="padding:5px 10px;background:${st.isLive?'rgba(0,212,170,.06)':'rgba(0,212,170,.16)'};border:1px solid ${st.isLive?'#0a3a31':'#00d4aa'};color:${st.isLive?'#3a4760':'#00d4aa'};border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:${st.isLive?'default':'pointer'};font-family:inherit">LIVE</button>
+      <button onclick="planScrubStep(1)" aria-label="Step forward" ${canNext?'':'disabled'} style="width:32px;height:32px;border-radius:50%;background:${canNext?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:15px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
+      <span style="font-size:11px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-left:6px">${stepLabel}</span>
+    </div>`;
+    return;
+  }
+  // AUTO mode — compact single-clock + step buttons (existing preview layout).
   host.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <button onclick="planScrubStep(-1)" aria-label="Step back" title="Previous sub" ${canPrev?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
     <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0">
@@ -7580,6 +7656,23 @@ function renderPlanScrubBar(){
     <button onclick="planScrubStep(1)" aria-label="Step forward" title="Next sub" ${canNext?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canNext?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
   </div>
   <div style="text-align:center;font-size:11px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-top:6px">${stepLabel}</div>`;
+}
+
+// v2.7.55 — Plan-page version of clkAdj for the dual-clock steppers. Reuses
+// ssAdj (clamps + log) and then refreshes both the scrub bar (clock readouts)
+// and the timeline / pitch (frequency change reshuffles upcoming events).
+function planClkAdj(k,d){
+  if(typeof ssAdj==='function') ssAdj(k,d);
+  // Mirror the Plan page top steppers if they exist (auto mode they're visible).
+  renderSubOrderControls();
+  renderSubOrderSuggestion();
+  buildPlanTimeline();
+  renderPlanScrubBar();
+  renderPlanField3D();
+  renderPlanBenchChips();
+  renderSubOrder();
+  if(typeof saveActiveGame==='function') saveActiveGame();
+  if(typeof renderG==='function') renderG();
 }
 
 // Paint just the bench chips. Re-rendering only this strip on a scrub step
