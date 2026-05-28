@@ -529,24 +529,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== HOME: TEAM SELECT ===== -->
 <div id="home" class="scr active">
-  <div class="hdr">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div id="hdrBrand" style="display:flex;align-items:center;gap:10px;min-width:0">
-        <svg class="logo-anim" viewBox="0 0 40 60" width="22" height="33" aria-hidden="true" style="flex-shrink:0;display:block">
-          <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
-          <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
-          <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
-          <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
-          <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
-          <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
-        </svg>
-        <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:9px;color:#1a1a2e;font-weight:800;letter-spacing:1px;vertical-align:middle;background:#f0a500;padding:2px 5px;border-radius:3px;margin-left:2px">BETA</span><span id="verTag" style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;vertical-align:middle;margin-left:6px"></span></h1>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Donate to keep this app going" title="Donate to keep this app going" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="heart" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
-        <button onclick="openSettings()" aria-label="Settings" title="Settings" style="background:none;color:#888;border:1px solid #444;border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><i data-lucide="settings" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
-        <div id="authChip"></div>
-      </div>
+  <div class="hdr" style="position:relative">
+    <!-- v2.7.73: brand centred in the top bar; right-side buttons (donate, settings, auth) absolute-positioned top-right so they don't push the brand off-centre. -->
+    <div id="hdrBrand" style="display:flex;align-items:center;justify-content:center;gap:10px;min-width:0">
+      <svg class="logo-anim" viewBox="0 0 40 60" width="22" height="33" aria-hidden="true" style="flex-shrink:0;display:block">
+        <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
+        <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
+        <circle cx="20" cy="28" r="3.4" fill="#e94560"/>
+        <circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm"/><circle cx="32" cy="28" r="3.4" fill="#00d4aa" class="sub-dot sub-rm sub-dot-2"/>
+        <circle cx="14" cy="48" r="3.4" fill="#e94560"/>
+        <circle cx="26" cy="48" r="3.4" fill="#e94560"/>
+      </svg>
+      <h1 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SUB TIMER <span style="font-size:9px;color:#1a1a2e;font-weight:800;letter-spacing:1px;vertical-align:middle;background:#f0a500;padding:2px 5px;border-radius:3px;margin-left:2px">BETA</span><span id="verTag" style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;vertical-align:middle;margin-left:6px"></span></h1>
+    </div>
+    <div style="position:absolute;top:50%;right:16px;transform:translateY(-50%);display:flex;align-items:center;gap:8px">
+      <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" aria-label="Donate to keep this app going" title="Donate to keep this app going" style="background:rgba(255,196,40,.08);color:#ffc428;border:1px solid rgba(255,196,40,.4);border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;text-decoration:none"><i data-lucide="heart" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></a>
+      <button onclick="openSettings()" aria-label="Settings" title="Settings" style="background:none;color:#888;border:1px solid #444;border-radius:14px;width:34px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0"><i data-lucide="settings" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i></button>
+      <div id="authChip"></div>
     </div>
     <div id="hdrTagline" class="sub">Smart Subs for grassroots coaches</div>
   </div>
@@ -2980,12 +2979,18 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.72-beta';
+const APP_VERSION='v2.7.73-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.73-beta':{
+    title:'SUB TIMER brand centred in the home header',
+    items:[
+      'SUB TIMER logo + BETA chip + version tag now sit centred in the top bar of the home screen. Donate / Settings / Auth buttons moved to absolute top-right so they no longer push the brand off-centre.'
+    ]
+  },
   'v2.7.72-beta':{
     title:'Fix: game control buttons (Sub / Undo / Start) hidden by the new bottom tab bar',
     items:[
