@@ -2900,12 +2900,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.53-beta';
+const APP_VERSION='v2.7.54-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.54-beta':{
+    title:'Play Now goes straight to the game + pitch no longer freezes after Done',
+    items:[
+      'Play Now → game screen directly. The auto-open of the Plan page after kickoff is gone — coaches who want to peek at the plan can still tap the Plan icon from the game screen, but the default path is now one tap shorter.',
+      'Fixed: the 3D pitch on the game screen would go black with one stray player label leaking out of the corner after opening + closing the Plan page. The afl3d renderer had hopped to the Plan page\'s #planFieldWrap and wasn\'t hopping back when Done was tapped. closeSubOrder now re-runs renderG so the pitch snaps back into #pitchMid.'
+    ]
+  },
   'v2.7.53-beta':{
     title:'Plan page: game timer up top + step through subs like a live view',
     items:[
@@ -4519,7 +4526,10 @@ function startFromSquad(){
     const p=currentTeam.plans.find(x=>x.id===_pickedPlanId);
     if(p && typeof applyPlanProfile==='function') applyPlanProfile(p);
   }
-  if(typeof openSubOrder==='function') setTimeout(openSubOrder, 0);
+  // v2.7.54: Play Now → game screen directly. Previously this auto-opened the
+  // Plan page so the coach saw the projected sub list before kickoff, but the
+  // extra hop is friction (and orphaned the 3D pitch in #planFieldWrap when
+  // they tapped Done — see closeSubOrder fix below).
 }
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
@@ -7128,6 +7138,11 @@ function closeSubOrder(){
   // v2.7.53: tear down the live-clock ticker so it doesn't keep firing after the page closes.
   if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
   _planTimeline=null; _planScrubIdx=0;
+  // v2.7.54: hop the 3D pitch back. afl3d was last pointed at #planFieldWrap by
+  // renderPlanField3D — without this call the game screen's #pitchMid keeps its
+  // orphaned canvas (frozen frame, stale pills at last-projected coords). renderG
+  // calls afl3d.update(pitchMid, ...) which the needInit check detects + re-inits.
+  if(typeof renderG==='function') renderG();
 }
 // v2.7.39: jump from the Plan overlay into the full Lineup editor (#s3).
 // Used in CUSTOM mode where the coach explicitly wants to set positions /
