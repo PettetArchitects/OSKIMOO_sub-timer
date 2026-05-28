@@ -194,7 +194,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 #gameDash .gd-btn.gd-go,#s4 #gameDash .gd-btn.gd-pause,
   #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:11px!important}
   #s4 #gameDash .gd-btn svg{width:18px!important;height:18px!important}
+  /* v2.7.79 — landscape phone: shrink the Plan-page dual clock so it stops eating the whole viewport (backlog #3). Same trick as game-screen clock above. */
+  #subOrderOv .tmr-c{font-size:28px!important;letter-spacing:1px!important}
+  #subOrderOv #planClockAnchor{padding:6px 0 2px!important}
+  /* Home: hide the tagline that overlaps the right-side donate/settings/auth buttons in landscape (backlog #4). Brand bar at top already says "SUB TIMER". */
+  #home #hdrTagline{display:none!important}
 }
+/* v2.7.79 — formation chip row: use grid with auto-fit columns so the 7 chips distribute evenly instead of leaving an orphan on a new row (backlog #5). */
+#planFormationChips{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(54px,1fr))!important;gap:4px!important}
+#planFormationChips button{padding:4px 6px!important}
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
 
@@ -3023,12 +3031,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.78-beta';
+const APP_VERSION='v2.7.79-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.79-beta':{
+    title:'Visual bugs: landscape phone Plan clock + home tagline overlap + formation chip orphan',
+    items:[
+      'Backlog #3 — iPhone landscape Plan: dual DSEG clock dropped from min(13vw, 56px) to 28px on landscape phone so the field + sub timeline fit on screen instead of being pushed below the fold.',
+      'Backlog #4 — Home page in landscape: hidden the "Smart Subs for grassroots coaches" tagline (was overlapping the donate / settings / auth buttons on the right). The top brand bar already shows SUB TIMER so the tagline is redundant in tight viewports.',
+      'Backlog #5 — Formation chip row now renders as a CSS grid with auto-fit minmax(54px, 1fr) columns. 7 chips distribute evenly across the row instead of leaving "1-2-3" orphaned on its own line.'
+    ]
+  },
   'v2.7.78-beta':{
     title:'Fix: basketball 3D pills floating + zoom not working',
     items:[
