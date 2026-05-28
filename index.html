@@ -687,8 +687,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div class="chip-grid" id="playerGrid"></div>
     <div id="countInfo" style="text-align:center;margin-top:12px;font-size:13px;color:#888">0 selected</div>
     <!-- Equal-game-time helper: suggests a sub interval from who's actually here today. -->
-    <div id="equalTimeHint" style="margin-top:10px"></div>
-    <button class="btn btn-g" id="nextBtn1" disabled onclick="startFromSquad()" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">Start Game <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    <div id="equalTimeHint" style="display:none"></div>
+    <button class="btn btn-g" id="nextBtn1" disabled onclick="startFromSquad()" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
     <button class="btn btn-o btn-s" onclick="goSettings()" style="margin-top:8px;width:100%;font-size:13px" title="Change formation, strategy, timings just for this game">Game options for today →</button>
     <div style="text-align:center;margin-top:8px;font-size:11px;color:#666">Defaults come from the team — edit them under <strong style="color:#888">Edit Team → Game Settings</strong>.</div>
   </div>
@@ -2898,12 +2898,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.41-beta';
+const APP_VERSION='v2.7.42-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.42-beta':{
+    title:'Squad page: drop the sub-timing hint + rename Start Game → Next',
+    items:[
+      '"Start Game" was misleading on the squad page — the clock doesn\'t actually start until you tap START on the dashboard. Renamed to "Next" with a → icon so the role of the button (advance to the Plan / game screen) reads accurately.',
+      'Equal-time hint hidden on the squad page — sub-timing decisions belong on the Plan page, not mixed in with the "who\'s here" call.'
+    ]
+  },
   'v2.7.41-beta':{
     title:'Squad page: drop the duplicate ✓ ✓ on each player',
     items:['.chip.sel::after already adds a " ✓" via CSS — my v2.7.36 cleanup added a second inline one and they were rendering as "Name ✓ ✓". Just the name now; the cross-out + dimming on un-selected chips still telegraphs "out".']
