@@ -2900,12 +2900,21 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.52-beta';
+const APP_VERSION='v2.7.53-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.53-beta':{
+    title:'Plan page: game timer up top + step through subs like a live view',
+    items:[
+      'New scrub bar above the 3D pitch — shows the period chip and a DSEG game clock (same look as the live game timer). On LIVE it ticks with the real game clock; tap ▶ to step forward through each upcoming sub and the clock jumps to that sub time.',
+      'The 3D pitch + bench strip now reflect the scrubbed state. Step ▶ to see WHO will be on the field at the next sub, the one after, and so on through the whole game. Tap LIVE to snap back to right-now.',
+      'Tap any future sub row in the timeline to jump the scrub bar straight to that point — currently-previewed row gets a cyan ring so you know where you are.',
+      'Pitch taps (swap / injury) are disabled while scrubbed off LIVE — a preview shouldn\'t mutate the live state. Tap LIVE first to return control.'
+    ]
+  },
   'v2.7.52-beta':{
     title:'Plan profiles: Save moved up top + rename action',
     items:[
@@ -7033,10 +7042,21 @@ function ssSetStrat(strat){
 // the current half. Strategy tabs let coaches preview the sub order under
 // any strategy without committing; "Use this strategy" applies the preview.
 let _subOrderStrat=null;   // currently previewed strategy (null = use live G.subStrategy)
+// v2.7.53 — Plan-page scrub timeline. Holds the full simulated sub sequence so
+// the coach can step backward/forward through upcoming subs and watch the
+// pitch + bench update at each point ("live preview" of the plan). _planScrubIdx
+// 0 == LIVE (right now); 1..N == state AFTER the Nth upcoming sub event.
+let _planTimeline=null;
+let _planScrubIdx=0;
+let _planLiveTickId=null;  // interval that keeps the LIVE clock ticking on the Plan page
 function openSubOrder(){
   if(!G) return;
   // v2.7.34: tabs work in toggle space (auto/planned), not internal strategies.
   _subOrderStrat=stratToToggle(G.subStrategy||'fair');
+  // v2.7.53: build the scrub timeline first so the roster overview, scrub bar,
+  // and sub list all read from the same simulation. Reset to LIVE every open.
+  _planScrubIdx=0;
+  buildPlanTimeline();
   renderSubOrderTabs();
   renderSubOrderControls();
   renderSubOrderSuggestion();
@@ -7049,6 +7069,15 @@ function openSubOrder(){
   renderPlanProfiles();
   // v2.7.43: full-page screen instead of an overlay so the dense sub list has real estate.
   showScr('subOrderOv');
+  // v2.7.53: while LIVE and the game clock is running, repaint the scrub bar
+  // clock every second so the top-of-page timer stays in sync with the game.
+  if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
+  _planLiveTickId=setInterval(()=>{
+    if(_planScrubIdx===0 && G && G.running){
+      const clk=document.getElementById('planScrubClock');
+      if(clk){ const s=G.secs||0; clk.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+    }
+  },1000);
   _li();
 }
 // v2.7.27: keep the inline sub-frequency + group-size readouts on the Plan
@@ -7064,6 +7093,10 @@ function soAdj(k,d){
   ssAdj(k,d);
   renderSubOrderControls();
   renderSubOrderSuggestion();
+  // v2.7.53: changing freq / group-size reshuffles the projected events — rebuild
+  // the timeline + repaint the scrub bar/pitch/bench so the preview stays in sync.
+  buildPlanTimeline();
+  renderPlanRosterOverview();
   renderSubOrder();
   if(typeof saveActiveGame==='function') saveActiveGame();
   if(typeof renderG==='function') renderG();
@@ -7090,7 +7123,12 @@ function renderSubOrderSuggestion(){
   el.innerHTML=`<div style="font-size:10px;letter-spacing:1px;color:#00d4aa;font-weight:800;margin-bottom:4px;text-transform:uppercase">Equal-time ideal</div>
     Roster of ${N} · ${onF} on field · ${B} on bench · ${P} swap${P>1?'s':''} per sub.<br>${verdict}`;
 }
-function closeSubOrder(){ showScr('s4'); _subOrderStrat=null; _planBuildMode=false; }
+function closeSubOrder(){
+  showScr('s4'); _subOrderStrat=null; _planBuildMode=false;
+  // v2.7.53: tear down the live-clock ticker so it doesn't keep firing after the page closes.
+  if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
+  _planTimeline=null; _planScrubIdx=0;
+}
 // v2.7.39: jump from the Plan overlay into the full Lineup editor (#s3).
 // Used in CUSTOM mode where the coach explicitly wants to set positions /
 // formation / GK / matched pairs. The s3 "Back" + "Start Game" both already
@@ -7212,21 +7250,27 @@ function renderPlanProfiles(){
 function renderPlanRosterOverview(){
   const host=document.getElementById('planRosterOverview');
   if(!host||!G||!avail) return;
-  const onIdx=G.on||[], benchIdx=G.bench||[];
-  const benchChipsHtml=benchIdx.map(i=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.35);border-radius:14px;font-size:12px;font-weight:700;color:#f0a500;white-space:nowrap">${fn(avail[i])}</span>`).join('');
+  // v2.7.53: roster shows the SCRUBBED state (LIVE by default, or any future
+  // step the coach picked via the scrub bar). All counts + chips flow from the
+  // same getPlanScrubState() so the pitch, bench strip and counters never drift.
+  const st=getPlanScrubState()||{on:G.on||[], bench:G.bench||[]};
+  const onIdx=st.on, benchIdx=st.bench;
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px">
-      <div style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
+      <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
       <div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"></div>
     </div>
+    <div id="planScrubBar" style="padding:8px 12px;border-top:1px solid #16213e;background:rgba(91,192,222,.04)"></div>
     <div id="planFieldWrap" style="height:420px;position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
     <div style="padding:8px 12px">
-      <div style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">${benchChipsHtml||'<span style="font-size:12px;color:#666">no subs available</span>'}</div>
+      <div id="planBenchCount" style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
+      <div id="planBenchChips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
   </div>`;
   renderPlanFormationChips();
+  renderPlanScrubBar();
   renderPlanField3D();
+  renderPlanBenchChips();
 }
 function renderPlanFormationChips(){
   const host=document.getElementById('planFormationChips');
@@ -7249,29 +7293,44 @@ function renderPlanField3D(){
     return;
   }
   const positions=getPositions();
+  // v2.7.53: use the scrubbed on-field roster, not G.on directly. When the coach
+  // is on LIVE the two match; when stepping forward through upcoming subs the
+  // pitch shows who'll be on at that future point. Tap-to-swap is disabled when
+  // scrubbed off LIVE (the gesture would mutate live state from a preview).
+  const st=getPlanScrubState()||{on:G.on, isLive:true};
+  const onList=st.on, isLive=st.isLive;
+  // Update the "On field · N" header counter to stay in sync when scrubbing.
+  const cnt=document.getElementById('planOnCount');
+  if(cnt) cnt.textContent='On field · '+onList.length;
   // afl3d.update will tear down + re-init when the container changes. When the
   // coach taps Done and renderG runs on s4, afl3d.update(pitchMid, ...) moves
   // the renderer back automatically.
   afl3d.update(wrap, (add)=>{
-    G.on.forEach((pIdx,i)=>{
+    onList.forEach((pIdx,i)=>{
       const pos=positions[i];
       if(!pos) return;
       const isGk=(G.gk===pIdx);
       const mins=Math.floor((G.pt[avail[pIdx]]||0)/60);
       const el=document.createElement('div');
       el.className='fc '+(isGk?'fc-gk':'fc-on');
-      el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
+      el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:'+(isLive?'pointer':'default');
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const isNb=_3dSport==='netball';
       const shirtInner=isNb?shirtSvg('',pos.label):shirtSvg(jersey);
       const posChip=isNb?'':`<span class="fc-pos">${pos.label}</span>`;
       el.innerHTML=`<div class="fc-shirt">${shirtInner}</div><div class="fc-label">${posChip}<span class="fc-name">${fn(avail[pIdx])}</span><span class="fc-mins">${mins}′</span></div>`;
-      // Tap on the pitch in Plan view = same swap gesture as the game screen.
-      el.onpointerdown=(e)=>fieldPillPointerDown(e,pIdx,isGk);
-      el.onpointermove=fieldPillPointerMove;
-      el.onpointerup=(e)=>fieldPillPointerUp(e,pIdx,isGk);
-      el.onpointercancel=()=>{ if(typeof _lpTimer!=='undefined' && _lpTimer){clearTimeout(_lpTimer);} window._lpFired=false; };
-      el.onclick=(e)=>fieldPillClick(e,pIdx,isGk);
+      if(isLive){
+        // Tap on the pitch in Plan view = same swap gesture as the game screen — LIVE only.
+        el.onpointerdown=(e)=>fieldPillPointerDown(e,pIdx,isGk);
+        el.onpointermove=fieldPillPointerMove;
+        el.onpointerup=(e)=>fieldPillPointerUp(e,pIdx,isGk);
+        el.onpointercancel=()=>{ if(typeof _lpTimer!=='undefined' && _lpTimer){clearTimeout(_lpTimer);} window._lpFired=false; };
+        el.onclick=(e)=>fieldPillClick(e,pIdx,isGk);
+      } else {
+        // Scrubbed off LIVE — pitch is a preview, swallow taps so the coach
+        // can't accidentally mutate a future state into reality.
+        el.style.opacity='0.92';
+      }
       add(el, pos.x, pos.y, avail[pIdx]);
     });
   }, _3dSport);
@@ -7319,7 +7378,11 @@ function subOrderPick(strat){
   // tap. ssSetStrat handles the toggle→internal mapping + log entry.
   _subOrderStrat=strat;
   if(typeof ssSetStrat==='function') ssSetStrat(strat);
+  // v2.7.53: strategy change → different projected events → rebuild scrub timeline + repaint.
+  _planScrubIdx=0;
+  buildPlanTimeline();
   renderSubOrderTabs();
+  renderPlanRosterOverview();
   renderSubOrder();
   const btn=document.getElementById('subOrderApplyBtn');
   if(btn) btn.style.display='none';     // never needed now
@@ -7340,48 +7403,46 @@ function subOrderApply(){
   if(typeof saveActiveGame==='function') saveActiveGame();
   if(typeof renderG==='function') renderG();
 }
-function renderSubOrder(){
-  const info=document.getElementById('subOrderInfo');
-  const list=document.getElementById('subOrderList');
-  if(!info||!list||!G) return;
-  // v2.7.34: _subOrderStrat is now a toggle key (auto|planned); resolve to internal
-  // strategy ('fair'|'paired'|'planned') for the projection simulator.
+// v2.7.53 — Build the full sub timeline (past + projected) and stash the
+// post-event on/bench rosters at every step so the scrub bar can preview any
+// point in the plan. Past periods are read from G.log (no replay state).
+// Current + future periods are simulated with the same logic renderSubOrder
+// used to inline — extracted here so the scrub bar, pitch, bench and timeline
+// list all read from one source of truth.
+function buildPlanTimeline(){
+  if(!G){ _planTimeline=null; return null; }
   const toggle=_subOrderStrat||stratToToggle(G.subStrategy||'fair');
   const strat=(toggle==='auto')?toggleToStrat('auto'):'planned';
-  const stratLabels={fair:'Equal time',paired:'Matched',planned:'Custom'};
-  const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const sport=getSport(currentTeam);
   const periodCount=sport.periodCount||2;
-  const periodLbl=p=>sport.periodShort?sport.periodShort(p):('Period '+p);
+  const hmSec=(cfg.hm||0)*60, sfSec=(cfg.sf||1)*60;
 
-  // v2.7.21: walk EVERY period, not just the current one. Coaches plan the whole game.
-  // For periods at or after currentHalf we run the same off/on simulation trigSub uses,
-  // carrying simOn/simBench/simPt across period boundaries (players persist; only the
-  // half clock + G.sd reset). For periods BEFORE currentHalf we read history out of G.log.
   let simOn=[...G.on], simBench=[...G.bench];
   const simPt=Object.assign({},G.pt);
-  const sectionsByPeriod=new Map();
-  // Past periods — read confirmed subs from the log.
+  const events=[];
+
+  // Past — read confirmed swaps from the log. State-after isn't recorded for
+  // history (would need to invert from current), so scrub only walks future.
   for(let p=1;p<G.half;p++){
-    const past=(G.log||[]).filter(e=>e.type==='sub'&&e.half===p).map(e=>({
-      time:e.time,off:[e.off],on:[e.on],done:true,past:true
-    }));
-    sectionsByPeriod.set(p,past);
+    (G.log||[]).filter(e=>e.type==='sub'&&e.half===p).forEach(e=>{
+      events.push({period:p,time:e.time,off:[e.off],on:[e.on],done:true,past:true});
+    });
   }
-  // Periods at or after the current half — simulate.
-  const hmSec=(cfg.hm||0)*60, sfSec=(cfg.sf||1)*60;
+
   for(let p=G.half;p<=periodCount;p++){
-    const batches=[];
     let simSecs=(p===G.half)?G.secs:0;
-    // Sub times within this period (in-period seconds).
-    const times=[];
-    for(let t=sfSec;t<hmSec;t+=sfSec) times.push(t);
+    const times=[]; for(let t=sfSec;t<hmSec;t+=sfSec) times.push(t);
     if(strat==='planned' && G.subPlan && G.subPlan.events && G.subPlan.events.length){
-      const events=G.subPlan.events.filter(e=>e.type==='sub' && e.half===p).sort((a,b)=>a.timeInHalf-b.timeInHalf);
-      events.forEach(ev=>{
+      const planEvts=G.subPlan.events.filter(e=>e.type==='sub' && e.half===p).sort((a,b)=>a.timeInHalf-b.timeInHalf);
+      planEvts.forEach(ev=>{
         const t=ev.timeInHalf*60;
         const done=(p===G.half)&&G.sd.includes(t);
-        batches.push({time:t,off:ev.off||[],on:ev.on||[],done});
+        const off=ev.off||[], on=ev.on||[];
+        const cc=Math.min(off.length,on.length);
+        const slicedOff=off.slice(0,cc), slicedOn=on.slice(0,cc);
+        for(let i=0;i<cc;i++){ const idx=simOn.indexOf(slicedOff[i]); if(idx>=0) simOn[idx]=slicedOn[i]; }
+        simBench=simBench.filter(pl=>!slicedOn.includes(pl)).concat(slicedOff);
+        events.push({period:p,time:t,off:slicedOff,on:slicedOn,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
       });
     } else {
       times.forEach(t=>{
@@ -7389,7 +7450,10 @@ function renderSubOrder(){
         simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt; });
         simSecs=t;
         const done=(p===G.half)&&G.sd.includes(t);
-        if(simBench.length===0){ batches.push({time:t,off:[],on:[],done,note:'no bench'}); return; }
+        if(simBench.length===0){
+          events.push({period:p,time:t,off:[],on:[],done,note:'no bench',stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
+          return;
+        }
         const c=Math.min(cfg.sc||1,simBench.length);
         const eligibleOn=G.gk!==null?simOn.filter(pl=>pl!==G.gk):simOn.slice();
         let off=[],on=[];
@@ -7409,18 +7473,147 @@ function renderSubOrder(){
         }
         const cc=Math.min(off.length,on.length);
         off=off.slice(0,cc); on=on.slice(0,cc);
-        batches.push({time:t,off,on,done});
         for(let i=0;i<cc;i++){ const idx=simOn.indexOf(off[i]); if(idx>=0) simOn[idx]=on[i]; }
         simBench=simBench.filter(pl=>!on.includes(pl)).concat(off);
+        events.push({period:p,time:t,off,on,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
       });
     }
-    sectionsByPeriod.set(p,batches);
-    // Accrue end-of-period minutes for whoever's still on, then clock resets.
     const remaining=Math.max(0,hmSec-simSecs);
     simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+remaining; });
   }
 
-  const totalUpcoming=Array.from(sectionsByPeriod.values()).flat().filter(b=>!b.past&&!b.done).length;
+  _planTimeline={events, initialOn:[...G.on], initialBench:[...G.bench], periodCount};
+  // Clamp scrub idx in case freq / group-size shortened the future list.
+  const futureCount=events.filter(e=>!e.past).length;
+  if(_planScrubIdx>futureCount) _planScrubIdx=futureCount;
+  if(_planScrubIdx<0) _planScrubIdx=0;
+  return _planTimeline;
+}
+
+// Resolve the currently-scrubbed roster state. _planScrubIdx 0 == LIVE (use
+// G's own on/bench/secs/half); 1..N == state recorded after the Nth upcoming
+// (non-past) event in the timeline.
+function getPlanScrubState(){
+  if(!G) return null;
+  const tl=_planTimeline;
+  const futureEvents=tl?tl.events.filter(e=>!e.past):[];
+  if(_planScrubIdx<=0||!futureEvents.length){
+    return {on:[...G.on], bench:[...G.bench], period:G.half, time:G.secs, idx:0, total:futureEvents.length, isLive:true};
+  }
+  const N=Math.min(_planScrubIdx,futureEvents.length);
+  const ev=futureEvents[N-1];
+  return {
+    on:ev.stateAfterOn?[...ev.stateAfterOn]:[...G.on],
+    bench:ev.stateAfterBench?[...ev.stateAfterBench]:[...G.bench],
+    period:ev.period, time:ev.time,
+    off:ev.off||[], swapOn:ev.on||[],
+    idx:N, total:futureEvents.length, isLive:false
+  };
+}
+
+function planScrubStep(d){
+  if(!_planTimeline) buildPlanTimeline();
+  const tl=_planTimeline; if(!tl) return;
+  const futureCount=tl.events.filter(e=>!e.past).length;
+  _planScrubIdx=Math.max(0,Math.min(futureCount,(_planScrubIdx||0)+d));
+  renderPlanScrubBar();
+  renderPlanField3D();
+  renderPlanBenchChips();
+  renderSubOrder();
+}
+function planScrubLive(){
+  _planScrubIdx=0;
+  renderPlanScrubBar();
+  renderPlanField3D();
+  renderPlanBenchChips();
+  renderSubOrder();
+}
+function planScrubJump(idx){
+  if(!_planTimeline) buildPlanTimeline();
+  const futureCount=_planTimeline?_planTimeline.events.filter(e=>!e.past).length:0;
+  _planScrubIdx=Math.max(0,Math.min(futureCount,idx|0));
+  renderPlanScrubBar();
+  renderPlanField3D();
+  renderPlanBenchChips();
+  renderSubOrder();
+}
+
+// Render the scrub control bar: period chip · DSEG clock · LIVE button + step arrows.
+// Sits inside the On-field card above the 3D pitch so it visually anchors what
+// the pitch is showing.
+function renderPlanScrubBar(){
+  const host=document.getElementById('planScrubBar');
+  if(!host||!G) return;
+  const sport=getSport(currentTeam);
+  const periodLbl=p=>sport.periodShort?sport.periodShort(p):('Period '+p);
+  const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  const st=getPlanScrubState();
+  if(!st){ host.innerHTML=''; return; }
+  const canPrev=st.idx>0;
+  const canNext=st.idx<st.total;
+  const stepLabel=st.isLive
+    ?(st.total?`Live · ${st.total} sub${st.total===1?'':'s'} ahead — tap ▶ to step through`:'Live — no upcoming subs')
+    :`After sub ${st.idx} of ${st.total}`;
+  const tColor=st.isLive?'#00d4aa':'#5bc0de';
+  host.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <button onclick="planScrubStep(-1)" aria-label="Step back" title="Previous sub" ${canPrev?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canPrev?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canPrev?'#5bc0de':'#16213e'};color:${canPrev?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canPrev?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">◀</button>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0">
+      <span style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:${tColor};text-transform:uppercase;background:${st.isLive?'rgba(0,212,170,.08)':'rgba(91,192,222,.08)'};padding:3px 8px;border:1px solid ${st.isLive?'rgba(0,212,170,.3)':'rgba(91,192,222,.3)'};border-radius:4px;white-space:nowrap">${periodLbl(st.period)}</span>
+      <span id="planScrubClock" style="font-family:'DSEG',monospace;font-size:22px;color:${tColor};font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums">${fmtTime(st.time)}</span>
+    </div>
+    <button onclick="planScrubLive()" aria-label="Jump to live" title="Jump back to live" ${st.isLive?'disabled':''} style="padding:6px 11px;background:${st.isLive?'rgba(0,212,170,.06)':'rgba(0,212,170,.16)'};border:1px solid ${st.isLive?'#0a3a31':'#00d4aa'};color:${st.isLive?'#3a4760':'#00d4aa'};border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:${st.isLive?'default':'pointer'};font-family:inherit">LIVE</button>
+    <button onclick="planScrubStep(1)" aria-label="Step forward" title="Next sub" ${canNext?'':'disabled'} style="width:34px;height:34px;border-radius:50%;background:${canNext?'rgba(91,192,222,.16)':'rgba(91,192,222,.04)'};border:1px solid ${canNext?'#5bc0de':'#16213e'};color:${canNext?'#5bc0de':'#3a4760'};font-size:16px;font-weight:800;cursor:${canNext?'pointer':'not-allowed'};display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit">▶</button>
+  </div>
+  <div style="text-align:center;font-size:11px;color:${st.isLive?'#00d4aa':'#9fb3c8'};font-weight:700;letter-spacing:.4px;margin-top:6px">${stepLabel}</div>`;
+}
+
+// Paint just the bench chips. Re-rendering only this strip on a scrub step
+// avoids a full overview repaint (which would tear down + re-init afl3d).
+function renderPlanBenchChips(){
+  const host=document.getElementById('planBenchChips');
+  const cnt=document.getElementById('planBenchCount');
+  if(!host||!G||!avail) return;
+  const st=getPlanScrubState();
+  const benchIdx=st?st.bench:(G.bench||[]);
+  if(cnt) cnt.textContent='On bench · '+benchIdx.length;
+  host.innerHTML=benchIdx.map(i=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.35);border-radius:14px;font-size:12px;font-weight:700;color:#f0a500;white-space:nowrap">${fn(avail[i])}</span>`).join('') || '<span style="font-size:12px;color:#666">no subs available</span>';
+}
+
+function renderSubOrder(){
+  const info=document.getElementById('subOrderInfo');
+  const list=document.getElementById('subOrderList');
+  if(!info||!list||!G) return;
+  // v2.7.53: rebuild the timeline if it isn't already built (defence-in-depth —
+  // callers in openSubOrder / soAdj / subOrderPick rebuild explicitly, but
+  // direct renderSubOrder calls — eg. ssSetStrat → renderSubOrder — drop here too).
+  if(!_planTimeline) buildPlanTimeline();
+  const toggle=_subOrderStrat||stratToToggle(G.subStrategy||'fair');
+  const strat=(toggle==='auto')?toggleToStrat('auto'):'planned';
+  const stratLabels={fair:'Equal time',paired:'Matched',planned:'Custom'};
+  const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  const sport=getSport(currentTeam);
+  const periodCount=sport.periodCount||2;
+  const periodLbl=p=>sport.periodShort?sport.periodShort(p):('Period '+p);
+
+  // Group the timeline events by period for the per-period column layout below.
+  const sectionsByPeriod=new Map();
+  for(let p=1;p<=periodCount;p++) sectionsByPeriod.set(p,[]);
+  const futureEvents=(_planTimeline&&_planTimeline.events)||[];
+  // Track which future-event index each row corresponds to so taps on a row
+  // can jump the scrub bar to that point.
+  let futIdx=0;
+  futureEvents.forEach(ev=>{
+    const slot=sectionsByPeriod.get(ev.period);
+    if(!slot) return;
+    if(ev.past){
+      slot.push({time:ev.time,off:ev.off,on:ev.on,done:true,past:true});
+    } else {
+      futIdx++;
+      slot.push({time:ev.time,off:ev.off,on:ev.on,done:ev.done,note:ev.note,scrubIdx:futIdx});
+    }
+  });
+
+  const totalUpcoming=futureEvents.filter(b=>!b.past&&!b.done).length;
   if(strat==='planned' && (!G.subPlan||!G.subPlan.events||!G.subPlan.events.length)){
     info.textContent=`${stratLabels[strat]||strat} — no plan set. Pick a different strategy or build a plan from the setup screen.`;
   } else {
@@ -7466,7 +7659,14 @@ function renderSubOrder(){
           </div>`;
         }
       }
-      html.push(`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;margin-bottom:6px;overflow:hidden;opacity:${doneOpacity}">
+      // v2.7.53: future blocks are tappable — tap one and the scrub bar jumps
+      // to that exact preview point. Currently-scrubbed block gets a cyan ring.
+      const tappable=(typeof b.scrubIdx==='number');
+      const isScrubbed=tappable && b.scrubIdx===_planScrubIdx;
+      const ringCol=isScrubbed?'#5bc0de':'#1e2a45';
+      const ringShadow=isScrubbed?'box-shadow:0 0 0 2px rgba(91,192,222,.25);':'';
+      const tapAttr=tappable?` onclick="planScrubJump(${b.scrubIdx})"`:'';
+      html.push(`<div${tapAttr} style="background:#0a1628;border:1px solid ${ringCol};${ringShadow}border-radius:8px;margin-bottom:6px;overflow:hidden;opacity:${doneOpacity};${tappable?'cursor:pointer;':''}">
         <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(91,192,222,.06);border-bottom:1px solid #16213e">
           <div style="font-family:'DSEG',monospace;font-size:15px;color:#5bc0de;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums">${fmtTime(b.time)}</div>
           <div style="flex:1"></div>
