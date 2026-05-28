@@ -952,25 +952,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="planClockAnchor" style="padding:12px 0 4px;flex-shrink:0;text-align:center"></div>
   <!-- Scrollable body — full-page real estate for the strategy controls + the sub timeline. -->
   <div style="flex:1;min-height:0;overflow-y:auto;padding:14px 16px;max-width:1200px;width:100%;margin:0 auto;box-sizing:border-box">
-    <div id="subOrderTabs" style="display:flex;gap:4px;margin:0 0 12px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px"></div>
-    <!-- v2.7.52: Saved-plan profiles compressed to a single inline chip row (no banner). "+ Save" lives in the top toolbar; each chip has rename + delete actions. -->
-    <div id="planProfilesRow" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-      <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase;margin-right:2px">Profiles</span>
-      <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
-    </div>
-    <!-- v2.7.61: stripped this row to JUST Players-per-sub (the only Plan-page config
-         that's not already in the dual clock anchor — half-length and sub-frequency
-         both live there now). Always visible regardless of AUTO/CUSTOM so the coach
-         always sees how many bodies a sub event will swap. -->
-    <div id="planTopSteppers" style="display:flex;justify-content:center;margin-bottom:12px">
-      <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.3);border-radius:8px;padding:6px 14px">
-        <span style="font-size:12px;color:#5bc0de;font-weight:700;letter-spacing:.3px">Players per sub</span>
-        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" style="width:24px;height:24px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:15px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-        <span id="soScV" style="font-size:15px;font-weight:800;color:#5bc0de;min-width:18px;text-align:center;font-variant-numeric:tabular-nums">2</span>
-        <button onclick="soAdj('sc',1)" aria-label="More per sub" style="width:24px;height:24px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:15px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+    <!-- v2.7.65: all sub controls grouped in a single horizontal row right under
+         the clock anchor — AUTO/CUSTOM tabs, Players-per-sub stepper, and saved-
+         profile chips share one band so the page reads as "clock + controls" up
+         top, then the field, then the timeline. -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
+      <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px;flex-shrink:0"></div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.3);border-radius:8px;padding:6px 12px;flex-shrink:0" id="planTopSteppers">
+        <span style="font-size:11px;color:#5bc0de;font-weight:700;letter-spacing:.3px">Players/sub</span>
+        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
+        <span id="soScV" style="font-size:14px;font-weight:800;color:#5bc0de;min-width:16px;text-align:center;font-variant-numeric:tabular-nums">2</span>
+        <button onclick="soAdj('sc',1)" aria-label="More per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+      </div>
+      <div id="planProfilesRow" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1">
+        <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase">Profiles</span>
+        <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
-    <!-- v2.7.51: equal-time tile removed — was a big block for info the steppers already telegraph (current sub-every is right there, ideal is implicit if the coach knows the roster). -->
+    <!-- v2.7.51: equal-time tile lives but is hidden by default; renderSubOrderSuggestion drives visibility. -->
     <div id="subOrderSuggestion" style="display:none"></div>
     <!-- v2.7.48: starting-XI + bench overview so the coach sees the whole roster status at a glance — not just the swap rows. -->
     <div id="planRosterOverview" style="margin-bottom:14px"></div>
@@ -2926,12 +2925,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.64-beta';
+const APP_VERSION='v2.7.65-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.65-beta':{
+    title:'Plan page: sub controls grouped up top; formations run along the top of the field',
+    items:[
+      'AUTO/CUSTOM tabs, Players-per-sub stepper, and saved-profile chips now share ONE horizontal row right under the clock anchor — single sub-controls band instead of three stacked sections.',
+      'Formation chips moved to a horizontal row along the top of the field card (next to "On field · N"). Tap any chip to apply that formation — selected one is highlighted. The bottom-right toggle button + popup are gone (the chips ARE the control).'
+    ]
+  },
   'v2.7.64-beta':{
     title:'Header + clock positions consistent between game and Plan pages',
     items:[
@@ -7406,26 +7412,21 @@ function renderPlanRosterOverview(){
   // mirror s4. No more chip strip below the field, no more forced top-down view.
   const isCustom=(_subOrderStrat==='planned');
   const pitchH=isCustom?'560px':'420px';
+  // v2.7.65: formation chips run along the TOP of the field card (next to the
+  // "On field · N" label) — no more bottom-right popup button. Inline taps select
+  // a formation directly; current selection highlighted.
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px">
-      <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase">On field · ${onIdx.length}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:8px;flex-wrap:wrap">
+      <div id="planOnCount" style="font-size:10px;letter-spacing:1.2px;color:#00d4aa;font-weight:800;text-transform:uppercase;flex-shrink:0">On field · ${onIdx.length}</div>
+      <div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex:1"></div>
     </div>
-    <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45">
-      <!-- v2.7.57: in-pitch formation toggle mirroring game-screen #fmtToggle. -->
-      <button id="planFmtToggle" onclick="togglePlanFormation()" aria-label="Change formation" title="Change formation" style="position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);display:inline-flex;align-items:center;gap:6px;z-index:30;font-family:inherit"><i data-lucide="layout-grid" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i><span>${curFormation||'Formation'}</span></button>
-      <div id="planFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:140px;max-height:60dvh;overflow-y:auto;z-index:31">
-        <div id="planFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
-      </div>
-    </div>
+    <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-top:1px solid #1e2a45;border-bottom:1px solid #1e2a45"></div>
     <div style="padding:8px 12px">
       <div id="planBenchCount" style="font-size:10px;letter-spacing:1.2px;color:#f0a500;font-weight:800;margin-bottom:6px;text-transform:uppercase">On bench · ${benchIdx.length}</div>
       <div id="planBenchChips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
   </div>`;
-  // Hide formation toggle when the sport offers only one formation.
-  const formCount=Object.keys(FORMATIONS[curFmt]||{}).length;
-  const ft=document.getElementById('planFmtToggle');
-  if(ft) ft.style.display=(formCount>1)?'inline-flex':'none';
+  renderPlanFormationChips();
   renderPlanScrubBar();
   renderPlanField3D();
   renderPlanBenchChips();
