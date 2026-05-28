@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.7.75
+> Last updated: v2.7.83
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -133,10 +133,13 @@ The app has two **persistent anchors** that frame every screen.
 ### 3.1 Top brand bar (`#appBrandBar`)
 
 - `position:fixed; top:0; left:0; right:0`
-- Height 34px + `env(safe-area-inset-top)`
+- Height 44px + `env(safe-area-inset-top)`
 - Background `var(--surface-card-2)` with 1px bottom border `var(--border-section)`
-- Content: animated dots logo (14×21px) · SUB TIMER name (12px, weight 900, 2px letter-spacing) · BETA badge · version tag
-- Centred horizontally; never has actions
+- **Three slots** (v2.7.82): hamburger LEFT · logo CENTRE · version RIGHT
+  - Left: `#globalMenuBtn` 36×36 hamburger; routes to active screen's drawer
+  - Centre: animated dots logo (14×21px) · SUB TIMER name (12px, weight 900, 2px letter-spacing) · BETA badge
+  - Right: version tag (10px, muted, tabular)
+- The brand bar **IS** the persistent app header on every screen. Per-screen `.hdr` (if present) sits below as screen-specific content.
 
 ### 3.2 Bottom tab bar (`#bottomTabBar`)
 
@@ -147,15 +150,29 @@ The app has two **persistent anchors** that frame every screen.
 - Each tab is 62px min-width, 22×22px icon stacked above 10px label
 - Active tab: tint `var(--accent-cyan-tint)`, text `var(--accent-cyan)`, 14px pill background
 - Inactive: text `var(--text-muted)`, no background
+- **Visibility rule (v2.7.80)**: hidden on landing-style screens (home, sport picker, grade picker). The tabs only show once a team context is active.
 
 ### 3.3 Page header (`.hdr`)
 
-- 84px min-height, vertically centred content
+- 84px min-height, vertically centred content (`min-height:84px;display:flex;flex-direction:column;justify-content:center`)
 - Padding `10px 16px`
 - Background: linear gradient `#16213e → #0f3460`
 - 3px bottom border `var(--accent-red)`
-- `position:sticky; top: calc(34px + env(safe-area-inset-top))` — sticks below the brand bar
+- `position:sticky; top: calc(44px + env(safe-area-inset-top))` — sticks below the brand bar
 - Contents per-page (title / score / actions)
+- **Home exception (v2.7.82)**: `#home > .hdr { display:none }` — the brand bar IS the only header on home; the body content starts immediately below it.
+
+### 3.4 Side drawer (v2.7.83)
+
+- `position:fixed; top:0; left:0`, width 280px (max 80vw), height 100dvh
+- `transform: translateX(-100%)` by default; `.drawer-open` → `translateX(0)`
+- 0.25s ease transition
+- Background `var(--surface-card-2)` with 1px right border `var(--border-emphasized)` + 4px×24px ambient shadow
+- Padding top accounts for brand bar (`calc(48px + env(safe-area-inset-top) + 12px)`)
+- Companion **scrim** `#appDrawerScrim` — `position:fixed inset:0`, 55% black, z-index 9400. Tap to close.
+- Triggered by `#globalMenuBtn` via `toggleGlobalMenu()` which routes to the active screen's drawer (home / game / plan)
+- **Drawer body**: vertical list of menu items, each `13px 14px` padding, 15px label, leading icon
+- **Drawer footer** (`.drawer-donate`): pinned to the bottom via `margin-top:auto`, divided from the body by a 1px top border. Always contains Send feedback + Donate (amber pill).
 
 ### 3.4 Page content padding
 
@@ -349,6 +366,44 @@ Items are full-width buttons with leading icon (15-17×15-17px), 13-15px label, 
 
 Same shape as dropdown menu but positioned absolutely above an in-card trigger button.
 
+#### 4.5.5 Drawer item (v2.7.83)
+
+Standard item inside the side drawer:
+
+```css
+width: 100%;
+padding: 13px 14px;
+background: transparent;
+border: none;
+color: var(--text-secondary);
+font-size: 15px;
+font-weight: 700;
+text-align: left;
+border-radius: 8px;
+display: flex; align-items: center; gap: 12px;
+```
+
+Leading icon 15×15. Destructive items (End game) use `color: var(--accent-red-light)`. The Donate footer item uses an amber pill background (`rgba(255,196,40,.08)` bg, `rgba(255,196,40,.4)` border, `var(--accent-yellow)` text).
+
+#### 4.5.6 Daily coach quote (v2.7.80→.82)
+
+Centred italic line on the home page body, replaces the static tagline once a coach has at least one team. Picks one of 10 quotes per local date (stable across refreshes within the same day).
+
+```html
+<div id="hdrQuoteTop" style="font-size:13px;color:#eee;font-weight:600;font-style:italic;line-height:1.35">
+  "Every kid deserves a turn."
+  <span style="opacity:.6;font-style:normal;font-weight:600">— grassroots mantra</span>
+</div>
+```
+
+### 4.8 Team card (home list)
+
+Each team in the home list renders as a chevron-tappable card with the sport-icon + name + meta line. Variants:
+
+- **Default** — neutral border, chevron action on the right
+- **Needs setup** — amber Set up pill on the right (renders when `players.length < FORMATS[fmt].onField`)
+- **Has active game (v2.7.77)** — `border: 1.5px solid var(--accent-green)` + `box-shadow: 0 0 0 4px rgba(0,212,170,.08)` accent ring. Adds an inline "Game in progress · Q1 · 0:00 · 0-0" meta line under the player count. Right-side action becomes a pair of buttons: outlined **Discard** + green **Resume**. Tapping anywhere else on the card also resumes.
+
 ### 4.6 Tab strip (AUTO/CUSTOM)
 
 ```css
@@ -421,7 +476,22 @@ The bottom tab bar handles the 3 core context switches:
 - **Plan** → `subOrderOv` if active game exists, else home
 - **Team** → `editTeam` for current team
 
-Hamburger menu (top-left of each context view) exposes secondary actions: Edit team, Settings, End game, plus Save plan / Edit Lineup on the Plan page when CUSTOM is active.
+The brand-bar hamburger (top-left) opens the active screen's drawer:
+- **Home drawer** — Settings · Sign in / account · (footer) Send feedback · Donate
+- **Game drawer** — Edit team · Settings · End game · (footer) Send feedback · Donate
+- **Plan drawer** — Edit team · Settings · End game · (CUSTOM only: Save plan · Edit Lineup) · (footer) Send feedback · Donate
+
+### 5.6 Auto-naming new teams (v2.7.76)
+
+If the coach saves a team without entering a name, generate it from `sport + format`:
+- "Soccer 11v11" · "Netball GO" · "AFL U13" · "Basketball 5v5" · "Water Polo Junior 25m"
+- Collision → append `#2`, `#3`, etc.
+
+Legacy `"Untitled Team"` rows migrate on next load.
+
+### 5.7 Day-stable rotating content
+
+The daily quote uses `Math.floor(new Date().setHours(0,0,0,0)/86400000) % N` so the same quote shows all day across refreshes, advances at midnight. Same pattern is reusable for any "once-per-day" surfaced content.
 
 ---
 
@@ -444,12 +514,13 @@ Hamburger menu (top-left of each context view) exposes secondary actions: Edit t
 
 ## 7. Sports-aware content
 
-| Sport | Format codes | Periods | GK | Ball icon |
-|---|---|---|---|---|
-| Soccer | 4v4 / 5v5 / 6v6 / 7v7 / 9v9 / 11v11 | Halves | Yes (5v5+) | Pentagon-seamed circle |
-| Netball | Set / GO / Junior / Open | Quarters | No | Cross-seamed circle |
-| AFL | Auskick / U9-U16 / Senior | Quarters | No | Tilted ellipse |
-| Basketball | 5v5 | Quarters | No | X-seamed circle |
+| Sport | Format codes | Periods | GK | Ball icon | Field-viz status |
+|---|---|---|---|---|---|
+| Soccer | 4v4 / 5v5 / 6v6 / 7v7 / 9v9 / 11v11 | Halves | Yes (5v5+) | Pentagon-seamed circle | Full 3D |
+| Netball | Set / GO / Junior / Open | Quarters | No | Cross-seamed circle | Full 3D |
+| AFL | Auskick / U9-U16 / Senior | Quarters | No | Tilted ellipse | Full 3D |
+| Basketball | 5v5 | Quarters | No | X-seamed circle | Full 3D (court accuracy backlog item) |
+| Water polo | Junior 25m / Senior 30m | Quarters | Yes | (TBD) | Preview — pool builder pending |
 
 Position labels (rendered on shirt or chip):
 - Soccer: GK / LB / RB / CB / LM / CM / RM / LW / RW / ST / FW
@@ -487,20 +558,27 @@ When introducing or modifying components: update this document **first**, then i
 
 ---
 
-## 11. Outstanding cleanup (v2.7.75 → v2.7.76 backlog)
+## 11. Cleanup backlog
 
-Items found in the visual audit that need rationalising:
+### Done since v2.7.75
+- ✅ Untitled Team auto-naming (v2.7.76)
+- ✅ Resume-banner → inline team-card affordance (v2.7.77)
+- ✅ Basketball 3D pills floating + zoom broken (v2.7.78)
+- ✅ Landscape phone Plan clock + home tagline overlap + formation chip orphan (v2.7.79)
+- ✅ Tab bar hidden on landing pages + daily quote (v2.7.80)
+- ✅ Home cleanup — single hamburger / no floating buttons (v2.7.81 → .82)
+- ✅ Hamburger → side drawer with Donate + Feedback footer (v2.7.83)
+- ✅ Single app header (hamburger LEFT · logo CENTRE · version RIGHT) (v2.7.82)
 
-1. **Untitled Team naming** — auto-generate from sport + format + creation date so coaches with multiple drafts can tell them apart.
-2. **Resume-banner collision** — green "Game in progress" banner overlaps the home tagline strip. Either move it above the tagline or merge into the team list.
-3. **iPhone landscape Plan page** — dual clock dominates; cap font size at `min(8vw, 36px)` when `(orientation:landscape) and (max-height:500px)`.
-4. **Home tagline overlap (iPhone landscape)** — "Smart Subs for grassroots coaches" sits behind the right-side auth/donate/settings buttons. Stack below the brand row.
-5. **Formation chip wrap (iPhone portrait Plan)** — 7-formation row wraps to 2 lines with a single chip orphaned. Use a CSS grid with auto-fit columns of fixed width.
-6. **Team-action menu hierarchy** — "Edit team" is greyed-out and reads as inactive; either match the other coloured items or move into the hamburger menu.
-7. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the bar's dark background on real-device displays.
-8. **Equal-time ideal tile** — large text block; reduce to one tight line or roll into the clock anchor as a tag.
-9. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
-10. **Light theme** — not supported. Document as out of scope or plan.
+### Still open
+1. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
+2. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
+3. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
+4. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
+5. **Light theme** — not supported. Document as out of scope or plan.
+6. **Basketball court accuracy** — match real NBA / FIBA markings: straight-side 3-point line, inner centre circle (4ft), backboard 4ft inside the baseline, half-dashed free-throw circle.
+7. **Water polo field viz** — `_buildWaterPolo()` builder + pool tinted ground + goal posts at each end.
+8. **3D pitch race on first paint** — occasionally renders black if the screen flips visible after afl3d.init runs at 0×0 size. Investigate ResizeObserver fallback timing.
 
 ---
 
