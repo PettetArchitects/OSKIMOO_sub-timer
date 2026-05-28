@@ -2543,7 +2543,13 @@ const afl3d={
     // this all the way to ~87° from zenith and the AFL view ended up flat-as-grass, which made the
     // oval markings disappear into nothing and pills overlap badly. 14° still lets coaches do a low
     // behind-the-goals swoop without losing readability.
-    controls.minDistance=80; controls.maxDistance=600; controls.minPolarAngle=0.04; controls.maxPolarAngle=1.30;
+    // v2.7.78: scale zoom min/max to the field size. Hardcoded (80, 600) suited AFL/soccer
+    // but basketball is a 15×28 m court — minDistance=80 was further than the whole field,
+    // so pinch-zoom did nothing. Use the field's max half-extent to anchor sensible bounds.
+    const _maxHalf=Math.max(this.FIELD_W,this.FIELD_L)/2;
+    controls.minDistance=Math.max(8,_maxHalf*0.45);
+    controls.maxDistance=Math.max(controls.minDistance*4, _maxHalf*8);
+    controls.minPolarAngle=0.04; controls.maxPolarAngle=1.30;
     // Once the user drags/pinches, they've left the preset — drop the highlight (setView fires 'change', not 'start', so presets stay lit).
     controls.addEventListener('start', ()=>{ if(this.viewsEl) [...this.viewsEl.querySelectorAll('button[data-v]')].forEach(b=>b.classList.remove('active')); });
     // Capture drawing-buffer dimensions before any line materials are created — Line2 shaders need this resolution to compute pixel widths.
@@ -2636,7 +2642,7 @@ const afl3d={
   snapshotPositions(){
     const map=new Map();
     if(!this.pills) return map;
-    this.pills.forEach(p=>{ if(p.name) map.set(p.name, this.worldOf(p.x,p.y,8).clone()); });
+    this.pills.forEach(p=>{ if(p.name) map.set(p.name, this.worldOf(p.x,p.y,Math.min(8, Math.min(this.FIELD_W,this.FIELD_L)*0.08)).clone()); });
     this.benchPills.forEach(p=>{ if(p.name) map.set(p.name, new THREE.Vector3(p.wx,p.wy,p.wz)); });
     return map;
   },
@@ -2698,7 +2704,7 @@ const afl3d={
       return {sx, sy, s, dist};
     };
     this.pills.forEach(p=>{
-      const target=this.worldOf(p.x,p.y,8);
+      const target=this.worldOf(p.x,p.y,Math.min(8, Math.min(this.FIELD_W,this.FIELD_L)*0.08));
       const world=this._pillWorld(p, target);
       const r=projOne(world, 0.78, 2.4, 1);
       items.push(r?{p, r, kind:'field'}:null);
@@ -3017,12 +3023,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.77-beta';
+const APP_VERSION='v2.7.78-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.78-beta':{
+    title:'Fix: basketball 3D pills floating + zoom not working',
+    items:[
+      'Player pills were sitting 8 metres above the court — a hardcoded height that made sense on a 105 m soccer pitch but on a 15×28 m basketball court read as "floating in the rafters". Pill height now scales to 8% of the field\'s shorter side (1.2 m on basketball, 5.4 m on soccer, 8 m on the larger AFL / netball surfaces).',
+      'OrbitControls zoom min/max were also hardcoded (80, 600 units) which sat further from the camera than the entire basketball court — so pinch / scroll-wheel zoom appeared dead. Both bounds now scale with the field\'s max half-extent so zoom feels natural on every sport.'
+    ]
+  },
   'v2.7.77-beta':{
     title:'Resume "Game in progress" inlined into the matching team card',
     items:[
