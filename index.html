@@ -919,18 +919,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#16213e;border-bottom:1px solid rgba(91,192,222,.25);flex-shrink:0">
     <button onclick="closeSubOrder()" aria-label="Done" title="Done — back to dashboard" style="display:flex;align-items:center;gap:6px;padding:9px 14px;background:rgba(233,69,96,.12);border:1px solid #e94560;color:#ff7088;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="arrow-left" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Done</button>
     <h2 style="flex:1;text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-size:18px"><i data-lucide="list" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Sub Plan</h2>
+    <button id="subOrderSaveBtn" onclick="saveCurrentPlanPrompt()" aria-label="Save as plan profile" title="Save current as a plan profile" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="bookmark-plus" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Save</button>
     <button id="subOrderLineupBtn" onclick="openLineupFromPlan()" aria-label="Edit Lineup" title="Edit Lineup &amp; Formation" style="display:none;align-items:center;gap:6px;padding:9px 14px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit"><i data-lucide="grid-3x3" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Lineup</button>
   </div>
   <!-- Scrollable body — full-page real estate for the strategy controls + the sub timeline. -->
   <div style="flex:1;min-height:0;overflow-y:auto;padding:14px 16px;max-width:1200px;width:100%;margin:0 auto;box-sizing:border-box">
     <div id="subOrderTabs" style="display:flex;gap:4px;margin:0 0 12px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px"></div>
-    <!-- v2.7.46: saved Custom-plan profiles — pick a previous build instead of starting from scratch, or save the current state as a named profile. CUSTOM-only. -->
-    <div id="planProfilesRow" style="display:none;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.35);border-radius:8px;padding:10px 12px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px">
-        <span style="font-size:11px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase">Saved plan profiles</span>
-        <button onclick="saveCurrentPlanPrompt()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(167,139,250,.18);border:1px solid #a78bfa;border-radius:6px;color:#a78bfa;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit"><i data-lucide="bookmark-plus" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>Save current</button>
-      </div>
-      <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px"></div>
+    <!-- v2.7.52: Saved-plan profiles compressed to a single inline chip row (no banner). "+ Save" lives in the top toolbar; each chip has rename + delete actions. -->
+    <div id="planProfilesRow" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase;margin-right:2px">Profiles</span>
+      <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
     </div>
     <!-- Sub-frequency + group-size steppers. -->
     <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -2902,12 +2900,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.51-beta';
+const APP_VERSION='v2.7.52-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.52-beta':{
+    title:'Plan profiles: Save moved up top + rename action',
+    items:[
+      'Save-as-profile button promoted to the top toolbar next to Lineup, so creating a new plan is a one-tap shortcut from anywhere on the Plan page (no more scrolling down through the sub list to find it).',
+      'Profile chip row compressed to a single slim row of pill chips, hidden entirely when no profiles exist (the Save button up top handles the empty state).',
+      'Each profile chip now has a pencil (rename) and × (delete) icon inline — tap pencil to rename, tap × to remove, tap the name itself to load it.'
+    ]
+  },
   'v2.7.51-beta':{
     title:'Plan page: full-width pitch + Equal-time tile gone',
     items:[
@@ -7159,22 +7165,37 @@ function deletePlanProfile(id){
   if(cloudUser&&typeof pushCloudTeam==='function') pushCloudTeam(currentTeam);
   renderPlanProfiles();
 }
+// v2.7.52: rename a saved profile.
+function renamePlanProfile(id){
+  if(!currentTeam||!currentTeam.plans) return;
+  const p=currentTeam.plans.find(x=>x.id===id);
+  if(!p) return;
+  const next=prompt('Rename profile', p.name);
+  if(next===null) return;
+  const trimmed=String(next).trim();
+  if(!trimmed) return;
+  p.name=trimmed;
+  saveTeams(teams);
+  if(cloudUser&&typeof pushCloudTeam==='function') pushCloudTeam(currentTeam);
+  renderPlanProfiles();
+}
 function renderPlanProfiles(){
   const row=document.getElementById('planProfilesRow');
   const list=document.getElementById('planProfilesList');
+  const saveBtn=document.getElementById('subOrderSaveBtn');
   if(!row||!list) return;
-  // Only show in CUSTOM mode (planned).
+  // CUSTOM-only — both the chip row and the toolbar Save button.
   const toggle=_subOrderStrat||stratToToggle(G&&G.subStrategy||'fair');
-  if(toggle!=='planned' || !currentTeam){ row.style.display='none'; return; }
-  row.style.display='block';
+  const showCustom=(toggle==='planned' && !!currentTeam);
+  if(saveBtn) saveBtn.style.display=showCustom?'inline-flex':'none';
+  if(!showCustom){ row.style.display='none'; return; }
   const plans=(currentTeam.plans||[]);
-  if(!plans.length){
-    list.innerHTML='<span style="font-size:12px;color:#888;font-weight:500">No saved profiles yet — build a plan and tap <strong style="color:#a78bfa">Save current</strong> to store it for next time.</span>';
-    return;
-  }
-  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:14px;font-size:12px;font-weight:700;color:#a78bfa;font-family:inherit">
+  row.style.display=plans.length?'flex':'none';   // hide the whole row when empty — Save button alone handles the empty state
+  if(!plans.length) return;
+  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 10px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:14px;font-size:12px;font-weight:700;color:#a78bfa;font-family:inherit">
     <button onclick="applyPlanProfile((currentTeam.plans||[]).find(x=>x.id===${p.id}))" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0">${p.name}</button>
-    <button onclick="deletePlanProfile(${p.id})" aria-label="Delete profile" title="Delete" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 2px;font-size:13px;line-height:1">×</button>
+    <button onclick="renamePlanProfile(${p.id})" aria-label="Rename" title="Rename" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 3px;display:inline-flex;align-items:center"><i data-lucide="pencil" width="12" height="12" style="width:12px;height:12px;display:inline-flex"></i></button>
+    <button onclick="deletePlanProfile(${p.id})" aria-label="Delete profile" title="Delete" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 4px 0 2px;font-size:13px;line-height:1">×</button>
   </span>`).join('');
   _li();
 }
