@@ -46,6 +46,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ic-xl{width:1.8em;height:1.8em}
 
 .hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:0;z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+/* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
+#bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
+.btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
+.btb-btn{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px;background:transparent;border:none;border-radius:14px;color:#7d8a9c;font-size:10px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;min-width:62px}
+.btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
+.btb-btn svg{width:22px;height:22px}
+/* All scrollable screens leave room above the tab bar. */
+.scr{padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
+#s4.active,#subOrderOv.active{padding-bottom:0}  /* These two use overflow:hidden flex layout; their bottom controls handle the spacing internally — see #gameDash / #planControlBand bottom margins. */
+#s4 #gameDash,#subOrderOv #planControlBand{padding-bottom:calc(8px + 58px + env(safe-area-inset-bottom))}
 .hdr h1{font-size:18px;font-weight:700;letter-spacing:1px}
 .hdr .sub{font-size:11px;color:#aaa;margin-top:1px}
 .hdr-row{display:flex;align-items:center;justify-content:space-between}
@@ -643,8 +653,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <h1 id="editTitle">New Team</h1>
       <button class="back-btn" onclick="deleteTeam()" id="delTeamBtn" style="color:#e94560">Delete</button>
     </div>
-    <!-- v2.7.67: 3-way switcher top-right of the Team header. -->
-    <div id="vsSlot_team" style="position:absolute;top:6px;right:8px;z-index:20"></div>
   </div>
   <div class="sec">
     <h2>Team Name</h2>
@@ -813,8 +821,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </div>
     <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
     <div id="scoreArea" style="display:flex;align-items:center;gap:6px"></div>
-    <!-- v2.7.67: 3-way switcher (Game / Plan / Team) lives in the top-right corner of the header. Replaces the old Plan-icon button — the Plan tab in the switcher does the same job. -->
-    <div id="vsSlot_s4" style="position:absolute;top:6px;right:8px;z-index:20"></div>
     <!-- v2.7.28: Plan button returned to top-right of the score header (was on the bottom dashboard in v2.7.22-27).
          v2.7.67: hidden — the 3-way switcher's Plan tab handles this now. Kept in DOM in case any code still references the id. -->
     <button id="subOrderBtn" onclick="openSubOrder()" aria-label="Sub Plan" title="Sub Plan" style="display:none;position:absolute;top:6px;right:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;align-items:center;justify-content:center;padding:0">
@@ -906,7 +912,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <!-- v2.7.29 layout: Formation toggle moved onto the pitch overlay (bottom-right). Dashboard is three buttons. -->
   <!-- Running:  [SUB]   [Undo] [PAUSE] -->
   <!-- Paused:   [RESET] [Undo] [START] -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px;flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
@@ -943,8 +949,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <button onclick="closePlanMenu();abandonGame&&abandonGame()" style="width:100%;padding:13px 14px;background:none;border:none;color:#ff7088;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
     <h2 style="text-align:center;color:#00d4aa;display:flex;align-items:center;justify-content:center;gap:10px;margin:0;font-size:22px;letter-spacing:.5px"><i data-lucide="list" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i>Sub Plan</h2>
-    <!-- v2.7.67: 3-way switcher lives top-right. Replaces the standalone Back-to-game button — the Game tab in the switcher does the same job. -->
-    <div id="vsSlot_plan" style="position:absolute;top:6px;right:8px;z-index:20"></div>
   </div>
   <!-- v2.7.56/64: Clock anchor — same padding (12px 0 4px) + no background, no
        border as the game-screen #clkArea so the clock sits in exactly the same
@@ -1155,6 +1159,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 
 </div><!-- /app -->
+
+<!-- v2.7.71: app-wide bottom tab bar — true anchor visible on every screen. -->
+<div id="bottomTabBar"></div>
+
 
 <script>
 // ===== STORAGE =====
@@ -2888,32 +2896,32 @@ function showScr(id){
   _li(); // materialise any <i data-lucide> placeholders revealed by the screen swap
 }
 
-// v2.7.66 — 3-way view switcher (Game / Plan / Team) modelled on the Apple Timer
-// app tab bar. Painted into #vsSlot_s4 / #vsSlot_plan / #vsSlot_team — one pill
-// per page, kept in sync. Tap any tab to jump to that view (with the appropriate
-// setup call — openSubOrder for Plan, editTeamFromGame for Team, renderG for Game).
+// v2.7.66/71 — App-wide bottom tab bar (Game / Plan / Team). Single body-level
+// #bottomTabBar element, position:fixed at the bottom of the viewport — a true
+// nav anchor visible on every screen (like iOS native apps).
 function renderViewSwitcher(){
-  const active=(()=>{
-    const ov=document.getElementById('subOrderOv');
-    if(ov&&ov.classList.contains('active')) return 'plan';
+  const host=document.getElementById('bottomTabBar');
+  if(!host) return;
+  // Active view = whichever .scr currently has .active. Default to Game-context.
+  let active='game';
+  const ov=document.getElementById('subOrderOv');
+  if(ov&&ov.classList.contains('active')) active='plan';
+  else {
     const et=document.getElementById('editTeam');
-    if(et&&et.classList.contains('active')) return 'team';
-    return 'game';
-  })();
+    if(et&&et.classList.contains('active')) active='team';
+    else {
+      const home=document.getElementById('home');
+      if(home&&home.classList.contains('active')) active='home';
+    }
+  }
   const tabs=[
-    {k:'game', label:'Game', svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>'},
-    {k:'plan', label:'Plan', svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="16" x2="14" y2="16"/></svg>'},
-    {k:'team', label:'Team', svg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'}
+    {k:'game', label:'Game', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>'},
+    {k:'plan', label:'Plan', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="16" x2="14" y2="16"/></svg>'},
+    {k:'team', label:'Team', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'}
   ];
-  const html=`<div style="display:inline-flex;background:rgba(10,22,40,.85);border:1px solid #1e2a45;border-radius:24px;padding:3px;gap:2px;backdrop-filter:blur(8px)">
-    ${tabs.map(t=>{
-      const sel=(t.k===active);
-      return `<button onclick="switchToView('${t.k}')" aria-label="${t.label} view" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:${sel?'rgba(91,192,222,.18)':'transparent'};border:none;border-radius:20px;color:${sel?'#5bc0de':'#9fb3c8'};font-size:12.5px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;transition:background .15s">${t.svg}<span>${t.label}</span></button>`;
-    }).join('')}
+  host.innerHTML=`<div class="btb-pill">
+    ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="switchToView('${t.k}')" aria-label="${t.label} view">${t.svg}<span>${t.label}</span></button>`).join('')}
   </div>`;
-  ['vsSlot_s4','vsSlot_plan','vsSlot_team'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.innerHTML=html;
-  });
 }
 
 function switchToView(v){
@@ -2974,12 +2982,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.70-beta';
+const APP_VERSION='v2.7.71-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.71-beta':{
+    title:'App-wide bottom tab bar (Game / Plan / Team) — iOS-style anchor',
+    items:[
+      'Switcher moved from the top of each page to a true app-wide bottom tab bar — single body-level position:fixed element, visible on every screen (Home, Sport picker, Grade picker, Squad, Settings, Lineup, Game, Plan, Team editor). One consistent nav anchor everywhere, like Apple\'s native tab bars.',
+      'Apple-style markup: icon above label per tab, active tab gets a tinted pill. Safe-area inset baked in so the bar sits above the iPhone home indicator.',
+      'Screens add bottom padding to keep content from hiding behind the bar; the Game and Plan pages (which have their own bottom control bands) push those bands up above the tab bar.'
+    ]
+  },
   'v2.7.70-beta':{
     title:'Every page header now shares the same 84px eyebrow height',
     items:[
@@ -8103,6 +8119,8 @@ function renderSubOrder(){
 // wait 1.7s to be safe, then remove the node so it can't intercept taps in
 // any edge case where pointer-events leak through.
 setTimeout(()=>{ const s=document.getElementById('launchSplash'); if(s) s.remove(); }, 1700);
+// v2.7.71: paint the bottom tab bar on initial load so it's visible from the first frame.
+if(typeof renderViewSwitcher==='function') renderViewSwitcher();
 </script>
 </body>
 </html>
