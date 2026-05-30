@@ -3023,8 +3023,11 @@ function closeSoundPicker(){
   document.getElementById('soundOv').classList.remove('show');
 }
 
-function showScr(id){
-  if(G&&G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;if(G.raf)cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
+function showScr(id, keepClock){
+  // v2.7.90: keepClock lets the live-roster flow (Roster tab ↔ game) move between
+  // screens without pausing the match clock — adding a player or marking one out
+  // for the game shouldn't stop play. Every other navigation still pauses.
+  if(!keepClock && G&&G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;if(G.raf)cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
@@ -3116,7 +3119,8 @@ function switchToView(v){
         currentTeam.players.forEach((nm,i)=>{ if(avail.includes(nm)) sel.add(i); });
       }
       if(typeof renderS1==='function') renderS1();
-      showScr('s1');
+      // v2.7.90: keep the match clock running while editing the squad live.
+      showScr('s1', !!(G&&G.running));
     }
     else if(typeof home==='function') home();
   }
@@ -3189,12 +3193,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.89-beta';
+const APP_VERSION='v2.7.90-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.90-beta':{
+    title:'Live squad edits no longer pause the match clock',
+    items:[
+      'Opening the Roster tab mid-game — to add a late arrival or mark a player out for the game — now keeps the match clock running instead of pausing it. Play doesn\'t stop just because you\'re adjusting the squad; the running clock carries through to the edit and back to the pitch.',
+      'Every other navigation still pauses the clock as before — only the live-roster flow keeps it ticking.'
+    ]
+  },
   'v2.7.89-beta':{
     title:'Edit the squad mid-game from the Roster tab',
     items:[
@@ -5036,7 +5047,7 @@ function renderS1(){
     const desired=[...sel].map(i=>currentTeam.players[i]);
     const adds=desired.filter(nm=>!avail.includes(nm)).length;
     const rems=avail.filter(nm=>!desired.includes(nm)).length;
-    if(info) info.textContent='Tap to add or drop players — changes apply to the live game';
+    if(info) info.textContent='Tap to add a player or mark one out for the game — the clock keeps running';
     const diff=[adds?`+${adds} in`:'',rems?`−${rems} out`:''].filter(Boolean).join(' · ');
     countEl.textContent=`${n} in squad${diff?` · ${diff}`:''}`;
     nb.disabled=desired.length<1;
@@ -5204,7 +5215,9 @@ function applySquadToGame(){
     saveActiveGame();
   }
   if(typeof renderG==='function') renderG();
-  showScr('s4');
+  // v2.7.90: return to the pitch without pausing — the clock kept running through
+  // the edit, so preserve whatever run state it had.
+  showScr('s4', !!(G&&G.running));
 }
 
 // Append a player to the live match roster and park them on the bench.
