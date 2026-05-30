@@ -722,7 +722,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div style="width:60px"></div>
     </div>
   </div>
-  <div class="info">Tap to mark players NOT available today</div>
+  <div class="info" id="s1Info">Tap to mark players NOT available today</div>
   <div class="sec">
     <h2>Squad</h2>
     <div class="chip-grid" id="playerGrid"></div>
@@ -3189,12 +3189,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.88-beta';
+const APP_VERSION='v2.7.89-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.89-beta':{
+    title:'Edit the squad mid-game from the Roster tab',
+    items:[
+      'The Roster tab now edits the running squad in place. Tap a player to drop a no-show or add a late arrival, then Apply — the change hits the live game with the clock and score left running. No more starting a fresh game just to fix the roster.',
+      'Dropping an on-field player hands their position to the longest-benched sub (or the side plays a body short if the bench is empty). Adding a player parks them on the bench, and if you were short they slot straight onto the field.',
+      'The squad page detects a live game: the button becomes Apply to game (with a +in / −out summary) instead of the pre-game Next, and reverts to the normal availability flow before kickoff.'
+    ]
+  },
   'v2.7.88-beta':{
     title:'Roster tab added to the bottom nav',
     items:[
@@ -5017,18 +5025,37 @@ function renderS1(){
   const n=sel.size;
   const out=currentTeam.players.length-n;
   const minP=FORMATS[curFmt].onField;
-  document.getElementById('countInfo').textContent=n+' playing'+(out?` · ${out} out`:'')+(n>=minP?` — ${n-minP} subs`:`  (need ${minP}+)`);
   const nb=document.getElementById('nextBtn1');
-  nb.disabled=n<minP;
-  // v2.7.88: reached via the Roster tab mid-game, this button starts a fresh game —
-  // relabel so the coach knows tapping it clears the current clock/score (guarded
-  // by a confirm in startFromSquad). Pre-game it stays the usual "Next →".
-  nb.innerHTML=gameInProgress()
-    ? 'Start new game <i data-lucide="rotate-ccw" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>'
-    : 'Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>';
+  const countEl=document.getElementById('countInfo');
+  const info=document.getElementById('s1Info');
+  const arrowR='<i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>';
+  if(G){
+    // v2.7.89: a game is live — this page now edits the running squad in place.
+    // Toggle players in/out and Apply; changes hit the live game (clock + score
+    // untouched) instead of starting a fresh one.
+    const desired=[...sel].map(i=>currentTeam.players[i]);
+    const adds=desired.filter(nm=>!avail.includes(nm)).length;
+    const rems=avail.filter(nm=>!desired.includes(nm)).length;
+    if(info) info.textContent='Tap to add or drop players — changes apply to the live game';
+    const diff=[adds?`+${adds} in`:'',rems?`−${rems} out`:''].filter(Boolean).join(' · ');
+    countEl.textContent=`${n} in squad${diff?` · ${diff}`:''}`;
+    nb.disabled=desired.length<1;
+    nb.innerHTML=(adds||rems)
+      ? `Apply to game <i data-lucide="check" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>`
+      : `Back to game <i data-lucide="arrow-left" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>`;
+    nb.onclick=applySquadToGame;
+    const hint=document.getElementById('equalTimeHint'); if(hint) hint.style.display='none';
+    const picker=document.getElementById('squadPlanPicker'); if(picker) picker.innerHTML='';
+  } else {
+    if(info) info.textContent='Tap to mark players NOT available today';
+    countEl.textContent=n+' playing'+(out?` · ${out} out`:'')+(n>=minP?` — ${n-minP} subs`:`  (need ${minP}+)`);
+    nb.disabled=n<minP;
+    nb.innerHTML=`Next ${arrowR}`;
+    nb.onclick=startFromSquad;
+    renderEqualTimeHint(n, minP);
+    renderSquadPlanPicker();
+  }
   _li();
-  renderEqualTimeHint(n, minP);
-  renderSquadPlanPicker();
 }
 
 // v2.7.47 — squad-page plan picker. Lets the coach pick AUTO (default) or a
@@ -5141,6 +5168,119 @@ function startFromSquad(){
   // Plan page so the coach saw the projected sub list before kickoff, but the
   // extra hop is friction (and orphaned the 3D pitch in #planFieldWrap when
   // they tapped Done — see closeSubOrder fix below).
+}
+
+// ===== v2.7.89: LIVE SQUAD EDITING =====
+// Reached via the Roster tab while a game is running. Every live structure
+// (G.on / G.bench / G.gk / G.pairs / luOrd / rotPairs / gk1 / gk2 and the sub
+// plans) keys into `avail` by index, so adding a late arrival just appends
+// (index-safe) and dropping a no-show splices `avail` then remaps every
+// remaining reference down by one. The match clock + score live on G and are
+// never touched.
+function applySquadToGame(){
+  // No live game (shouldn't happen from the Roster tab, but be safe): fall back
+  // to the normal pre-game start flow.
+  if(!G){ startFromSquad(); return; }
+  const desired=[...sel].map(i=>currentTeam.players[i]);
+  const toRemove=avail.filter(n=>!desired.includes(n));
+  const toAdd=desired.filter(n=>!avail.includes(n));
+  if(toRemove.length || toAdd.length){
+    // Drop no-shows first (recompute the index each time — earlier splices shift
+    // it), then bring on late arrivals.
+    toRemove.forEach(n=>{ const i=avail.indexOf(n); if(i>=0) liveRemovePlayer(i); });
+    toAdd.forEach(n=>liveAddPlayer(n));
+    // If the side is a body short and there are bench players free (e.g. a late
+    // arrival just joined the bench, or a no-show was pulled), fill the empty
+    // field slots from the bench — longest-benched first.
+    const target=Math.min(FORMATS[curFmt].onField, G.on.length+G.bench.length);
+    while(G.on.length<target && G.bench.length){
+      const rep=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0))[0];
+      G.bench=G.bench.filter(p=>p!==rep);
+      G.on.push(rep);
+    }
+    setDisplayNameList(avail);
+    sel.clear(); currentTeam.players.forEach((n,i)=>{ if(avail.includes(n)) sel.add(i); });
+    cfg.subPlanStale=true;
+    saveActiveGame();
+  }
+  if(typeof renderG==='function') renderG();
+  showScr('s4');
+}
+
+// Append a player to the live match roster and park them on the bench.
+function liveAddPlayer(name){
+  const idx=avail.length;
+  avail.push(name);
+  if(G){
+    if(!(name in G.pt)) G.pt[name]=0;
+    G.bench.push(idx);
+    (G.pairs=G.pairs||[]).push({on:[idx]});
+    if(G._halfStart){
+      G._halfStart.bench.push(idx);
+      (G._halfStart.pairs=G._halfStart.pairs||[]).push({on:[idx]});
+      if(G._halfStart.pt && !(name in G._halfStart.pt)) G._halfStart.pt[name]=0;
+    }
+  }
+  (luOrd=luOrd||[]).push(idx);
+  (rotPairs=rotPairs||[]).push({on:[idx]});
+}
+
+// Remove a player from the live match roster. If they're on the field, hand
+// their slot to the longest-benched player (or play short if the bench is
+// empty) before reindexing.
+function liveRemovePlayer(idx){
+  if(idx<0||idx>=avail.length) return;
+  if(G){
+    const onPos=G.on.indexOf(idx);
+    if(onPos>=0){
+      if(G.bench.length){
+        const rep=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0))[0];
+        G.bench=G.bench.filter(p=>p!==rep);
+        G.on[onPos]=rep;
+        if(G.gk===idx) G.gk=rep;
+      } else {
+        G.on.splice(onPos,1);
+        if(G.gk===idx) G.gk=null;
+      }
+    }
+  }
+  removeAvailIndex(idx);
+}
+
+// Splice `avail` at idx and shift every remaining index reference down by one.
+// (G.log + goals store names, not indices, so match history is unaffected.)
+function removeAvailIndex(idx){
+  const name=avail[idx];
+  const dec=p=> p>idx? p-1 : p;
+  const purge=arr=>(arr||[]).filter(p=>p!==idx).map(dec);
+  const purgePairs=ps=>(ps||[]).map(pr=>({...pr,on:(pr.on||[]).filter(p=>p!==idx).map(dec)})).filter(pr=>pr.on.length);
+  if(G){
+    G.on=purge(G.on);
+    G.bench=purge(G.bench);
+    if(G.gk===idx) G.gk=null; else if(G.gk!=null) G.gk=dec(G.gk);
+    delete G.pt[name];
+    G.pairs=purgePairs(G.pairs);
+    if(G._halfStart){
+      G._halfStart.on=purge(G._halfStart.on);
+      G._halfStart.bench=purge(G._halfStart.bench);
+      if(G._halfStart.gk===idx) G._halfStart.gk=null; else if(G._halfStart.gk!=null) G._halfStart.gk=dec(G._halfStart.gk);
+      if(G._halfStart.pt) delete G._halfStart.pt[name];
+      G._halfStart.pairs=purgePairs(G._halfStart.pairs);
+    }
+    [G.subPlan, (cfg&&cfg.subPlan)].forEach(sp=>{
+      if(!sp) return;
+      if(Array.isArray(sp.start)) sp.start=purge(sp.start);
+      if(Array.isArray(sp.events)) sp.events.forEach(ev=>{
+        if(Array.isArray(ev.off)) ev.off=purge(ev.off);
+        if(Array.isArray(ev.on)) ev.on=purge(ev.on);
+      });
+    });
+  }
+  if(Array.isArray(luOrd)) luOrd=purge(luOrd);
+  rotPairs=purgePairs(rotPairs);
+  if(gk1===idx) gk1=null; else if(gk1!=null) gk1=dec(gk1);
+  if(gk2===idx) gk2=null; else if(gk2!=null) gk2=dec(gk2);
+  avail.splice(idx,1);
 }
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
