@@ -3099,6 +3099,11 @@ function renderViewSwitcher(){
 }
 
 function switchToView(v){
+  // v2.7.91: the bottom tab bar shares the overlays' z-index but sits later in the
+  // DOM, so it stays tappable while a modal (e.g. the "Who scored?" picker) is open.
+  // Tapping a tab then would strand that overlay over the new screen — so dismiss
+  // any open overlay before navigating.
+  document.querySelectorAll('.ov.show').forEach(o=>o.classList.remove('show'));
   if(v==='game'){
     if(G){ if(typeof renderG==='function') renderG(); showScr('s4'); }
     else if(typeof home==='function') home();
@@ -3193,12 +3198,18 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.90-beta';
+const APP_VERSION='v2.7.91-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.91-beta':{
+    title:'Fix: tapping a tab no longer strands an open dialog over the new screen',
+    items:[
+      'The bottom tab bar floats above pop-up dialogs, so you could tap Game / Plan / Team / Roster while one was open (e.g. the "Who scored?" picker after a goal) — and the dialog would stay stuck over the screen you landed on, blocking it. Switching tabs now dismisses any open dialog first.'
+    ]
+  },
   'v2.7.90-beta':{
     title:'Live squad edits no longer pause the match clock',
     items:[
@@ -5212,6 +5223,11 @@ function applySquadToGame(){
     setDisplayNameList(avail);
     sel.clear(); currentTeam.players.forEach((n,i)=>{ if(avail.includes(n)) sel.add(i); });
     cfg.subPlanStale=true;
+    // v2.7.91: the undo snapshot holds avail-indices from before this edit — a
+    // removal splices + reindexes avail, so the old snapshot would restore the
+    // wrong players (NaN minutes). You can't undo a sub that predates the roster
+    // change, so drop the snapshot.
+    G.lastSub=null;
     saveActiveGame();
   }
   if(typeof renderG==='function') renderG();
