@@ -3198,12 +3198,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.91-beta';
+const APP_VERSION='v2.7.92-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.92-beta':{
+    title:'Keeper picker + pick-your-starters on the Plan page (1st & 2nd half)',
+    items:[
+      'The goalkeeper picker now lives on the Plan page and is always visible for any sport with a keeper — no more hunting for it behind the lineup editor. Pick which player on the field wears the gloves.',
+      'New "Clear field — pick starters" option: start with an empty pitch and tap players on to build your starting line-up yourself, instead of the auto-fill. Auto-fill is still one tap away.',
+      'Both controls double as your half-time touch point — at the break, the Plan page sets up the 2nd-half starting line-up and keeper, and there’s a "set 2nd-half line-up" link right on the break screen.'
+    ]
+  },
   'v2.7.91-beta':{
     title:'Fix: tapping a tab no longer strands an open dialog over the new screen',
     items:[
@@ -6159,6 +6167,7 @@ function rGkP(cid,si){
 // ===== S4: GAME =====
 function startGame(){
   ensureAudio(); // unlock audio on user tap (iOS requirement)
+  _pickStarters=false;   // fresh game — leave any stale pick-starters mode
   const fmt=FORMATS[curFmt];
   const on=Math.min(fmt.onField,avail.length);
   if(fmt.hasGk && gk1!==null){
@@ -6247,7 +6256,7 @@ function renderG(){
     ce.className='tmr-c warn';
     const nextPeriod=G.half+1;
     const startLbl=_sport.key==='netball'?`Start Q${nextPeriod}`:(nextPeriod===2?'Start 2nd Half':`Start Period ${nextPeriod}`);
-    ni.innerHTML=`swap or sub now if needed, then tap ${startLbl}`;
+    ni.innerHTML=`swap or sub now if needed, then tap ${startLbl} · <span onclick="openSubOrder()" style="color:#5bc0de;font-weight:700;cursor:pointer;text-decoration:underline">set ${nextPeriod===2?'2nd-half':'next'} line-up</span>`;
     pb.innerHTML=ic('play',21)+`<span>${startLbl}</span>`;
     pb.className='gd-btn gd-go';
   } else {
@@ -7105,6 +7114,7 @@ function startNextPeriod(){
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
   G.lastSub=null;   // undo doesn't cross the period boundary
   G.atBreak=false;
+  _pickStarters=false;   // the next-period line-up is now locked in
   snapshotHalfStart();   // fresh baseline for resetHalf within the new period
   // Kick off the next period straight away — one tap.
   G.lastTs=performance.now();G.running=true;
@@ -8068,20 +8078,68 @@ function renderPlanProfiles(){
 // v2.7.51 — Plan-page roster: full-width pitch + slim bench strip below.
 // Mirrors the live-game screen flow (pitch fills most of the view, bench
 // underneath). The old side-by-side grid was making the pitch a postage stamp.
+// v2.7.92: true when the coach is picking starters (empty-pitch flow) on the Plan page.
+let _pickStarters=false;
 function renderPlanRosterOverview(){
   const host=document.getElementById('planRosterOverview');
   if(!host||!G||!avail) return;
   // v2.7.53: roster shows the SCRUBBED state (LIVE by default, or any future
   // step the coach picked via the scrub bar). All counts + chips flow from the
   // same getPlanScrubState() so the pitch, bench strip and counters never drift.
-  const st=getPlanScrubState()||{on:G.on||[], bench:G.bench||[]};
+  const st=getPlanScrubState()||{on:G.on||[], bench:G.bench||[], isLive:true};
   const onIdx=st.on, benchIdx=st.bench;
+  const fmt=FORMATS[curFmt]||{};
+  const onField=Math.min(fmt.onField||onIdx.length, avail.length);
+  const setupPhase=planSetupPhase();
+  if(!setupPhase) _pickStarters=false;   // can't pick starters once the clock is rolling
+  const canEdit=st.isLive!==false;       // edit only from the LIVE step, never a scrubbed preview
+  // v2.7.92: at a break the Plan controls set up the NEXT period — label them so.
+  const upcoming=G.atBreak?G.half+1:G.half;
+  const periodWord=upcoming===2?'2nd-half':(upcoming>2?('period-'+upcoming):'Starting');
+  let controls='';
+  // --- Goalkeeper picker (any sport with a keeper). Lives on the Plan page so it's
+  //     never lost behind the CUSTOM-only lineup editor; also the keeper touch point
+  //     at the half-time break (sets G.gk for the 2nd half). ---
+  if(fmt.hasGk && canEdit){
+    const opts=(onIdx||[]).map(i=>`<option value="${i}"${G.gk===i?' selected':''}>${fn(avail[i])}</option>`).join('');
+    controls+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #16213e">
+      <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:#e94560;text-transform:uppercase;white-space:nowrap">Keeper${upcoming>=2?' · '+periodWord:''}</span>
+      <select onchange="setPlanKeeper(parseInt(this.value))" style="flex:1;background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:7px 9px;font-size:13px;font-weight:700;font-family:inherit;outline:none">${opts||'<option value="-1">— field empty —</option>'}</select>
+    </div>`;
+  }
+  // --- Pick-starters (empty pitch) — only before kickoff or at a period break. ---
+  if(setupPhase && canEdit){
+    if(_pickStarters){
+      const full=onIdx.length>=onField;
+      const onChips=onIdx.length?onIdx.map(i=>`<button onclick="planRemoveStarter(${i})" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.45);border-radius:14px;font-size:12px;font-weight:700;color:#00d4aa;cursor:pointer;font-family:inherit">${fn(avail[i])} <span style="opacity:.7">✕</span></button>`).join(''):'<span style="font-size:12px;color:#666">no one on the field — tap players below</span>';
+      const benchChips=benchIdx.length?benchIdx.map(i=>`<button ${full?'disabled':''} onclick="planAddStarter(${i})" style="padding:5px 10px;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.35);border-radius:14px;font-size:12px;font-weight:700;color:#f0a500;cursor:${full?'default':'pointer'};opacity:${full?'.4':'1'};font-family:inherit">${fn(avail[i])}${full?'':' +'}</button>`).join(''):'<span style="font-size:12px;color:#666">everyone is on the field</span>';
+      controls+=`<div style="padding:9px 10px;border-bottom:1px solid #16213e;background:rgba(0,212,170,.04)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:#00d4aa;text-transform:uppercase">${periodWord} line-up · ${onIdx.length}/${onField}</span>
+          <span style="display:flex;gap:6px">
+            <button onclick="planAutoFillStarters()" style="padding:5px 10px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Auto-fill</button>
+            <button onclick="planFinishStarters()" style="padding:5px 12px;background:rgba(0,212,170,.16);border:1px solid #00d4aa;color:#00d4aa;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Done</button>
+          </span>
+        </div>
+        <div style="font-size:10px;color:#5bc0de;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:2px 0 4px">On field — tap to bench</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">${onChips}</div>
+        <div style="font-size:10px;color:#f0a500;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:2px 0 4px">Bench — tap to send on</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${benchChips}</div>
+      </div>`;
+    } else {
+      controls+=`<div style="padding:8px 10px;border-bottom:1px solid #16213e;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#9fb3c8;font-weight:600">${periodWord} line-up is auto-filled.</span>
+        <button onclick="planClearField()" style="padding:6px 11px;background:none;border:1px solid #00d4aa;color:#00d4aa;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Clear field — pick starters</button>
+      </div>`;
+    }
+  }
   // v2.7.68: compact card — dropped "On field · N" / "On bench · N" labels
   // (info is obvious from the field viz + bench chips). Pitch height 380px,
   // formation chips inline above the pitch, bench chips on a slim strip below.
   // Less chrome, more density.
   const pitchH='380px';
   host.innerHTML=`<div style="background:#0a1628;border:1px solid #1e2a45;border-radius:8px;overflow:hidden">
+    ${controls}
     <div id="planFormationChips" style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px;justify-content:center;border-bottom:1px solid #16213e"></div>
     <div id="planFieldWrap" style="height:${pitchH};position:relative;background:#06101c;border-bottom:1px solid #1e2a45"></div>
     <div id="planBenchChips" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 10px"></div>
@@ -8093,6 +8151,114 @@ function renderPlanRosterOverview(){
   renderPlanScrubBar();
   renderPlanField3D();
   renderPlanBenchChips();
+}
+
+// ===== v2.7.92: starting line-up + keeper touch points on the Plan page =====
+// The Plan page operates on the LIVE game object, so these controls double as the
+// 2nd-half setup at the period break — there G.on IS the next period's starters and
+// the keeper set here carries straight into the 2nd half.
+function planSetupPhase(){
+  // Editable starters: before kickoff, or paused at a period break — never mid-play.
+  return !!(G && !G.running && (!gameInProgress() || G.atBreak));
+}
+function setPlanKeeper(idx){
+  if(!G||isNaN(idx)) return;
+  const fmt=FORMATS[curFmt];
+  if(!fmt||!fmt.hasGk) return;
+  if(!(G.on||[]).includes(idx)) return;   // the keeper must be on the field
+  G.gk=idx;
+  const upcoming=G.atBreak?G.half+1:G.half;
+  if(upcoming<=1) gk1=idx; else gk2=idx;
+  if(planSetupPhase()) commitPlanLineup();  // keep the keeper out of the rotation pairs
+  saveActiveGame();
+  renderPlanRosterOverview();
+  if(typeof renderG==='function') renderG();
+}
+function planClearField(){
+  if(!planSetupPhase()) return;
+  G.bench=[...(G.on||[]),...(G.bench||[])];
+  G.on=[];
+  G.gk=null;
+  _pickStarters=true;
+  saveActiveGame();
+  renderPlanRosterOverview();
+}
+function planAddStarter(idx){
+  if(!planSetupPhase()||!_pickStarters) return;
+  const fmt=FORMATS[curFmt];
+  const onField=Math.min(fmt.onField||99, avail.length);
+  if((G.on||[]).length>=onField) return;
+  if(!(G.bench||[]).includes(idx)) return;
+  G.bench=G.bench.filter(p=>p!==idx);
+  G.on.push(idx);
+  if(fmt.hasGk && G.gk===null) G.gk=G.on[0];   // first player on becomes keeper until changed
+  commitPlanLineup();
+  saveActiveGame();
+  renderPlanRosterOverview();
+}
+function planRemoveStarter(idx){
+  if(!planSetupPhase()||!_pickStarters) return;
+  if(!(G.on||[]).includes(idx)) return;
+  G.on=G.on.filter(p=>p!==idx);
+  G.bench.unshift(idx);
+  if(G.gk===idx) G.gk=(FORMATS[curFmt].hasGk && G.on.length)?G.on[0]:null;
+  commitPlanLineup();
+  saveActiveGame();
+  renderPlanRosterOverview();
+}
+function planAutoFillStarters(){
+  if(!planSetupPhase()) return;
+  const fmt=FORMATS[curFmt];
+  const on=Math.min(fmt.onField,avail.length);
+  const upcoming=G.atBreak?G.half+1:G.half;
+  if(upcoming<=1){
+    // pre-kickoff: position-aware assignment.
+    if(fmt.hasGk && gk1===null) gk1=0;
+    smartAssign();
+    G.on=luOrd.slice(0,on);
+    G.bench=luOrd.slice(on);
+    G.gk=fmt.hasGk?(gk1!=null?gk1:G.on[0]):null;
+  } else {
+    // later period: simple fill, keeper first.
+    const pool=avail.map((_,i)=>i);
+    const order=(fmt.hasGk && G.gk!=null)?[G.gk,...pool.filter(i=>i!==G.gk)]:pool;
+    G.on=order.slice(0,on);
+    G.bench=order.slice(on);
+    if(fmt.hasGk && !G.on.includes(G.gk)) G.gk=G.on[0]!=null?G.on[0]:null;
+  }
+  commitPlanLineup();
+  saveActiveGame();
+  renderPlanRosterOverview();
+  if(typeof renderG==='function') renderG();
+}
+function planFinishStarters(){
+  _pickStarters=false;
+  if(planSetupPhase()) commitPlanLineup();
+  saveActiveGame();
+  renderPlanRosterOverview();
+  if(typeof renderG==='function') renderG();
+}
+// Rebuild luOrd + rotation pairs + the half-start snapshot from the current
+// G.on / G.bench. Excludes the live keeper (G.gk) from the rotation. Setup-phase only.
+function commitPlanLineup(){
+  if(!G) return;
+  const fmt=FORMATS[curFmt];
+  luOrd=[...(G.on||[]),...(G.bench||[])];
+  if(fmt&&fmt.hasGk&&G.gk!=null){
+    const upcoming=G.atBreak?G.half+1:G.half;
+    if(upcoming<=1) gk1=G.gk; else gk2=G.gk;
+  }
+  const on=Math.min((fmt&&fmt.onField)||luOrd.length, avail.length);
+  const outfield=luOrd.slice(0,on).filter(p=>!(fmt&&fmt.hasGk&&p===G.gk));
+  rotPairs=[];
+  const pairSize=(cfg&&cfg.sc)||1;
+  for(let i=0;i<outfield.length;i+=pairSize){
+    const grp=outfield.slice(i,i+pairSize);
+    if(grp.length) rotPairs.push({on:grp});
+  }
+  G.pairs=rotPairs.map(p=>({on:[...p.on]}));
+  G.pairIdx=0;
+  snapshotHalfStart();
 }
 function renderPlanFormationChips(){
   const host=document.getElementById('planFormationChips');
@@ -8630,6 +8796,10 @@ function renderPlanBenchChips(){
   const st=getPlanScrubState();
   const benchIdx=st?st.bench:(G.bench||[]);
   if(cnt) cnt.textContent='On bench · '+benchIdx.length;
+  // v2.7.92: while picking starters the editor above shows its own bench row — hide
+  // this duplicate strip so there aren't two bench lists fighting for attention.
+  if(_pickStarters){ host.style.display='none'; host.innerHTML=''; return; }
+  host.style.display='flex';
   host.innerHTML=benchIdx.map(i=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.35);border-radius:14px;font-size:12px;font-weight:700;color:#f0a500;white-space:nowrap">${fn(avail[i])}</span>`).join('') || '<span style="font-size:12px;color:#666">no subs available</span>';
 }
 
