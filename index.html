@@ -3207,7 +3207,7 @@ const CHANGELOG_DATA={
   'v2.7.92-beta':{
     title:'Keeper picker + pick-your-starters on the Plan page (1st & 2nd half)',
     items:[
-      'The goalkeeper picker now lives on the Plan page and is always visible for any sport with a keeper — no more hunting for it behind the lineup editor. Pick which player on the field wears the gloves.',
+      'The goalkeeper picker now lives on the Plan page and is always visible for any sport with a keeper — no more hunting for it behind the lineup editor. Pick ANY player as keeper; a benched pick is swapped straight onto the field.',
       'New "Clear field — pick starters" option: start with an empty pitch and tap players on to build your starting line-up yourself, instead of the auto-fill. Auto-fill is still one tap away.',
       'Both controls double as your half-time touch point — at the break, the Plan page sets up the 2nd-half starting line-up and keeper, and there’s a "set 2nd-half line-up" link right on the break screen.'
     ]
@@ -8101,10 +8101,18 @@ function renderPlanRosterOverview(){
   //     never lost behind the CUSTOM-only lineup editor; also the keeper touch point
   //     at the half-time break (sets G.gk for the 2nd half). ---
   if(fmt.hasGk && canEdit){
-    const opts=(onIdx||[]).map(i=>`<option value="${i}"${G.gk===i?' selected':''}>${fn(avail[i])}</option>`).join('');
+    // In setup phase you can pick ANY player as keeper — a benched pick is swapped
+    // onto the field. Mid-play the list stays on-field-only (live keeper change).
+    let opts;
+    if(setupPhase){
+      opts=`<option value="-1"${G.gk==null?' selected':''}>— pick keeper —</option>`+
+        avail.map((n,i)=>`<option value="${i}"${G.gk===i?' selected':''}>${fn(n)}${(onIdx||[]).includes(i)?'':' (bench)'}</option>`).join('');
+    } else {
+      opts=(onIdx||[]).map(i=>`<option value="${i}"${G.gk===i?' selected':''}>${fn(avail[i])}</option>`).join('')||'<option value="-1">— field empty —</option>';
+    }
     controls+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #16213e">
       <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:#e94560;text-transform:uppercase;white-space:nowrap">Keeper${upcoming>=2?' · '+periodWord:''}</span>
-      <select onchange="setPlanKeeper(parseInt(this.value))" style="flex:1;background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:7px 9px;font-size:13px;font-weight:700;font-family:inherit;outline:none">${opts||'<option value="-1">— field empty —</option>'}</select>
+      <select onchange="setPlanKeeper(parseInt(this.value))" style="flex:1;background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:7px 9px;font-size:13px;font-weight:700;font-family:inherit;outline:none">${opts}</select>
     </div>`;
   }
   // --- Pick-starters (empty pitch) — only before kickoff or at a period break. ---
@@ -8162,10 +8170,26 @@ function planSetupPhase(){
   return !!(G && !G.running && (!gameInProgress() || G.atBreak));
 }
 function setPlanKeeper(idx){
-  if(!G||isNaN(idx)) return;
+  if(!G||isNaN(idx)||idx<0) return;
   const fmt=FORMATS[curFmt];
   if(!fmt||!fmt.hasGk) return;
-  if(!(G.on||[]).includes(idx)) return;   // the keeper must be on the field
+  const onField=Math.min(fmt.onField||99, avail.length);
+  if(!(G.on||[]).includes(idx)){
+    // Picking a benched player as keeper — bring them onto the field. Swapping a
+    // sub on mid-play isn't this control's job, so only do it during setup phase.
+    if(!planSetupPhase()) return;
+    G.bench=(G.bench||[]).filter(p=>p!==idx);
+    if(G.gk!=null && G.on.includes(G.gk)){
+      G.on[G.on.indexOf(G.gk)]=idx;        // displace the old keeper to the bench
+      G.bench.unshift(G.gk);
+    } else if(G.on.length<onField){
+      G.on.push(idx);                       // open slot — just bring them on
+    } else {
+      const off=G.on.pop();                 // field full, no keeper — vacate the last slot
+      if(off!=null) G.bench.unshift(off);
+      G.on.push(idx);
+    }
+  }
   G.gk=idx;
   const upcoming=G.atBreak?G.half+1:G.half;
   if(upcoming<=1) gk1=idx; else gk2=idx;
