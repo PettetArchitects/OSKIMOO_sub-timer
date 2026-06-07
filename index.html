@@ -3198,12 +3198,19 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.94-beta';
+const APP_VERSION='v2.7.95-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.95-beta':{
+    title:'Fix: 2nd-half subs now fire when the Plan says they will',
+    items:[
+      'The live sub timer used a continuous whole-game schedule while the Plan page + Settings preview used a per-half one. When your sub frequency didn\'t divide evenly into the half length (e.g. 7-min subs in a 20-min half), the 2nd-half subs fired at shifted times — so the swaps, the playing-time balance, the "next sub" countdown and the printed plan all disagreed.',
+      'The game now uses the same per-half cadence everywhere: subs restart every X minutes at the top of each half, exactly as shown in Settings ("subs at 7′, 14′") and on the Plan page. No change when your frequency already divides evenly (e.g. 5-min subs in a 20-min half).'
+    ]
+  },
   'v2.7.94-beta':{
     title:'Who-comes-on-for-who back on the field pill',
     items:['On-field player pills now show "↑Cooper" (green) when a sub is queued, so you can see who\'s replacing them without scanning the bench list']
@@ -5579,12 +5586,13 @@ function generateAutoPlan(){
   const sport=getSportFromFormatKey(curFmt);
   const onF=Math.min(fmt.onField,avail.length);
   if(avail.length===0||onF===0||avail.length<=onF)return {events:[],issues:avail.length<=onF?['Add more players than on-field count to enable subs']:[]};
-  // Sub schedule (whole-game continuous, same logic as subTs)
+  // Sub schedule — per-half cadence (subs every cfg.sf minutes within each
+  // period, restarting each half), matching subTs() and the Plan/Settings
+  // preview so planned events land exactly on the times the live game checks.
   const subTimesGame=[];
   const totalPeriods=sport.periodCount||2;
-  for(let t=cfg.sf;t<cfg.hm*totalPeriods;t+=cfg.sf){
-    if(t%cfg.hm===0)continue; // skip exact period boundary (handled by halftime)
-    subTimesGame.push(t);
+  for(let p=0;p<totalPeriods;p++){
+    for(let t=cfg.sf;t<cfg.hm;t+=cfg.sf) subTimesGame.push(p*cfg.hm+t);
   }
   // Start lineup (use luOrd if it's been built, else first N from avail)
   const start=(luOrd&&luOrd.length>=onF)?luOrd.slice(0,onF):avail.map((_,i)=>i).slice(0,onF);
@@ -6247,20 +6255,18 @@ function changeSubStrategy(){
   document.getElementById('subStratOv').classList.add('show');
 }
 function subTs(){
-  // Whole-game continuous schedule: subs fire every cfg.sf minutes from
-  // kickoff, treating the match as one continuous timeline (not restarting
-  // each half). Within the current half, return only the in-half seconds
-  // for the times that fall inside this half's window.
-  // For frequencies that divide evenly into half-length this is identical
-  // to the per-half behaviour; for odd frequencies it preserves the cadence
-  // across halftime rather than restarting it.
+  // Per-half schedule: rolling subs fire every cfg.sf minutes WITHIN each
+  // period, restarting the cadence at the start of every half. Returns the
+  // in-half sub times (in seconds) for the current half.
+  // This matches what the coach is shown everywhere else — the Settings
+  // preview ("N subs per half at X′, Y′…", updPrev), the Plan page
+  // (renderSubPlan) and the Full-Control auto plan (generateAutoPlan) — so the
+  // live game fires exactly when promised, including the 2nd half when cfg.sf
+  // doesn't divide evenly into cfg.hm. (A continuous whole-game timeline used
+  // to shift the 2nd-half sub times for odd frequencies, desyncing the
+  // countdown and the plan from the actual swaps.)
   const r=[];
-  const halfNum=(G&&G.half)||1;
-  const halfStartGame=(halfNum-1)*cfg.hm; // minutes
-  const halfEndGame=halfStartGame+cfg.hm;
-  for(let tGame=cfg.sf;tGame<halfEndGame;tGame+=cfg.sf){
-    if(tGame>halfStartGame) r.push((tGame-halfStartGame)*60);
-  }
+  for(let t=cfg.sf;t<cfg.hm;t+=cfg.sf) r.push(t*60);
   return r;
 }
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}

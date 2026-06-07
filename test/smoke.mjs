@@ -220,6 +220,27 @@ const SCENARIOS = [
     chk('no NaN on netball Plan', !/\bNaN\b/.test(await screenText(page, 'subOrderOv')));
     await shot(page, 'netball-plan');
   }],
+
+  ['sub schedule: per-half cadence (odd frequency)', async (page) => {
+    // Regression: when cfg.sf does NOT divide evenly into cfg.hm the live timer
+    // used to shift the 2nd-half sub times off a continuous whole-game timeline,
+    // desyncing them from the Plan page + Settings preview (subs fired at the
+    // wrong times, minutes drifted, the countdown disagreed). subTs() must now
+    // return the SAME per-half cadence the coach is shown, for every half.
+    const r = await page.evaluate(() => {
+      const savedHm = cfg.hm, savedSf = cfg.sf;
+      cfg.hm = 20; cfg.sf = 7;                 // 7 ∤ 20 → the previously-broken case
+      const expect = [];                       // what updPrev() promises ("subs at 7′, 14′")
+      for (let t = cfg.sf; t < cfg.hm; t += cfg.sf) expect.push(t * 60);
+      if (!G) G = {};
+      G.half = 1; const h1 = subTs();
+      G.half = 2; const h2 = subTs();
+      cfg.hm = savedHm; cfg.sf = savedSf;
+      return { expect, h1, h2 };
+    });
+    chk('half 1 sub times = per-half preview', JSON.stringify(r.h1) === JSON.stringify(r.expect), `(${r.h1.map((s) => s / 60 + '′').join(', ')})`);
+    chk('half 2 cadence restarts (matches half 1)', JSON.stringify(r.h2) === JSON.stringify(r.h1), `(${r.h2.map((s) => s / 60 + '′').join(', ')})`);
+  }],
 ];
 
 // --- main ------------------------------------------------------------------

@@ -4,6 +4,14 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.7.95-beta — Fix: 2nd-half subs now fire when the Plan says they will
+
+- 🔧 **Sub schedule bug.** The live sub timer (`subTs`) ran a *continuous whole-game* schedule while the Plan page (`renderSubPlan`), the Settings preview (`updPrev`) and the Full-Control auto plan (`generateAutoPlan`) used a *per-half* one. When the sub frequency didn't divide evenly into the half length (e.g. 7-minute subs in a 20-minute half), the 2nd-half subs fired at **shifted times** — so the actual swaps, the playing-time balance, the "next sub" countdown and the printed plan all disagreed. This surfaced as wrong 2nd-half timing, uneven minutes, a desynced countdown, and subs "firing wrong."
+- ✅ **Fix.** The game now uses one **per-half cadence** everywhere: rolling subs restart every `cfg.sf` minutes at the top of each half, exactly as shown in Settings and on the Plan page. `generateAutoPlan` was aligned to the same cadence so planned 2nd-half events land on the minutes the live game checks. No behaviour change when the frequency already divides evenly (e.g. the default 5-min subs in a 20-min half).
+- 🧪 Added a smoke regression check (`hm=20, sf=7`) asserting both halves return the same per-half sub times.
+
+---
+
 ## v2.2.0-beta — 3D pitch for soccer & netball too
 
 - ⚽ **Soccer** and 🥅 **netball** now use the same real 3D playing surface as AFL — drag to rotate, pinch to zoom, tap a player. Same Behind / Side / Top presets, lock toggle, and auto-zoom-to-fit.
