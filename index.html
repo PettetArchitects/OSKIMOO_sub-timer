@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.93-beta';
+const APP_VERSION='v2.7.94-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.94-beta':{
+    title:'Who-comes-on-for-who back on the field pill',
+    items:['On-field player pills now show "↑Cooper" (green) when a sub is queued, so you can see who\'s replacing them without scanning the bench list']
+  },
   'v2.7.93-beta':{
     title:'Favourite teams pinned to the top',
     items:['Tap the star on any team card to pin it to the top — favourites get a gold edge so the team you actually coach is always one tap away']
@@ -7482,13 +7486,10 @@ function renderRoster(){
         const justSwap=_jsw&&_jsw.names.has(avail[pIdx]);
         el.className='fc '+(isGk?'fc-gk':'fc-on')+(isOff?' fc-off':'')+(isSwapSel?' fc-sel':'')+(justOn?' fc-just-on':'')+(justSwap?' fc-just-swap':'');
         el.style.cssText='position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;cursor:pointer';
-        // v2.7.14: skip the "↑Incoming" badge entirely on narrow viewports.
-        // matchMedia is more reliable than window.innerWidth on iOS where
-        // innerWidth can stale across rotations / PWA standalone mode.
-        // v2.7.18: badge removed entirely from on-field pill — the bench list below
-// already shows "Cooper for Jack at FB" so the duplicate ↑Incoming on the
-// crowded pill was just noise (and CSS / JS guards kept losing to caching).
-const subInline='';
+        // v2.7.94: bring back the "↑Incoming" badge on the on-field pill so the coach can SEE who's coming on for whom
+        // without having to scan the bench list below. Green chip, only when this player is about to come off AND a
+        // replacement is queued. Stays out of the way of the live-game pill until the sub is staged.
+        const subInline=(isOff&&replacedBy!==null)?`<span class="fc-mins fc-sub-in" style="color:#22c55e;font-weight:800">↑${fn(avail[replacedBy])}</span>`:'';
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         // v2.7.18: for netball the chest BIB IS the position label — render position
         // letters on the shirt and drop the duplicate fc-pos chip from the label below.
