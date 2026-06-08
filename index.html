@@ -203,9 +203,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4{position:relative!important}
   /* Eyebrow = the two clocks only, centred. Hamburger floats top-left. The SCORE
      is lifted out of the header and hovers over the top of the field (below). */
-  /* Split-flap board clock — tiles are wider than plain digits, so the font is
-     sized so both boards (half + sub) fit the eyebrow row. Both equal. */
-  #s4 .tmr-c{font-size:28px!important;letter-spacing:0!important}
+  /* Plain DSEG clock (no flap tiles) — the digits get the full width, so the font
+     can be much bigger. DSEG Regular weight (lighter), both clocks equal. */
+  #s4 .tmr-c{font-size:42px!important;font-weight:normal!important;letter-spacing:1px!important}
   #s4 #clkArea{position:static!important;padding:7px 6px 6px!important;margin:0!important;flex-shrink:0!important}
   #s4 #clkArea > div:first-child{gap:16px!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important}
   /* tighten the colon separator + inter-tile gap to buy back width for the bigger
@@ -6455,7 +6455,7 @@ function syncHalfLbl(ce){
 function renderG(){
   const _sport=getSport(currentTeam);
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
-  const ce=document.getElementById('clk');ce.innerHTML=flapBoard(fmtHalf(Math.floor(curMs/1000)));
+  const ce=document.getElementById('clk');ce.textContent=fmtHalf(Math.floor(curMs/1000));
   ce.className='tmr-c';
   // v2.7.23: keep the inline clk-area steppers in sync with cfg on every render.
   const _hmV=document.getElementById('clkHmV'); if(_hmV&&cfg) _hmV.textContent=cfg.hm;
@@ -6791,7 +6791,7 @@ function updateClkSub(){
   if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length){ if(grp) grp.style.display='none'; return; }
   const d=Math.max(0,ns-G.secs), m=Math.floor(d/60), s=d%60;
   if(grp) grp.style.display='flex';
-  cs.innerHTML=flapBoard(String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'));
+  cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   cs.className='tmr-c tmr-sub'+(d<=10?' alert':(d<=30?' warn':''));
   // Title colour follows the countdown urgency so it reads at-a-glance.
   const lbl=document.getElementById('clkSubLbl');
@@ -6829,7 +6829,7 @@ function tickLoop(now){
     if(G.secs%5===0)saveActiveGame();
   }
   // Update display (whole seconds — centiseconds were too noisy and overflowed on iPhone)
-  const ce=document.getElementById('clk');ce.innerHTML=flapBoard(fmtHalf(Math.floor(totalMs/1000)));
+  const ce=document.getElementById('clk');ce.textContent=fmtHalf(Math.floor(totalMs/1000));
   ce.className='tmr-c';   // half clock stays white — only the sub timer warns for subs
   syncHalfLbl(ce);
   updateClkSub();
