@@ -149,10 +149,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    (#planClockAnchor). DARK BEZEL (unifying frame) wraps a LIGHTER LCD screen with
    dark segments. Identical markup metrics on both pages → no height shift. === */
 #clkArea, #planClockAnchor{
-  /* Casio Royale (A168) brushed-steel bezel */
-  background:linear-gradient(180deg,#e8eaec 0%,#c0c4c8 45%,#9da1a6 55%,#cccfd2 100%)!important;
-  border:1px solid #6c7075!important;border-radius:11px!important;
-  box-shadow:0 2px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.75), inset 0 -1px 1px rgba(0,0,0,.32)!important;
+  /* Casio Royale AE1200 — DARK bezel/face around the LCD (the silver is the case/band,
+     not the bezel). Faint chrome inner ring evokes the case edge. */
+  background:linear-gradient(180deg,#2a2d22,#0c0e07)!important;
+  border:1px solid #000!important;border-radius:11px!important;
+  box-shadow:0 2px 4px rgba(0,0,0,.55), inset 0 0 0 1px rgba(180,186,176,.18), inset 0 1px 0 rgba(255,255,255,.08)!important;
   margin:6px 8px 5px!important;padding:5px!important;
 }
 /* LCD screen inside the steel case — dark frame around the grey-green glass */
