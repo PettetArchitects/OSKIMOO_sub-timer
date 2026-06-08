@@ -2874,7 +2874,10 @@ const afl3d={
       need=Math.max(need, zc+Math.abs(xc)/tanH, zc+Math.abs(yc)/tanV);
     });
     // v2.8: top-down view pulls back a bit more (less zoomed-in) than the angled views.
-    let d=need*(this.view==='top'?this._fitMargin*1.3:this._fitMargin);
+    // Top-down zoom: the fork layout gives the field lots of room → fill it (tight
+    // fit); the default layout pulls back more so the field isn't too zoomed-in.
+    const _topMul=document.documentElement.classList.contains('fork')?0.98:1.3;
+    let d=need*(this.view==='top'?this._fitMargin*_topMul:this._fitMargin);
     d=Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, d));
     this._fitD=d;
     cam.position.copy(target).addScaledVector(dir, d);
