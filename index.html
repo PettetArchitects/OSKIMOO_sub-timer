@@ -6924,7 +6924,7 @@ function updateClkSub(){
   if(grp) grp.style.display='';
   const total=(cfg.sf||1)*60;
   const d=Math.max(0,ns-G.secs), m=Math.floor(d/60), s=d%60;
-  cs.textContent=m+':'+String(s).padStart(2,'0');   // compact (no leading zero) — fits the small dial
+  cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');   // MM:SS in the dial centre
   // Urgency tint on the light LCD — dark amber, then dark red, as the next sub nears.
   const col=d<=10?'#a8281e':(d<=30?'#876312':'#23271c');
   cs.style.color=col;
@@ -9069,7 +9069,7 @@ function renderPlanClockAnchor(){
     <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="cursor:pointer;display:flex;align-items:center">
       <div class="sub-dial">
         <svg viewBox="0 0 44 44"><circle class="sd-ticks" cx="22" cy="22" r="21"/><circle class="sd-track" cx="22" cy="22" r="18"/><circle class="sd-arc" cx="22" cy="22" r="18"/></svg>
-        <div class="sd-center"><div class="sd-time">${(cfg.sf||0)}:00</div><div class="sd-lbl">SUB</div></div>
+        <div class="sd-center"><div class="sd-time">${String(cfg.sf||0).padStart(2,'0')}:00</div><div class="sd-lbl">SUB</div></div>
       </div>
     </div>
   </div>`;
