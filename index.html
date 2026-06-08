@@ -142,9 +142,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    page headings). Each character sits on its own two-tone flap tile with a dark
    seam across the middle; ':' and ' ' are bare separators. Char colour inherits
    from the parent so the clock's warn/alert states still tint it. === */
-.flap-board{display:inline-flex;align-items:stretch;gap:.12em;line-height:1;font-variant-numeric:tabular-nums}
-.flap-tile{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:.74em;padding:.1em .09em .12em;border-radius:.07em;color:inherit;font-family:'DSEG',ui-monospace,monospace;font-weight:bold;
-  background:linear-gradient(180deg,#2c313a 0 calc(50% - .6px),#070809 calc(50% - .6px) calc(50% + .6px),#181b21 calc(50% + .6px) 100%);
+.flap-board{display:inline-flex;align-items:stretch;gap:.2em;line-height:1;font-variant-numeric:tabular-nums}
+.flap-tile{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:.96em;padding:.14em .16em;border-radius:.08em;color:inherit;font-family:'DSEG',ui-monospace,monospace;font-weight:bold;
+  background:linear-gradient(180deg,#2c313a 0 calc(50% - .35px),#0b0d10 calc(50% - .35px) calc(50% + .35px),#181b21 calc(50% + .35px) 100%);
   box-shadow:0 .04em .12em rgba(0,0,0,.6),inset 0 .04em 0 rgba(255,255,255,.06),inset 0 -.04em .06em rgba(0,0,0,.5);
   text-shadow:0 .02em .04em rgba(0,0,0,.7)}
 .flap-tile.flap-sep{background:none!important;box-shadow:none!important;text-shadow:none;min-width:.28em;padding:0;border-radius:0}
@@ -188,7 +188,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      is lifted out of the header and hovers over the top of the field (below). */
   /* Split-flap board clock — tiles are wider than plain digits, so the font is
      sized so both boards (half + sub) fit the eyebrow row. Both equal. */
-  #s4 .tmr-c{font-size:27px!important;letter-spacing:0!important}
+  #s4 .tmr-c{font-size:23px!important;letter-spacing:0!important}
   #s4 #clkArea{position:static!important;padding:7px 8px 6px!important;margin:0!important;flex-shrink:0!important}
   #s4 #clkArea > div:first-child{gap:24px!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important}
   /* Each clock: the label sits BESIDE the digits, stacked into two rows to the
