@@ -138,6 +138,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
 /* Next-sub countdown digit display — SAME size as the main clock now (v2.7.3) so the two read as a matched pair. Green by default. */
 .tmr-c.tmr-sub{letter-spacing:1.5px;color:#00d4aa}
+/* v2.8: the half/sub inline +/- steppers are removed from the GAME page — the
+   clocks themselves are now tappable and open the timing editor, so this chrome
+   is redundant. Hidden at every width on s4 (cursor:pointer hints the tap). */
+#s4 #clkArea .clk-stepper{display:none!important}
+#s4 #clk,#s4 #clkSub,#s4 #hLbl,#s4 #clkSubLbl{cursor:pointer}
+/* v2.8: per-player time is noise on the GAME screen — it lives on the Plan page.
+   Hide the minutes on the on-field pills and the bench pills (game screen only;
+   :not(.fc-sub-in) keeps the "↑incoming" badge). */
+#s4 .fc-mins:not(.fc-sub-in){display:none!important}
+#s4 .benchMins{display:none!important}
 /* iPhone / narrow-portrait: tighten the stacked score header so it clears
    the absolutely-positioned ✕ end-game button. Stacking itself is now the
    default in renderScore (not media-query-gated). */
@@ -147,9 +157,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 #scoreArea{gap:8px!important}
   #s4 .team-label{font-size:10px!important;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #s4 .team-controls{gap:4px!important}
-  #s4 .team-controls > button{width:24px!important;height:24px!important;font-size:14px!important}
-  #s4 .team-score{font-size:26px!important;min-width:22px!important}
-  #s4 .score-colon{font-size:20px!important;margin:0 2px!important}
+  #s4 .team-label{max-width:90px!important;font-size:9px!important}
+  #s4 .team-controls{gap:4px!important}
+  #s4 .team-controls > button{width:22px!important;height:22px!important;font-size:13px!important}
+  #s4 .team-score{font-size:20px!important;min-width:18px!important}
+  #s4 .score-colon{font-size:16px!important;margin:0 3px!important;padding-bottom:2px!important}
+  /* Score sits at the bottom-centre of the pitch overlay, between the view toggle
+     (left) and formation button (right) — a glassy pill on the dark strip below
+     the field. Still tap-to-adjust via its +/- buttons. */
+  #s4 #scoreArea{position:absolute!important;bottom:6px!important;left:50%!important;transform:translateX(-50%)!important;display:flex!important;align-items:center!important;gap:6px!important;background:rgba(11,18,30,.66)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;border:1px solid rgba(60,75,105,.5)!important;border-radius:14px!important;padding:2px 12px!important;z-index:20!important;box-shadow:0 6px 18px rgba(0,0,0,.5)!important}
+  /* v2.8: portrait clock + score were eating the vertical budget above the
+     pitch — shrink the game clock (was the global min(13vw,56px) ≈ 50px) and
+     tighten the clock-area padding so more height goes to the field. */
+  /* v2.8: SCORE + both TIMERS share ONE row. The clocks lift to the right of
+     the score header (absolutely positioned, like the landscape layout) and the
+     score sits on the left — reclaiming the entire second band for the field. */
+  #s4{position:relative!important}
+  /* Eyebrow = the two clocks only, centred. Hamburger floats top-left. The SCORE
+     is lifted out of the header and hovers over the top of the field (below). */
+  #s4 .tmr-c{font-size:25px!important;letter-spacing:.5px!important}
+  #s4 #clkArea{position:static!important;padding:7px 8px 6px!important;margin:0!important;flex-shrink:0!important}
+  #s4 #clkArea > div:first-child{gap:24px!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important}
+  /* Each clock: the label sits BESIDE the digits, stacked into two rows to the
+     clock height. Half clock = label on the LEFT; sub clock = label on the RIGHT. */
+  #s4 #clkArea > div:first-child > div:first-child{flex-direction:row-reverse!important;align-items:center!important;gap:6px!important}
+  #s4 #clkSubGrp{flex-direction:row!important;align-items:center!important;gap:6px!important}
+  #s4 #hLbl{font-size:10px!important;letter-spacing:.4px!important;white-space:normal!important;max-width:32px!important;text-align:right!important;line-height:1.05!important;margin:0!important}
+  #s4 #clkSubLbl{font-size:10px!important;letter-spacing:.4px!important;white-space:normal!important;max-width:32px!important;text-align:left!important;line-height:1.05!important;margin:0!important}
+  #s4 #nsi{display:none!important}
+  /* v2.8: maximise the field on phone. The bench was collapsing to ONE column
+     at 390px (minmax(190px) auto-fit) → tall stacked cards eating ~26dvh. Force
+     a tight 2-column strip and cap the height so the flex:1 pitch above claims
+     the freed vertical space. */
+  /* v2.8: bench on ONE row — flatten the wave grid into a single horizontal
+     strip (scrolls sideways if the bench is long). Each wave's label sits inline
+     to the left of its pills. Much shorter → more field. */
+  #s4 #benchTop{max-height:none!important;padding:4px 6px 6px!important;overflow-x:auto!important;overflow-y:hidden!important}
+  #s4 .benchGrid{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center!important;overflow-x:auto!important;justify-content:center!important}
+  #s4 .benchGrid > div{flex-direction:row!important;align-items:center!important;gap:6px!important;flex-shrink:0!important}
+  #s4 .benchPill{flex-shrink:0!important;padding:3px 8px!important;border-radius:7px!important}
+  /* Reorder chevrons are width-expensive on the one-row strip — reordering can be
+     done on the Plan page; hide them here. */
+  #s4 .benchReorder{display:none!important}
+  /* Drop the per-wave labels too — the green (next on) vs amber (later) pill
+     colour already signals priority, and dropping them lets the whole bench fit
+     on one row without scrolling. */
+  #s4 .benchWaveTag{display:none!important}
+  #s4 .benchGrid > div{gap:8px!important}
+  /* v2.8: the score header + dashboard were eating real estate too. Drop the
+     header's 84px floor and tighten the RESET/Undo/START bar so the field wins
+     the freed height. */
+  /* Collapse the (now empty) score-header band so the CLOCKS become the top
+     eyebrow. Hamburger still floats top-left; the score is absolute (hovering). */
+  #s4 > div:first-child{min-height:0!important;padding:0!important;border-bottom:none!important;overflow:visible!important}
+  #s4 #gameDash{padding-top:6px!important;gap:6px!important}
+  #s4 #gameDash .gd-btn{min-height:42px!important;padding:5px 4px!important;font-size:10px!important;gap:2px!important}
+  #s4 #gameDash .gd-btn svg{width:16px!important;height:16px!important}
+  /* v2.8: the app's brand eyebrow stays across the top on the game screen too
+     (reinstated). Its menu hamburger is hidden here since the bottom-nav gear is
+     the menu now — the bar just carries the SUB TIMER wordmark + version. */
+  body.on-game #globalMenuBtn{display:none!important}
   /* v2.7.9: drop the "↑Incoming" badge inside the outgoing player's pill on
      mobile — it clashes with the position/name/minutes on narrow screens.
      Larger viewports keep it for the at-a-glance "who's coming on for whom". */
@@ -382,9 +449,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc{pointer-events:auto}
 /* v2.7.22: soccer + netball default shirt size shrunk a touch (30→26 / 34→30) — the old size
    felt too big at the default fit zoom. AFL stays smaller still (data-sport="afl"). */
-.afl3d-overlay .fc-shirt{width:26px;height:30px}
-.afl3d-overlay .fc-shirt-num{font-size:9px}
-.afl3d-overlay .fc-label{padding:1px 4px;gap:3px;margin-top:1px}
+.afl3d-overlay .fc-shirt{width:22px;height:25px}
+.afl3d-overlay .fc-shirt-num{font-size:8px}
+.afl3d-overlay .fc-label{padding:0 3px;gap:2px;margin-top:1px}
 .afl3d-overlay .fc-pos{font-size:8px;min-width:11px;padding:1px 3px}
 .afl3d-overlay .fc-name{font-size:9px;letter-spacing:.2px}
 .afl3d-overlay .fc-mins{font-size:8px;margin-left:3px}
@@ -423,7 +490,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v1.9 player pill — broadcast style:
    shirt icon (no circle around it) with the jersey number ON the shirt;
    below the shirt, a single label pill with [POS] [NAME] [mins] [↑sub] inline. */
-.fc-shirt{position:relative;width:44px;height:48px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.fc-shirt{position:relative;width:37px;height:41px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 @media(min-width:768px){.fc-shirt{width:52px;height:56px}}
 /* AFL packs 12–18 players on the oval — smaller tokens so they don't overlap. */
 .lu-pitch.np-afl .fc-shirt{width:32px;height:36px}
@@ -434,7 +501,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .lu-pitch.np-afl .fc-mins{font-size:8px;margin-left:3px}
 @media(min-width:768px){.lu-pitch.np-afl .fc-shirt{width:38px;height:42px}.lu-pitch.np-afl .fc-shirt-num{font-size:13px}.lu-pitch.np-afl .fc-name{font-size:10px}}
 .fc-shirt svg{width:100%;height:100%}
-.fc-shirt-num{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:900;color:currentColor;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.fc-shirt-num{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:currentColor;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 @media(min-width:768px){.fc-shirt-num{font-size:17px}}
 .fc-jersey{display:none}            /* old corner badge — replaced by .fc-shirt-num */
 .fc-mins{color:#94a3b8;font-size:10px;font-weight:600;margin-left:4px}
@@ -850,8 +917,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div style="height:1px;background:#243049;margin:4px 0"></div>
       <button onclick="closeGameMenu();abandonGame()" style="width:100%;padding:13px 14px;background:none;border:none;color:#ff7088;font-size:15px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
-    <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
-    <div id="scoreArea" style="display:flex;align-items:center;gap:6px"></div>
+    <!-- Score controls (renderScore) moved to the bottom of the pitch overlay,
+         between the view + formation buttons. Element lives there now. -->
     <!-- v2.7.28: Plan button returned to top-right of the score header (was on the bottom dashboard in v2.7.22-27).
          v2.7.67: hidden — the 3-way switcher's Plan tab handles this now. Kept in DOM in case any code still references the id. -->
     <button id="subOrderBtn" onclick="openSubOrder()" aria-label="Sub Plan" title="Sub Plan" style="display:none;position:absolute;top:6px;right:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;align-items:center;justify-content:center;padding:0">
@@ -869,8 +936,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="clkArea" style="text-align:center;padding:12px 0 4px;flex-shrink:0">
     <div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-        <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
-        <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
+        <div class="tmr-c" id="clk" onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="margin:0;line-height:1;cursor:pointer">00:00</div>
+        <div id="hLbl" onclick="openSubSettings()" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap;cursor:pointer">1ST HALF</div>
         <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
         <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -880,8 +947,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         </div>
       </div>
       <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:4px">
-        <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
-        <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
+        <div class="tmr-c tmr-sub" id="clkSub" onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="margin:0;line-height:1;color:#00d4aa;cursor:pointer">05:00</div>
+        <div id="clkSubLbl" onclick="openSubSettings()" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap;cursor:pointer">NEXT SUB</div>
         <!-- v2.7.23: inline sub-frequency editor under the sub countdown. -->
         <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -901,6 +968,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="viewToggle" onclick="cycleView()" aria-label="Cycle camera view" style="display:none;position:absolute;bottom:8px;left:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
     <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
     <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
+    <!-- Score — sits at the bottom-centre of the pitch overlay, between the view
+         toggle (left) and the formation button (right). Filled by renderScore(). -->
+    <div id="scoreArea"></div>
     <!-- v2.7.32: Formation picker is now a VERTICAL popup floating just above the fmtToggle button so it doesn't push the pitch upward when it opens. -->
     <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:78px;max-height:60dvh;overflow-y:auto;z-index:31">
       <div id="gameFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -2158,6 +2228,33 @@ let aflTilt=(()=>{ try{return Math.min(AFL_TILT_MAX,Math.max(AFL_TILT_MIN,parseI
 function aflPlaneRatio(tiltDeg){ return 1.7/Math.cos(tiltDeg*Math.PI/180); }  // keeps the tilted plane ~filling the box (2.40 at 45°)
 function aflTiltAdj(d){ aflTilt=Math.max(AFL_TILT_MIN,Math.min(AFL_TILT_MAX,aflTilt+d)); try{localStorage.setItem('aflTilt',aflTilt);}catch(e){} renderG(); }
 
+// Soccer/netball iso pitch: the allowable field-view ANGLE scales with the
+// device width. Narrow phones get a SHALLOWER tilt so the players spread out
+// down the pitch (less perspective compression); wide screens get the fuller
+// iso look. One simple formula drives both the JS projection (PITCH_TILT_DEG +
+// PITCH_PLANE_HEIGHT_RATIO that pitchPt() reads) AND the inline .lu-plane CSS,
+// so the ground and the tokens always use the exact same angle.
+const SOCCER_TILT_MIN=26, SOCCER_TILT_MAX=45, SOCCER_TILT_MINW=360, SOCCER_TILT_MAXW=820;
+function pitchTiltForWidth(){
+  const w=window.innerWidth||390;
+  const f=Math.max(0,Math.min(1,(w-SOCCER_TILT_MINW)/(SOCCER_TILT_MAXW-SOCCER_TILT_MINW)));
+  return Math.round(SOCCER_TILT_MIN+(SOCCER_TILT_MAX-SOCCER_TILT_MIN)*f);
+}
+// Sets the globals pitchPt() reads and returns the inline style for .lu-plane.
+// Ratio = 1.7/cos(tilt) keeps the tilted plane filling the box (2.40 at 45°,
+// matching the old static CSS) — same calibration as aflPlaneRatio().
+function soccerPlaneStyle(){
+  const t=pitchTiltForWidth();
+  PITCH_TILT_DEG=t;
+  PITCH_PLANE_HEIGHT_RATIO=1.7/Math.cos(t*Math.PI/180);
+  return `transform:rotateX(${t}deg);height:${(PITCH_PLANE_HEIGHT_RATIO*100).toFixed(0)}%`;
+}
+// The 3D game pitch (afl3d) default camera. A small portrait screen needs a
+// HIGHER / steeper overhead view ('top') so players spread evenly down the
+// field instead of bunching at the foreshortened far end; larger screens keep
+// the lower 'behind-the-goal' broadcast angle. User can still cycle views.
+function defaultPitchView(){ return (window.innerWidth||390)<=480 ? 'top' : 'behind'; }
+
 function pitchPt(px,py){
   // Fall back to identity (raw position) if dims aren't ready — guarantees the
   // token is always VISIBLE somewhere on the pitch rather than disappearing
@@ -2402,7 +2499,7 @@ const afl3d={
   // v2.7.33: basketball FIBA court 28×15 m; ring 3.05 m above the floor.
   DIMS:{ afl:{W:135,L:165,shape:'oval',goalH:7}, soccer:{W:104,L:160,shape:'rect',goalH:4}, netball:{W:76.5,L:153,shape:'rect',goalH:15}, basketball:{W:15,L:28,shape:'rect',goalH:3.05}, waterpolo:{W:20,L:30,shape:'rect',goalH:0.9} },
   sport:'afl', FIELD_W:135, FIELD_L:165, groundGrp:null,
-  renderer:null, scene:null, camera:null, controls:null, wrap:null, overlay:null, raf:null, locked:false, view:'behind',
+  renderer:null, scene:null, camera:null, controls:null, wrap:null, overlay:null, raf:null, locked:false, view:null,
   pills:[],          // field pills (formation %): {el, x, y}
   benchPills:[],     // sideline pills (world XYZ already resolved): {el, wx, wy, wz}
   worldOf(px,py,h){ return new THREE.Vector3((px/100-0.5)*this.FIELD_W, h||0, (py/100-0.5)*this.FIELD_L); },
@@ -2633,7 +2730,7 @@ const afl3d={
       this.groundGrp=this.buildGround(); this.scene.add(this.groundGrp);
       this._syncLineRes();
       this._buildFitPts();
-      this.setView(this.view||'behind');
+      this.setView(this.view||defaultPitchView());
     }
     return true;
   },
@@ -2684,7 +2781,7 @@ const afl3d={
     // "drag · pinch · tap" hint removed in v2.7.11 — the gesture is discoverable enough.
     container.appendChild(wrap);
     this.renderer=renderer; this.scene=scene; this.camera=camera; this.controls=controls; this.wrap=wrap; this.overlay=overlay; this.viewsEl=views;
-    this.setView(this.view);
+    this.setView(this.view||defaultPitchView());
     // Resize handling
     if(this._ro) this._ro.disconnect();
     this._ro=new ResizeObserver(()=>{ const w=wrap.clientWidth,h=wrap.clientHeight; if(w&&h){ renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); this._resW=renderer.domElement.width; this._resH=renderer.domElement.height; this._syncLineRes(); this.autoFit(); } });
@@ -3030,6 +3127,9 @@ function showScr(id, keepClock){
   if(!keepClock && G&&G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;if(G.raf)cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // v2.8: flag the live-game screen so phone CSS can reclaim the 44px brand bar
+  // (s4 has its own hamburger, so the global bar is redundant during a match).
+  document.body.classList.toggle('on-game', id==='s4');
   window.scrollTo(0,0);
   // v2.7.66: repaint the 3-way view switcher whenever the active screen changes
   // so the right tab stays highlighted across Game / Plan / Team transitions.
@@ -3091,10 +3191,14 @@ function renderViewSwitcher(){
     {k:'team', label:'Team', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
     // v2.7.88: Roster tab — jumps to the squad page (who's here / who's not today),
     // so a coach can wave in late arrivals or strike no-shows without leaving the game.
-    {k:'roster', label:'Roster', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'}
+    {k:'roster', label:'Roster', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'},
+    // v2.8: the per-screen hamburgers are gone — a single gear in the bottom nav
+    // opens the contextual menu (Edit Team / Sub Plan / End game + settings) on
+    // every screen, so the whole app shares one clean bottom bar.
+    {k:'menu', label:'Menu', action:'menu', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'}
   ];
   host.innerHTML=`<div class="btb-pill">
-    ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="switchToView('${t.k}')" aria-label="${t.label} view">${t.svg}<span>${t.label}</span></button>`).join('')}
+    ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="${t.action==='menu'?'toggleGlobalMenu(event)':`switchToView('${t.k}')`}" aria-label="${t.label}">${t.svg}<span>${t.label}</span></button>`).join('')}
   </div>`;
 }
 
@@ -3105,7 +3209,15 @@ function switchToView(v){
   // any open overlay before navigating.
   document.querySelectorAll('.ov.show').forEach(o=>o.classList.remove('show'));
   if(v==='game'){
-    if(G){ if(typeof renderG==='function') renderG(); showScr('s4'); }
+    if(G){
+      // If we're leaving the Plan page, run its full teardown — it hops the 3D
+      // pitch back to #pitchMid AND resets the camera out of the Plan's landscape
+      // 'top-h' board view. Skipping it (as the bare renderG path did) left the
+      // pitch letterboxed/clipped on the game screen.
+      const onPlan=(()=>{const ov=document.getElementById('subOrderOv');return ov&&ov.classList.contains('active');})();
+      if(onPlan && typeof closeSubOrder==='function'){ closeSubOrder(); }
+      else { if(typeof renderG==='function') renderG(); showScr('s4'); }
+    }
     else if(typeof home==='function') home();
   } else if(v==='plan'){
     if(G){ if(typeof openSubOrder==='function') openSubOrder(); }
@@ -6029,7 +6141,7 @@ function renderLineupPitch(){
   if(_luSport.key==='netball'){
     pitch.innerHTML=`<div class="pitch-lines"></div><div class="nb-third nb-third-1"></div><div class="nb-third nb-third-2"></div><div class="nb-circle-top"></div><div class="nb-circle-bot"></div><div class="nb-centre-circle"></div>`;
   } else {
-    pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
+    pitch.innerHTML=`<div class="lu-plane" style="${soccerPlaneStyle()}">${SOCCER_PITCH_SVG}</div>`;
   }
   // Token positions will be projected through pitchPt() — set _pitchDims so
   // makeFCCard's projection math knows the actual container size. Need to
@@ -6265,10 +6377,15 @@ function subTs(){
 }
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
 
+// The game's half clock counts DOWN — shows time REMAINING in the half (half
+// length minus elapsed), not elapsed. Display-only: G.secs still counts up, so
+// all sub-timing / half-end logic is unchanged. Clamped at 0.
+function fmtHalf(elapsedSecs){ return fmt(Math.max(0,(cfg.hm*60)-elapsedSecs)); }
+
 function renderG(){
   const _sport=getSport(currentTeam);
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
-  const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(curMs/1000));
+  const ce=document.getElementById('clk');ce.textContent=fmtHalf(Math.floor(curMs/1000));
   ce.className='tmr-c';
   // v2.7.23: keep the inline clk-area steppers in sync with cfg on every render.
   const _hmV=document.getElementById('clkHmV'); if(_hmV&&cfg) _hmV.textContent=cfg.hm;
@@ -6638,7 +6755,7 @@ function tickLoop(now){
     if(G.secs%5===0)saveActiveGame();
   }
   // Update display (whole seconds — centiseconds were too noisy and overflowed on iPhone)
-  const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(totalMs/1000));
+  const ce=document.getElementById('clk');ce.textContent=fmtHalf(Math.floor(totalMs/1000));
   ce.className='tmr-c';
   if(!cfg.breaksOnly){const ns=nxtST();if(ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}}
   updateClkSub();
@@ -6798,7 +6915,7 @@ function manualSub(){
 function cycleView(){
   if(typeof afl3d==='undefined' || !afl3d.ready || !afl3d.ready()) return;
   const order=['behind','side','top'];
-  const cur=afl3d.view||'behind';
+  const cur=afl3d.view||defaultPitchView();
   const next=order[(order.indexOf(cur)+1)%order.length];
   afl3d.setView(next);
   updateViewToggle();
@@ -6811,7 +6928,7 @@ function updateViewToggle(){
     v.style.display='none';
     return;
   }
-  const cur=(afl3d.view||'behind');
+  const cur=(afl3d.view||defaultPitchView());
   const lbl=cur.charAt(0).toUpperCase()+cur.slice(1);
   const icon={behind:'eye',side:'move-horizontal',top:'square'}[cur]||'eye';
   v.style.display='inline-flex';
@@ -7538,8 +7655,8 @@ function renderRoster(){
       pitch.innerHTML=`<div class="lu-plane" style="transform:rotateX(${aflTilt}deg);height:${(PITCH_PLANE_HEIGHT_RATIO*100).toFixed(0)}%">${aflPitchSvg()}</div>`;
     }
   } else {
-    PITCH_TILT_DEG=45; PITCH_PLANE_HEIGHT_RATIO=2.40;   // soccer defaults (CSS plane uses these)
-    pitch.innerHTML=`<div class="lu-plane">${SOCCER_PITCH_SVG}</div>`;
+    // Width-based field-view angle (sets PITCH_TILT_DEG + ratio, returns plane CSS).
+    pitch.innerHTML=`<div class="lu-plane" style="${soccerPlaneStyle()}">${SOCCER_PITCH_SVG}</div>`;
   }
   // Append to DOM BEFORE reading pitch dimensions —
   // detached elements have clientWidth/Height = 0, which would NaN the projection.
@@ -7634,6 +7751,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const replacesP=swapMap?swapMap[pIdx]:undefined;
       const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
       const row=document.createElement('div');
+      row.className='benchPill';
       // In injury mode (after the off-player is chosen) every bench pill is a
       // tappable "bring on" target — highlight red and wire the click.
       const isInjuryPick=(gameMode==='injury'&&injuryOffSel!==null);
@@ -7652,17 +7770,17 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const isLast=benchIdx===G.bench.length-1;
       const arrowBtn=(dir,disabled)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
       const reorderHtml=allowReorder
-        ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${arrowBtn('up',isFirst)}${arrowBtn('down',isLast)}</div>`
+        ? `<div class="benchReorder" style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${arrowBtn('up',isFirst)}${arrowBtn('down',isLast)}</div>`
         : '';
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
         <div style="width:24px;height:24px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',11,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:10px;color:#f0a500;font-weight:600;margin-top:1px;line-height:1.1">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:13px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:11px;color:#f0a500;font-weight:600;margin-top:1px;line-height:1.1">${fn(avail[replacesP])}</div>`:''}
         </div>
-        <div style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
+        <div class="benchMins" style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
       `;
       return row;
@@ -7674,6 +7792,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
     // - Single-wave: cards lay out in a 2-column auto-fit grid so a long bench doesn't run off the page.
     const grid=document.createElement('div');
     const useGrid=waves.length>1;
+    grid.className='benchGrid'+(useGrid?' benchGrid-multi':'');
     grid.style.cssText=useGrid
       ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start'
       : 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;align-items:start';
@@ -7687,10 +7806,15 @@ function renderBenchInto(container, swapMap, posForPlayer){
         const labelColour=isNext?'#00d4aa':(waveIdx===1?'#f0a500':'#888');
         const col=document.createElement('div');
         col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0';
-        const tag=document.createElement('div');
-        tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
-        tag.textContent=labelText;
-        col.appendChild(tag);
+        // No "Next on" label — the green pill colour already says it. Later waves
+        // keep their "+5'" timing tag.
+        if(!isNext){
+          const tag=document.createElement('div');
+          tag.className='benchWaveTag';
+          tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
+          tag.textContent=labelText;
+          col.appendChild(tag);
+        }
         waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,isNext)));
         grid.appendChild(col);
       });
@@ -7975,15 +8099,21 @@ function closeSubOrder(){
   // v2.7.53: tear down the live-clock ticker so it doesn't keep firing after the page closes.
   if(_planLiveTickId){ clearInterval(_planLiveTickId); _planLiveTickId=null; }
   _planTimeline=null; _planScrubIdx=0;
-  // v2.7.62: reset to 'behind' on exit so the live game screen lands on its
-  // default perspective (Plan page forces 'top-h' on entry — that view shouldn't
-  // bleed into the game screen which works best from the touchline).
-  if(typeof afl3d!=='undefined' && afl3d.view==='top-h') afl3d.view='behind';
+  // v2.8: reset out of the Plan's landscape 'top-h' board view back to the game's
+  // own view (portrait 'top' on phone via defaultPitchView) so the pitch fills the
+  // tall container instead of letterboxing.
+  if(typeof afl3d!=='undefined' && afl3d.view==='top-h'){
+    afl3d.view=(typeof defaultPitchView==='function')?defaultPitchView():'behind';
+  }
   // v2.7.54: hop the 3D pitch back. afl3d was last pointed at #planFieldWrap by
   // renderPlanField3D — without this call the game screen's #pitchMid keeps its
   // orphaned canvas (frozen frame, stale pills at last-projected coords). renderG
   // calls afl3d.update(pitchMid, ...) which the needInit check detects + re-inits.
   if(typeof renderG==='function') renderG();
+  // After the game screen is laid out, re-apply the view so the camera actually
+  // repositions + autoFits to #pitchMid (a bare view= property change doesn't move
+  // the camera, which is what left the pitch clipped).
+  requestAnimationFrame(()=>{ if(typeof afl3d!=='undefined' && afl3d.ready && afl3d.ready()) afl3d.setView(afl3d.view); });
 }
 // v2.7.39: jump from the Plan overlay into the full Lineup editor (#s3).
 // Used in CUSTOM mode where the coach explicitly wants to set positions /
