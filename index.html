@@ -71,6 +71,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #appBrandBar .ab-beta{font-size:8px;font-weight:800;letter-spacing:1px;color:#1a1a2e;background:#f0a500;padding:1px 4px;border-radius:2px}
 #appBrandBar .ab-ver{font-size:10px;color:#888;font-weight:600;letter-spacing:.4px;min-width:54px;text-align:right;padding-right:4px}
 #globalMenuBtn{width:36px;height:36px;border-radius:8px;border:1px solid #2a3550;background:none;color:#9fb3c8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+/* v2.8: the bottom nav's Menu gear IS the menu — so the brand-bar hamburger is
+   hidden at ALL widths whenever the nav is up (home/game/plan/squad). It only
+   returns on the picker flow, where there's no bottom nav. (Was previously scoped
+   to the ≤480px media query, so it lingered on tablet/desktop.) */
+body.nav-shown #globalMenuBtn{display:none!important}
 /* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
 .btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
@@ -310,10 +315,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 #gameDash{padding-top:6px!important;gap:6px!important}
   #s4 #gameDash .gd-btn{min-height:42px!important;padding:5px 4px!important;font-size:10px!important;gap:2px!important}
   #s4 #gameDash .gd-btn svg{width:16px!important;height:16px!important}
-  /* v2.8: the brand bar carries only the wordmark + version when the bottom nav is
-     up — its hamburger is redundant (the nav's Menu gear is the menu). Hidden
-     whenever the nav shows (home/game/plan/squad); returns on the picker flow. */
-  body.nav-shown #globalMenuBtn{display:none!important}
+  /* v2.8: hamburger-hide rule (body.nav-shown #globalMenuBtn) lifted to global
+     scope near #globalMenuBtn — it must apply at every width, not just ≤480px. */
   /* v2.7.9: drop the "↑Incoming" badge inside the outgoing player's pill on
      mobile — it clashes with the position/name/minutes on narrow screens.
      Larger viewports keep it for the at-a-glance "who's coming on for whom". */
@@ -746,11 +749,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="hdrTagline" class="sub">Smart Subs for grassroots coaches</div>
     <div id="hdrQuote" style="display:none;margin-top:6px;font-size:13px;color:#eee;font-weight:600;font-style:italic;line-height:1.35;text-align:center;padding:0 56px"></div>
   </div>
-  <!-- v2.7.84: homeMenu moved OUT of the (hidden) .hdr so the drawer can render — display:none on a parent hides the whole subtree. -->
-  <div id="homeMenu" style="display:none;position:absolute;top:60px;left:12px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
-    <!-- v2.7.85: Settings item removed — its contents (Sub-alert sound, Help & gestures, Send feedback) inject into every drawer via openDrawer(). -->
-    <div id="homeMenuAuthSlot" style="margin-top:2px"></div>
-  </div>
+  <!-- v2.8: #homeMenu relocated to app/body level (after </app>) so it renders on
+       the lobby/start screen too — when #home is display:none its subtree can't
+       paint, which left the bottom-nav Menu opening an invisible 0×0 drawer. -->
   <div class="sec">
     <div id="resumeBanner" style="display:none;margin-bottom:12px;padding:12px;background:#1a2a14;border:1.5px solid #00d4aa;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -1408,6 +1409,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div id="bottomTabBar"></div>
 <!-- v2.7.83: drawer scrim — darkens the page behind the side drawer; tap to close. -->
 <div id="appDrawerScrim" onclick="closeAnyDrawer()"></div>
+<!-- v2.8: home/lobby side-drawer — body-level (not inside #home) so it renders on
+     every team-context screen. Drawer chrome (fixed position, 280px, slide-in) is
+     forced by the #homeMenu CSS rule; the inline style here is just the closed state. -->
+<div id="homeMenu" style="display:none">
+  <!-- Settings items (Sub-alert sound, Help & gestures, Send feedback) inject via openDrawer(). -->
+  <div id="homeMenuAuthSlot" style="margin-top:2px"></div>
+</div>
 <!-- v2.7.81→.83: donate moved INSIDE the hamburger drawer (.drawer-donate). FAB kept hidden in case any code path still references it. -->
 <a id="coffeeFab" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
 
