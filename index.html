@@ -230,13 +230,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      at 390px (minmax(190px) auto-fit) → tall stacked cards eating ~26dvh. Force
      a tight 2-column strip and cap the height so the flex:1 pitch above claims
      the freed vertical space. */
-  /* v2.8: the bottom ~third of the screen is the bench + dashboard + nav zone.
-     #benchTop is a reserved ~19dvh band (→ bench+dash+nav ≈ 1/3); the bench fills
-     it as a 2-column block (vertically scrolls if the bench is long). */
-  #s4 #benchTop{height:19dvh!important;max-height:19dvh!important;padding:3px 8px 4px!important;overflow-y:auto!important;overflow-x:hidden!important}
-  #s4 .benchGrid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:6px 8px!important;align-content:flex-start!important;overflow:visible!important}
-  #s4 .benchGrid > div{flex-direction:column!important;align-items:stretch!important;gap:6px!important;min-width:0!important}
-  #s4 .benchPill{padding:4px 8px!important;border-radius:7px!important}
+  /* v2.8: bench is a tight 4-column grid, up to ~2 rows then scrolls. The wave
+     columns are dissolved (display:contents) so every chip is a direct grid item
+     and lines up 4-across. Band sizes to content, capped ~2 rows. */
+  #s4 #benchTop{height:auto!important;max-height:15dvh!important;padding:2px 8px 3px!important;overflow-y:auto!important;overflow-x:hidden!important}
+  #s4 .benchGrid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:4px 6px!important;align-content:flex-start!important;overflow:visible!important}
+  #s4 .benchGrid > div:not(.benchPill){display:contents!important}   /* dissolve wave columns into the 4-col grid */
+  #s4 .benchPill{padding:3px 5px!important;border-radius:6px!important;min-width:0!important}
+  #s4 .benchPill > div:first-child{width:18px!important;height:18px!important;margin-right:4px!important;font-size:8px!important}  /* position badge */
+  #s4 .benchPill > div:nth-child(2) > div:first-child{font-size:11px!important;line-height:1.1!important}   /* incoming name */
+  #s4 .benchPill > div:nth-child(2) > div:nth-child(2){font-size:9px!important;line-height:1.05!important}  /* outgoing name */
   /* Reorder chevrons are width-expensive on the one-row strip — reordering can be
      done on the Plan page; hide them here. */
   #s4 .benchReorder{display:none!important}
