@@ -730,6 +730,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- ===== LOBBY — the loaded team's home: tap the name to switch · New game · Resume/Discard ===== -->
+<div id="lobby" class="scr" style="flex-direction:column">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px 18px;position:relative">
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button id="lobbyTeamBtn" onclick="toggleLobbyTeamMenu(event)" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;color:#eee;font-size:26px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;padding:4px 8px;max-width:90vw">
+        <span id="lobbyTeamName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Team</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div id="lobbyTeamMeta" style="font-size:13px;color:#7d8a9c;font-weight:600;letter-spacing:.3px"></div>
+      <div id="lobbyTeamMenu" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:240px;max-height:50dvh;overflow-y:auto;z-index:60"></div>
+    </div>
+    <div id="lobbyActions" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px"></div>
+  </div>
+</div>
+
 <!-- Feedback modal -->
 <div class="ov" id="feedbackOv">
   <div class="ab" style="max-width:380px;text-align:left">
@@ -3219,7 +3234,8 @@ function renderViewSwitcher(){
     if((et&&et.classList.contains('active'))||(s1&&s1.classList.contains('active'))) active='squad';
     else {
       const home=document.getElementById('home');
-      if(home&&home.classList.contains('active')) active='home';
+      const lob=document.getElementById('lobby');
+      if((home&&home.classList.contains('active'))||(lob&&lob.classList.contains('active'))) active='home';
     }
   }
   // v2.7.74: Game tab uses a sport-aware ball icon (soccer/AFL oval/netball/basketball)
@@ -3252,7 +3268,7 @@ function renderViewSwitcher(){
     {k:'menu', label:'Menu', action:'menu', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'}
   ];
   host.innerHTML=`<div class="btb-pill">
-    ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="${t.action==='menu'?'toggleGlobalMenu(event)':t.action==='home'?"showScr('home');renderHome&&renderHome()":`switchToView('${t.k}')`}" aria-label="${t.label}">${t.svg}<span>${t.label}</span></button>`).join('')}
+    ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="${t.action==='menu'?'toggleGlobalMenu(event)':t.action==='home'?"showScr('lobby');renderLobby&&renderLobby()":`switchToView('${t.k}')`}" aria-label="${t.label}">${t.svg}<span>${t.label}</span></button>`).join('')}
   </div>`;
 }
 
@@ -4549,6 +4565,65 @@ function toggleFavorite(id){
   saveTeams(teams);
   if(typeof syncTeamsToCloud==='function'){ try{ syncTeamsToCloud(); }catch(e){} }
   renderHome();
+}
+
+// ===== LOBBY (v2.8) — the loaded team's home: New game / Resume / Discard, tap name to switch =====
+function renderLobby(){
+  teams=loadTeams();
+  const active=loadActiveGame();
+  if(!currentTeam || !teams.find(t=>String(t.id)===String(currentTeam.id))){
+    currentTeam=(active&&active.teamId&&teams.find(t=>String(t.id)===String(active.teamId)))
+             || teams.find(t=>t.favorite) || teams[0] || null;
+  }
+  if(!currentTeam){ showScr('home'); renderHome(); return; }   // no teams → list / first-run
+  document.getElementById('lobbyTeamName').textContent=currentTeam.name;
+  const fmt=(typeof FORMATS!=='undefined')?FORMATS[currentTeam.format]:null;
+  document.getElementById('lobbyTeamMeta').textContent=`${(currentTeam.players||[]).length} players${fmt?' · '+fmt.label:''}`;
+  const hasActive=active && String(active.teamId)===String(currentTeam.id);
+  const acts=document.getElementById('lobbyActions');
+  if(hasActive){
+    acts.innerHTML=
+      `<button onclick="resumeActiveGame()" class="btn btn-g" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:17px;padding:16px">${ic('play',20)}Resume game</button>`
+     +`<button onclick="lobbyNewGame()" class="btn btn-o" style="font-size:14px;padding:13px">New game</button>`
+     +`<button onclick="lobbyDiscard()" style="background:none;border:none;color:#7d8a9c;font-size:13px;font-weight:700;cursor:pointer;padding:6px;font-family:inherit">Discard in-progress game</button>`;
+  } else {
+    acts.innerHTML=`<button onclick="lobbyNewGame()" class="btn btn-g" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:18px;padding:18px">${ic('play',22)}New game</button>`;
+  }
+  _li();
+}
+function lobbyNewGame(){
+  if(!currentTeam) return;
+  const active=loadActiveGame();
+  if(active && String(active.teamId)===String(currentTeam.id)){
+    if(!confirm('Start a new game? The in-progress game will be discarded.')) return;
+    if(typeof clearActiveGame==='function') clearActiveGame();
+    G=null;
+  }
+  selectTeam(currentTeam.id);   // → squad picker → kick off
+}
+function lobbyDiscard(){
+  if(!confirm('Discard the in-progress game? This cannot be undone.')) return;
+  if(typeof clearActiveGame==='function') clearActiveGame();
+  G=null;
+  renderLobby();
+}
+function lobbyPickTeam(id){
+  const m=document.getElementById('lobbyTeamMenu'); if(m) m.style.display='none';
+  const t=teams.find(x=>String(x.id)===String(id));
+  if(t){ currentTeam=t; renderLobby(); }
+}
+function toggleLobbyTeamMenu(e){
+  if(e) e.stopPropagation();
+  const m=document.getElementById('lobbyTeamMenu'); if(!m) return;
+  if(m.style.display==='block'){ m.style.display='none'; return; }
+  teams=loadTeams();
+  const sorted=[...teams].sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
+  const cid=currentTeam?String(currentTeam.id):'';
+  m.innerHTML=sorted.map(t=>`<button onclick="lobbyPickTeam('${t.id}')" style="width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;background:${String(t.id)===cid?'rgba(0,212,170,.12)':'none'};border:none;color:#cdd9e5;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;font-family:inherit">${t.favorite?ic('star',13,'#ffc428'):'<span style="display:inline-block;width:13px"></span>'}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</span><span style="font-size:11px;color:#7d8a9c">${(t.players||[]).length}</span></button>`).join('')
+    +`<div style="height:1px;background:#243049;margin:4px 0"></div>`
+    +`<button onclick="document.getElementById('lobbyTeamMenu').style.display='none';newTeam()" style="width:100%;padding:11px 12px;background:none;border:none;color:#5bc0de;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;font-family:inherit">+ New Team</button>`;
+  m.style.display='block';
+  _li();
 }
 
 // v2.7.36 — Team action overlay (Play Now / Plan Ahead / Past Games / Edit).
@@ -7943,6 +8018,9 @@ function maybeShowWhatsNew(){
 // the hero element doesn't exist in the DOM until renderHome paints.)
 {const _v=APP_VERSION.replace(/-beta$/,'');const _el=document.getElementById('verTag');if(_el)_el.textContent=_v;const _ab=document.getElementById('abVer');if(_ab)_ab.textContent=_v;}
 renderHome();
+// v2.8: land on the loaded-team LOBBY when teams exist (active-game team / favourite /
+// first). First run / no teams stays on the home list rendered just above.
+try{ if(loadTeams().length && typeof renderLobby==='function'){ showScr('lobby'); renderLobby(); } }catch(e){}
 initCloudAuth();
 _li(); // materialise initial-page <i data-lucide> placeholders once Lucide is in
 maybeShowWhatsNew(); // fire the changelog modal if this is a new version for this device
