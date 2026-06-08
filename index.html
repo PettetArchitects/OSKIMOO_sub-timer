@@ -329,6 +329,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v2.7.79 — formation chip row: use grid with auto-fit columns so the 7 chips distribute evenly instead of leaving an orphan on a new row (backlog #5). */
 #planFormationChips{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(54px,1fr))!important;gap:4px!important}
 #planFormationChips button{padding:4px 6px!important}
+/* v2.8: Plan page = single-screen, pitch-first. Portrait was using the huge base
+   clock; bring it down to the game-eyebrow scale so the pitch + scrub bar fit one
+   screen. The heavy projected-minutes + full schedule tuck behind #planMoreToggle. */
+#subOrderOv .tmr-c{font-size:42px!important;letter-spacing:1px!important;font-weight:normal!important}
+#subOrderOv #planClockAnchor{padding:8px 0 4px!important}
+#subOrderOv #planRosterOverview{margin-bottom:8px!important}
+#planMoreToggle{width:100%;margin:4px 0 10px;padding:10px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.25);border-radius:9px;color:#9fb3c8;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+/* Remove the redundant "Sub Plan" title bar (the brand bar above already names the
+   app) — collapse it to zero height, keep only the floating menu button. */
+#subOrderOv > div:first-child{min-height:0!important;height:0!important;padding:0!important;background:none!important;border:none!important;overflow:visible!important}
+#subOrderOv > div:first-child h2{display:none!important}
+#subOrderOv #planMenuBtn{width:34px!important;height:34px!important;top:6px!important;background:rgba(13,24,40,.72)!important;z-index:40}
+#subOrderOv #subOrderSuggestion{font-size:11px!important;line-height:1.3!important;margin-bottom:8px!important}
+#subOrderOv #subOrderSuggestion *{font-size:inherit!important;margin-top:2px!important;margin-bottom:2px!important}
 @keyframes sub-flash{from{opacity:1}to{opacity:.4}}
 @keyframes pulse{from{opacity:1}to{opacity:.4}}
 
@@ -1139,13 +1153,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subOrderSuggestion" style="display:none"></div>
     <!-- v2.7.48: starting-XI + bench overview so the coach sees the whole roster status at a glance — not just the swap rows. -->
     <div id="planRosterOverview" style="margin-bottom:14px"></div>
-    <!-- v2.7.66: projected playing time per player across the full game. The
-         fairness check — Auto-fair strategies exist to balance minutes, this
-         shows whether they actually are. Sorted lowest first so the kids
-         getting under-played sit at the top. -->
-    <div id="planProjMins" style="margin-bottom:14px"></div>
-    <div id="subOrderInfo" style="font-size:13px;color:#888;text-align:center;margin:0 0 14px"></div>
-    <div id="subOrderList"></div>
+    <!-- v2.8: pitch + scrub bar are the default one-screen view; the heavy detail
+         (projected minutes + the full sub schedule) tucks behind this toggle. -->
+    <button id="planMoreToggle" onclick="togglePlanMore()">▾ Projected minutes &amp; full schedule</button>
+    <div id="planMoreWrap" style="display:none">
+      <!-- v2.7.66: projected playing time per player across the full game. The
+           fairness check — Auto-fair strategies exist to balance minutes, this
+           shows whether they actually are. Sorted lowest first so the kids
+           getting under-played sit at the top. -->
+      <div id="planProjMins" style="margin-bottom:14px"></div>
+      <div id="subOrderInfo" style="font-size:13px;color:#888;text-align:center;margin:0 0 14px"></div>
+      <div id="subOrderList"></div>
+    </div>
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
   </div>
   <!-- v2.7.58/71: bottom control band shares the gameDash styling. Bottom padding
@@ -8097,6 +8116,20 @@ function closeSubSettings(){
   document.getElementById('subSettingsOv').classList.remove('show');
   if(typeof saveActiveGame==='function') saveActiveGame();
   if(typeof renderG==='function') renderG();
+  // v2.8: if the Plan page is open, refresh it with the new timing (mirrors the
+  // planClkAdj re-render path) — the Plan clock taps here instead of using steppers.
+  const po=document.getElementById('subOrderOv');
+  if(po && po.classList.contains('active')){
+    try{
+      if(typeof renderSubOrderControls==='function') renderSubOrderControls();
+      if(typeof renderSubOrderSuggestion==='function') renderSubOrderSuggestion();
+      if(typeof buildPlanTimeline==='function') buildPlanTimeline();
+      if(typeof renderPlanScrubBar==='function') renderPlanScrubBar();
+      if(typeof renderPlanField3D==='function') renderPlanField3D();
+      if(typeof renderPlanBenchChips==='function') renderPlanBenchChips();
+      if(typeof renderSubOrder==='function') renderSubOrder();
+    }catch(e){}
+  }
 }
 function ssAdj(k,d){
   if(k==='hm') cfg.hm=Math.max(5,Math.min(30,cfg.hm+d));
@@ -8167,6 +8200,16 @@ let _subOrderStrat=null;   // currently previewed strategy (null = use live G.su
 let _planTimeline=null;
 let _planScrubIdx=0;
 let _planLiveTickId=null;  // interval that keeps the LIVE clock ticking on the Plan page
+// v2.8: the projected-minutes + full-schedule block is collapsed by default so the
+// Plan page is pitch + scrub bar on one screen. The toggle reveals the detail.
+let _planMoreOpen=false;
+function togglePlanMore(){ _planMoreOpen=!_planMoreOpen; applyPlanMore(); }
+function applyPlanMore(){
+  const w=document.getElementById('planMoreWrap');
+  const t=document.getElementById('planMoreToggle');
+  if(w) w.style.display=_planMoreOpen?'block':'none';
+  if(t) t.innerHTML=(_planMoreOpen?'▴':'▾')+' Projected minutes &amp; full schedule';
+}
 function openSubOrder(){
   if(!G) return;
   // v2.7.34: tabs work in toggle space (auto/planned), not internal strategies.
@@ -8174,6 +8217,7 @@ function openSubOrder(){
   // v2.7.53: build the scrub timeline first so the roster overview, scrub bar,
   // and sub list all read from the same simulation. Reset to LIVE every open.
   _planScrubIdx=0;
+  _planMoreOpen=false; applyPlanMore();   // start collapsed — pitch-first
   buildPlanTimeline();
   renderSubOrderTabs();
   renderSubOrderControls();
@@ -8977,33 +9021,18 @@ function renderPlanClockAnchor(){
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const st=getPlanScrubState();
   if(!st){ host.innerHTML=''; return; }
-  const tColor=st.isLive?'#00d4aa':'#5bc0de';
-  // v2.7.60: SAME dual-clock element in both AUTO and CUSTOM — direct copy of the
-  // game-screen header (left clock = game time / period / min-half stepper; right
-  // clock = SUB EVERY countdown / min-subs stepper). The previous AUTO variant
-  // (single clock) made the anchor read differently across the two modes; one
-  // anchor, one shape, regardless of strategy.
-  const hmV=cfg.hm||0, sfV=cfg.sf||0;
-  host.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-      <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:${tColor}">${fmtTime(st.time)}</div>
-      <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
-        <button onclick="planClkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-        <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${hmV}</span>
-        <span style="opacity:.7">min half</span>
-        <button onclick="planClkAdj('hm',1)" aria-label="Longer half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
-      </div>
+  // v2.8: match the game-screen clock exactly — side-stacked labels, white half +
+  // green sub, big DSEG, tap to edit timing (openSubSettings). The min-half/min-subs
+  // stepper pills are gone (same as the game); timing is edited via the tap modal.
+  const pStack=periodLbl(st.period).toUpperCase().split(' ').map(x=>`<div>${x}</div>`).join('');
+  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap">
+    <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:4px;cursor:pointer">
+      <div style="font-size:10px;color:#eee;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:right;white-space:nowrap;max-width:30px">${pStack}</div>
+      <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:#eee">${fmtTime(st.time)}</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:5px;cursor:pointer">
       <div class="tmr-c" style="margin:0;line-height:1;color:#00d4aa">${fmtTime((cfg.sf||0)*60)}</div>
-      <div style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">SUB EVERY</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
-        <button onclick="planClkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-        <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${sfV}</span>
-        <span style="opacity:.7">min subs</span>
-        <button onclick="planClkAdj('sf',1)" aria-label="Sub less often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
-      </div>
+      <div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:left;white-space:nowrap;max-width:30px"><div>SUB</div><div>EVERY</div></div>
     </div>
   </div>`;
 }
