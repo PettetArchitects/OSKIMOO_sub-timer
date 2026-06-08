@@ -166,16 +166,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    :not(.fc-sub-in) keeps the "↑incoming" badge). */
 #s4 .fc-mins:not(.fc-sub-in){display:none!important}
 #s4 .benchMins{display:none!important}
-/* === v2.8 EXPERIMENTAL LAYOUT FORK (?fork=1) ===
-   Re-orders the game screen via flex `order`: BENCH on top → FIELD → CLOCK just
-   above the play/pause (dashboard) row. Everything else shifts up. Same markup,
-   pure reorder, so it's a true side-by-side comparison of the default layout. */
-.fork #s4 > div:first-child{order:-2!important}                 /* collapsed score header — very top */
-.fork #s4 > #clkArea{order:-1!important}                        /* CLOCK stays the top eyebrow */
-.fork #s4 > #benchTop{order:0!important;border-bottom:1px solid #243049!important}  /* BENCH directly below the clock */
-.fork #s4 > #pitchZone{order:1!important}                       /* FIELD */
-.fork #s4 > #fmtRow{order:1!important}
-.fork #s4 > #gameDash{order:2!important}                        /* play/pause row at the bottom */
+/* === v2.8 game-screen order ===
+   CLOCK (top eyebrow) → BENCH → FIELD → play/pause (dashboard) row. Glanceable
+   info (time + who's next) grouped at the top; the field is one clean block;
+   actions at the bottom. Pure flex `order` over the source markup. */
+#s4 > div:first-child{order:-2}                 /* collapsed score header — very top */
+#s4 > #clkArea{order:-1}                         /* clock eyebrow */
+#s4 > #benchTop{order:0;border-bottom:1px solid #243049}  /* bench directly below the clock */
+#s4 > #pitchZone{order:1}                        /* field */
+#s4 > #fmtRow{order:1}
+#s4 > #gameDash{order:2}                          /* play/pause row at the bottom */
 /* iPhone / narrow-portrait: tighten the stacked score header so it clears
    the absolutely-positioned ✕ end-game button. Stacking itself is now the
    default in renderScore (not media-query-gated). */
@@ -1335,9 +1335,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 try{localStorage.removeItem('subTimerTheme');document.documentElement.removeAttribute('data-theme');}catch(e){}
 
 // ===== CLOUD SYNC (Supabase) =====
-// v2.8: experimental layout fork — ?fork=1 reorders the game screen (bench on top,
-// clock just above the play/pause row). Toggle on <html> so CSS can switch layouts.
-try{ if(new URLSearchParams(location.search).get('fork')==='1') document.documentElement.classList.add('fork'); }catch(e){}
 const SUPABASE_URL='https://grvrigrxujbnmullixiz.supabase.co';
 const SUPABASE_KEY='sb_publishable_kMIAVFBTRB2Tk-lODUiO5w_PCq3YF_6';
 const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}}):null;
@@ -2874,10 +2871,9 @@ const afl3d={
       need=Math.max(need, zc+Math.abs(xc)/tanH, zc+Math.abs(yc)/tanV);
     });
     // v2.8: top-down view pulls back a bit more (less zoomed-in) than the angled views.
-    // Top-down zoom: the fork layout gives the field lots of room → fill it (tight
-    // fit); the default layout pulls back more so the field isn't too zoomed-in.
-    const _topMul=document.documentElement.classList.contains('fork')?0.98:1.3;
-    let d=need*(this.view==='top'?this._fitMargin*_topMul:this._fitMargin);
+    // Top-down view fills the field area with a tight fit (the clock-above-bench
+    // layout gives it the room); angled views use the base margin.
+    let d=need*(this.view==='top'?this._fitMargin*0.98:this._fitMargin);
     d=Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, d));
     this._fitD=d;
     cam.position.copy(target).addScaledVector(dir, d);
