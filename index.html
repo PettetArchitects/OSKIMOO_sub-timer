@@ -3198,7 +3198,8 @@ function renderViewSwitcher(){
   if(!host) return;
   // v2.7.80: hide the tab bar on landing-style screens (no team context selected).
   // The Game / Plan / Team tabs are only meaningful once the coach is INSIDE a team.
-  const onLanding=['home','sportPicker','gradePicker'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
+  // v2.8: nav stays visible on home too — only hidden during the new-team picker flow.
+  const onLanding=['sportPicker','gradePicker'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
   if(onLanding){ host.style.display='none'; }
   else { host.style.display='flex'; }
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
@@ -7801,10 +7802,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
   {
     const benchSection=document.createElement('div');
     benchSection.style.cssText='display:flex;flex-direction:column;gap:6px';
-    const bLbl=document.createElement('div');
-    bLbl.style.cssText='padding:0 2px';
-    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`;
-    benchSection.appendChild(bLbl);
+    // v2.8: "BENCH · N" title dropped — redundant (the chips are obviously the bench).
 
     // Pair-rotation mode swaps pre-grouped pairs as units, so reordering an
     // individual bench player has no effect. Hide reorder arrows in that mode.
