@@ -26,6 +26,13 @@
       url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff') format('woff');
   font-weight:bold;font-style:normal;font-display:swap;
 }
+/* Lighter cut for the flap-board clock — Bold reads too heavy on the small tiles. */
+@font-face{
+  font-family:'DSEG';
+  src:url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff2') format('woff2'),
+      url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff') format('woff');
+  font-weight:normal;font-style:normal;font-display:swap;
+}
 </style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -143,7 +150,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    seam across the middle; ':' and ' ' are bare separators. Char colour inherits
    from the parent so the clock's warn/alert states still tint it. === */
 .flap-board{display:inline-flex;align-items:stretch;gap:.2em;line-height:1;font-variant-numeric:tabular-nums}
-.flap-tile{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:.96em;padding:.14em .16em;border-radius:.08em;color:inherit;font-family:'DSEG',ui-monospace,monospace;font-weight:bold;
+.flap-tile{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:.96em;padding:.26em .16em;border-radius:.08em;color:inherit;font-family:'DSEG',ui-monospace,monospace;font-weight:normal;
   background:linear-gradient(180deg,#2c313a 0 calc(50% - .35px),#0b0d10 calc(50% - .35px) calc(50% + .35px),#181b21 calc(50% + .35px) 100%);
   box-shadow:0 .04em .12em rgba(0,0,0,.6),inset 0 .04em 0 rgba(255,255,255,.06),inset 0 -.04em .06em rgba(0,0,0,.5);
   text-shadow:0 .02em .04em rgba(0,0,0,.7)}
