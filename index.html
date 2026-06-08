@@ -141,7 +141,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* Timer */
 .tmr{text-align:center;padding:20px 16px 14px;background:linear-gradient(180deg,#16213e,#1a1a2e)}
 .tmr-h{font-size:14px;color:#e94560;font-weight:700;text-transform:uppercase;letter-spacing:2px}
-.tmr-c{font-family:'DSEG',monospace;font-size:min(13vw,56px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:2px 0;line-height:1}
+.tmr-c{font-family:'DSEG',monospace;font-size:min(13vw,56px);font-weight:bold;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:2px 0;line-height:1;position:relative;isolation:isolate}
+/* v2.8: Casio-LCD "ghost" — all segments faintly lit (88:88) behind the live digits,
+   like an unlit LCD you catch in the sun. Inherits each clock's colour + metrics. */
+.tmr-c::before{content:"88:88";position:absolute;left:0;top:0;opacity:.11;z-index:-1;pointer-events:none}
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
 /* Next-sub countdown digit display — SAME size as the main clock now (v2.7.3) so the two read as a matched pair. Green by default. */
 .tmr-c.tmr-sub{letter-spacing:1.5px;color:#00d4aa}
