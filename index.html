@@ -154,22 +154,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   background:linear-gradient(180deg,#2a2d22,#0c0e07)!important;
   border:1px solid #000!important;border-radius:11px!important;
   box-shadow:0 2px 4px rgba(0,0,0,.55), inset 0 0 0 1px rgba(180,186,176,.18), inset 0 1px 0 rgba(255,255,255,.08)!important;
-  margin:6px 8px 5px!important;padding:5px!important;
+  margin:5px 8px 4px!important;padding:3px!important;
 }
 /* LCD screen inside the steel case — dark frame around the grey-green glass */
 #clkArea > div:first-child, #planClockAnchor > div:first-child{
   background:linear-gradient(180deg,#c6ccba,#a7ad99)!important;
   border:2px solid #20241a!important;border-radius:6px!important;
   box-shadow:inset 0 2px 5px rgba(16,24,6,.42)!important;
-  padding:7px 9px!important;box-sizing:border-box!important;
-  min-height:54px!important;align-items:center!important;gap:12px!important;   /* fixed metrics = same band height */
+  padding:3px 9px!important;box-sizing:border-box!important;
+  min-height:46px!important;align-items:center!important;gap:12px!important;   /* fixed metrics = same band height */
 }
 #clkArea .tmr-c, #planClockAnchor .tmr-c{color:#23271c!important;font-size:44px!important;font-style:italic!important} /* half clock = main display, slanted like the AE1200 LCD */
 #clkArea #hLbl{color:#3a4030!important}
 #clkArea .tmr-c::before, #planClockAnchor .tmr-c::before{opacity:.17} /* off-segments read on the light panel */
 /* Sub-timer circular complication — a Casio radar-style dark ring on the light LCD,
    countdown in the centre. Replaces the digital sub clock; frees the band width. */
-.sub-dial{position:relative;width:54px;height:54px;flex-shrink:0}
+.sub-dial{position:relative;width:48px;height:48px;flex-shrink:0}
 .sub-dial > svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
 .sub-dial .sd-ticks{fill:none;stroke:rgba(35,39,28,.5);stroke-width:2.2;stroke-dasharray:.7 4.55}  /* AE1200 compass-dial ticks */
 .sub-dial .sd-track{fill:none;stroke:rgba(30,36,20,.16);stroke-width:3}
