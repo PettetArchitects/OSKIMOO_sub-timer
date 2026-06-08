@@ -2860,7 +2860,8 @@ const afl3d={
       const xc=v.dot(xaxis), yc=v.dot(yaxis), zc=v.dot(zaxis);
       need=Math.max(need, zc+Math.abs(xc)/tanH, zc+Math.abs(yc)/tanV);
     });
-    let d=need*this._fitMargin;
+    // v2.8: top-down view pulls back a bit more (less zoomed-in) than the angled views.
+    let d=need*(this.view==='top'?this._fitMargin*1.3:this._fitMargin);
     d=Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, d));
     this._fitD=d;
     cam.position.copy(target).addScaledVector(dir, d);
@@ -6463,8 +6464,9 @@ function renderG(){
     pb.className='gd-btn gd-go';
   } else {
     document.getElementById('hLbl').textContent=_sport.periodShort(G.half);
-    if(!cfg.breaksOnly&&ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
-    syncHalfLbl(ce);  // label colour follows the clock (white → amber → red)
+    // v2.8: the half clock no longer changes colour for a sub — only the sub
+    // timer warns. The half clock stays white (game time), label follows it.
+    syncHalfLbl(ce);
     if(cfg.breaksOnly){
       // Breaks-only mode (e.g. netball): rotate at the quarter/half break, no rolling subs.
       const brk=(_sport.key==='netball'||_sport.key==='afl')?'quarter break':'the break';
@@ -6816,8 +6818,7 @@ function tickLoop(now){
   }
   // Update display (whole seconds — centiseconds were too noisy and overflowed on iPhone)
   const ce=document.getElementById('clk');ce.innerHTML=flapBoard(fmtHalf(Math.floor(totalMs/1000)));
-  ce.className='tmr-c';
-  if(!cfg.breaksOnly){const ns=nxtST();if(ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}}
+  ce.className='tmr-c';   // half clock stays white — only the sub timer warns for subs
   syncHalfLbl(ce);
   updateClkSub();
   G.raf=requestAnimationFrame(tickLoop);
