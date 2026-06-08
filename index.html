@@ -332,7 +332,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v2.8: Plan page = single-screen, pitch-first. Portrait was using the huge base
    clock; bring it down to the game-eyebrow scale so the pitch + scrub bar fit one
    screen. The heavy projected-minutes + full schedule tuck behind #planMoreToggle. */
-#subOrderOv .tmr-c{font-size:42px!important;letter-spacing:1px!important;font-weight:normal!important}
+#subOrderOv .tmr-c{font-size:40px!important;letter-spacing:1px!important;font-weight:normal!important}
 #subOrderOv #planClockAnchor{padding:8px 0 4px!important}
 #subOrderOv #planRosterOverview{margin-bottom:8px!important}
 #planMoreToggle{width:100%;margin:4px 0 10px;padding:10px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.25);border-radius:9px;color:#9fb3c8;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -9025,14 +9025,14 @@ function renderPlanClockAnchor(){
   // green sub, big DSEG, tap to edit timing (openSubSettings). The min-half/min-subs
   // stepper pills are gone (same as the game); timing is edited via the tap modal.
   const pStack=periodLbl(st.period).toUpperCase().split(' ').map(x=>`<div>${x}</div>`).join('');
-  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap">
-    <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:4px;cursor:pointer">
-      <div style="font-size:10px;color:#eee;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:right;white-space:nowrap;max-width:30px">${pStack}</div>
+  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:nowrap">
+    <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:5px;cursor:pointer">
+      <div style="font-size:9px;color:#eee;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:right;white-space:nowrap;width:30px">${pStack}</div>
       <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:#eee">${fmtTime(st.time)}</div>
     </div>
     <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:5px;cursor:pointer">
       <div class="tmr-c" style="margin:0;line-height:1;color:#00d4aa">${fmtTime((cfg.sf||0)*60)}</div>
-      <div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:left;white-space:nowrap;max-width:30px"><div>SUB</div><div>EVERY</div></div>
+      <div style="font-size:9px;color:#00d4aa;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:left;white-space:nowrap;width:30px"><div>SUB</div><div>EVERY</div></div>
     </div>
   </div>`;
 }
