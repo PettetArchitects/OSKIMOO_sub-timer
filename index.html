@@ -206,9 +206,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      clock height. Half clock = label on the LEFT; sub clock = label on the RIGHT. */
   #s4 #clkArea > div:first-child > div:first-child{flex-direction:row-reverse!important;align-items:center!important;gap:4px!important}
   #s4 #clkSubGrp{flex-direction:row!important;align-items:center!important;gap:4px!important}
+  /* Half label colour is driven by JS to match the half clock (white → amber → red),
+     like the sub label matches the green sub clock. */
   #s4 #hLbl{font-size:9px!important;letter-spacing:.3px!important;white-space:normal!important;max-width:28px!important;text-align:right!important;line-height:1.05!important;margin:0!important}
   #s4 #clkSubLbl{font-size:9px!important;letter-spacing:.3px!important;white-space:normal!important;max-width:28px!important;text-align:left!important;line-height:1.05!important;margin:0!important}
   #s4 #nsi{display:none!important}
+  /* iPhone: drop player numbers — the jersey-number badge clutters the small pills. */
+  #s4 .fc-shirt-num{display:none!important}
+  #s4 .benchJersey{display:none!important}
   /* v2.8: maximise the field on phone. The bench was collapsing to ONE column
      at 390px (minmax(190px) auto-fit) → tall stacked cards eating ~26dvh. Force
      a tight 2-column strip and cap the height so the flex:1 pitch above claims
@@ -963,7 +968,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c" id="clk" onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="margin:0;line-height:1;cursor:pointer">00:00</div>
-        <div id="hLbl" onclick="openSubSettings()" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap;cursor:pointer">1ST HALF</div>
+        <div id="hLbl" onclick="openSubSettings()" style="font-size:13px;color:#eee;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap;cursor:pointer">1ST HALF</div>
         <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
         <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -6420,6 +6425,14 @@ function flapBoard(text, cls){
   return '<span class="flap-board'+(cls?' '+cls:'')+'">'+tiles+'</span>';
 }
 
+// Keep the "1ST HALF" label the same colour as the half clock (white → amber →
+// red), mirroring how the sub label tracks the green sub clock.
+function syncHalfLbl(ce){
+  const hl=document.getElementById('hLbl'); if(!hl) return;
+  ce=ce||document.getElementById('clk');
+  hl.style.color=(ce&&ce.classList.contains('alert'))?'#e94560':(ce&&ce.classList.contains('warn'))?'#f0a500':'#eee';
+}
+
 function renderG(){
   const _sport=getSport(currentTeam);
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
@@ -6444,8 +6457,8 @@ function renderG(){
     pb.className='gd-btn gd-go';
   } else {
     document.getElementById('hLbl').textContent=_sport.periodShort(G.half);
-    document.getElementById('hLbl').style.color='#e94560';
     if(!cfg.breaksOnly&&ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
+    syncHalfLbl(ce);  // label colour follows the clock (white → amber → red)
     if(cfg.breaksOnly){
       // Breaks-only mode (e.g. netball): rotate at the quarter/half break, no rolling subs.
       const brk=(_sport.key==='netball'||_sport.key==='afl')?'quarter break':'the break';
@@ -6752,8 +6765,11 @@ function updateClkSub(){
   // disappears when there's no upcoming sub (breaks-only, empty bench, time elapsed).
   const grp=document.getElementById('clkSubGrp');
   const ns=typeof nxtST==='function'?nxtST():null;
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){ if(grp) grp.style.display='none'; return; }
-  const d=ns-G.secs, m=Math.floor(d/60), s=d%60;
+  // Hide only when there's genuinely no upcoming sub (breaks-only / empty bench /
+  // none left). When a sub is DUE/overdue, show 00:00 — don't vanish (that read
+  // as the sub timer "bugging out").
+  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length){ if(grp) grp.style.display='none'; return; }
+  const d=Math.max(0,ns-G.secs), m=Math.floor(d/60), s=d%60;
   if(grp) grp.style.display='flex';
   cs.innerHTML=flapBoard(String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'));
   cs.className='tmr-c tmr-sub'+(d<=10?' alert':(d<=30?' warn':''));
@@ -6796,6 +6812,7 @@ function tickLoop(now){
   const ce=document.getElementById('clk');ce.innerHTML=flapBoard(fmtHalf(Math.floor(totalMs/1000)));
   ce.className='tmr-c';
   if(!cfg.breaksOnly){const ns=nxtST();if(ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}}
+  syncHalfLbl(ce);
   updateClkSub();
   G.raf=requestAnimationFrame(tickLoop);
 }
@@ -7811,7 +7828,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
         ? `<div class="benchReorder" style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${arrowBtn('up',isFirst)}${arrowBtn('down',isLast)}</div>`
         : '';
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
-      const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
+      const jerseyHtml=jersey?`<span class="benchJersey" style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
         <div style="width:24px;height:24px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
