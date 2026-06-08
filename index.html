@@ -6934,8 +6934,14 @@ function updateClkSub(){
   // Hide only when there's genuinely no upcoming sub (breaks-only / empty bench /
   // none left). When a sub is DUE/overdue, show 00:00 — don't vanish (that read
   // as the sub timer "bugging out").
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length){ if(grp) grp.style.display='none'; return; }
+  if(cfg.breaksOnly||!G.bench||!G.bench.length){ if(grp) grp.style.display='none'; return; }
   if(grp) grp.style.display='';
+  if(ns===null){   // no more subs this period — keep the dial present (empty ring), don't vanish
+    cs.textContent='-'; cs.style.color='#6a715f';
+    const _l=document.getElementById('clkSubLbl'); if(_l) _l.style.color='#6a715f';
+    const _a=document.getElementById('subDialArc'); if(_a){ _a.style.strokeDashoffset='113.1'; _a.style.stroke='#6a715f'; }
+    return;
+  }
   const total=(cfg.sf||1)*60;
   const d=Math.max(0,ns-G.secs), m=Math.floor(d/60), s=d%60;
   cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');   // MM:SS in the dial centre
