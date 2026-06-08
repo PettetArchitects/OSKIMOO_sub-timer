@@ -145,6 +145,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v2.8: Casio-LCD "ghost" — all segments faintly lit (88:88) behind the live digits,
    like an unlit LCD you catch in the sun. Inherits each clock's colour + metrics. */
 .tmr-c::before{content:"88:88";position:absolute;left:0;top:0;opacity:.11;z-index:-1;pointer-events:none}
+/* === v2.8 Casio watch clock module — shared by the game (#clkArea) and the plan
+   (#planClockAnchor). DARK BEZEL (unifying frame) wraps a LIGHTER LCD screen with
+   dark segments. Identical markup metrics on both pages → no height shift. === */
+#clkArea, #planClockAnchor{
+  background:linear-gradient(180deg,#20231a,#0a0c06)!important;   /* dark bezel */
+  border:1px solid #000!important;border-radius:12px!important;
+  box-shadow:0 2px 4px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07)!important;
+  margin:6px 8px 5px!important;padding:4px!important;
+}
+/* light LCD screen inside the bezel — first child is the clock flex-row on both */
+#clkArea > div:first-child, #planClockAnchor > div:first-child{
+  background:linear-gradient(180deg,#c6ccba,#a8ae9a)!important;border-radius:8px!important;
+  box-shadow:inset 0 2px 5px rgba(16,24,6,.36), inset 0 -1px 0 rgba(255,255,255,.32)!important;
+  padding:7px 9px!important;box-sizing:border-box!important;
+  min-height:54px!important;align-items:center!important;gap:12px!important;   /* fixed metrics = same band height */
+}
+#clkArea .tmr-c, #planClockAnchor .tmr-c{color:#23271c!important;font-size:36px!important} /* dark segments, sized to fit the bezel */
+#clkArea #hLbl, #clkArea #clkSubLbl{color:#3a4030!important}
+#clkArea .tmr-c::before, #planClockAnchor .tmr-c::before{opacity:.17} /* off-segments read on the light panel */
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
 /* Next-sub countdown digit display — SAME size as the main clock now (v2.7.3) so the two read as a matched pair. Green by default. */
 .tmr-c.tmr-sub{letter-spacing:1.5px;color:#00d4aa}
@@ -9030,12 +9049,12 @@ function renderPlanClockAnchor(){
   const pStack=periodLbl(st.period).toUpperCase().split(' ').map(x=>`<div>${x}</div>`).join('');
   host.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap">
     <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:5px;cursor:pointer">
-      <div style="font-size:9px;color:#eee;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:right;white-space:nowrap;max-width:30px">${pStack}</div>
+      <div style="font-size:9px;color:#3a4030;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:right;white-space:nowrap;max-width:30px">${pStack}</div>
       <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:#eee">${fmtHalf(st.time)}</div>
     </div>
     <div onclick="openSubSettings()" title="Tap to edit half length + sub timing" style="display:flex;flex-direction:row;align-items:center;gap:5px;cursor:pointer">
       <div class="tmr-c" style="margin:0;line-height:1;color:#00d4aa">${fmtTime((cfg.sf||0)*60)}</div>
-      <div style="font-size:9px;color:#00d4aa;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:left;white-space:nowrap;max-width:30px"><div>SUB</div><div>EVERY</div></div>
+      <div style="font-size:9px;color:#3a4030;font-weight:800;letter-spacing:.3px;line-height:1.05;text-align:left;white-space:nowrap;max-width:30px"><div>SUB</div><div>EVERY</div></div>
     </div>
   </div>`;
 }
