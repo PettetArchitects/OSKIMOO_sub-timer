@@ -143,6 +143,38 @@ const SCENARIOS = [
     await shot(page, 'keeper-any');
   }],
 
+  // Regression (v2.7.95): building a line-up from scratch while the scrub bar is
+  // parked on a future-sub preview used to desync the pitch/chips/keeper from the
+  // real line-up — players you never picked showed on the field and the wrong
+  // keeper got the projected minutes. Editing must snap the view back to LIVE so
+  // what you see equals what you built.
+  ['edit-while-scrubbed stays in sync (no phantom players)', async (page) => {
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'Scrub FC' });
+    await page.evaluate(() => switchToView('plan'));
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      // Park the scrub bar on a future preview (the trigger condition).
+      if (typeof planScrubStep === 'function') planScrubStep(1);
+      const scrubbedAway = (typeof _planScrubIdx !== 'undefined') && _planScrubIdx !== 0;
+      // Build a line-up from scratch while (previously) scrubbed.
+      planClearField();
+      const bench = [...G.bench];
+      for (const idx of bench.slice(0, 6)) planAddStarter(idx);
+      const st = getPlanScrubState();
+      return {
+        scrubbedAway,
+        backToLive: st.isLive === true && _planScrubIdx === 0,
+        match: JSON.stringify(G.on) === JSON.stringify(st.on),
+        gkOnField: G.gk == null || G.on.includes(G.gk),
+      };
+    });
+    chk('reproduced the scrubbed-preview condition', r.scrubbedAway);
+    chk('editing snaps the view back to LIVE', r.backToLive);
+    chk('pitch/chips match the built line-up (no phantom players)', r.match);
+    chk('keeper is on the field', r.gkOnField);
+    await shot(page, 'edit-while-scrubbed');
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);
