@@ -205,6 +205,33 @@ const SCENARIOS = [
     await shot(page, 'next-prev-sync');
   }],
 
+  // Regression (v2.7.97): changing the keeper rebuilt the rotation pairs but did
+  // NOT invalidate the projected-minutes timeline, so the panel replayed the old
+  // keeper — crediting a full game's minutes to an outfielder while the real
+  // keeper sat lower. The keeper is never subbed, so they must be the single
+  // highest projected-minutes player.
+  ['keeper gets full projected minutes after a keeper change', async (page) => {
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'Proj FC' });
+    await page.evaluate(() => switchToView('plan'));
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      // Build a custom line-up, then make a NON-default on-field player the keeper.
+      planClearField();
+      const n = FORMATS[curFmt].onField; while (G.on.length < n && G.bench.length) planAddStarter(G.bench[0]);
+      const target = G.on.find(i => i !== G.gk);
+      setPlanKeeper(target);
+      const keeperName = avail[G.gk];
+      const pt = computeProjectedMinutes();
+      const rows = Object.entries(pt).map(([nm, sec]) => ({ nm, m: Math.round(sec / 60) })).sort((a, b) => b.m - a.m);
+      const maxGame = cfg.hm * getSport(currentTeam).periodCount;
+      return { keeperName, keeperMins: Math.round((pt[keeperName] || 0) / 60), top: rows[0], maxGame, anyZero: rows.some(x => x.m === 0) };
+    });
+    chk('keeper is the top projected-minutes player', r.top.nm === r.keeperName);
+    chk('keeper is credited the full game', r.keeperMins === r.maxGame);
+    chk('projection is non-empty (no all-zeros)', !r.anyZero);
+    await shot(page, 'keeper-projected-minutes');
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);

@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.96-beta';
+const APP_VERSION='v2.7.97-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.97-beta':{
+    title:'Fixed: projected minutes now follow the keeper you pick',
+    items:['Changing the keeper on the Plan page left the projected-minutes panel replaying the old line-up, so a full game\'s minutes could be credited to the wrong player while the actual keeper showed fewer. The projection now rebuilds whenever you change the line-up, keeper, or formation — the keeper (never subbed) correctly shows the full game.']
+  },
   'v2.7.96-beta':{
     title:'Fixed: Next/Prev sub no longer "drops" a player on the Plan page',
     items:['Stepping through your plan with Next sub / Prev sub redrew the pitch but left the on-field chip list frozen, so a preview looked like a player had dropped off the field (and Prev "brought them back"). The chip list now stays in lock-step with the pitch — build a custom line-up, then tap Next sub to demo how it rolls into the auto rotation.']
@@ -8192,6 +8196,11 @@ function renderPlanRosterOverview(){
   renderPlanScrubBar();
   renderPlanField3D();
   renderPlanBenchChips();
+  // v2.7.97: keep the projected-minutes panel in step with line-up / keeper /
+  // formation edits. Every edit routes through here, so refreshing the panel in
+  // one place (rather than in each edit fn) ensures the minutes always reflect
+  // the committed line-up — the keeper, never subbed, shows the full game.
+  if(typeof renderPlanProjectedMinutes==='function') renderPlanProjectedMinutes();
 }
 
 // ===== v2.7.92: starting line-up + keeper touch points on the Plan page =====
@@ -8330,6 +8339,13 @@ function commitPlanLineup(){
   G.pairs=rotPairs.map(p=>({on:[...p.on]}));
   G.pairIdx=0;
   snapshotHalfStart();
+  // v2.7.97: any line-up / keeper / formation edit changes the simulation the
+  // projected-minutes panel and the scrub preview replay. _planTimeline is only
+  // rebuilt when null, so without invalidating it here the projection kept
+  // replaying the OLD keeper + rotation — crediting a full game's minutes to the
+  // wrong player (e.g. an outfielder shown at 40' while the actual keeper sat at
+  // 25'). Null it so the next render rebuilds from the committed line-up.
+  _planTimeline=null;
 }
 function renderPlanFormationChips(){
   const host=document.getElementById('planFormationChips');
@@ -8609,7 +8625,12 @@ function getPlanScrubState(){
 // across every event + period remainder. Returns {playerName: totalSeconds} —
 // the projected playing time for the FULL game given the current plan.
 function computeProjectedMinutes(){
-  if(!_planTimeline||!G) return {};
+  if(!G) return {};
+  // v2.7.97: self-heal a missing timeline. Edits invalidate _planTimeline (set
+  // it null) so the projection rebuilds from the new line-up/keeper; rebuild it
+  // on demand here rather than returning {} (which rendered every player at 0').
+  if(!_planTimeline) buildPlanTimeline();
+  if(!_planTimeline) return {};
   const periodCount=_planTimeline.periodCount;
   const hmSec=(cfg.hm||0)*60;
   let simOn=[..._planTimeline.initialOn];
