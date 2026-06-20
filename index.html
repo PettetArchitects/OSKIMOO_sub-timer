@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.95-beta';
+const APP_VERSION='v2.7.96-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.96-beta':{
+    title:'Fixed: Next/Prev sub no longer "drops" a player on the Plan page',
+    items:['Stepping through your plan with Next sub / Prev sub redrew the pitch but left the on-field chip list frozen, so a preview looked like a player had dropped off the field (and Prev "brought them back"). The chip list now stays in lock-step with the pitch — build a custom line-up, then tap Next sub to demo how it rolls into the auto rotation.']
+  },
   'v2.7.95-beta':{
     title:'Fixed: building a line-up from scratch now stays in sync',
     items:['When you cleared the field and picked starters while the sub-plan preview was parked on a future sub, the pitch could show players you never picked and credit the wrong keeper with the minutes. Editing the line-up now snaps the view back to LIVE so what you see matches what you built.']
@@ -8667,9 +8671,14 @@ function planScrubStep(d){
   const tl=_planTimeline; if(!tl) return;
   const futureCount=tl.events.filter(e=>!e.past).length;
   _planScrubIdx=Math.max(0,Math.min(futureCount,(_planScrubIdx||0)+d));
-  renderPlanScrubBar();
-  renderPlanField3D();
-  renderPlanBenchChips();
+  // v2.7.96: repaint the WHOLE roster overview, not just the pitch. Previously
+  // Next/Prev redrew the pitch + bench but left the "ON FIELD" chips frozen on
+  // the LIVE line-up — so a preview step showed the after-sub XI on the pitch
+  // while the chips still listed the starters, reading as "a player dropped off
+  // the field". renderPlanRosterOverview() hides the editable chips when scrubbed
+  // off LIVE (canEdit=false) and restores them at LIVE, so the two never
+  // contradict each other. It re-runs the pitch / bench / scrub-bar renders too.
+  renderPlanRosterOverview();
   renderSubOrder();
 }
 function planScrubLive(){
