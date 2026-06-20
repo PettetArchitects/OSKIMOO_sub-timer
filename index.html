@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.94-beta';
+const APP_VERSION='v2.7.95-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.95-beta':{
+    title:'Fixed: building a line-up from scratch now stays in sync',
+    items:['When you cleared the field and picked starters while the sub-plan preview was parked on a future sub, the pitch could show players you never picked and credit the wrong keeper with the minutes. Editing the line-up now snaps the view back to LIVE so what you see matches what you built.']
+  },
   'v2.7.94-beta':{
     title:'Who-comes-on-for-who back on the field pill',
     items:['On-field player pills now show "↑Cooper" (green) when a sub is queued, so you can see who\'s replacing them without scanning the bench list']
@@ -8198,6 +8202,7 @@ function setPlanKeeper(idx){
   if(!G||isNaN(idx)||idx<0) return;
   const fmt=FORMATS[curFmt];
   if(!fmt||!fmt.hasGk) return;
+  if(planSetupPhase()) planEnsureLiveForEdit();
   const onField=Math.min(fmt.onField||99, avail.length);
   if(!(G.on||[]).includes(idx)){
     // Picking a benched player as keeper — bring them onto the field. Swapping a
@@ -8223,8 +8228,19 @@ function setPlanKeeper(idx){
   renderPlanRosterOverview();
   if(typeof renderG==='function') renderG();
 }
+// v2.7.95: editing the line-up always acts on the REAL (live) line-up, never a
+// scrubbed preview. If the coach left the scrub bar on a future sub ("Sub 1/6")
+// and then builds/edits a line-up, the pitch + chips + projected minutes were
+// reading the frozen preview while the edit wrote G.on — so players they never
+// picked showed on the field and the wrong keeper got the minutes. Snapping the
+// scrub index back to 0 before any edit keeps what you see and what you change
+// in sync. Returns nothing; safe to call when already live.
+function planEnsureLiveForEdit(){
+  if(typeof _planScrubIdx!=='undefined' && _planScrubIdx!==0){ _planScrubIdx=0; }
+}
 function planClearField(){
   if(!planSetupPhase()) return;
+  planEnsureLiveForEdit();
   G.bench=[...(G.on||[]),...(G.bench||[])];
   G.on=[];
   G.gk=null;
@@ -8234,6 +8250,7 @@ function planClearField(){
 }
 function planAddStarter(idx){
   if(!planSetupPhase()||!_pickStarters) return;
+  planEnsureLiveForEdit();
   const fmt=FORMATS[curFmt];
   const onField=Math.min(fmt.onField||99, avail.length);
   if((G.on||[]).length>=onField) return;
@@ -8247,6 +8264,7 @@ function planAddStarter(idx){
 }
 function planRemoveStarter(idx){
   if(!planSetupPhase()||!_pickStarters) return;
+  planEnsureLiveForEdit();
   if(!(G.on||[]).includes(idx)) return;
   G.on=G.on.filter(p=>p!==idx);
   G.bench.unshift(idx);
