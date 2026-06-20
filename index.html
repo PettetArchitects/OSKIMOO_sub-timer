@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.97-beta';
+const APP_VERSION='v2.7.98-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.98-beta':{
+    title:'Fairer Equal-time rotation — minutes actually even out',
+    items:['The auto rotation sorted only by minutes played, which let it pull and return the same players (leaving some on 25′ and others on 35′) and occasionally bench a player one interval after they came on. It now breaks ties fairly — whoever’s been on longest comes off, whoever’s waited longest comes on — so playing time converges to even and nobody gets subbed off right after coming on.']
+  },
   'v2.7.97-beta':{
     title:'Fixed: projected minutes now follow the keeper you pick',
     items:['Changing the keeper on the Plan page left the projected-minutes panel replaying the old line-up, so a full game\'s minutes could be credited to the wrong player while the actual keeper showed fewer. The projection now rebuilds whenever you change the line-up, keeper, or formation — the keeper (never subbed) correctly shows the full game.']
@@ -8530,6 +8534,16 @@ function buildPlanTimeline(){
   let simOn=[...G.on], simBench=[...G.bench];
   const simPt=Object.assign({},G.pt);
   const events=[];
+  // v2.7.98: fair tiebreakers for the equal-time rotation. Sorting only by
+  // minutes ties on array order, which made the engine pull/return the SAME
+  // players (uneven 25–35' spread) and even bench someone one interval after
+  // they came on ('on then straight off'). Track a global clock (seconds since
+  // kickoff) and, per player, when they last came on / off so equal-minute ties
+  // break by "been on longest comes off" and "been waiting longest comes on".
+  let simClock=(G.half-1)*hmSec + ((G.half===G.half)?G.secs:0);
+  const onSince={}, offSince={};
+  simOn.forEach(pl=>{ onSince[pl]=simClock; });
+  simBench.forEach(pl=>{ offSince[pl]=simClock; });
 
   // Past — read confirmed swaps from the log. State-after isn't recorded for
   // history (would need to invert from current), so scrub only walks future.
@@ -8558,7 +8572,7 @@ function buildPlanTimeline(){
       times.forEach(t=>{
         const dt=Math.max(0,t-simSecs);
         simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt; });
-        simSecs=t;
+        simSecs=t; simClock=(p-1)*hmSec+t;
         const done=(p===G.half)&&G.sd.includes(t);
         if(simBench.length===0){
           events.push({period:p,time:t,off:[],on:[],done,note:'no bench',stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
@@ -8566,25 +8580,39 @@ function buildPlanTimeline(){
         }
         const c=Math.min(cfg.sc||1,simBench.length);
         const eligibleOn=G.gk!==null?simOn.filter(pl=>pl!==G.gk):simOn.slice();
+        // Equal-time selection with fair tiebreakers:
+        //   OFF = most minutes; tie → on the field longest (smallest onSince).
+        //   ON  = fewest minutes; tie → waiting longest (smallest offSince).
+        // Measuring both sides the same way makes minutes converge and stops a
+        // just-arrived player being pulled at the next sub.
+        const offSorted=[...eligibleOn].sort((a,b)=>
+          (simPt[avail[b]]||0)-(simPt[avail[a]]||0) || (onSince[a]||0)-(onSince[b]||0));
+        const onSorted=[...simBench].sort((a,b)=>
+          (simPt[avail[a]]||0)-(simPt[avail[b]]||0) || (offSince[a]||0)-(offSince[b]||0));
         let off=[],on=[];
         if(strat==='paired' && G.pairs && G.pairs.length){
           const pairsByMins=G.pairs.map(pair=>({
             onMembers:pair.on.filter(pl=>eligibleOn.includes(pl)),
-            totalMins:pair.on.reduce((s,pl)=>s+(simPt[avail[pl]]||0),0)
-          })).filter(x=>x.onMembers.length>0).sort((a,b)=>b.totalMins-a.totalMins);
+            totalMins:pair.on.reduce((s,pl)=>s+(simPt[avail[pl]]||0),0),
+            onSince:Math.min(...pair.on.map(pl=>onSince[pl]!=null?onSince[pl]:simClock))
+          })).filter(x=>x.onMembers.length>0)
+            .sort((a,b)=>b.totalMins-a.totalMins || a.onSince-b.onSince);
           if(pairsByMins.length){
             off=pairsByMins[0].onMembers;
-            on=[...simBench].sort((a,b)=>(simPt[avail[a]]||0)-(simPt[avail[b]]||0)).slice(0,off.length);
+            on=onSorted.slice(0,off.length);
           }
         }
         if(!off.length){
-          off=[...eligibleOn].sort((a,b)=>(simPt[avail[b]]||0)-(simPt[avail[a]]||0)).slice(0,c);
-          on=[...simBench].sort((a,b)=>(simPt[avail[a]]||0)-(simPt[avail[b]]||0)).slice(0,c);
+          off=offSorted.slice(0,c);
+          on=onSorted.slice(0,c);
         }
         const cc=Math.min(off.length,on.length);
         off=off.slice(0,cc); on=on.slice(0,cc);
         for(let i=0;i<cc;i++){ const idx=simOn.indexOf(off[i]); if(idx>=0) simOn[idx]=on[i]; }
         simBench=simBench.filter(pl=>!on.includes(pl)).concat(off);
+        // Stamp the swap times so the next interval's tiebreakers are fair.
+        off.forEach(pl=>{ offSince[pl]=simClock; });
+        on.forEach(pl=>{ onSince[pl]=simClock; });
         events.push({period:p,time:t,off,on,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
       });
     }

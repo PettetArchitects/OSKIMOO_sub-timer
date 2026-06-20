@@ -232,6 +232,40 @@ const SCENARIOS = [
     await shot(page, 'keeper-projected-minutes');
   }],
 
+  // Regression (v2.7.98): the Equal-time rotation sorted only by minutes, tying
+  // on array order — so it pulled/returned the same players (uneven spread) and
+  // benched someone one interval after they came on. Fair tiebreakers (off = on
+  // longest; on = waiting longest) make minutes converge. For a squad where even
+  // is achievable, the outfield spread should be ~0 and nobody bounced.
+  ['Equal-time rotation evens outfield minutes (no churn)', async (page) => {
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'Even FC' });
+    await page.evaluate(() => switchToView('plan'));
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      // True Equal-time: 'fair' strategy, no matched pairs.
+      G.subStrategy = 'fair'; G.pairs = [];
+      _planTimeline = null; buildPlanTimeline();
+      // churn: a player SUBBED ON at one event and subbed OFF at the very next.
+      // Starters (initialOn) don't count — leave their "came on" index undefined
+      // so their first real sub-off isn't mistaken for churn.
+      const ev = _planTimeline.events.filter(e => !e.past);
+      const onAt = {};
+      let churn = 0;
+      ev.forEach((e, idx) => {
+        (e.off || []).forEach(i => { if (onAt[i] === idx - 1) churn++; });
+        (e.on || []).forEach(i => { onAt[i] = idx; });
+      });
+      const pt = computeProjectedMinutes();
+      const gk = avail[G.gk];
+      const outfield = Object.entries(pt).filter(([n]) => n !== gk).map(([, sec]) => Math.round(sec / 60));
+      const spread = Math.max(...outfield) - Math.min(...outfield);
+      return { spread, churn, outfield };
+    });
+    chk('outfield minutes are even (spread <= 5m)', r.spread <= 5, `(spread ${r.spread}m)`);
+    chk('no player benched right after coming on', r.churn === 0, `(churn ${r.churn})`);
+    await shot(page, 'equal-time-even');
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);
