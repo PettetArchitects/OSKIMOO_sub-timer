@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.98-beta';
+const APP_VERSION='v2.7.99-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.7.99-beta':{
+    title:'Fixed: Auto-fill no longer strands your keeper in an outfield spot',
+    items:['When you picked an outfielder as keeper and then tapped Auto-fill, your actual goalkeeper could be dumped into an outfield position (e.g. right-mid) while better-suited bench players sat. Auto-fill now respects that the keeper is your manual pick — a player who only plays in goal goes to the bench rather than being forced onto the field out of position.']
+  },
   'v2.7.98-beta':{
     title:'Fairer Equal-time rotation — minutes actually even out',
     items:['The auto rotation sorted only by minutes played, which let it pull and return the same players (leaving some on 25′ and others on 35′) and occasionally bench a player one interval after they came on. It now breaks ties fairly — whoever’s been on longest comes off, whoever’s waited longest comes on — so playing time converges to even and nobody gets subbed off right after coming on.']
@@ -5857,6 +5861,13 @@ function smartAssign(){
       const ptags=currentTeam?getPlayerPos(currentTeam,avail[pIdx]):[];
       let score=0;
       if(ptags.includes(tag)) score=10; // exact match
+      // v2.7.99: a pure keeper (tagged only GK) must not be auto-placed into an
+      // outfield slot ahead of an actual outfielder. When the coach picks an
+      // outfielder as keeper, the displaced goalkeeper was landing at e.g. RM
+      // (scoring 0 like everyone else, then winning on low index) while better-
+      // fit bench players sat. Push pure GKs far down so they only take an
+      // outfield slot if no outfield player is left — i.e. they bench instead.
+      if(ptags.length>0 && ptags.every(t=>t==='GK')) score-=100;
       // Give slight preference to keep original order for tie-breaking
       score-=pIdx*0.01;
       if(score>bestScore){bestScore=score;best=pIdx;}
