@@ -175,6 +175,36 @@ const SCENARIOS = [
     await shot(page, 'edit-while-scrubbed');
   }],
 
+  // Regression (v2.7.96): the Next/Prev sub buttons used to redraw the pitch but
+  // not the ON FIELD chips, so a preview step showed the after-sub XI on the
+  // pitch while the chips stayed on the starters — reading as "a player dropped
+  // off the field". Stepping back to LIVE redrew everything ("Prev shows the
+  // full"). This is the coach demoing a custom line-up → auto rotation. The
+  // pitch and chips must never contradict: at LIVE they match; on a preview the
+  // editable chips hide rather than show a stale list.
+  ['Next/Prev sub: pitch and chips never contradict', async (page) => {
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'Scrub2 FC' });
+    await page.evaluate(() => switchToView('plan'));
+    await page.waitForTimeout(400);
+    // Build a custom starting line-up first (the coach's plan starting point).
+    await page.evaluate(() => { planClearField(); const n = FORMATS[curFmt].onField; while (G.on.length < n && G.bench.length) planAddStarter(G.bench[0]); });
+    const read = () => page.evaluate(() => {
+      const st = getPlanScrubState();
+      const html = document.getElementById('planRosterOverview').innerHTML;
+      const chipIdx = [...html.matchAll(/planRemoveStarter\((\d+)\)/g)].map(m => +m[1]);
+      return { isLive: st.isLive, pitch: st.on.map(i => avail[i]), chipsShown: chipIdx.length > 0, chips: chipIdx.map(i => avail[i]) };
+    });
+    const live = await read();
+    chk('at LIVE, chips match the pitch', live.isLive && JSON.stringify(live.pitch) === JSON.stringify(live.chips));
+    await page.evaluate(() => planScrubStep(1));
+    const preview = await read();
+    chk('on a preview step, stale chips are hidden (not contradicting the pitch)', preview.isLive === false && preview.chipsShown === false);
+    await page.evaluate(() => planScrubStep(-1));
+    const back = await read();
+    chk('Prev back to LIVE restores the full line-up, chips match', back.isLive && JSON.stringify(back.pitch) === JSON.stringify(back.chips) && back.chips.length === 7);
+    await shot(page, 'next-prev-sync');
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);
