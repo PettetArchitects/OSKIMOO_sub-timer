@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.0-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.2-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -127,7 +127,7 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 - **Game Format pills** — switch on the fly (resets formation / GK to format defaults).
 - **Formation pills** — short descriptors in-pill ("Balanced", "Possession diamond", etc.) for quick scanning.
 - **Half Length** stepper (5–30 min).
-- **Sub Frequency** stepper (2–15 min). *Continuous across both halves* — cadence doesn't restart at HT.
+- **Sub Frequency** stepper (2–15 min). *Per-period cadence* (v2.8.2) — subs restart at the top of each half/quarter (sf, 2·sf, …), matching what the Plan page + preview show, in every period.
 - **Players per Sub** stepper (1–4).
 - **Goalkeepers** dropdown (1H + 2H) — only shown for `hasGk` formats.
 - **Sub Strategy** cards:
