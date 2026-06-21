@@ -7,11 +7,39 @@
 > and what must be true at each step. **A bug is where the actual behaviour
 > diverges from a pathway here.** Hand-authored; this is the oracle, so keep it
 > describing intent, not current implementation.
->
-> Format: each pathway is a sequence of **steps**. Each step has the coach's
-> **goal**, the **action**, and the **expected result** (✓ invariants). The
-> expectations are what tests/hunts should assert. A ⚠️ marks a known risk area
-> (where bugs have lived) worth extra coverage.
+
+## Precision standard (write every step to this bar)
+
+Each step is precise about **observable intent**, and silent about **mechanism**.
+State exactly three things — and nothing finer:
+
+1. **Trigger** — what the coach does, in their words ("tap a player who isn't here").
+2. **Observable result** — what they should see/can verify ("that player greys
+   out; the playing count drops by one").
+3. **Boundary** — what must stay true ("can't drop below the format's onField").
+
+**Do NOT** write function names, CSS classes, state variables, or render order —
+that's the job of `UIMAP.md`. Keeping intent implementation-free is what lets
+this doc *disagree with the code when the code is wrong* (the whole point of an
+oracle). Too vague → tests assert the wrong thing; too precise → the doc just
+mirrors the code and can't catch bugs. Aim for "a coach could check it by
+looking."
+
+## How a step becomes enforceable control
+
+Each ✓ line is an **assertable invariant**. Tag it with what enforces it, so the
+doc is an executable map, not just prose:
+
+- `✓ …  [smoke: <check name>]` — guarded by an automated test
+- `✓ …  [hunt: I#]` — guarded by a hunt invariant
+- `✓ …  [🔴 unguarded]` — intended but nothing tests it yet (this is the backlog)
+
+When you change an intended result here, the guarding test must change too — and
+the app must comply. That loop (edit intent → test enforces → app conforms) is
+the control. Untagged ✓ lines are the to-do list for the UI-driven hunt.
+
+> Format: each pathway = a sequence of **steps** (Trigger → Observable result,
+> per the standard above). ⚠️ marks a known risk area (where bugs have lived).
 
 Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not yet.
 
@@ -30,8 +58,9 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 5 | Tag positions (per-player or **bulk tag**) | Tags persist; survive rename; removed on delete ⚠️ |
 | 6 | Name the team, Save | Team appears on Home; ready (green) if it has a format + enough players, else "Set up" (yellow) |
 
-✓ A saved team round-trips (positions, numbers, side/foot) through edit → save → reopen.
-⚠️ Renaming player A to player B's existing name must **not** silently overwrite B's tags. *(known limitation)*
+✓ A saved team round-trips (positions, numbers, side/foot) through edit → save → reopen.  [🔴 unguarded]
+✓ Add / remove player changes the squad size.  [edit: add player grows the squad / remove player shrinks]
+⚠️ Renaming player A to player B's existing name must **not** silently overwrite B's tags. *(known limitation, 🔴 unguarded)*
 
 ---
 
@@ -47,8 +76,11 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 4 | Pick starting line-up + keeper (or auto-fill) | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
 | 5 | Kick off | Live game screen; clock at 0; correct XI on the pitch |
 
-✓ Auto-fill respects each player's position tags; keeper is the coach's manual pick.
-✓ Projected minutes reflect the chosen keeper + line-up (keeper = full game).
+✓ Field fills to onField; keeper is on the field.  [smoke: pick-starters fills field to onField / keeper is on the field]
+✓ A pure-GK is never auto-placed in an outfield slot (benched instead).  [smoke: displaced pure keeper is benched, not stranded outfield · hunt: I7]
+✓ Keeper is the coach's manual pick; a benched pick swaps onto the field.  [smoke: benched player becomes keeper, on field]
+✓ Projected minutes reflect the chosen keeper + line-up (keeper = full game).  [smoke: keeper is the top projected-minutes player / keeper is credited the full game]
+✓ Squad-select can't proceed below onField; exactly-onField = no bench.  [edit: squad equals onField (no bench)]
 
 ---
 
@@ -66,7 +98,10 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 6 | Score +/- | Goal logged on +; most-recent goal removed on −; never negative |
 | 7 | Equal-time rotation over the game | Minutes converge to even; nobody benched the interval after they came on ⚠️ |
 
-✓ The field count stays at onField through every sub; keeper stays on field.
+✓ A sub changes the on-field set; undo restores it exactly.  [smoke: trigSub changed the on-field set / undoLastSub restores the line-up]
+✓ Manual + injury subs preserve the field size.  [edit: manual sub changed the line-up · injury(minor/out): field size preserved]
+✓ Equal-time rotation evens minutes (spread ≤ 5m), no on-then-off churn.  [smoke: outfield minutes are even / no player benched right after coming on · hunt: I5]
+✓ Score increments log a goal; decrement removes the most recent; never negative.  [sports: score never negative / decrement removed a logged goal]
 
 ---
 
@@ -84,7 +119,12 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 6 | Resume from Home banner | Restores the exact in-progress state |
 | 7 | Discard | Clears the saved game |
 
-✓ Backgrounding (visibilitychange/pagehide) persists the live state, not just the 5s checkpoint.
+✓ Keeper picker stays available all through the break, even with the sub preview stepped.  [smoke: keeper picker STILL shown after stepping the sub preview · hunt: I8]
+✓ Chosen 2nd-period keeper + line-up carry in; 1st-period keeper stays on field next period.  [smoke: 2nd-half keeper carried into period / 1st-half keeper stays on the field in the 2nd half]
+✓ Reset-half restores the kickoff XI + clock.  [edit: reset restores the kickoff XI]
+✓ Backgrounding the app saves the live clock + score immediately.  [edit: backgrounding (hidden) saves the game / saved snapshot preserves the live clock + score]
+✓ Resume restores the exact in-progress state; discard clears it.  [edit: clock/score/line-up restored · discardActiveGame clears storage]
+⚠️ Quarter-sport breaks (Q1/Q3) carry the same guarantees — only soccer half-time is tested.  [🔴 unguarded]
 
 ---
 
