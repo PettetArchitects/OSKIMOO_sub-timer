@@ -12,6 +12,7 @@
     "gate": "node test/sanity.mjs && node test/smoke.mjs && node test/sports.mjs && node test/edge.mjs",
     "hunt": "node test/hunt.mjs",
     "loop": "node test/loop.mjs",
+    "uimap": "node test/uimap.mjs --runtime",
     "test": "npm run gate"
   },
   "devDependencies": {
