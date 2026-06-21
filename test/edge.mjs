@@ -56,6 +56,39 @@ const SCENARIOS = [
     chk('discardActiveGame clears storage', res.after === false);
   }],
 
+  // Regression (v2.8.1): an in-progress game must be saved when the app is
+  // backgrounded or closed — not only on the 5s checkpoint. On a phone, the OS
+  // can evict a backgrounded tab; without this, everything since the last
+  // checkpoint was lost ("the game didn't save"). visibilitychange(hidden) and
+  // pagehide both persist the live state (clock + score) immediately.
+  ['backgrounding the app saves the in-progress game', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'BG FC' });
+    const r = await page.evaluate(() => {
+      if (!G.running) tog();
+      // distinctive state that has NOT hit a checkpoint or explicit save
+      localStorage.removeItem('subTimerActive');
+      G.secs = 437; G.elapsedMs = 437000; G.scoreUs = 3;
+      const before = loadActiveGame();
+      // simulate app-switch / screen-lock
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+      const onHide = loadActiveGame();
+      // simulate close / reload
+      localStorage.removeItem('subTimerActive');
+      window.dispatchEvent(new Event('pagehide'));
+      const onPagehide = loadActiveGame();
+      return {
+        noneBefore: before === null,
+        savedOnHide: !!onHide, clock: onHide && onHide.G.secs, score: onHide && onHide.G.scoreUs,
+        savedOnPagehide: !!onPagehide,
+      };
+    });
+    chk('un-checkpointed state would have been lost', r.noneBefore);
+    chk('backgrounding (hidden) saves the game', r.savedOnHide);
+    chk('saved snapshot preserves the live clock + score', r.clock === 437 && r.score === 3);
+    chk('pagehide (close/reload) also saves', r.savedOnPagehide);
+  }],
+
   // ---- In-game interactions ---------------------------------------------
   ['manual sub + undo', async (page, { chk, shot }) => {
     await bootstrap(page, { format: '9v9', name: 'Manual FC' });

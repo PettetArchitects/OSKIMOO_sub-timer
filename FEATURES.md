@@ -1,9 +1,33 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v1.4-beta · **Last reviewed:** 2026-05-11
-**Source:** `sub-timer.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
+**Version:** v2.8.0-beta · **Last reconciled:** see git history for this file
+**Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
-This document catalogues every user-facing feature, what it does, and any known edge cases or gotchas. Use it as a regression-test checklist before each release.
+This document catalogues every user-facing feature, what it does, and its
+automated-test status. Use it as the map for testing and as a regression
+checklist before each release.
+
+> **Reconciliation note (v2.8.0 audit).** This catalogue was last written at
+> v1.4–v1.6 and had drifted ~50 versions. It has been reconciled against the
+> current `index.html`, verifying each claim exists in code (and, where
+> feasible, that it behaves). Headline corrections from the audit:
+> - **5 sports now, not 2:** soccer, netball, **AFL, basketball, water polo**
+>   (23 formats total). Earlier copy listing only soccer + netball is updated
+>   in §2.
+> - **Source file renamed** `sub-timer.html` → `index.html`.
+> - **Sub-strategy UI collapsed.** The data model still defines three strategies
+>   (`fair`=Equal time, `paired`=Matched, `planned`=Custom — see §10), but the
+>   **UI only exposes a 2-way Auto / Custom toggle** (`renderSubOrderTabs`,
+>   `renderSsStratGrid`). "Auto" silently resolves to fair-or-paired. This
+>   doc/UI mismatch is itself a known source of coach confusion.
+> - **Group size (`cfg.sc`) is 1–4** — matched **multiples**, not just pairs.
+> - **Test status added** per area (✅ tested / 🟡 partial / ❌ untested) against
+>   the suites in `test/` (smoke, sports, edge; hunt is exploratory only).
+> - Confirmed still-present (I'd earlier under-counted these): AI roster import
+>   (now also an AI **plan** mode), sound packs, bench-reorder chevrons,
+>   side/foot pickers, opposition-formation logging.
+
+Legend: ✅ tested · 🟡 partial · ❌ untested (automated coverage in `test/`).
 
 ---
 
@@ -30,10 +54,16 @@ This document catalogues every user-facing feature, what it does, and any known 
 
 ## 2. Multi-sport Core
 
-| Sport | Formats supported |
-|---|---|
-| **Soccer** | 4v4 (U6), 5v5 (Futsal / 5-aside), 6v6 (Summer 6-aside), 7v7 (U8–9), 9v9 (U10–11), 11v11 (U12+) |
-| **Netball** | Set (U8), GO (U10), Junior (U13), Open (Senior 14+) |
+| Sport | Periods | Keeper | Formats | Test |
+|---|---|---|---|---|
+| **Soccer** | 2 halves | 5v5+ | 4v4, 5v5, 6v6, 7v7, 9v9, 11v11 | ✅ |
+| **Netball** | 4 quarters | no | Set (U8), GO (U10), Junior (U13), Open (14+) | ✅ |
+| **AFL** | 4 quarters | no | Auskick, U9–U16, Senior (10 formats) | ✅ |
+| **Basketball** | 4 quarters | no | 5v5 | ✅ |
+| **Water polo** | 4 quarters | yes | Junior 25m, Senior 30m | ✅ |
+
+_All 23 formats run a full game to summary in `test/sports.mjs` (220 checks)._
+_AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 
 - Sport stamped on team at creation (`pickSport` → `pickFormat`).
 - Legacy teams missing `sport` are migrated on load from the format key (e.g. `nb-go` → `netball`).
@@ -55,7 +85,8 @@ This document catalogues every user-facing feature, what it does, and any known 
 | Position tag assignment | Tag any player with any combination of position labels (GK/DEF/MID/WNG/FWD for soccer; GS/GA/WA/C/WD/GD/GK for netball). |
 | Position tags survive rename | `onPlayerNameChange` migrates the position-map key when a name changes. |
 | Position tags removed on delete | `removePlayerField` deletes the player's entry from positions map. |
-| AI roster import from photo | OpenAI `gpt-4o-mini` with vision via Supabase Edge Function `extract-roster`. Names ≤ 30 chars, max ~25 players. |
+| AI roster import from photo | `sb.functions.invoke('extract-roster', {imageBase64})` — vision model via Supabase Edge Function. ❌ untested (server-side; needs cloud). |
+| **AI sub-plan from photo** (newer, not in v1.x doc) | `extract-roster` with `mode:'plan'` — reads a roster/plan image and builds the sub plan. ❌ untested. |
 | Delete team | Confirm dialog → removes locally + on cloud. |
 | Set up incomplete teams | If team has no format or too few players, the home card shows a yellow "Set up" button instead of green "Start". |
 
@@ -288,4 +319,54 @@ the lineup-assignment algorithm.
 
 **Auth:** Supabase JS client → Resend SMTP for magic-link emails.
 
-**AI:** OpenAI `gpt-4o-mini` via Supabase Edge Function `extract-roster`.
+**AI:** vision model via Supabase Edge Function `extract-roster` (roster import
++ `mode:'plan'` sub-plan import). Edge function is server-side, not in this repo.
+
+---
+
+## 14. Test-coverage audit (v2.8.0)
+
+Surface: **11 screens · 81 distinct user actions · 259 functions.** Of the 81
+user actions, ~44 are exercised by an automated suite; **~37 have no automated
+coverage.** The hunt (`test/hunt.mjs`) fuzzes the Plan page but does not count
+as coverage.
+
+### Covered ✅ (asserted by smoke / sports / edge)
+Team create/edit/delete, add/remove players, sample squad, sport + **all 23
+format** full games, clock start/pause, auto-sub + confirm, manual sub, undo,
+injury sub (both modes), reset-half, equal-time rotation evenness, matched
+**pairs**, projected minutes + keeper credit, pick-starters, keeper picker
+(incl. bench pick + half-time), smart position auto-fill (incl. pure-GK
+benching), save/resume/discard, live player removal.
+
+### Not covered ❌ (prioritised by mid-game risk to a youth coach)
+1. **Save-on-backgrounding** — *reported broken*; in-progress games can vanish
+   when the phone backgrounds the tab. No `visibilitychange`/`pagehide` save.
+2. **Matched multiples (`cfg.sc` = 3, 4)** — rotation tested only at pairs.
+3. **Keeper + line-up at quarter breaks (Q1/Q3)** — half-time fix verified for
+   soccer's single break only.
+4. **Quick team setup parsing** — inline-position parse (`cleanupPlayerNames`,
+   `stripTrailingPosition`) + **bulk tag** (`applyBulkTag`): parse user input,
+   zero coverage.
+5. **Scoring scorer/assist + match save/history** — `promptScorer`,
+   `saveMatch`, `showHistory`.
+6. **Cloud login + sync** — `sendMagicLink`, `pushCloudTeam`, `pullCloudMatches`
+   (needs a cloud env to test).
+7. **AI roster / plan import** — server-side; needs cloud.
+8. **3D pitch (`afl3d`) + camera views** — large subsystem, view-only.
+9. **Saved sub-plan profiles** — `applyPlanProfile`, `pickSquadPlan`,
+   rename/delete profile.
+10. **Sound packs, bench reorder, side/foot pickers, opposition formation** —
+    present, untested.
+
+### Stale claims corrected in this audit
+- 2 sports → **5 sports / 23 formats**.
+- `sub-timer.html` → **`index.html`**.
+- 3-button strategy chooser (Equal/Paired/Manual) → **2-button Auto/Custom UI**
+  over a 3-strategy model (fair/paired/planned).
+- "Half Length 5–30" — soccer halves; quarter sports use per-quarter lengths.
+- Side/foot data model exists but is **still not read by `smartAssign`** (the
+  v1.6 "still to do" remains true at v2.8.0 — verified).
+
+_Maintenance: update an area's ✅/🟡/❌ when its coverage changes; re-run the
+existence sweep after large refactors to catch new drift._

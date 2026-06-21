@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.0-beta';
+const APP_VERSION='v2.8.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.1-beta':{
+    title:'Fixed: in-progress games now save when you switch apps',
+    items:['If you switched apps or locked your phone mid-game, the game could be lost — the phone can quietly close a backgrounded tab, and the app only saved every few seconds. It now saves the moment the app goes to the background or closes, so your clock, score and line-up are kept right up to the second you left.']
+  },
   'v2.8.0-beta':{
     title:'Fixed: changing the keeper at half-time',
     items:['At half-time the keeper picker could disappear if you’d stepped the sub preview forward, leaving no way to change the goalkeeper for the second half. The keeper picker and starting line-up controls now stay available throughout the break (and before kickoff) no matter where the sub preview is parked — pick your second-half keeper, confirm the line-up, and start the half. The first-half keeper stays on the field for the second half, as you’d want for youth games.']
@@ -7780,6 +7784,18 @@ maybeShowWhatsNew(); // fire the changelog modal if this is a new version for th
 // v2.7.7: tap ANYWHERE except a player pill / overlay / banner / dashboard to
 // cancel an armed swap selection or in-progress injury sub. v2.7.5 only listened
 // on #pitchMid which missed taps on the clock, score header, bench area, etc.
+// v2.8.1: persist an in-progress game the moment the app is backgrounded or
+// closed. Previously the only saves were the 5s in-game checkpoint and explicit
+// actions — so if a coach switched apps / locked the phone and the OS then
+// evicted the tab (routine on iOS), everything since the last checkpoint was
+// lost ("the game didn't save"). saveActiveGame() already freezes the running
+// clock into the snapshot, so calling it here loses nothing. visibilitychange
+// (hidden) covers app-switch / screen-lock; pagehide covers close / reload.
+// Both are far more reliable on mobile than beforeunload.
+function _persistOnHide(){ try{ if(typeof G!=='undefined' && G && typeof saveActiveGame==='function') saveActiveGame(); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') _persistOnHide(); });
+window.addEventListener('pagehide', _persistOnHide);
+
 document.addEventListener('click',(e)=>{
   // v2.7.9: tap outside the hamburger menu closes it.
   const gm=document.getElementById('gameMenu');
