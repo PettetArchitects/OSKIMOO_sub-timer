@@ -358,6 +358,52 @@ const SCENARIOS = [
     chk('2nd-half line-up carried into period', JSON.stringify(p2.on) === JSON.stringify(planned.on));
   }],
 
+  // Regression (v2.8.0): at half-time the keeper picker was gated on the sub
+  // scrub bar being on LIVE, so stepping the preview forward made it DISAPPEAR
+  // — a coach couldn't change the keeper for the 2nd half. The picker (a setup
+  // control) must stay available throughout the break regardless of scrub
+  // position; and the 1st-half keeper should stay on the field in the 2nd half.
+  ['half-time: keeper picker stays available even when sub preview is stepped', async (page) => {
+    // Fully reset first: a prior scenario may leave a game running with a live
+    // animation frame, which would fight this scenario's manual clock control.
+    await page.evaluate(() => { if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; } G = null; } localStorage.clear(); });
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'HT Keeper FC' });
+    const r = await page.evaluate(() => {
+      const keeperShown = () => /Keeper/.test(document.getElementById('planRosterOverview').innerHTML);
+      // Cancel any animation-frame loop a prior scenario left running, so the
+      // manual clock-jump below isn't fought by a stray tickLoop.
+      if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; }
+      G.running = false; G.lastTs = null;
+      // jump to the break
+      G.secs = cfg.hm * 60; G.elapsedMs = cfg.hm * 60 * 1000;
+      advH();
+      switchToView('plan');
+      const atBreak = !!G.atBreak;
+      const shownLive = keeperShown();
+      // step the sub preview forward (the trigger) — picker must NOT vanish
+      if (typeof planScrubStep === 'function') planScrubStep(1);
+      const scrubbed = _planScrubIdx !== 0;
+      const shownScrubbed = keeperShown();
+      // change the keeper to the 1st-half keeper's replacement, confirm carry-over
+      const h1keeper = G.gk;
+      const newK = G.on.find(i => i !== G.gk);
+      setPlanKeeper(newK);
+      startNextPeriod();
+      return {
+        atBreak, shownLive, scrubbed, shownScrubbed,
+        h2started: G.half === 2 && G.running,
+        newKeeperKept: G.gk === newK && G.on.includes(G.gk),
+        h1keeperOnFieldH2: G.on.includes(h1keeper),
+      };
+    });
+    chk('reached the break', r.atBreak);
+    chk('keeper picker shown at break (LIVE)', r.shownLive);
+    chk('keeper picker STILL shown after stepping the sub preview', r.scrubbed && r.shownScrubbed);
+    chk('2nd half started with the chosen new keeper', r.h2started && r.newKeeperKept);
+    chk('1st-half keeper stays on the field in the 2nd half', r.h1keeperOnFieldH2);
+    await shot(page, 'halftime-keeper');
+  }],
+
   ['summary screen renders', async (page) => {
     await page.evaluate(() => { G.half = getSport(currentTeam).periodCount; if (typeof advH === 'function') advH(); });
     await page.waitForTimeout(400);
