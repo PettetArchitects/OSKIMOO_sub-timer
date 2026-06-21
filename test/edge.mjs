@@ -244,6 +244,35 @@ const SCENARIOS = [
     chk('live edits do NOT corrupt the saved plan', r.savedPlanIntact);
   }],
 
+  // Regression (v2.8.4): "Save plan profile" must be reachable in AUTO mode, not
+  // only Custom — a coach can build a custom line-up + keeper in Auto, so there's
+  // always something worth saving. It used to be force-hidden in Auto (buried).
+  // The Edit-Lineup item stays Custom-only.
+  ['save-plan is available in Auto mode (not buried in Custom)', async (page, { chk }) => {
+    const r = await page.evaluate(() => {
+      localStorage.clear(); teams = loadTeams(); if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} } G = null; }
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Auto FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      if (typeof ssSetStrat === 'function') ssSetStrat('auto');   // default mode
+      if (typeof renderSubOrder === 'function') renderSubOrder();
+      const menu = document.getElementById('planMenu');
+      const vis = (el) => { let n = el; while (n && n !== menu) { if (getComputedStyle(n).display === 'none') return false; n = n.parentElement; } return !!el; };
+      const saveBtn = document.getElementById('subOrderSaveBtn');
+      const lineupBtn = document.getElementById('subOrderLineupBtn');
+      const grp = document.getElementById('planMenuCustomGroup');
+      return {
+        saveShown: vis(saveBtn),
+        saveOutsideCustomGroup: saveBtn && !grp.contains(saveBtn),
+        lineupHidden: !vis(lineupBtn),  // Edit Lineup still Custom-only
+        strat: G.subStrategy,
+      };
+    });
+    chk('Save plan button is shown in Auto mode', r.saveShown);
+    chk('Save plan is outside the Custom-only group', r.saveOutsideCustomGroup);
+    chk('Edit Lineup stays Custom-only (hidden in Auto)', r.lineupHidden);
+  }],
+
   // ---- Team management ---------------------------------------------------
   ['delete team removes it from the list', async (page, { chk }) => {
     const r = await page.evaluate(() => {
