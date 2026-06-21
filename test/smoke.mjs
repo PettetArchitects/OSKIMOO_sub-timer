@@ -232,6 +232,77 @@ const SCENARIOS = [
     await shot(page, 'keeper-projected-minutes');
   }],
 
+  // Regression (v2.7.98): the Equal-time rotation sorted only by minutes, tying
+  // on array order — so it pulled/returned the same players (uneven spread) and
+  // benched someone one interval after they came on. Fair tiebreakers (off = on
+  // longest; on = waiting longest) make minutes converge. For a squad where even
+  // is achievable, the outfield spread should be ~0 and nobody bounced.
+  ['Equal-time rotation evens outfield minutes (no churn)', async (page) => {
+    await bootstrap(page, { sport: 'soccer', onField: 7, name: 'Even FC' });
+    await page.evaluate(() => switchToView('plan'));
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      // True Equal-time: 'fair' strategy, no matched pairs.
+      G.subStrategy = 'fair'; G.pairs = [];
+      _planTimeline = null; buildPlanTimeline();
+      // churn: a player SUBBED ON at one event and subbed OFF at the very next.
+      // Starters (initialOn) don't count — leave their "came on" index undefined
+      // so their first real sub-off isn't mistaken for churn.
+      const ev = _planTimeline.events.filter(e => !e.past);
+      const onAt = {};
+      let churn = 0;
+      ev.forEach((e, idx) => {
+        (e.off || []).forEach(i => { if (onAt[i] === idx - 1) churn++; });
+        (e.on || []).forEach(i => { onAt[i] = idx; });
+      });
+      const pt = computeProjectedMinutes();
+      const gk = avail[G.gk];
+      const outfield = Object.entries(pt).filter(([n]) => n !== gk).map(([, sec]) => Math.round(sec / 60));
+      const spread = Math.max(...outfield) - Math.min(...outfield);
+      return { spread, churn, outfield };
+    });
+    chk('outfield minutes are even (spread <= 5m)', r.spread <= 5, `(spread ${r.spread}m)`);
+    chk('no player benched right after coming on', r.churn === 0, `(churn ${r.churn})`);
+    await shot(page, 'equal-time-even');
+  }],
+
+  // Regression (v2.7.99): picking an outfielder as keeper then tapping Auto-fill
+  // stranded the displaced pure goalkeeper in an outfield slot (e.g. right-mid)
+  // while better-fit bench players sat. The keeper is a manual pick; a pure GK
+  // (tagged only GK) must never be auto-placed outfield when outfielders are free.
+  ['auto-fill never strands a pure keeper in an outfield slot', async (page) => {
+    const r = await page.evaluate(() => {
+      localStorage.clear(); teams = loadTeams(); if (G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} } } G = null;
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      const p = editingTeam.players;
+      editingTeam.positions = {};
+      // Alex = pure GK; everyone else has an outfield role.
+      Object.assign(editingTeam.positions, {
+        [p[0]]: ['GK'], [p[1]]: ['DEF'], [p[2]]: ['DEF'], [p[3]]: ['MID'],
+        [p[4]]: ['MID'], [p[5]]: ['MID'], [p[6]]: ['FWD'], [p[7]]: ['DEF'], [p[8]]: ['FWD'],
+      });
+      document.getElementById('teamNameInput').value = 'GK FC';
+      saveAndBack(); selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      // Pick an OUTFIELDER (a midfielder) as keeper, then auto-fill.
+      setPlanKeeper(avail.indexOf(p[4]));
+      planAutoFillStarters();
+      const positions = getPositions();
+      const pureGkName = p[0];
+      const onIdx = G.on.findIndex(i => avail[i] === pureGkName);
+      const onFieldSlot = onIdx >= 0 ? positions[onIdx].label : null;
+      return {
+        keeperIsChosen: avail[G.gk] === p[4],
+        pureGkOnField: onIdx >= 0,
+        pureGkSlot: onFieldSlot,
+        onCount: G.on.length, onField: FORMATS[curFmt].onField,
+      };
+    });
+    chk('chosen keeper is honoured', r.keeperIsChosen);
+    chk('field is full', r.onCount === r.onField);
+    chk('displaced pure keeper is benched, not stranded outfield', !r.pureGkOnField, r.pureGkSlot ? `(was at ${r.pureGkSlot})` : '');
+    await shot(page, 'keeper-autofill');
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);
