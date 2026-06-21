@@ -144,18 +144,22 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 ---
 
-## P6 — Plan-ahead & saved plans 🔴
+## P6 — Plan-ahead & saved plans 🟡
 
-**Goal:** pre-build a sub plan before game day, reuse it.
+**Goal:** pre-build a sub plan, reuse it, and tweak it on game day.
 
 | # | Action | Expected result |
 | --- | --- | --- |
 | 1 | Team → Plan ahead | Plan page in build mode; set format, formation, sub plan |
 | 2 | Build / preview the sub plan (Next / Prev / Live) | Pitch + chips + projected minutes stay in sync; preview never contradicts the live line-up ⚠️ |
-| 3 | Save the plan as a profile; rename / delete | Profile persists per team; applies on a future game |
-| 4 | Start from a saved plan | Game begins with that plan's line-up + schedule |
+| 3 | Save the plan as a profile; rename / delete | Profile persists per team (and syncs to cloud); applies on a future game. "Save plan" is in the Plan-page menu in **any** mode (v2.8.4 — was Custom-only) |
+| 4 | Start a fresh game from a saved plan | Game begins with that plan's line-up, keeper, formation, timings + schedule |
+| 5 | **Modify the applied plan on game day** | Plan-page edits (keeper, starters, settings) apply to the live game and **do not corrupt the saved profile** |
 
-🔴 Saved-plan profiles (apply/rename/delete) not yet covered.
+✓ Save → reuse restores the plan's line-up + keeper; game-day edits take effect and leave the saved profile intact.  [edit: reusing the plan restores its keeper / live edits do NOT corrupt the saved plan]
+✓ Applying a plan (rebuilding the game) while the pitch is mid-render doesn't crash.  [edit: projected minutes still compute after modify]
+✓ "Save plan" is reachable in Auto mode, not only Custom (Edit Lineup stays Custom-only).  [edit: Save plan button is shown in Auto mode / Edit Lineup stays Custom-only]
+🔴 Rename / delete profile, and the AUTO-mode discoverability of "save plan", not yet covered.
 
 ---
 
