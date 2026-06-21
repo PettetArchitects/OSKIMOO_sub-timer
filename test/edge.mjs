@@ -164,6 +164,36 @@ const SCENARIOS = [
     chk('sub frequency clamps at >=1', r.sfFloor >= 1);
   }],
 
+  // Regression (v2.8.2): the live sub schedule must MATCH what the Plan page +
+  // preview show — subs restart each period (sf, 2·sf, …), not run on a
+  // continuous whole-game timeline. With a frequency that doesn't divide evenly
+  // into the period (7-min subs, 20-min half) the 2nd half used to drift to
+  // 1′/8′/15′; it must now be 7′/14′ in every period, equal to the plan.
+  ['sub timing matches the plan (per-period cadence, odd frequency)', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Cadence FC' });
+    const r = await page.evaluate(() => {
+      // clean slate so prior scenarios don't bleed state into the schedule
+      if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; }
+      G.running = false; G.sd = [];
+      cfg.hm = 20; cfg.sf = 7;            // odd frequency: doesn't divide evenly
+      // Plan-page projection FIRST (from kickoff), so its half-1 events aren't
+      // marked "past" by a clock we advanced for the subTs reads.
+      G.half = 1; G.secs = 0;
+      G.subStrategy = 'fair'; _planTimeline = null; buildPlanTimeline();
+      const ev = _planTimeline.events.filter((e) => !e.past);
+      const planH1 = ev.filter((e) => e.period === 1).map((e) => Math.round(e.time / 60));
+      const planH2 = ev.filter((e) => e.period === 2).map((e) => Math.round(e.time / 60));
+      // live engine per period (schedule depends only on cfg now, not the clock)
+      G.half = 1; G.secs = 0; const h1 = subTs().map((s) => s / 60);
+      G.half = 2; G.secs = 0; const h2 = subTs().map((s) => s / 60);
+      return { h1, h2, planH1, planH2 };
+    });
+    chk('half 1 fires at 7′, 14′', JSON.stringify(r.h1) === JSON.stringify([7, 14]), `(${r.h1})`);
+    chk('half 2 restarts (7′, 14′ — no drift)', JSON.stringify(r.h2) === JSON.stringify([7, 14]), `(${r.h2})`);
+    chk('live engine matches the Plan page (half 1)', JSON.stringify(r.h1) === JSON.stringify(r.planH1));
+    chk('live engine matches the Plan page (half 2)', JSON.stringify(r.h2) === JSON.stringify(r.planH2));
+  }],
+
   // ---- Team management ---------------------------------------------------
   ['delete team removes it from the list', async (page, { chk }) => {
     const r = await page.evaluate(() => {
