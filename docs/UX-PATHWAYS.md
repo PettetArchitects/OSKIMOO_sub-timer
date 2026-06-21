@@ -102,6 +102,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ Manual + injury subs preserve the field size.  [edit: manual sub changed the line-up · injury(minor/out): field size preserved]
 ✓ Equal-time rotation evens minutes (spread ≤ 5m), no on-then-off churn.  [smoke: outfield minutes are even / no player benched right after coming on · hunt: I5]
 ✓ Score increments log a goal; decrement removes the most recent; never negative.  [sports: score never negative / decrement removed a logged goal]
+✓ Live sub times match the plan: subs restart each period (sf, 2·sf, …), so the live game fires at exactly the times the Plan page + preview show — even when the frequency doesn't divide evenly into the period.  [edit: half 2 restarts / live engine matches the Plan page]
 
 ---
 
