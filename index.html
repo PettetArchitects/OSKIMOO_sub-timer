@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.2-beta';
+const APP_VERSION='v2.8.3-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.3-beta':{
+    title:'Fixed: rare crash when applying a saved plan',
+    items:['Reusing a saved plan (or otherwise rebuilding the game while the pitch was still drawing) could throw a harmless-looking error behind the scenes. The pitch renderers now bail cleanly if the game has just been rebuilt, so applying a saved plan is solid.']
+  },
   'v2.8.2-beta':{
     title:'Fixed: live sub times now match your plan in every period',
     items:['When your sub frequency didn’t divide evenly into the period (e.g. 7-minute subs in a 20-minute half), the live game drifted off the times the Plan page and preview showed you — the second half fired at 1′, 8′, 15′ instead of 7′, 14′. Subs now restart each half/quarter and fire at exactly the times your plan shows, in every period.']
@@ -7453,6 +7457,11 @@ function getNextSwap(){
 }
 
 function renderRoster(){
+  // v2.8.3: renderRoster is also scheduled via requestAnimationFrame (the
+  // first-paint race below), so by the time a deferred frame fires the game may
+  // have been torn down + rebuilt (e.g. applying a saved plan calls
+  // startFromSquad). Bail if there's no live game — reading G.gk on null throws.
+  if(!G) return;
   // New thumb-zone layout: bench (subs coming on) at the TOP, pitch in the
   // MIDDLE, all controls in the bottom bar. We populate the bench + hint
   // (both flex-shrink:0 siblings) BEFORE reading the pitch dimensions, so the
@@ -7520,6 +7529,9 @@ function renderRoster(){
     const _js=window._justSubbed;        // sub pulse: green-on, red-off
     const _jsw=window._justSwapped;      // swap pulse: cyan on both swapped pills
     afl3d.update(pitchMid, (add, addBench)=>{
+      // v2.8.3: async callback — G may have been rebuilt since renderG ran (the
+      // top-level guard passed earlier). Re-check before reading G.pt on null.
+      if(!G) return;
       // Field players
       playerSlots.forEach(({pos,pIdx,isGk})=>{
         const isOff=nextOff.has(pIdx);
@@ -8441,6 +8453,11 @@ function renderPlanField3D(){
   // coach taps Done and renderG runs on s4, afl3d.update(pitchMid, ...) moves
   // the renderer back automatically.
   afl3d.update(wrap, (add)=>{
+    // v2.8.3: afl3d invokes this callback asynchronously (after the 3D scene
+    // inits), so G may have been torn down + rebuilt in between (e.g. applying a
+    // saved plan rebuilds the game). The top-level !G guard ran before that, so
+    // re-check here — reading G.gk / G.pt on a null G would throw.
+    if(!G) return;
     onList.forEach((pIdx,i)=>{
       const pos=positions[i];
       if(!pos) return;

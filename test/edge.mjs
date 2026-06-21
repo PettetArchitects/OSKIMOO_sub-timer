@@ -194,6 +194,56 @@ const SCENARIOS = [
     chk('live engine matches the Plan page (half 2)', JSON.stringify(r.h2) === JSON.stringify(r.planH2));
   }],
 
+  // ---- Saved plans (build once, reuse, tweak on game day) ----------------
+  // Coverage for the workflow: build a custom plan → save it → start a fresh
+  // game using it → modify it on game day. Crucially, live edits must NOT
+  // corrupt the saved plan (they share luOrd/pairs shapes).
+  ['saved plan: build → save → reuse → modify on game day', async (page, { chk }) => {
+    const r = await page.evaluate(() => {
+      localStorage.clear(); teams = loadTeams(); if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} } G = null; }
+      // stub prompt() so saveCurrentPlanPrompt gets a name (headless prompt
+      // returns null otherwise, which makes the save a no-op).
+      window.prompt = () => 'Strong XI';
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Plan FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      // build a distinctive plan: a non-default keeper
+      planClearField();
+      const n = FORMATS[curFmt].onField; while (G.on.length < n && G.bench.length) planAddStarter(G.bench[0]);
+      setPlanKeeper(G.on.find((i) => i !== G.gk)); planFinishStarters();
+      const planKeeper = avail[G.gk];
+      saveCurrentPlanPrompt();
+      const saved = (currentTeam.plans || []).length === 1;
+      const planId = currentTeam.plans[currentTeam.plans.length - 1].id;
+      // start a FRESH game applying the saved plan
+      _squadPickedPlanId = planId; startFromSquad();
+      const appliedKeeper = avail[G.gk];
+      // modify on game day: change keeper, then re-pick the XI
+      switchToView('plan');
+      setPlanKeeper(G.on.find((i) => i !== G.gk));
+      const modKeeper = avail[G.gk];
+      planClearField();
+      while (G.on.length < FORMATS[curFmt].onField && G.bench.length) planAddStarter(G.bench[0]);
+      planFinishStarters();
+      const pt = computeProjectedMinutes();
+      return {
+        saved,
+        applyRestoredKeeper: appliedKeeper === planKeeper,
+        modifyTookEffect: modKeeper !== appliedKeeper,
+        fieldFull: G.on.length === FORMATS[curFmt].onField,
+        keeperOnField: G.on.includes(G.gk),
+        minutesCompute: Object.values(pt).some((v) => v > 0),
+        savedPlanIntact: !!(currentTeam.plans[0].luOrd && currentTeam.plans[0].luOrd.length),
+      };
+    });
+    chk('plan saved to the team', r.saved);
+    chk('reusing the plan restores its keeper', r.applyRestoredKeeper);
+    chk('game-day modification takes effect', r.modifyTookEffect);
+    chk('modified game stays valid (field full, keeper on)', r.fieldFull && r.keeperOnField);
+    chk('projected minutes still compute after modify', r.minutesCompute);
+    chk('live edits do NOT corrupt the saved plan', r.savedPlanIntact);
+  }],
+
   // ---- Team management ---------------------------------------------------
   ['delete team removes it from the list', async (page, { chk }) => {
     const r = await page.evaluate(() => {

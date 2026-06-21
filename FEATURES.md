@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.2-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.3-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
