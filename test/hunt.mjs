@@ -179,6 +179,15 @@ async function huntFormat(page, cfg, R, opts) {
 (async () => {
   const trials = Number(process.env.HUNT_TRIALS || 40);
   const seqLen = Number(process.env.HUNT_SEQLEN || 8);
+  // Deep-run controls. The per-move settle-waits make a full deep sweep slow, so
+  // give two ways to keep it inside a time budget instead of being killed mid-run:
+  //   HUNT_ONLY=5v5,nb-go   — hunt only these formats (run/debug/resume one at a time)
+  //   HUNT_BUDGET_MS=480000 — stop cleanly between formats once the budget elapses,
+  //                           reporting what WAS covered (no scary FATAL timeout).
+  const onlyFmts = (process.env.HUNT_ONLY || '').split(',').map(s => s.trim()).filter(Boolean);
+  const budgetMs = Number(process.env.HUNT_BUDGET_MS || 0);
+  const startedAt = Date.now();
+  const formats = onlyFmts.length ? FORMATS_TO_HUNT.filter(f => onlyFmts.includes(f.fmt)) : FORMATS_TO_HUNT;
   const chromium = await loadChromium();
   const { srv, port } = await startServer();
   const browser = await chromium.launch({ executablePath: browserExecutable(), headless: !process.env.SMOKE_HEADED, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
@@ -192,13 +201,17 @@ async function huntFormat(page, cfg, R, opts) {
   await page.waitForFunction(() => typeof newTeam === 'function', { timeout: 10000 });
 
   const R = makeReporter();
-  console.log(`\n🔎 Bug hunt — ${trials} trials × ${seqLen} moves per format, ${FORMATS_TO_HUNT.length} formats\n`);
-  for (const cfg of FORMATS_TO_HUNT) {
+  console.log(`\n🔎 Bug hunt — ${trials} trials × ${seqLen} moves per format, ${formats.length} format(s)${budgetMs ? ` · budget ${Math.round(budgetMs / 1000)}s` : ''}\n`);
+  let covered = 0, skipped = [];
+  for (const cfg of formats) {
+    if (budgetMs && Date.now() - startedAt > budgetMs) { skipped.push(cfg.fmt); continue; }
     process.stdout.write(`  hunting ${cfg.fmt} (${cfg.sport})… `);
     const before = R.findings.length;
     await huntFormat(page, cfg, R, { trials, seqLen });
     console.log(`${R.findings.length - before} issue(s)`);
+    covered++;
   }
+  if (skipped.length) console.log(`  ⏱️ budget reached — skipped ${skipped.length} format(s): ${skipped.join(', ')} (re-run with HUNT_ONLY=${skipped.join(',')})`);
   // I9: console errors collected across the whole run
   consoleErrs.forEach(e => R.note('I9', e, ['(whole run)']));
 
@@ -216,7 +229,7 @@ async function huntFormat(page, cfg, R, opts) {
   console.log('\n========== BUG HUNT REPORT ==========');
   if (!unique.length) {
     console.log('No invariant violations found. ✓');
-    console.log(`(${trials * seqLen * FORMATS_TO_HUNT.length} move-checks across ${FORMATS_TO_HUNT.length} formats)`);
+    console.log(`(${trials * seqLen * FORMATS_TO_HUNT.length} move-checks across ${covered} format(s))`);
     process.exit(0);
   }
   console.log(`${unique.length} distinct issue(s) found:\n`);
