@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.1-beta';
+const APP_VERSION='v2.8.2-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.2-beta':{
+    title:'Fixed: live sub times now match your plan in every period',
+    items:['When your sub frequency didn’t divide evenly into the period (e.g. 7-minute subs in a 20-minute half), the live game drifted off the times the Plan page and preview showed you — the second half fired at 1′, 8′, 15′ instead of 7′, 14′. Subs now restart each half/quarter and fire at exactly the times your plan shows, in every period.']
+  },
   'v2.8.1-beta':{
     title:'Fixed: in-progress games now save when you switch apps',
     items:['If you switched apps or locked your phone mid-game, the game could be lost — the phone can quietly close a backgrounded tab, and the app only saved every few seconds. It now saves the moment the app goes to the background or closes, so your clock, score and line-up are kept right up to the second you left.']
@@ -5607,12 +5611,17 @@ function generateAutoPlan(){
   const sport=getSportFromFormatKey(curFmt);
   const onF=Math.min(fmt.onField,avail.length);
   if(avail.length===0||onF===0||avail.length<=onF)return {events:[],issues:avail.length<=onF?['Add more players than on-field count to enable subs']:[]};
-  // Sub schedule (whole-game continuous, same logic as subTs)
+  // v2.8.2: per-PERIOD sub schedule — subs restart each half/quarter (sf, 2·sf,
+  // … within each period), matching subTs() and the Plan-page preview. Build the
+  // whole-game minute list by offsetting each period's in-period times by that
+  // period's start, so a planned sub always lands on a minute the live engine
+  // (nxtST/tickLoop) actually checks. Previously this used a continuous timeline
+  // that drifted off the promised times for frequencies not dividing the period.
   const subTimesGame=[];
   const totalPeriods=sport.periodCount||2;
-  for(let t=cfg.sf;t<cfg.hm*totalPeriods;t+=cfg.sf){
-    if(t%cfg.hm===0)continue; // skip exact period boundary (handled by halftime)
-    subTimesGame.push(t);
+  for(let p=0;p<totalPeriods;p++){
+    const base=p*cfg.hm;
+    for(let t=cfg.sf;t<cfg.hm;t+=cfg.sf) subTimesGame.push(base+t);
   }
   // Start lineup (use luOrd if it's been built, else first N from avail)
   const start=(luOrd&&luOrd.length>=onF)?luOrd.slice(0,onF):avail.map((_,i)=>i).slice(0,onF);
@@ -5644,7 +5653,11 @@ function generateAutoPlan(){
       const off=[...elig].sort((a,b)=>simPt[b]-simPt[a]).slice(0,c);
       // On: lowest minutes first
       const on=[...simBench].sort((a,b)=>simPt[a]-simPt[b]).slice(0,c);
-      events.push({type:'sub',gameMin,off,on,half:gameMin>cfg.hm?2:1,timeInHalf:gameMin>cfg.hm?gameMin-cfg.hm:gameMin});
+      // v2.8.2: period-aware (1..N), not hardcoded to 2 halves — quarter sports
+      // place subs in Q1..Q4. timeInHalf is the minute WITHIN its period.
+      const _period=Math.floor((gameMin-1)/cfg.hm)+1;
+      const _timeInHalf=gameMin-(_period-1)*cfg.hm;
+      events.push({type:'sub',gameMin,off,on,half:_period,timeInHalf:_timeInHalf});
       // Apply swap
       for(let i=0;i<c;i++){
         const oi=simOn.indexOf(off[i]);
@@ -6282,20 +6295,18 @@ function changeSubStrategy(){
   document.getElementById('subStratOv').classList.add('show');
 }
 function subTs(){
-  // Whole-game continuous schedule: subs fire every cfg.sf minutes from
-  // kickoff, treating the match as one continuous timeline (not restarting
-  // each half). Within the current half, return only the in-half seconds
-  // for the times that fall inside this half's window.
-  // For frequencies that divide evenly into half-length this is identical
-  // to the per-half behaviour; for odd frequencies it preserves the cadence
-  // across halftime rather than restarting it.
+  // v2.8.2: per-PERIOD cadence — subs restart at the top of each half/quarter,
+  // firing at cfg.sf, 2·cfg.sf, … within the period. This matches exactly what
+  // the Plan page (buildPlanTimeline) and the Settings preview show the coach:
+  // e.g. 7-min subs in a 20-min half fire at 7′ and 14′ in EVERY period.
+  // Previously the live engine ran a continuous whole-game timeline, so when
+  // cfg.sf didn't divide evenly into the period the 2nd half drifted off the
+  // promised times (1′, 8′, 15′) — the live game disagreeing with the plan.
+  // The schedule now depends only on the period length, not on which period
+  // we're in, so it can't drift. Returns in-period seconds.
   const r=[];
-  const halfNum=(G&&G.half)||1;
-  const halfStartGame=(halfNum-1)*cfg.hm; // minutes
-  const halfEndGame=halfStartGame+cfg.hm;
-  for(let tGame=cfg.sf;tGame<halfEndGame;tGame+=cfg.sf){
-    if(tGame>halfStartGame) r.push((tGame-halfStartGame)*60);
-  }
+  const hmSec=cfg.hm*60, sfSec=cfg.sf*60;
+  for(let t=sfSec;t<hmSec;t+=sfSec) r.push(t);
   return r;
 }
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
