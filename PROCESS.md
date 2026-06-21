@@ -4,6 +4,11 @@
 > Built and proven on Sub Timer; written here so you can stand it up on any
 > other codebase. Read it as an **admin setup guide**: the principles are
 > universal, the file names are this project's instance — swap them for yours.
+>
+> **Starting a fresh session on *this* repo?** Read **`SESSION-LOG.md`** first —
+> it's the git-native persistent memory (current state, backlog, owner decisions,
+> session history). This file (PROCESS.md) is the *method*; SESSION-LOG is the
+> *running record*.
 
 ---
 
