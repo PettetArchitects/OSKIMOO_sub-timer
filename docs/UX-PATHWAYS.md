@@ -41,8 +41,8 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 | # | Action | Expected result |
 | --- | --- | --- |
-| 1 | Team card → Play now | Squad-select screen; all players selectable |
-| 2 | Toggle who's available | Footer shows playing / out / subs count; can't proceed below the format's onField |
+| 1 | Team card → Play now | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
+| 2 | **Deselect the no-shows** — tap any player who isn't here to take them out | Tapped players are removed (greyed/struck-through); footer shows playing / out / subs count; can't proceed below the format's onField |
 | 3 | (Optional) Settings: period length, sub frequency, **players-per-sub (1–4)**, strategy | Values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
 | 4 | Pick starting line-up + keeper (or auto-fill) | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
 | 5 | Kick off | Live game screen; clock at 0; correct XI on the pitch |
