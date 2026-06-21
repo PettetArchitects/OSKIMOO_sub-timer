@@ -3198,12 +3198,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.7.99-beta';
+const APP_VERSION='v2.8.0-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.0-beta':{
+    title:'Fixed: changing the keeper at half-time',
+    items:['At half-time the keeper picker could disappear if you’d stepped the sub preview forward, leaving no way to change the goalkeeper for the second half. The keeper picker and starting line-up controls now stay available throughout the break (and before kickoff) no matter where the sub preview is parked — pick your second-half keeper, confirm the line-up, and start the half. The first-half keeper stays on the field for the second half, as you’d want for youth games.']
+  },
   'v2.7.99-beta':{
     title:'Fixed: Auto-fill no longer strands your keeper in an outfield spot',
     items:['When you picked an outfielder as keeper and then tapped Auto-fill, your actual goalkeeper could be dumped into an outfield position (e.g. right-mid) while better-suited bench players sat. Auto-fill now respects that the keeper is your manual pick — a player who only plays in goal goes to the bench rather than being forced onto the field out of position.']
@@ -8148,11 +8152,19 @@ function renderPlanRosterOverview(){
   // v2.7.92: at a break the Plan controls set up the NEXT period — label them so.
   const upcoming=G.atBreak?G.half+1:G.half;
   const periodWord=upcoming===2?'2nd-half':(upcoming>2?('period-'+upcoming):'Starting');
+  // v2.8.0: setup controls (keeper picker + pick-starters) must be available
+  // whenever we're in setup phase — pre-kickoff OR at a period break — even if
+  // the sub-plan scrub bar happens to be parked on a future-sub preview. They
+  // were gated on canEdit (scrub-on-LIVE), so stepping the preview forward at
+  // half-time made the keeper picker DISAPPEAR — a coach couldn't change the
+  // keeper for the 2nd half. The edit actions all snap the view back to LIVE
+  // (planEnsureLiveForEdit) before mutating, so showing them off-LIVE is safe.
+  const canSetup=setupPhase;
   let controls='';
   // --- Goalkeeper picker (any sport with a keeper). Lives on the Plan page so it's
   //     never lost behind the CUSTOM-only lineup editor; also the keeper touch point
   //     at the half-time break (sets G.gk for the 2nd half). ---
-  if(fmt.hasGk && canEdit){
+  if(fmt.hasGk && (canSetup || canEdit)){
     // In setup phase you can pick ANY player as keeper — a benched pick is swapped
     // onto the field. Mid-play the list stays on-field-only (live keeper change).
     let opts;
@@ -8168,6 +8180,10 @@ function renderPlanRosterOverview(){
     </div>`;
   }
   // --- Pick-starters (empty pitch) — only before kickoff or at a period break. ---
+  // Gated on canEdit (scrub-on-LIVE) so the editable chips never linger on a
+  // future-sub preview contradicting the pitch (v2.7.96). The keeper picker
+  // above is exempt — it reads G.gk directly and carries no desync risk, so it
+  // stays visible throughout setup even when the preview is stepped (v2.8.0).
   if(setupPhase && canEdit){
     if(_pickStarters){
       const full=onIdx.length>=onField;
