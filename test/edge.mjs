@@ -371,6 +371,48 @@ const SCENARIOS = [
     chk('reset restores the kickoff XI', JSON.stringify(r.afterReset) === JSON.stringify(r.kickoff));
     chk('reset returns the clock to 0', r.secs === 0);
   }],
+
+  // ---- Team share link (v2.8.5) -------------------------------------------
+  ['team share link imports the team on a fresh device', async (page, { chk, shot }) => {
+    await bootstrap(page, { format: '7v7', name: 'Dragonflies U8' });
+    const shared = await page.evaluate(() => {
+      const t = teams[teams.length - 1];
+      // give the payload something real to round-trip beyond names
+      t.numbers = { [t.players[0]]: '7' };
+      t.prefs = Object.assign(t.prefs || {}, { hm: 22 });
+      saveTeams(teams);
+      return { code: buildTeamShareCode(t), players: t.players.length, sid: String(t.id) };
+    });
+    chk('code carries the ST1. prefix', /^ST1\./.test(shared.code));
+    // Fresh device: wipe storage, then open the app via the share link.
+    await page.evaluate((c) => { localStorage.clear(); location.hash = '#team=' + c; }, shared.code);
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(() => typeof teams !== 'undefined' && Array.isArray(teams), { timeout: 10000 });
+    const r = await page.evaluate(() => ({
+      count: teams.length,
+      name: teams[0] && teams[0].name,
+      players: teams[0] ? teams[0].players.length : 0,
+      number: teams[0] && teams[0].numbers ? teams[0].numbers[teams[0].players[0]] : null,
+      hm: teams[0] && teams[0].prefs ? teams[0].prefs.hm : null,
+      welcome: document.getElementById('teamImportOv').classList.contains('show'),
+      hashCleared: !location.href.includes('team='),
+    }));
+    chk('team imported on the fresh device', r.count === 1 && r.name === 'Dragonflies U8');
+    chk('full roster carried across', r.players === shared.players);
+    chk('jersey number + game settings carried across', r.number === '7' && r.hm === 22);
+    chk('welcome overlay offers Play now', r.welcome);
+    chk('share code stripped from the URL', r.hashCleared);
+    await shot(page, 'share-imported');
+    // Play now → squad picker for the imported team.
+    const play = await page.evaluate(() => {
+      importWelcomePlay();
+      return { onS1: document.getElementById('s1').classList.contains('active'), team: currentTeam && currentTeam.name };
+    });
+    chk('Play now lands on the squad picker', play.onS1 && play.team === 'Dragonflies U8');
+    // Re-importing the same code must refresh in place, not duplicate.
+    const dedup = await page.evaluate((c) => { importSharedTeam(parseTeamShareCode(c)); return teams.length; }, shared.code);
+    chk('re-importing the same code does not duplicate', dedup === 1);
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })

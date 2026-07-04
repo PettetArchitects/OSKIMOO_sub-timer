@@ -4,6 +4,18 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.8.5-beta — Team share link (access code for parents & co-coaches)
+
+- 🔗 **Share team** — new item in the team-action menu. Builds a link that carries the whole team setup: roster, position tags, jersey numbers, preferred sides/feet, format and saved game settings. Send it to a parent or co-coach; opening it installs the team on their phone with a **"TEAM IS READY — Play now"** welcome that lands them one tap from kickoff. No account needed on either end of the receive.
+- 📋 **Copy link** + native **share sheet** (mobile) from the share overlay.
+- ⌨️ **Paste-a-code fallback** — "Got a team link from your coach? Add it here" on the welcome screen accepts the full link or the bare `ST1.` code, for messengers that mangle URLs.
+- ♻️ **Safe to re-send** — re-opening a code for a team you already imported refreshes it in place (no duplicates), and opening your own link never clones your own team.
+
+### Architecture notes
+- Payload is self-contained base64url JSON in the URL hash (`#team=ST1.<payload>`): `{v, sid, n, s, f, p, pos, sd, ft, nm, pr}` — no server round-trip, works on preview deployments (link uses `location.origin`). `sid` (the sharer's team id) is stamped onto the import as `sharedFrom` and is the dedupe key. Import runs at boot **before** `renderHome()` (`importTeamFromUrl`), then `history.replaceState` strips the code so refreshes don't re-trigger; a bad/unknown-format payload (e.g. from a newer app) is rejected whole rather than half-imported. New edge-suite scenario round-trips a share code onto a wiped device.
+
+---
+
 ## v2.2.0-beta — 3D pitch for soccer & netball too
 
 - ⚽ **Soccer** and 🥅 **netball** now use the same real 3D playing surface as AFL — drag to rotate, pinch to zoom, tap a player. Same Behind / Side / Top presets, lock toggle, and auto-zoom-to-fit.
