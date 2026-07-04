@@ -4,11 +4,11 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.8.4-beta** · 0 static + 86 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.8.5-beta** · 0 static + 95 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
-- `home` — Home (7 routes in)
+- `home` — Home (8 routes in)
 - `s4` — Live game (6 routes in)
 - `sportPicker` — Sport picker (2 routes in)
 - `s1` — Squad select (2 routes in)
@@ -27,17 +27,17 @@
 These are emitted by `innerHTML` templates; a static parse can't say which
 screen shows them. See §C for the runtime-verified placement.
 
-- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnyDrawer`, `closeAppSettings`, `closeBulkTag`, `closeGameMenu`, `closePlanMenu`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeWhatsNew`, `confSub`, `cycleView`, `deleteTeam`, `discardActiveGame`, `dismissTip`, `fillSampleSquad`, `newTeam`, `nextTip`, `openFeedback`, `openSubOrder`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendFeedback`, `sendMagicLink`, `showHistory`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionPlayNow`, `tog`, `toggleAflView`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
+- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnyDrawer`, `closeAppSettings`, `closeBulkTag`, `closeGameMenu`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `discardActiveGame`, `dismissTip`, `fillSampleSquad`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openSubOrder`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendFeedback`, `sendMagicLink`, `shareTeamNative`, `showHistory`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionPlayNow`, `teamActionShare`, `tog`, `toggleAflView`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
 - **`renderScore()`** → `adjScore`, `aflScore`, `aflUndo`
 - **`renderPlanProfiles()`** → `applyPlanProfile`, `deletePlanProfile`, `renamePlanProfile`
+- **`renderHome()`** → `newTeam`, `openTeamCodeEntry`
 - **`renderSquadPlanPicker()`** → `pickSquadPlan`, `planAheadFromSquad`
 - **`showSum()`** → `saveMatch`, `showScr`
 - **`renderPlanControlBand()`** → `planScrubLive`, `planScrubStep`
 - **`renderAuthChip()`** → `signOutCloud`
 - **`renderViewSwitcher()`** → `switchToView`
-- **`renderHome()`** → `newTeam`
 - **`renderEqualTimeHint()`** → `applyEqualTime`
 - **`openPlanSwapEditor()`** → `closePlanEdit`
 - **`renderG()`** → `openSubOrder`
@@ -55,11 +55,12 @@ screen shows them. See §C for the runtime-verified placement.
 Booted the app, navigated to each screen, recorded the controls actually
 visible/clickable. This corrects §A/§B guesses.
 
-### Home `home` — 4 visible
+### Home `home` — 5 visible
 
 - `add()`
 - `closeAnyDrawer()`
 - `newTeam()`
+- `openTeamCodeEntry()`
 - `toggleGlobalMenu()`
 
 ### Sport picker `sportPicker` — 3 visible

@@ -14,7 +14,7 @@
 
 ## Current state (top of tree)
 
-- **Version:** v2.8.4-beta · **main:** green, docs in sync, **0 open PRs**.
+- **Version:** v2.8.5-beta · **main:** green, docs in sync.
 - **Gate:** `npm run gate` = sanity → docs-check → smoke → sports → edge, enforced
   in CI on protected `main`. ~315 checks. Plus `hunt` / `loop` (discovery, not gated)
   and `uimap` (regenerate the UI map).
@@ -90,6 +90,16 @@ the oracle. Don't "fix" the app away from these without checking.
 ---
 
 ## Session history (newest first)
+
+### Session 3 — team share link (access code for parents)
+Owner ask: "a team access code I can send that has the Dragonflies already set
+up — the parents just run the game." Shipped **Share team** (team-action menu):
+a self-contained link (`#team=ST1.<base64url JSON>`) carrying roster, positions,
+numbers, sides/feet, format + game-settings prefs. Recipient opens it → team
+imports before first paint → "TEAM IS READY — Play now" welcome → squad picker.
+No account needed. Paste-a-code fallback on the landing page; re-sent codes
+refresh in place (dedupe by `sharedFrom`), own-link never clones. Edge-suite
+round-trip test onto a wiped device. v2.8.5-beta.
 
 ### Session 2 — bug-fix blitz + QA system + this memory doc
 Started from "a parent said something broke." Shipped **11 bug fixes** (phantom

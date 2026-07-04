@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.4-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.5-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -89,6 +89,8 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 | **AI sub-plan from photo** (newer, not in v1.x doc) | `extract-roster` with `mode:'plan'` — reads a roster/plan image and builds the sub plan. ❌ untested. |
 | Delete team | Confirm dialog → removes locally + on cloud. |
 | Set up incomplete teams | If team has no format or too few players, the home card shows a yellow "Set up" button instead of green "Start". |
+| **Team share link / access code** (v2.8.5) | **Share team** in the team-action menu builds a self-contained link (`#team=ST1.<base64url JSON>`) carrying name, sport, format, roster, positions, sides/feet, numbers and game-settings prefs (`buildTeamShareCode` / `buildTeamShareLink`). Copy button + native share sheet where available. ✅ tested (edge) |
+| Team share import | Opening a share link imports the team before first paint (`importTeamFromUrl` → `importSharedTeam`), strips the code from the URL, and shows a "TEAM IS READY — Play now" welcome that jumps straight to the squad picker. Paste-a-code fallback (`openTeamCodeEntry`) on the landing page. Re-importing the same code refreshes the copy in place (dedupe by `sharedFrom`); opening your own link never clones your team. Recipient needs no account. ✅ tested (edge) |
 
 **Edge cases:**
 - ⚠️ Renaming player A to player B's existing name **overwrites** B's positions (silent data loss, edge case). Not yet fixed.
