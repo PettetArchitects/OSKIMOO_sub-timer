@@ -62,6 +62,9 @@ jobs:
       - name: Second-half setup (keeper + Plan page at a break)
         run: npm run secondhalf
 
+      - name: Accessibility check (names + hit-target ratchet)
+        run: npm run a11y
+
       - name: Game flow round-trip (record → replay)
         run: npm run flow
 

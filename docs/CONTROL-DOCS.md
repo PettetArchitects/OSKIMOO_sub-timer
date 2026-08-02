@@ -1,6 +1,6 @@
 # Control Documents — register and gap audit
 
-> **Audited at v2.9.0-beta.** Companion to `PROCESS.md`, which describes the
+> **Audited at v2.9.1-beta.** Companion to `PROCESS.md`, which describes the
 > Map → Gate → Hunt → Replay method. This file answers a narrower question:
 > *which documents govern this app, which of them actually govern anything, and
 > what is missing.*
@@ -52,7 +52,7 @@ it stops people looking.
 | 5 | State & data model | `architecture.md` §3 | — | 🟡 described |
 | 6 | Interaction & motion | `design.md` §2.6, §5.1 | — | 🟡 described |
 | 7 | Feature catalogue | `FEATURES.md` | `docs-check` (version) | ✅ enforced |
-| 8 | Accessibility | `design.md` §8 | — | 🔴 **claims measurably false** |
+| 8 | Accessibility | `design.md` §8 | `test/a11y-check.mjs` (names hard-fail, size ratchet) | ✅ enforced |
 | 9 | Error / empty / loading states | `design.md` §6 | — | 🔴 a colour table, not a state catalogue |
 | 10 | Content, voice & tone | — | — | 🔴 **absent** |
 | 11 | Privacy & data handling | `docs/PRIVACY.md` | `test/privacy-check.mjs` (storage inventory) | ✅ enforced |
@@ -102,19 +102,23 @@ default for new features. Enforceable parts: assert that exports contain no raw
 player names (the game-flow suite already does this), and that no new
 `localStorage` key or cloud table appears without a row in the inventory.
 
-### 2. Accessibility — documented, unverified, currently false
+### 2. Accessibility — ✅ CLOSED at v2.9.1 (`test/a11y-check.mjs`)
 
-Easiest to fix and already making claims. A check can assert accessible names
-(passing today), flag sub-44px hit targets (18 failing), and catch the missing
-focus rings §8 already admits to.
+Walks eight screens in a real browser at 390×844. Accessible names are a **hard
+fail** (114 controls, all named). Hit targets are **ratcheted at 34** below
+44×44 — the standard is now stated as a target with the real number beside it,
+because §8 previously asserted the minimum flatly and was false.
 
-Note the hit-target finding is a **product** question, not only a code one: the
-−/+ steppers are deliberately small to fit two clock anchors side by side.
-Either the target changes or the standard does — but the doc and the app must
-stop disagreeing.
+Checking all eight screens rather than just the game screen roughly doubled the
+count (18 → 34) and turned up a genuine bug the a11y lens found first: an
+**unlabelled 4×4 button on the home screen**. `#historyBtn` was left behind when
+Match History moved into the team-action menu — its label stripped, but
+`renderHome` still un-hiding it. Removed.
 
-**What would close it:** `test/a11y-check.mjs`, ratcheted like `design-check`, so
-the count can fall but never rise.
+Remaining: the clock steppers (18×18) and tip arrows (24×24) are the worst
+offenders, and sizing them is a **layout** decision — the steppers are small so
+two clock anchors fit side by side on a phone. Focus rings are still effectively
+absent and reported on every run.
 
 ### 3. Error / empty / loading states — a colour table, not a catalogue
 

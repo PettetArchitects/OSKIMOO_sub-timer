@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.0
+> Last updated: v2.9.1
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -10,7 +10,7 @@
 1. **Game day clarity over screen real-estate** — the coach is on a sideline in sunlight watching twelve seven-year-olds. Every screen must be readable in one glance. Big DSEG clocks, big sub buttons, no precious typography.
 2. **One consistent app shell, many views** — two persistent anchors (top brand bar + bottom tab bar) wrap every screen so the coach never loses orientation. Per-page chrome lives inside that shell.
 3. **Auto by default, custom by intent** — the app picks fair subs unless the coach explicitly builds a plan. The custom path is one tap deeper, not the default.
-4. **Tactile, gestural** — tap to swap, long-press for injury sub, drag to reorder. Buttons are large; hit targets exceed 44×44pt.
+4. **Tactile, gestural** — tap to swap, long-press for injury sub, drag to reorder. Primary actions are large. 44×44pt is the hit-target *target*, not yet the floor — see §8 for the current count and the ratchet holding it.
 5. **Dark by default** — coaches use this outdoors in glare; dark UI with high-contrast accent colors reads better than light, and matches the iOS PWA aesthetic.
 
 ---
@@ -604,12 +604,27 @@ Position labels (rendered on shirt or chip):
 
 ## 8. Accessibility
 
-- All interactive elements include `aria-label` or visible text
-- Hit targets ≥ 44×44pt (iOS HIG minimum)
-- Color is never the sole indicator of state — labels accompany colour cues
-- DSEG digits and tabular nums prevent layout shift as time changes
-- Safe-area insets respected for iPhone notch + home indicator
-- Focus rings: not currently styled — relies on browser default. **Outstanding gap.**
+Verified by `npm run a11y` (`test/a11y-check.mjs`), which walks eight screens in
+a real browser at 390×844. Claims below are marked with how they stand.
+
+- ✅ **All interactive elements include `aria-label` or visible text.** Enforced —
+  a control with no accessible name fails the build. 114 controls checked.
+  Elements inside an `aria-hidden` subtree (the drawer scrim) are deliberately
+  excluded; that is what `aria-hidden` means.
+- 🟡 **Hit targets ≥ 44×44pt (iOS HIG minimum).** This is the **target**, not the
+  current state: **34 controls are below it** and the check is ratcheted at that
+  number, so it can fall but never rise.
+  Until v2.9.1 this section asserted the minimum flatly, which was simply false —
+  and being written down stopped anyone checking. The worst offenders are the
+  clock steppers (18×18) and the tip-carousel arrows (24×24). Sizing them up is a
+  layout change, not a token change: the steppers are small so two clock anchors
+  fit side by side on a phone. Either they change or this standard does — but the
+  document and the app must not disagree again.
+- ✅ Color is never the sole indicator of state — labels accompany colour cues
+- ✅ DSEG digits and tabular nums prevent layout shift as time changes
+- ✅ Safe-area insets respected for iPhone notch + home indicator
+- 🔴 **Focus rings** — one rule exists; there is no systematic `:focus-visible`
+  treatment. Reported by the check on every run until it is closed.
 
 ---
 

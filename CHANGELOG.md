@@ -4,6 +4,20 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.1-beta — Accessibility check, and the stray button it found
+
+- 🐛 **Removed an invisible 4×4 pixel button from the Home screen.** `#historyBtn` was left behind when Match History moved into the team-action menu — its label stripped, but `renderHome` still un-hiding it. Tappable, unlabelled, doing nothing a coach could see. The accessibility lens found it before any functional test did, because it was invisible rather than broken.
+- 🔎 **`test/a11y-check.mjs`** — walks eight screens in a real browser at 390×844, in the gate and CI.
+  - **Accessible names: hard fail.** All 114 controls pass. A control with no name a screen reader can announce now fails the build.
+  - **Hit targets: ratcheted at 34.** 34 controls sit below the 44×44pt minimum `design.md` §8 requires; the count can fall, never rise.
+  - **Focus rings:** reported every run until closed.
+- 📝 **`design.md` §8 now states what's true.** It asserted the 44pt minimum flatly while most controls failed it — and being written down is exactly what stopped anyone checking. It now reads as a target with the real number beside it, per `docs/CONTROL-DOCS.md`: a control that asserts the opposite of reality is worse than no control.
+- 🔇 The drawer scrim is `aria-hidden` — a decorative click-catcher shouldn't appear to a screen reader as an unnamed full-screen control when the drawer already has labelled close affordances.
+
+Checking all eight screens rather than only the game screen roughly doubled the count (18 → 34). The worst offenders are the clock steppers (18×18) and tip-carousel arrows (24×24); sizing those is a layout decision, since the steppers are deliberately small so two clock anchors fit side by side on a phone.
+
+---
+
 ## v2.9.0-beta — Data & privacy policy (no functional change)
 
 No change to how the app works. `docs/PRIVACY.md` records what Sub Timer stores, what leaves the device, and the rule for the next feature; `test/privacy-check.mjs` fails the build if a `localStorage` key appears with no row in it.

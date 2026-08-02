@@ -610,7 +610,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
     </div>
     <!-- v2.7.81: global Match History removed from home — match history is per-team now (Past Games in the team-action menu). The button + handler are kept hidden for any code path that still references them. -->
-    <button id="historyBtn" onclick="showHistory()" style="display:none"></button>
+    <!-- v2.9.1: the standalone Match History button is gone — the route is
+         Team card → ⋯ → Past Games (teamActionPastGames). The element was left
+         behind with its label stripped but renderHome still un-hid it, so home
+         carried an unlabelled 4×4 click target. -->
     <!-- v2.7.81: inline full-width donate replaced by a floating bottom-right heart button (#coffeeFab below). Element kept hidden so any code path still referencing it doesn't error. -->
     <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
     <!-- v2.7.83: feedback link moved into the hamburger drawer. Element kept hidden so legacy refs don't break. -->
@@ -1316,7 +1319,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 <div id="bottomTabBar"></div>
 <!-- v2.7.83: drawer scrim — darkens the page behind the side drawer; tap to close. -->
-<div id="appDrawerScrim" onclick="closeAnyDrawer()"></div>
+<!-- Decorative click-catcher behind an open drawer. aria-hidden because the
+     drawer has its own labelled close affordances; exposing an unnamed
+     full-screen region to a screen reader is noise, not an extra control. -->
+<div id="appDrawerScrim" onclick="closeAnyDrawer()" aria-hidden="true"></div>
 <!-- v2.7.81→.83: donate moved INSIDE the hamburger drawer (.drawer-donate). FAB kept hidden in case any code path still references it. -->
 <a id="coffeeFab" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
 
@@ -3869,12 +3875,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.0-beta';
+const APP_VERSION='v2.9.1-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.1-beta':{
+    title:'Fixed a stray invisible button, and an accessibility check',
+    items:['Removed an invisible 4\u00d74 pixel button on the Home screen \u2014 a leftover from when Match History moved into the team menu. It did nothing visible but was still tappable.','Behind the scenes: an automated accessibility check now runs on every change. Every button and control must have a name a screen reader can announce, and the number of controls smaller than Apple\u2019s 44pt minimum can only go down from here.']
+  },
   'v2.9.0-beta':{
     title:'Housekeeping: a written policy for your team\'s data',
     items:['No change to how the app works. There is now a written record of exactly what Sub Timer stores, what leaves your phone and what does not — plus an automated check so a future feature can\'t quietly start storing something new without it being written down. Game recordings you send for bug reports already replace player names with "Player 1, 2, 3…".']
@@ -4983,13 +4993,11 @@ function renderHome(){
   // Toggle footer buttons + heading visibility based on state
   const heading=document.getElementById('teamsHeading');
   const newBtn=document.getElementById('newTeamBtn');
-  const histBtn=document.getElementById('historyBtn');
   const hdrBrand=document.getElementById('hdrBrand');
   const hdrTagline=document.getElementById('hdrTagline');
   const isLanding=teams.length===0&&!cloudUser;
   if(heading)heading.style.display=isLanding?'none':'';
   if(newBtn)newBtn.style.display=isLanding?'none':'';
-  if(histBtn)histBtn.style.display=isLanding?'none':'';
   // v2.7.84: legacy body-level Donate / Send-feedback elements now live in the drawer.
   // Keep them permanently hidden so they don't render as 1px-tall flex strips.
   const coffeeBtn=document.getElementById('coffeeBtn');
