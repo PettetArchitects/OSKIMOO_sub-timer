@@ -273,16 +273,24 @@ Tone modifiers sit **on top of** `--secondary` rather than multiplying into new
 variants: `.is-go` (green), `.is-preview` (cyan), `.is-plan` (purple),
 `.is-attention` (amber). Same meanings as §2.1.
 
-**The treatment, and why it differs from the legacy one:**
+**The treatment: fun, familiar, approachable.** The audience is a volunteer
+parent on a sideline, not an engineer. An earlier cut borrowed from
+developer-tool design systems (Linear, Vercel Geist — flat, low-contrast, 600
+weight) and read cold and corporate for a kids' sport app. The reference set is
+now apps a grassroots coach already has on their phone: GameChanger, TeamSnap,
+Spond, Heja, Stack Team App — and Duolingo for the tactile press.
 
 | | Legacy | `ui-` |
 |---|---|---|
-| Fill | `linear-gradient(180deg,…)` | flat + `inset 0 1px 0 rgba(255,255,255,.22)` |
-| Elevation | drop shadow | surface tint (depth by lightness) |
-| Radius | 8px | 12px (14px for chips/steppers) |
-| Label | 800 weight, +.3px tracking | 600–650, −.005em |
-| Border | 1–1.5px solid | `inset 0 0 0 1px rgba(255,255,255,.075)` |
-| Height | 7–13px padding | 44–48px min-height |
+| Type | system sans, 800, +.3px tracking | `ui-rounded` (SF Pro Rounded on Apple), 700 |
+| Press | 1px nudge | 3px colour lip that compresses — most of the "fun" |
+| Fill | `linear-gradient(180deg,…)` | solid, confident |
+| Radius | 8px | 16px (14px chips) |
+| Height | 7–13px padding | 48–52px min-height |
+
+`ui-rounded` is a CSS generic family, so Apple devices — most of the audience —
+get rounded type natively, with a graceful fallback elsewhere. No webfont, no
+CSP problem, no download.
 
 **Zero new tokens** — no new colours, and nothing new on the type or radius
 scales. That was not true of the first draft, and both gates caught it:
