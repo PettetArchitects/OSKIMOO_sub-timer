@@ -250,7 +250,57 @@ Game screen (`#s4`) and Plan screen (`#subOrderOv`) override with overflow:hidde
 
 ### 4.1 Button
 
-#### 4.1.1 Primary action — `.gd-go`
+> **The `ui-` system (v2.9.3) — in progress.** Everything documented below §4.1.0
+> is the **legacy** treatment. It is what 121 inline-styled buttons, in 54
+> distinct combinations, actually look like today. The set below replaces it.
+
+#### 4.1.0 The `ui-` button system
+
+Six variants. Prefixed `ui-` so it cannot collide with the legacy `.btn` /
+`.chip` / `.st-btn` classes while both exist — the old ones are removed screen
+by screen as callers migrate, never in one sweep.
+
+| Class | Role | Size |
+|---|---|---|
+| `.ui-btn--primary` | The one action a screen exists for. At most one per view. | 48px min |
+| `.ui-btn--secondary` | Everything supporting. Takes a tone modifier for meaning. | 44px min |
+| `.ui-btn--ghost` | Menu and drawer rows. Full width, left-aligned. | 48px min |
+| `.ui-btn--danger` | Loses data or ends something. | 44px min |
+| `.ui-chip` | Compact, inline with content — tags, toggles, scores. | — |
+| `.ui-step` | The −/+ steppers. | **44×44** |
+
+Tone modifiers sit **on top of** `--secondary` rather than multiplying into new
+variants: `.is-go` (green), `.is-preview` (cyan), `.is-plan` (purple),
+`.is-attention` (amber). Same meanings as §2.1.
+
+**The treatment, and why it differs from the legacy one:**
+
+| | Legacy | `ui-` |
+|---|---|---|
+| Fill | `linear-gradient(180deg,…)` | flat + `inset 0 1px 0 rgba(255,255,255,.22)` |
+| Elevation | drop shadow | surface tint (depth by lightness) |
+| Radius | 8px | 12px (14px for chips/steppers) |
+| Label | 800 weight, +.3px tracking | 600–650, −.005em |
+| Border | 1–1.5px solid | `inset 0 0 0 1px rgba(255,255,255,.075)` |
+| Height | 7–13px padding | 44–48px min-height |
+
+**Zero new tokens** — no new colours, and nothing new on the type or radius
+scales. That was not true of the first draft, and both gates caught it:
+`ui-check` rejected `999px` and `19px` (pulled back to the existing `14px` and
+`18px`, visually identical at these sizes), and `design-check` rejected nine
+invented tints — every one of which turned out to have an exact token already,
+`#04201a` being `--text-inverse`, whose documented usage is literally "text on
+green primary buttons". Worth recording: the ratchets caught a claim of "no new
+colours" that was wrong by nine.
+
+Two documented gaps close with it: `.ui-step` at 44×44 removes 9 of the 34
+undersized controls (§8), and one `:focus-visible` rule on the base classes
+closes the focus-ring gap §8 has carried since it was written.
+
+**Migration** — step 1 (define the classes, no markup touched) is done; nothing
+uses them yet. Steps 2–5 are in §11 backlog item 1b.
+
+#### 4.1.1 Primary action — `.gd-go` *(legacy)*
 
 ```css
 flex: 1.5;
@@ -701,12 +751,18 @@ When introducing or modifying components: update this document **first**, then i
    Note the separate, pre-existing issue this surfaced: on soccer, `LB`/`RB`
    labels overlap the keeper's shirt at the current sizes too. Unrelated to the
    above, unfixed.
-1b. **One Button, 54 treatments (v2.9.2)** — §4.1 documents a single Button
-   component, but **121 of 158 buttons are inline-styled**, in 54 distinct
-   padding/size/radius/weight combinations. The document cannot govern a
-   component the code doesn't use. Converging means promoting the common
-   signatures to classes (the top 8 cover ~65 buttons) and is best done a screen
-   at a time. Ratcheted at 54 by `npm run ui`.
+1b. **Migrate onto the `ui-` button system (v2.9.3)** — the six variants are
+   defined (§4.1.0) and nothing uses them yet. 121 of 158 buttons remain
+   inline-styled in 54 combinations. Remaining steps, each verifiable alone with
+   a before/after screenshot and the `ui` ratchet lowered deliberately after:
+   **2.** drawer + menu rows → `.ui-btn--ghost` (46 buttons, near-identical already)
+   **3.** steppers + chips → `.ui-step` / `.ui-chip` (21; where the 44pt fix lands)
+   **4.** outline actions → `.ui-btn--secondary` + tone modifiers (27)
+   **5.** primary/destructive, then judge the rest — genuinely singular things
+   may stay inline if naming them adds nothing.
+   Note this step **does** change how the app looks, unlike the rest of the
+   consistency work, which deliberately moved no pixels. Scope is chrome only:
+   the clock, pitch and player chips are the app's identity and are out.
 2. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
 3. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
 4. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
