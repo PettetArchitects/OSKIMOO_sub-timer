@@ -684,13 +684,23 @@ When introducing or modifying components: update this document **first**, then i
 1. **Collapse the neutral ramp** — nine greys for text is too many. Target ~4.
    This is a visual change on every dense list, so it needs an eye on it, not a
    find-and-replace.
-1a. **Pitch-chip legibility (v2.9.2)** — 11 declarations of sub-9px text, all on
-   the 3D player chips; AFL drops to **7px** position labels and 8px names
-   because 18 players must fit. This is the app's core glanceable surface and it
-   has its smallest type. Options: shorten the chip content at high player
-   counts (drop minutes, or position, keeping the number), scale chips with
-   available width, or accept it explicitly for AFL only. **Needs a decision —
-   it is a density trade-off, not a token fix.**
+1a. **Pitch-chip legibility — DECIDED: keep current sizes (v2.9.2)**
+   11 declarations of sub-9px text sit on the 3D player chips; AFL uses **7px**
+   position labels and 8px names because 18 players must fit.
+   A dynamic version was built and rejected: `--chip-scale` derived from
+   container width and chip count, text floored at 9px via `max()`, with a
+   `[data-dense]` mode shedding the minutes badge and position code. It did
+   raise AFL to 9px, but it changes a surface that works today, and the owner's
+   call was to keep the current sizes. Kept in `git stash` on
+   `claude/game-flow-recorder` if it's ever wanted.
+   **Do not re-attempt without a fresh decision.** Two things learned if it is
+   revisited: (a) crowding must only ever *shrink* type — scaling sparse
+   formations up made labels wider and collided harder, because a 7v7 pitch is
+   the same size as an 11v11 one; (b) the sub-9px count is the *symptom*, and
+   the real constraint is label **width**, not font size.
+   Note the separate, pre-existing issue this surfaced: on soccer, `LB`/`RB`
+   labels overlap the keeper's shirt at the current sizes too. Unrelated to the
+   above, unfixed.
 1b. **One Button, 54 treatments (v2.9.2)** — §4.1 documents a single Button
    component, but **121 of 158 buttons are inline-styled**, in 54 distinct
    padding/size/radius/weight combinations. The document cannot govern a
