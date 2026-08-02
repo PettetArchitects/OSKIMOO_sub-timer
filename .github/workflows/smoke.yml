@@ -44,6 +44,9 @@ jobs:
       - name: Design-system check (tokens + ratchet)
         run: npm run design
 
+      - name: UI consistency check (type/radius/button ratchets)
+        run: npm run ui
+
       - name: Privacy inventory check
         run: npm run privacy
 

@@ -1,6 +1,6 @@
 # Control Documents — register and gap audit
 
-> **Audited at v2.9.1-beta.** Companion to `PROCESS.md`, which describes the
+> **Audited at v2.9.2-beta.** Companion to `PROCESS.md`, which describes the
 > Map → Gate → Hunt → Replay method. This file answers a narrower question:
 > *which documents govern this app, which of them actually govern anything, and
 > what is missing.*
@@ -46,7 +46,7 @@ it stops people looking.
 | # | Category | Document | Enforced by | Status |
 |---|---|---|---|---|
 | 1 | Design system / tokens | `design.md` §2 | `test/design-check.mjs` (ratcheted) | ✅ enforced |
-| 2 | Component inventory | `design.md` §3–4 | — | 🟡 described |
+| 2 | Component inventory | `design.md` §3–4 | `test/ui-check.mjs` (type/radius/button ratchets) | 🟡 counted, not yet governed |
 | 3 | Information architecture | `docs/UIMAP.md`, `architecture.md` §2 | `docs-check` (every wired control listed) | ✅ enforced |
 | 4 | UX journeys | `docs/UX-PATHWAYS.md` | `docs-check` (test tags must resolve) | 🟡 partial — see below |
 | 5 | State & data model | `architecture.md` §3 | — | 🟡 described |

@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.1
+> Last updated: v2.9.2
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -138,6 +138,18 @@ adding positions must map onto this palette rather than introduce new hues.
 | Meta / caption | 10-11px | 600 | .4px | |
 
 Font stack: `-apple-system, BlinkMacSystemFont, sans-serif`. DSEG-7 Classic Bold loaded via `@font-face` for the digital clocks.
+
+**Reality check (v2.9.2).** Those are eight *roles*; the code uses **20 distinct
+font sizes**, including `7px`, `8px` and `12.5px`. `npm run ui` counts them and
+ratchets, so the sprawl can shrink but not grow. See §11 backlog.
+
+**Legibility floor.** `ui-check` flags any declaration below **9px**. There are
+11, all on the 3D pitch player chips — worst on AFL, where 18 players force
+position labels to 7px and names to 8px. That is in direct tension with §1
+principle 1 ("readable in one glance" on a sunlit sideline): the pitch is the
+one surface a coach reads at a glance mid-game, and it carries the smallest text
+in the app. Recorded rather than silently changed, because fixing it is a
+density decision — 18 chips have to fit.
 
 ### 2.3 Spacing scale
 
@@ -672,6 +684,19 @@ When introducing or modifying components: update this document **first**, then i
 1. **Collapse the neutral ramp** — nine greys for text is too many. Target ~4.
    This is a visual change on every dense list, so it needs an eye on it, not a
    find-and-replace.
+1a. **Pitch-chip legibility (v2.9.2)** — 11 declarations of sub-9px text, all on
+   the 3D player chips; AFL drops to **7px** position labels and 8px names
+   because 18 players must fit. This is the app's core glanceable surface and it
+   has its smallest type. Options: shorten the chip content at high player
+   counts (drop minutes, or position, keeping the number), scale chips with
+   available width, or accept it explicitly for AFL only. **Needs a decision —
+   it is a density trade-off, not a token fix.**
+1b. **One Button, 54 treatments (v2.9.2)** — §4.1 documents a single Button
+   component, but **121 of 158 buttons are inline-styled**, in 54 distinct
+   padding/size/radius/weight combinations. The document cannot govern a
+   component the code doesn't use. Converging means promoting the common
+   signatures to classes (the top 8 cover ~65 buttons) and is best done a screen
+   at a time. Ratcheted at 54 by `npm run ui`.
 2. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
 3. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
 4. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.

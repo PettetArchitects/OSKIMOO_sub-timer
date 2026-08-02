@@ -4,6 +4,16 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.2-beta — UI consistency check, and the pitch-legibility finding
+
+- 🔎 **`test/ui-check.mjs`** — in the gate and CI. Ratchets four counts so the gap between `design.md` and the code can shrink but never grow: sub-9px text (11), distinct font sizes (20), distinct radii (11), distinct inline button treatments (54).
+- 🎯 **Three stray corner radii snapped onto the scale** — `7px→6px`, `15px→14px`, `5px→6px`. Each within 1–2px on a 24–52px element, so visually identical; verified in a browser. 13 distinct radii → 11.
+- 📉 **The pitch carries the smallest text in the app.** All 11 sub-9px declarations are on the 3D player chips, and AFL is worst: 18 players force position labels to **7px** and names to 8px. That is in direct tension with design principle #1 — *"the coach is on a sideline in sunlight… readable in one glance"* — because the pitch is precisely the surface read at a glance mid-game. **Recorded, not silently changed:** fixing it is a density trade-off (18 chips have to fit), so it needs a decision, not a token edit.
+- 📐 **One Button, 54 treatments.** `design.md` §4.1 documents a single Button component, but **121 of 158 buttons are inline-styled** across 54 distinct padding/size/radius/weight combinations. A document can't govern a component the code doesn't use. Ratcheted, with convergence (promoting the common signatures to classes — the top 8 cover ~65 buttons) recorded as backlog.
+- 📝 `design.md` §2.2 now states the real count next to the eight documented roles, rather than implying the roles are the whole story.
+
+---
+
 ## v2.9.1-beta — Accessibility check, and the stray button it found
 
 - 🐛 **Removed an invisible 4×4 pixel button from the Home screen.** `#historyBtn` was left behind when Match History moved into the team-action menu — its label stripped, but `renderHome` still un-hiding it. Tappable, unlabelled, doing nothing a coach could see. The accessibility lens found it before any functional test did, because it was invisible rather than broken.
