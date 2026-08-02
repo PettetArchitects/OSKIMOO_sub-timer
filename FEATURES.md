@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.7-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.8-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -220,6 +220,28 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 | Scope | Two-period sports only, matching the setting's label and the plan's soccer-only `gk_swap` event. Quarter sports change the keeper by tapping at the break. |
 | Break-aware Plan page | At a break `G.half` is still the *finished* period. `buildPlanTimeline()`, `computeProjectedMinutes()`, `getPlanScrubState()` and the period-column render all use `curP = G.atBreak ? G.half+1 : G.half` (and `curSecs = G.atBreak ? 0 : G.secs`) so the preview, the "NOW" tag and the projected minutes describe the period about to be played. |
 | Guarded by | `test/secondhalf.mjs` — 68 checks, in the merge gate. |
+
+---
+
+## 7c. Dev mode (v2.8.8) — the test harness, inside the app
+
+Hidden unless `?dev=1` has been visited on this device. Exists because every
+test script used to hand-roll its own "jump the game to state X" helper, and
+they drifted from the app: advancing `G.secs` without `G.elapsedMs` produced
+screenshots reading `00:01` six minutes into a half. This is **one**
+implementation of time travel, and it runs through `tickSecond()` — the same
+per-second logic `tickLoop` runs — so a dev jump cannot diverge from a real game.
+
+| Feature | Behaviour |
+|---|---|
+| Gating | `?dev=1` sets `subTimerDevMode` in localStorage and the flag is stripped from the URL (so a shared link never carries it). `?dev=0` or the in-panel button clears it. Nothing renders or wires when off. |
+| Launcher | A `DEV` pill, bottom-right, `display:none` unless enabled. |
+| Seed a game | `devSeedGame()` builds team → squad → format and lands on the pitch, for any of the 23 formats. |
+| Jump the clock | `devAdvanceTo(period, secs)` simulates forward through `tickSecond()`, so subs fire and minutes accrue exactly as live. Skip-to-break and skip-to-full-time included. |
+| Rewind | Supported **within the current period** by restoring `G._halfStart` and re-simulating; at a break the game is treated as sitting at the end of `G.half`. Rewinding across periods returns `false` (nothing records enough history to rebuild an earlier period faithfully) rather than silently doing nothing. |
+| Clock coherence | `devFreezeClock()` stops the loop and sets `G.elapsedMs = G.secs*1000`. `renderG` paints from `elapsedMs` while `tickSecond` moves `secs`; skipping this reconciliation is the exact bug that made hand-rolled harnesses display the wrong time. |
+| Replay a flow in-app | Paste an exported flow, `devFlowLoad()` rebuilds the game from `setup`, then Step/Play walk the actions. `auto` actions are reproduced by the clock advance, never re-applied. |
+| State inspector | Live readout (400ms) of period, clock, on/bench, `gk` and `gk2` (flagged explicit vs default), pairs, `pairIdx`, subs done, settings and per-player minutes. |
 
 ---
 

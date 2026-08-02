@@ -632,6 +632,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- ===== DEV MODE (v2.8.8) — test harness inside the app itself =====
+     Hidden unless ?dev=1 has been visited on this device. Nothing below is
+     rendered or wired when dev mode is off. -->
+<button id="devFab" onclick="toggleDevPanel()" style="display:none;position:fixed;right:10px;bottom:70px;z-index:9998;padding:8px 12px;background:#2b1a3d;border:1.5px solid #a06cd5;color:#c9a6f0;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.5)">DEV</button>
+<div class="ov" id="devOv">
+  <div class="ab" style="max-width:420px;text-align:left;max-height:88vh;overflow-y:auto">
+    <h2 style="text-align:center;margin-bottom:2px;color:#c9a6f0;display:flex;align-items:center;justify-content:center;gap:8px">DEV MODE</h2>
+    <p style="color:#888;font-size:11px;text-align:center;margin:0 0 10px">Test tools. Not visible to coaches — this device only.</p>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Seed a game</div>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <select id="devSeedFmt" class="input" style="flex:1;margin:0;padding:7px"></select>
+      <button onclick="devSeedGame()" style="padding:7px 12px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Seed</button>
+    </div>
+    <div style="font-size:10px;color:#666;margin-bottom:8px">Builds a team + squad and drops you on the pitch.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Jump the clock</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <span style="font-size:11px;color:#9fb3c8">Period</span>
+      <input id="devJumpP" type="number" min="1" value="1" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
+      <span style="font-size:11px;color:#9fb3c8">at</span>
+      <input id="devJumpM" type="number" min="0" value="0" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
+      <span style="font-size:11px;color:#9fb3c8">min</span>
+      <button onclick="devJump()" style="flex:1;padding:7px 10px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Go</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="devSkipToBreak()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Skip to break</button>
+      <button onclick="devSkipToFullTime()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Skip to full time</button>
+    </div>
+    <div style="font-size:10px;color:#666;margin-bottom:8px">Runs the real per-second logic, so subs fire and minutes accrue exactly as in a live game. Rewinding works within the current period only.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Replay a game flow</div>
+    <textarea id="devFlowJson" placeholder="Paste an exported game flow JSON here…" rows="3" class="input" style="resize:vertical;margin-bottom:6px;font-family:monospace;font-size:11px"></textarea>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="devFlowLoad()" style="flex:1;padding:7px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Load</button>
+      <button onclick="devFlowStep()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Step ▸</button>
+      <button onclick="devFlowPlay()" style="flex:1;padding:7px;background:none;border:1px solid #00d4aa;color:#00d4aa;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Play ▶</button>
+    </div>
+    <div id="devFlowStatus" style="font-size:11px;color:#888;margin-bottom:8px">No flow loaded.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">State</div>
+    <div id="devState" style="font-size:11px;font-family:monospace;color:#9fb3c8;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:8px;line-height:1.6;margin-bottom:10px">—</div>
+
+    <button class="btn btn-o" onclick="document.getElementById('devOv').classList.remove('show')">Close</button>
+    <button class="btn" style="margin-top:8px;background:none;border:1px solid #e94560;color:#e94560" onclick="setDevMode(false)">Turn dev mode OFF</button>
+  </div>
+</div>
+
 <!-- ===== GAME FLOW EXPORT (v2.8.6) — send a replayable recording of a game ===== -->
 <div class="ov" id="flowOv">
   <div class="ab" style="max-width:400px;text-align:left">
@@ -1971,6 +2019,228 @@ async function exportGameFlow(which){
   }catch(e){}
   try{ await navigator.clipboard.writeText(json); alert('Game flow copied to the clipboard — paste it into a message.'); }
   catch(e){ alert('Could not export the game flow on this device.'); }
+}
+
+// ===== v2.8.8: DEV MODE — the test harness, inside the app =====
+// Every test script in this repo used to hand-roll its own "jump the game to
+// state X" helper, and they drifted from the real app: advancing G.secs without
+// G.elapsedMs produced screenshots showing 00:01 six minutes into a half. This
+// is ONE implementation of time travel that goes through tickSecond() — the
+// same per-second logic tickLoop runs — so a dev jump can't diverge from a
+// real game. Off unless ?dev=1 has been visited on this device.
+let devMode=false;
+let _devTimer=null;
+function loadDevMode(){
+  try{
+    const u=new URL(location.href);
+    const q=u.searchParams.get('dev');
+    if(q==='1'){ localStorage.setItem('subTimerDevMode','1'); }
+    else if(q==='0'){ localStorage.removeItem('subTimerDevMode'); }
+    if(q!==null){
+      // Strip the flag so a shared/bookmarked URL doesn't carry dev mode along.
+      u.searchParams.delete('dev');
+      history.replaceState(null,'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams:'')+u.hash);
+    }
+    devMode=localStorage.getItem('subTimerDevMode')==='1';
+  }catch(e){ devMode=false; }
+  applyDevMode();
+}
+function setDevMode(on){
+  devMode=!!on;
+  try{ on?localStorage.setItem('subTimerDevMode','1'):localStorage.removeItem('subTimerDevMode'); }catch(e){}
+  if(!on) document.getElementById('devOv').classList.remove('show');
+  applyDevMode();
+}
+function applyDevMode(){
+  const fab=document.getElementById('devFab');
+  if(fab) fab.style.display=devMode?'block':'none';
+  if(!devMode&&_devTimer){ clearInterval(_devTimer); _devTimer=null; }
+}
+function toggleDevPanel(){
+  if(!devMode) return;
+  const ov=document.getElementById('devOv');
+  const opening=!ov.classList.contains('show');
+  ov.classList.toggle('show',opening);
+  if(opening){
+    devFillFormats();
+    devRefresh();
+    if(!_devTimer) _devTimer=setInterval(devRefresh,400);   // live state readout
+  } else if(_devTimer){ clearInterval(_devTimer); _devTimer=null; }
+}
+function devFillFormats(){
+  const s=document.getElementById('devSeedFmt');
+  if(!s||s.options.length) return;
+  s.innerHTML=Object.keys(FORMATS).map(k=>`<option value="${k}">${k} · ${FORMATS[k].sport}</option>`).join('');
+  s.value='7v7';
+}
+
+// Stop the clock and put the DISPLAY source back in step with the game clock.
+// renderG paints from G.elapsedMs while tickSecond only moves G.secs (the live
+// rAF loop is what normally reconciles them) — skipping this is exactly the bug
+// that made hand-rolled test harnesses show the wrong time.
+function devFreezeClock(){
+  if(!G) return;
+  if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; }
+  G.running=false; G.lastTs=null;
+  G.elapsedMs=G.secs*1000;
+}
+// Advance to (period, secs) by running the real per-second logic. Subs fire and
+// minutes accrue exactly as they would live. Returns false if the target is in
+// the past and can't be reached.
+function devAdvanceTo(period,secs){
+  if(!G) return false;
+  const periodCount=(getSport(currentTeam).periodCount)||2;
+  period=Math.max(1,Math.min(period,periodCount));
+  secs=Math.max(0,Math.min(secs,(cfg.hm||0)*60));
+  // Going backwards inside the current period: restore this period's kickoff
+  // snapshot, then simulate forward. Backwards ACROSS periods isn't supported —
+  // nothing records enough history to rebuild an earlier period faithfully.
+  // At a break the game sits at the END of G.half, so measure from there —
+  // treating the break as "G.secs" made a rewind request from half-time neither
+  // happen nor get refused; it silently did nothing.
+  const curSecs=G.atBreak?(cfg.hm||0)*60:G.secs;
+  const behind=(period<G.half)||(period===G.half&&secs<curSecs);
+  if(behind){
+    if(period!==G.half||!G._halfStart) return false;
+    const s=G._halfStart;
+    G.on=[...s.on]; G.bench=[...s.bench]; G.gk=s.gk; G.pt={...s.pt};
+    G.pairs=s.pairs.map(p=>({on:[...p.on]})); G.pairIdx=s.pairIdx;
+    G.secs=0; G.sd=[]; G.lastSub=null; G.ps=null; G.atBreak=false;
+    devFreezeClock();
+  }
+  let guard=0;
+  while(G&&guard++<200000){
+    if(G.atBreak){
+      if(G.half>=period) break;      // the break we were asked for
+      startNextPeriod(); devFreezeClock(); continue;
+    }
+    if(G.half>period) break;
+    if(G.half===period&&G.secs>=secs) break;
+    G.running=true;
+    const ended=tickSecond();
+    devFreezeClock();
+    if(ended&&G.half>=period) break;
+  }
+  devFreezeClock();
+  saveActiveGame();
+  renderG();
+  return true;
+}
+function devJump(){
+  if(!G){ alert('No game in progress — seed one first.'); return; }
+  const p=parseInt(document.getElementById('devJumpP').value,10)||1;
+  const m=parseInt(document.getElementById('devJumpM').value,10)||0;
+  if(!devAdvanceTo(p,m*60)) alert('Can\'t rewind into an earlier period — only within the current one.');
+  devRefresh();
+}
+function devSkipToBreak(){
+  if(!G) return;
+  devAdvanceTo(G.atBreak?G.half+1:G.half,(cfg.hm||0)*60);
+  devRefresh();
+}
+function devSkipToFullTime(){
+  if(!G) return;
+  devAdvanceTo((getSport(currentTeam).periodCount)||2,(cfg.hm||0)*60);
+  devRefresh();
+}
+function devSeedGame(){
+  const fmtKey=document.getElementById('devSeedFmt').value||'7v7';
+  const sportKey=FORMATS[fmtKey].sport;
+  if(G){ if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; } G.running=false; }
+  G=null;
+  teams=loadTeams();
+  newTeam(); pickSport(sportKey); pickFormat(fmtKey,sportKey); fillSampleSquad();
+  const inp=document.getElementById('teamNameInput'); if(inp) inp.value='DEV '+fmtKey;
+  saveAndBack();
+  selectTeam(teams[teams.length-1].id);
+  startFromSquad();
+  devFreezeClock();
+  renderG();
+  devRefresh();
+}
+
+// --- in-app flow replay ------------------------------------------------------
+let _devFlow=null, _devFlowIdx=0;
+function devFlowStatus(msg){ const e=document.getElementById('devFlowStatus'); if(e) e.textContent=msg; }
+function devFlowLoad(){
+  const raw=(document.getElementById('devFlowJson').value||'').trim();
+  if(!raw){ devFlowStatus('Paste a flow first.'); return; }
+  let j; try{ j=JSON.parse(raw); }catch(e){ devFlowStatus('Not valid JSON: '+e.message); return; }
+  const flow=Array.isArray(j)?j[0]:(j.flows?j.flows[0]:j);
+  if(!flow||!flow.actions){ devFlowStatus('No flow found in that JSON.'); return; }
+  _devFlow=flow; _devFlowIdx=0;
+  // Rebuild the game the flow started from, same as test/replay.mjs does.
+  const s=flow.setup||{};
+  const fmtKey=flow.format, sportKey=(FORMATS[fmtKey]||{}).sport||flow.sport;
+  if(G){ if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; } G.running=false; }
+  G=null; teams=loadTeams();
+  newTeam(); pickSport(sportKey); pickFormat(fmtKey,sportKey); fillSampleSquad();
+  const squad=s.squad||[];
+  if(squad.length){
+    editingTeam.players=squad.map(p=>p.name);
+    editingTeam.numbers={}; editingTeam.positions={};
+    squad.forEach(p=>{ if(p.number) editingTeam.numbers[p.name]=p.number; if(p.pos&&p.pos.length) editingTeam.positions[p.name]=[...p.pos]; });
+  }
+  const inp=document.getElementById('teamNameInput'); if(inp) inp.value='FLOW '+fmtKey;
+  saveAndBack();
+  selectTeam(teams[teams.length-1].id);
+  if(s.cfg) Object.assign(cfg,s.cfg);
+  if(Array.isArray(s.luOrd)&&s.luOrd.length) luOrd=[...s.luOrd];
+  if(Array.isArray(s.rotPairs)) rotPairs=s.rotPairs.map(p=>({on:[...p.on]}));
+  if(s.gk1!=null) gk1=s.gk1;
+  if(s.gk2!=null){ gk2=s.gk2; gk2Explicit=!!s.gk2Explicit; }
+  startFromSquad();
+  if(Array.isArray(s.initialOn)&&s.initialOn.length){
+    G.on=[...s.initialOn]; G.bench=[...(s.initialBench||[])];
+    if(s.initialGk!==undefined) G.gk=s.initialGk;
+  }
+  if(s.subStrategy) G.subStrategy=s.subStrategy;
+  if(s.subPlan) G.subPlan=JSON.parse(JSON.stringify(s.subPlan));
+  devFreezeClock();
+  renderG(); devRefresh();
+  devFlowStatus(`Loaded ${flow.actions.length} actions (${flow.format} · ${flow.app||'?'}). Step or Play.`);
+}
+function devFlowStep(){
+  if(!_devFlow){ devFlowStatus('No flow loaded.'); return false; }
+  if(_devFlowIdx>=_devFlow.actions.length){ devFlowStatus('Flow finished.'); return false; }
+  const a=_devFlow.actions[_devFlowIdx++];
+  if(a.half!=null&&a.secs!=null) devAdvanceTo(a.half,a.secs);
+  // Clock-fired actions are reproduced BY the clock advance above; re-applying
+  // them would double-substitute.
+  if(!a.auto&&a.fn!=='__resumed'&&typeof window[a.fn]==='function'){
+    try{ window[a.fn].apply(window,a.args||[]); }catch(e){ devFlowStatus('Step '+a.i+' ('+a.fn+') threw: '+e.message); }
+  }
+  devFreezeClock(); renderG(); devRefresh();
+  devFlowStatus(`Step ${_devFlowIdx}/${_devFlow.actions.length} — ${a.fn}()${a.auto?' [auto]':''} at P${a.half} ${Math.floor((a.secs||0)/60)}:${String((a.secs||0)%60).padStart(2,'0')}`);
+  return _devFlowIdx<_devFlow.actions.length;
+}
+function devFlowPlay(){
+  if(!_devFlow) return;
+  const tick=()=>{ if(devFlowStep()) setTimeout(tick,420); };
+  tick();
+}
+
+function devRefresh(){
+  const host=document.getElementById('devState');
+  if(!host) return;
+  if(!G){ host.textContent='No game in progress.'; return; }
+  const nm=i=>(avail&&avail[i]!=null)?avail[i]:('#'+i);
+  const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  const pairs=(G.pairs||[]).map(p=>'['+(p.on||[]).map(nm).join(', ')+']').join(' ')||'—';
+  const pt=avail?avail.map(n=>`${n} ${mm(G.pt[n]||0)}`).join(' · '):'—';
+  host.innerHTML=[
+    `period <b style="color:#c9a6f0">${G.half}</b> / ${(getSport(currentTeam).periodCount)||2}` +
+      `  clock <b style="color:#c9a6f0">${mm(G.secs)}</b>` +
+      (G.atBreak?'  <b style="color:#f0a500">AT BREAK</b>':'')+(G.running?'  <b style="color:#00d4aa">RUNNING</b>':''),
+    `on: ${(G.on||[]).map(nm).join(', ')||'—'}`,
+    `bench: ${(G.bench||[]).map(nm).join(', ')||'—'}`,
+    `gk: <b style="color:#e94560">${G.gk!=null?nm(G.gk):'none'}</b>` +
+      `   gk2: ${gk2!=null?nm(gk2):'none'}${gk2Explicit?' <b style="color:#00d4aa">(explicit)</b>':' (default)'}`,
+    `pairs: ${pairs}   pairIdx ${G.pairIdx}`,
+    `subs done this period: [${(G.sd||[]).map(mm).join(', ')}]`,
+    `strategy: ${G.subStrategy}   half ${cfg.hm}min   sub every ${cfg.sf}min ×${cfg.sc}`,
+    `mins: ${pt}`
+  ].join('<br>');
 }
 
 // ===== SPORTS (multi-sport core) =====
@@ -3587,12 +3857,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.7-beta';
+const APP_VERSION='v2.8.8-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.8-beta':{
+    title:'Dev mode (for testing — you won\'t see this)',
+    items:['A hidden test panel for reproducing bugs: seed a game, jump the clock to any period and minute, replay a game flow step by step, and watch the live game state. Enabled only by visiting the app with <strong>?dev=1</strong> on your own device, and switched off from inside the panel. No coach will ever see it.']
+  },
   'v2.8.7-beta':{
     title:'Fixed: your 2nd-half keeper now actually goes in goal',
     items:[
@@ -9791,6 +10065,8 @@ if(typeof renderViewSwitcher==='function') renderViewSwitcher();
 // v2.8.6: install the game-flow recorder LAST — the wrappers replace the real
 // functions, so every one of them must already be defined.
 try{ flowInstall(); }catch(e){}
+// v2.8.8: dev mode reads ?dev=1 and paints its launcher (no-op when off).
+try{ loadDevMode(); }catch(e){}
 </script>
 </body>
 </html>

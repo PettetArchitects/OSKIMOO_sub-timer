@@ -4,6 +4,24 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.8.8-beta — Dev mode: the test harness, inside the app
+
+Built after a run of screenshots showed `00:01` on the clock six minutes into a half. That was **not** the app — it was the throwaway fast-forward helper in the screenshot script, which advanced `G.secs` without `G.elapsedMs`. Every test script had been re-inventing that helper, and getting it subtly wrong. Now there is one implementation, in the app, that testing and debugging both use.
+
+- 🧪 **Hidden dev panel**, gated on visiting the app with **`?dev=1`**. The flag is stripped from the URL immediately (so a shared or bookmarked link never carries it) and the choice is remembered on that device. Turn it off from inside the panel or with `?dev=0`. Nothing renders or wires when it's off — coaches will never see it.
+- ⏱ **Jump the clock** to any period and minute. Runs the **real** per-second logic (`tickSecond()`), so auto-subs fire and playing minutes accrue exactly as in a live game — a jumped-to state is indistinguishable from a played-to one. Plus skip-to-break and skip-to-full-time.
+- ⏪ **Rewind within the current period** by restoring the kickoff snapshot and re-simulating. Rewinding *across* periods is refused outright rather than silently doing nothing — nothing records enough history to rebuild an earlier period faithfully.
+- 🌱 **Seed a game** in one tap for any of the 23 formats — team, squad, settings, straight onto the pitch. No more clicking through setup to test a half-time behaviour.
+- 🎞 **Replay a game flow on screen.** Paste an exported flow and step or play through it in the real app, watching the bug happen, instead of only headlessly via `test/replay.mjs`.
+- 🔍 **State inspector** — live readout of period, clock, on-field, bench, keeper (and whether `gk2` is an explicit pick or the default), rotation pairs, subs done and per-player minutes.
+
+### Architecture notes
+- `devFreezeClock()` stops the loop and reconciles `G.elapsedMs = G.secs*1000`. `renderG` paints the clock from `elapsedMs` while `tickSecond` only advances `secs` (the live rAF loop is what normally reconciles them) — every ad-hoc harness that skipped this displayed the wrong time.
+- `devAdvanceTo(period, secs)` drives `tickSecond()` in a loop and calls `startNextPeriod()` across breaks. At a break the current position is taken as the *end* of `G.half`, since `G.half` is still the finished period; treating it as `G.secs` made a rewind request from half-time neither happen nor get refused.
+- In-app flow replay mirrors `test/replay.mjs`: rebuild from `flow.setup`, advance the clock to each action, and skip `auto` actions (they are reproduced by the clock, and re-applying them would double-substitute).
+
+---
+
 ## v2.8.7-beta — Second-half setup fixes (the 2nd-half keeper, and the Plan page at a break)
 
 Both found by a targeted sweep of the period boundary after a coach reported "an issue with player setup in the second half".
