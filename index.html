@@ -635,27 +635,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== DEV MODE (v2.8.8) — test harness inside the app itself =====
      Hidden unless ?dev=1 has been visited on this device. Nothing below is
      rendered or wired when dev mode is off. -->
-<button id="devFab" onclick="toggleDevPanel()" style="display:none;position:fixed;right:10px;bottom:70px;z-index:9998;padding:8px 12px;background:#2b1a3d;border:1.5px solid #a06cd5;color:#c9a6f0;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.5)">DEV</button>
+<button id="devFab" onclick="toggleDevPanel()" style="display:none;position:fixed;right:10px;bottom:70px;z-index:9998;padding:8px 12px;background:rgba(167,139,250,.15);border:1.5px solid #a78bfa;color:#a78bfa;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.5)">DEV</button>
 <div class="ov" id="devOv">
   <div class="ab" style="max-width:420px;text-align:left;max-height:88vh;overflow-y:auto">
-    <h2 style="text-align:center;margin-bottom:2px;color:#c9a6f0;display:flex;align-items:center;justify-content:center;gap:8px">DEV MODE</h2>
+    <h2 style="text-align:center;margin-bottom:2px;color:#a78bfa;display:flex;align-items:center;justify-content:center;gap:8px">DEV MODE</h2>
     <p style="color:#888;font-size:11px;text-align:center;margin:0 0 10px">Test tools. Not visible to coaches — this device only.</p>
 
-    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Seed a game</div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Seed a game</div>
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <select id="devSeedFmt" class="input" style="flex:1;margin:0;padding:7px"></select>
-      <button onclick="devSeedGame()" style="padding:7px 12px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Seed</button>
+      <button onclick="devSeedGame()" style="padding:7px 12px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Seed</button>
     </div>
     <div style="font-size:10px;color:#666;margin-bottom:8px">Builds a team + squad and drops you on the pitch.</div>
 
-    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Jump the clock</div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Jump the clock</div>
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
       <span style="font-size:11px;color:#9fb3c8">Period</span>
       <input id="devJumpP" type="number" min="1" value="1" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
       <span style="font-size:11px;color:#9fb3c8">at</span>
       <input id="devJumpM" type="number" min="0" value="0" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
       <span style="font-size:11px;color:#9fb3c8">min</span>
-      <button onclick="devJump()" style="flex:1;padding:7px 10px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Go</button>
+      <button onclick="devJump()" style="flex:1;padding:7px 10px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Go</button>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <button onclick="devSkipToBreak()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Skip to break</button>
@@ -663,16 +663,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </div>
     <div style="font-size:10px;color:#666;margin-bottom:8px">Runs the real per-second logic, so subs fire and minutes accrue exactly as in a live game. Rewinding works within the current period only.</div>
 
-    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">Replay a game flow</div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Replay a game flow</div>
     <textarea id="devFlowJson" placeholder="Paste an exported game flow JSON here…" rows="3" class="input" style="resize:vertical;margin-bottom:6px;font-family:monospace;font-size:11px"></textarea>
     <div style="display:flex;gap:6px;margin-bottom:4px">
-      <button onclick="devFlowLoad()" style="flex:1;padding:7px;background:rgba(160,108,213,.18);border:1px solid #a06cd5;color:#c9a6f0;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Load</button>
+      <button onclick="devFlowLoad()" style="flex:1;padding:7px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Load</button>
       <button onclick="devFlowStep()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Step ▸</button>
       <button onclick="devFlowPlay()" style="flex:1;padding:7px;background:none;border:1px solid #00d4aa;color:#00d4aa;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Play ▶</button>
     </div>
     <div id="devFlowStatus" style="font-size:11px;color:#888;margin-bottom:8px">No flow loaded.</div>
 
-    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a06cd5;text-transform:uppercase;margin:10px 0 5px">State</div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">State</div>
     <div id="devState" style="font-size:11px;font-family:monospace;color:#9fb3c8;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:8px;line-height:1.6;margin-bottom:10px">—</div>
 
     <button class="btn btn-o" onclick="document.getElementById('devOv').classList.remove('show')">Close</button>
@@ -2229,8 +2229,8 @@ function devRefresh(){
   const pairs=(G.pairs||[]).map(p=>'['+(p.on||[]).map(nm).join(', ')+']').join(' ')||'—';
   const pt=avail?avail.map(n=>`${n} ${mm(G.pt[n]||0)}`).join(' · '):'—';
   host.innerHTML=[
-    `period <b style="color:#c9a6f0">${G.half}</b> / ${(getSport(currentTeam).periodCount)||2}` +
-      `  clock <b style="color:#c9a6f0">${mm(G.secs)}</b>` +
+    `period <b style="color:#a78bfa">${G.half}</b> / ${(getSport(currentTeam).periodCount)||2}` +
+      `  clock <b style="color:#a78bfa">${mm(G.secs)}</b>` +
       (G.atBreak?'  <b style="color:#f0a500">AT BREAK</b>':'')+(G.running?'  <b style="color:#00d4aa">RUNNING</b>':''),
     `on: ${(G.on||[]).map(nm).join(', ')||'—'}`,
     `bench: ${(G.bench||[]).map(nm).join(', ')||'—'}`,

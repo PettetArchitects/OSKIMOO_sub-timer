@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.7.83
+> Last updated: v2.8.9
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -436,6 +436,28 @@ Player shirt + name + minutes, positioned absolutely. Variants:
 - `.fc-sel` — cyan glow (selected for swap)
 - `.fc-just-on` — green pulse animation (just subbed on)
 - `.fc-just-swap` — cyan pulse (just swapped)
+
+### 4.9 Dev-mode panel (v2.8.8) — non-coach surface
+
+The only component in the app not intended for a coach. Hidden unless `?dev=1`
+has been visited on this device (`#devFab` is `display:none` otherwise).
+
+| Element | Spec |
+|---|---|
+| Launcher `#devFab` | Fixed pill, `right:10px bottom:70px` (clears the tab bar), `z-index:9998`. `--accent-purple` border + label on a `.15` tint. Label `DEV`, 11px/800, 1px tracking. |
+| Panel `#devOv` | Standard `.ov` / `.ab` modal (§4.5), `max-width:400px`, `max-height:88vh`, scrolls internally. |
+| Section eyebrows | 10px/800, 1px tracking, uppercase, `--accent-purple`. |
+| Primary actions | `--accent-purple` border + label on `rgba(167,139,250,.15)`. |
+| Secondary actions | `--border-emphasized` border, `--text-secondary` label (matches §4.1 secondary). |
+| State readout | Monospace 11px, `--surface-card` on `--border-subtle`, `line-height:1.6`. |
+| Destructive | "Turn dev mode OFF" uses `--accent-red`, per §4.1. |
+
+**Colour note.** This panel first shipped with three invented purples
+(`#a06cd5`, `#c9a6f0`, `#2b1a3d`) because it was built without consulting this
+document — the exact failure §10 warns about. Corrected in v2.8.9 to the
+existing `--accent-purple` `#a78bfa`, which the Game Plan panel and "Save plan
+profile" already use. Purple means *"planning / meta"* in this app; dev mode
+belongs to that family.
 
 ---
 
