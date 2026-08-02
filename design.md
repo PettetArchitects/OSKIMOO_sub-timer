@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.2
+> Last updated: v2.9.3
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -137,7 +137,18 @@ adding positions must map onto this palette rather than introduce new hues.
 | Pill label | 11-12px | 700 | .3px | |
 | Meta / caption | 10-11px | 600 | .4px | |
 
-Font stack: `-apple-system, BlinkMacSystemFont, sans-serif`. DSEG-7 Classic Bold loaded via `@font-face` for the digital clocks.
+Font stack: `-apple-system, BlinkMacSystemFont, sans-serif`. DSEG-7 Classic Bold
+for the digital clocks, and `ui-rounded` for `ui-` button labels (§4.1.0).
+
+**Delivery (v2.9.3).** DSEG is **inlined as a base64 data URI**, not fetched. It
+used to come from `cdn.jsdelivr.net` with no service worker, so at a ground with
+no signal `document.fonts.check()` returned false and the clock — the app's whole
+identity — fell back to plain monospace. 5KB raw, 6.7KB base64, on a 612KB file.
+Verified by loading with the CDN blocked.
+Three.js still comes from a CDN and that is deliberate: 600KB is not worth
+inlining, and the 2D pitch fallback renders correctly without it.
+`ui-rounded` is a CSS generic family, so it needs no download at all — Apple
+devices resolve SF Pro Rounded, everything else falls through the stack.
 
 **Reality check (v2.9.2).** Those are eight *roles*; the code uses **20 distinct
 font sizes**, including `7px`, `8px` and `12.5px`. `npm run ui` counts them and

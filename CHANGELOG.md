@@ -4,6 +4,21 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.3-beta — Works at a ground with no signal
+
+Prompted by a simple question — "fonts correct as well?" — applied with the same skepticism as the design and accessibility claims. The stack was fine. The delivery wasn't.
+
+- 🔤 **The clock font is inlined, not fetched.** DSEG-7 Classic came from `cdn.jsdelivr.net` with no service worker, so `document.fonts.check()` returned **false** offline and the clock fell back to plain monospace — the scoreboard identity simply absent, in the exact place the app is used. Now a base64 data URI: 5KB raw, 6.7KB inlined, on a 612KB file. Verified by loading with the CDN blocked.
+- 📴 **Service worker — the app opens with no reception.** `manifest.json` declared `display:standalone`, so it installed to the home screen looking native, and then needed a network to render its own clock. A cold start offline previously showed the browser's offline page. Verified: network fully down, cold start, full app with the DSEG clock.
+- 🌐 **Network-first, deliberately.** The obvious choice for an offline app is cache-first, but this app ships often and cache-first is how PWAs strand users on a three-week-old build. Network-first gives current-when-online, last-good-when-offline. Also **no `skipWaiting()`** — a worker taking over mid-match could reload the page during a game; new versions activate on the next cold start instead.
+- 🎨 **Three.js stays on the CDN.** 600KB isn't worth inlining and the 2D pitch fallback renders correctly without it. Cloud sync failing offline is also correct. The clock was the only cosmetic dependency, and it was the app's identity.
+
+### Notes
+- `docs/PRIVACY.md` gains a Cache Storage row. It holds no personal data — shell and icons only — but rule 1 says a new place to put data gets a row *before* it ships, not after. The rule is about the place, not the contents.
+- `design.md` §2.2 now documents delivery, not just the stack.
+
+---
+
 ## v2.9.2-beta — UI consistency check, and the pitch-legibility finding
 
 - 🔎 **`test/ui-check.mjs`** — in the gate and CI. Ratchets four counts so the gap between `design.md` and the code can shrink but never grow: sub-9px text (11), distinct font sizes (20), distinct radii (11), distinct inline button treatments (54).

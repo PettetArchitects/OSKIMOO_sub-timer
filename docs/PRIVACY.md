@@ -35,6 +35,16 @@ game-flow recorder's pseudonymisation decision was taken.
 | `subTimerTipIdx`, `subTimerTipsDismissed`, `subTimerLastSeenVersion` | UI state | No |
 | `subTimerDevMode` | Dev-panel flag | No |
 
+### Cache Storage (v2.9.3)
+
+The service worker caches the app shell so it opens without a network. It holds
+`index.html`, `manifest.json` and the three icons — **no personal data**, and
+nothing game- or team-related. Cache name is version-stamped, and old versions
+are deleted on activate.
+
+Recorded here because rule 1 says a new place to put data gets a row before it
+ships, not after. This one holds none, but the rule is about the *place*.
+
 ### Leaving the device
 
 | Destination | Payload | Notes |
