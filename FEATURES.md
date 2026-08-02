@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.6-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.7-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -208,6 +208,18 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 | Buy me a coffee CTA | Visible above the fold on summary. |
 | Match History (S6) | List of saved matches, most recent first. |
 | Match detail view | Read-only summary of a past match. |
+
+---
+
+## 6b. Period boundary / second-half setup (v2.8.7)
+
+| Feature | Behaviour |
+|---|---|
+| 2nd-half keeper | `applySecondHalfKeeper()` runs from `startNextPeriod()` before `snapshotHalfStart()`. Puts the nominated `gk2` in goal at the start of the second half, bringing them on from the bench (displacing the outgoing keeper) if needed, remapping `G.pairs` so the new keeper leaves the outfield rotation and the old one rejoins, and logging a `gk` event. |
+| Explicit-pick only | `gk2Explicit` gates the swap. `gk2` auto-defaults to a different player than `gk1`, so honouring the default would swap keepers in every keeper-format game. Set by the two GK `<select>`s and by `setPlanKeeper()` for a later period; cleared wherever `gk2` is defaulted/nulled and on `selectTeam()` (indices belong to one squad). Persisted through save/resume, plan profiles and game flows. |
+| Scope | Two-period sports only, matching the setting's label and the plan's soccer-only `gk_swap` event. Quarter sports change the keeper by tapping at the break. |
+| Break-aware Plan page | At a break `G.half` is still the *finished* period. `buildPlanTimeline()`, `computeProjectedMinutes()`, `getPlanScrubState()` and the period-column render all use `curP = G.atBreak ? G.half+1 : G.half` (and `curSecs = G.atBreak ? 0 : G.secs`) so the preview, the "NOW" tag and the projected minutes describe the period about to be played. |
+| Guarded by | `test/secondhalf.mjs` — 68 checks, in the merge gate. |
 
 ---
 

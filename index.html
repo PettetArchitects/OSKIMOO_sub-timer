@@ -816,7 +816,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
       <div class="set-row" style="margin-top:0">
         <label>2nd Half GK</label>
-        <select id="gk2SettingSel" onchange="gk2=parseInt(this.value)" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
+        <select id="gk2SettingSel" onchange="gk2=parseInt(this.value);gk2Explicit=true" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
@@ -833,7 +833,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <span style="font-size:10px;color:#e94560;font-weight:700;letter-spacing:.5px">1H</span>
       <select id="gk1Sel" onchange="gk1=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
       <span style="font-size:10px;color:#e94560;font-weight:700;letter-spacing:.5px;margin-left:2px">2H</span>
-      <select id="gk2Sel" onchange="gk2=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
+      <select id="gk2Sel" onchange="gk2=parseInt(this.value);gk2Explicit=true;renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
     </div>
   </div>
   <!-- Pitch fills the whole remaining space. -->
@@ -1614,7 +1614,7 @@ function gameSnapshot(){
   if(G.running&&G.lastTs)frozenMs+=performance.now()-G.lastTs;
   return {
     teamId:currentTeam.id,
-    curFmt,curFormation,avail,cfg,gk1,gk2,luOrd,rotPairs,
+    curFmt,curFormation,avail,cfg,gk1,gk2,gk2Explicit,luOrd,rotPairs,
     G:Object.assign({},G,{raf:null,iv:null,running:false,lastTs:null,elapsedMs:frozenMs}),
     savedAt:Date.now()
   };
@@ -1636,7 +1636,7 @@ function resumeActiveGame(){
   if(!t){clearActiveGame();return false;}
   currentTeam=t;
   curFmt=s.curFmt;curFormation=s.curFormation;
-  avail=s.avail;cfg=s.cfg;gk1=s.gk1;gk2=s.gk2;
+  avail=s.avail;cfg=s.cfg;gk1=s.gk1;gk2=s.gk2;gk2Explicit=!!s.gk2Explicit;
   setDisplayNameList(avail);
   luOrd=s.luOrd;rotPairs=s.rotPairs;
   G=s.G;
@@ -1734,7 +1734,7 @@ function flowBegin(){
       // Setup is everything test/replay.mjs needs to rebuild the exact game.
       setup:{
         cfg:JSON.parse(JSON.stringify(cfg||{})),
-        gk1,gk2,
+        gk1,gk2,gk2Explicit,
         luOrd:[...(luOrd||[])],
         rotPairs:(rotPairs||[]).map(p=>({on:[...p.on]}))
       },
@@ -2407,6 +2407,11 @@ let curFmt='7v7';
 let curFormation='2-3-1';
 let cfg={hm:20,sf:5,sc:2,subStrategy:'fair',breaksOnly:false};
 let avail=[],luOrd=[],swI=null,gk1=null,gk2=null;
+// v2.8.7: did the coach actually CHOOSE a 2nd-half keeper, or is gk2 just the
+// auto-default? gk2 defaults to player index 1 while gk1 defaults to 0, so
+// without this every keeper-format game would look like a halftime keeper
+// change was requested. Only an explicit pick arms the swap.
+let gk2Explicit=false;
 let rotPairs=[]; // [[onFieldIdx,benchIdx], ...] — paired rotation groups
 let pairSel=null; // for re-pairing: {pairIdx, slot:'on'|'bench'}
 let G=null; // game state
@@ -3582,12 +3587,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.6-beta';
+const APP_VERSION='v2.8.7-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.7-beta':{
+    title:'Fixed: your 2nd-half keeper now actually goes in goal',
+    items:[
+      'The <strong>2nd Half GK</strong> setting had never been connected to anything. You could pick a second-half keeper, it saved, and the Plan page even showed you a "HALFTIME GK SWAP" line — but when the second half kicked off your first-half keeper was still in goal. That player now takes the gloves at the break, coming off the bench if that\'s where they were.',
+      'It only swaps when you\'ve actually <strong>chosen</strong> a second-half keeper. The setting used to pre-fill itself with a different player than your first-half keeper, so honouring that would have started changing keepers in everyone\'s games. Leave it alone and nothing changes.',
+      'Fixed: at half-time (and every quarter break) the Plan page was replaying <em>the half that just finished</em> — stepping through the upcoming subs showed times that had already been and gone, and the projected minutes for the rest of the game were worked out from a line-up that never took the field. It now starts from the period you\'re about to play.'
+    ]
+  },
   'v2.8.6-beta':{
     title:'Hit a bug? Send me the game',
     items:['Every game you play is now recorded as a <strong>game flow</strong> — the setup plus every tap, in order. If something goes wrong, open the menu and tap <strong>Send game flow</strong>: I can replay your exact game on my machine and see the bug happen, instead of guessing from a description. Player names are swapped for "Player 1, 2, 3…" before anything leaves your phone, and only the last 12 games are kept.']
@@ -5037,6 +5050,11 @@ function importWelcomeClose(){
 
 function selectTeam(id){
   currentTeam=teams.find(t=>t.id==id);
+  // v2.8.7: a 2nd-half keeper choice belongs to the squad it was made for —
+  // gk1/gk2 are indices into THIS team's roster, so an explicit pick must not
+  // survive a team switch and hand the gloves to whoever happens to sit at
+  // that index in the new squad.
+  gk2Explicit=false;
   sel.clear();
   currentTeam.players.forEach((_,i)=>sel.add(i));
   if(currentTeam.format&&FORMATS[currentTeam.format]){
@@ -5946,7 +5964,7 @@ function removeAvailIndex(idx){
   if(Array.isArray(luOrd)) luOrd=purge(luOrd);
   rotPairs=purgePairs(rotPairs);
   if(gk1===idx) gk1=null; else if(gk1!=null) gk1=dec(gk1);
-  if(gk2===idx) gk2=null; else if(gk2!=null) gk2=dec(gk2);
+  if(gk2===idx){ gk2=null; gk2Explicit=false; } else if(gk2!=null) gk2=dec(gk2);
   avail.splice(idx,1);
 }
 function goSettings(){
@@ -5969,7 +5987,7 @@ function goSettings(){
 function updateGkSettings(){
   const fmt=FORMATS[curFmt];
   const sec=document.getElementById('gkSettingsSection');
-  if(!fmt.hasGk){ sec.style.display='none'; gk1=null; gk2=null; return; }
+  if(!fmt.hasGk){ sec.style.display='none'; gk1=null; gk2=null; gk2Explicit=false; return; }
   sec.style.display='';
   if(gk1===null) gk1=0;
   if(gk2===null) gk2=Math.min(1,avail.length-1);
@@ -5984,7 +6002,7 @@ function quickStart(){
   if(fmt.hasGk){
     if(gk1===null) gk1=0;
     if(gk2===null) gk2=Math.min(1,avail.length-1);
-  } else { gk1=null; gk2=null; }
+  } else { gk1=null; gk2=null; gk2Explicit=false; }
   smartAssign();
   buildPairs();
   // Start game directly
@@ -6207,7 +6225,11 @@ function generateAutoPlan(){
     simOn.forEach(p=>{simPt[p]+=elapsed;});
     lastMin=gameMin;
     // Halftime GK swap?
-    if(sport.key==='soccer'&&fmt.hasGk&&gameMin===cfg.hm&&gk1!==null&&gk2!==null&&gk1!==gk2){
+    // v2.8.7: only promise the halftime keeper change when the coach actually
+    // asked for one. gk2 auto-defaults to a different player than gk1, so this
+    // used to render "HALFTIME GK SWAP" on every keeper-format plan — a swap
+    // the live game never performed.
+    if(sport.key==='soccer'&&fmt.hasGk&&gk2Explicit&&gameMin===cfg.hm&&gk1!==null&&gk2!==null&&gk1!==gk2){
       events.push({type:'gk_swap',gameMin,off:gk1,on:gk2,half:1});
       if(simBench.includes(gk2)){
         simBench=simBench.filter(p=>p!==gk2);
@@ -6218,7 +6240,10 @@ function generateAutoPlan(){
     }
     if(subTimesGame.includes(gameMin)){
       const c=Math.min(cfg.sc,simBench.length);
-      const elig=fmt.hasGk&&gkIdx!==null?simOn.filter(p=>p!==gkIdx&&p!==gk2):simOn.slice();
+      // Hold gk2 out of the outfield rotation only when they really are going
+      // to take the gloves at halftime. Excluding an auto-defaulted gk2 pinned
+      // that player on the pitch for the whole game, never rotated.
+      const elig=fmt.hasGk&&gkIdx!==null?simOn.filter(p=>p!==gkIdx&&!(gk2Explicit&&p===gk2)):simOn.slice();
       // Off: highest minutes first (equal time)
       const off=[...elig].sort((a,b)=>simPt[b]-simPt[a]).slice(0,c);
       // On: lowest minutes first
@@ -6487,7 +6512,7 @@ function goLineup(){
   if(fmt.hasGk){
     if(gk1===null)gk1=0;
     if(gk2===null)gk2=Math.min(1,avail.length-1);
-  } else { gk1=null;gk2=null; }
+  } else { gk1=null;gk2=null; gk2Explicit=false; }
   smartAssign();
   buildPairs();renderS3();showScr('s3');
 }
@@ -7764,11 +7789,46 @@ function advH(){
     renderG();
   }else showSum();
 }
+// v2.8.7: put the nominated 2nd-half keeper in goal at the start of the second
+// half. The "2nd Half GK" setting had never been wired to anything — it was
+// stored, persisted and rendered on the Plan page as "HALFTIME GK SWAP", but
+// nothing assigned it to G.gk, so the first-half keeper played the whole match.
+// Only an EXPLICIT pick fires (gk2Explicit); gk2 auto-defaults to a different
+// player than gk1, so honouring the default would silently start swapping
+// keepers in every existing game.
+function applySecondHalfKeeper(upcoming){
+  if(!G||!gk2Explicit||gk2==null)return;
+  const fmt=FORMATS[curFmt];
+  if(!fmt||!fmt.hasGk)return;
+  // Scoped to two-period sports, matching the setting's label and the Plan
+  // page's gk_swap event. Quarter sports change the keeper by tapping them at
+  // the break, which already works and doesn't need a "2nd half" rule.
+  const periodCount=(getSport(currentTeam).periodCount)||2;
+  if(periodCount!==2||upcoming!==2)return;
+  if(gk2===G.gk)return;                       // already in goal — nothing to do
+  const old=G.gk;
+  if(!G.on.includes(gk2)){
+    // Nominated keeper is benched: bring them on in the outgoing keeper's slot.
+    G.bench=(G.bench||[]).filter(p=>p!==gk2);
+    const slot=(old!=null)?G.on.indexOf(old):-1;
+    if(slot>=0){ G.on[slot]=gk2; G.bench.unshift(old); }
+    else if(G.on.length<Math.min(fmt.onField||99,avail.length)){ G.on.push(gk2); }
+    else { const off=G.on.pop(); if(off!=null) G.bench.unshift(off); G.on.push(gk2); }
+  }
+  G.gk=gk2;
+  // The new keeper leaves the outfield rotation and the old one rejoins it —
+  // same remapping swapFieldPositions does for an on-pitch keeper change.
+  if(G.pairs&&G.pairs.length&&old!=null){
+    G.pairs.forEach(pair=>{ pair.on=pair.on.map(p=>p===gk2?old:p); });
+  }
+  if(old!=null) G.log.push({type:'gk',half:upcoming,time:0,off:avail[old],on:avail[gk2]});
+}
 // Tapping the primary button while at the break starts the next period.
 function startNextPeriod(){
   if(!G||!G.atBreak)return;
   G.log.push({type:'period_end',period:G.half,time:G.secs,scoreUs:G.scoreUs,scoreThem:G.scoreThem});
   G.half++;
+  applySecondHalfKeeper(G.half);   // before the snapshot, so RESET restores it
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
   G.lastSub=null;   // undo doesn't cross the period boundary
   G.atBreak=false;
@@ -8661,7 +8721,7 @@ function snapshotCurrentPlan(name){
     subStrategy:G?G.subStrategy:cfg.subStrategy,
     subPlan:(cfg.subPlan?JSON.parse(JSON.stringify(cfg.subPlan)):null),
     luOrd:G?[...G.on, ...G.bench]:[...(luOrd||[])],   // starting XI then bench
-    gk1, gk2,
+    gk1, gk2, gk2Explicit,
     rotPairs:(G&&G.pairs)?G.pairs.map(p=>({on:[...p.on]})):(rotPairs||[]).map(p=>({on:[...p.on]}))
   };
 }
@@ -8683,7 +8743,7 @@ function applyPlanProfile(plan){
       G.bench=plan.luOrd.slice(onCount);
     }
     if(plan.gk1!=null) gk1=plan.gk1;
-    if(plan.gk2!=null) gk2=plan.gk2;
+    if(plan.gk2!=null){ gk2=plan.gk2; gk2Explicit=!!plan.gk2Explicit; }
     if(plan.rotPairs && plan.rotPairs.length){
       G.pairs=plan.rotPairs.map(p=>({on:[...p.on]}));
     }
@@ -8894,7 +8954,7 @@ function setPlanKeeper(idx){
   }
   G.gk=idx;
   const upcoming=G.atBreak?G.half+1:G.half;
-  if(upcoming<=1) gk1=idx; else gk2=idx;
+  if(upcoming<=1) gk1=idx; else { gk2=idx; gk2Explicit=true; }   // tapping a keeper IS an explicit pick
   if(planSetupPhase()) commitPlanLineup();  // keep the keeper out of the rotation pairs
   saveActiveGame();
   renderPlanRosterOverview();
@@ -9191,6 +9251,16 @@ function buildPlanTimeline(){
   const periodCount=sport.periodCount||2;
   const hmSec=(cfg.hm||0)*60, sfSec=(cfg.sf||1)*60;
 
+  // v2.8.7: at a period break G.half is still the period that just FINISHED —
+  // startNextPeriod() is what increments it. Simulating from G.half therefore
+  // regenerated the finished half's sub slots as if they were still to come:
+  // scrubbing forward at half-time previewed period-1 sub points that had
+  // already happened, and the whole 2nd-half projection was computed from a
+  // line-up that never existed. Everything below keys off the period the game
+  // is about to play, not the one it just left.
+  const curP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+  const curSecs=G.atBreak?0:G.secs;
+
   let simOn=[...G.on], simBench=[...G.bench];
   const simPt=Object.assign({},G.pt);
   const events=[];
@@ -9200,27 +9270,27 @@ function buildPlanTimeline(){
   // they came on ('on then straight off'). Track a global clock (seconds since
   // kickoff) and, per player, when they last came on / off so equal-minute ties
   // break by "been on longest comes off" and "been waiting longest comes on".
-  let simClock=(G.half-1)*hmSec + ((G.half===G.half)?G.secs:0);
+  let simClock=(curP-1)*hmSec + curSecs;
   const onSince={}, offSince={};
   simOn.forEach(pl=>{ onSince[pl]=simClock; });
   simBench.forEach(pl=>{ offSince[pl]=simClock; });
 
   // Past — read confirmed swaps from the log. State-after isn't recorded for
   // history (would need to invert from current), so scrub only walks future.
-  for(let p=1;p<G.half;p++){
+  for(let p=1;p<curP;p++){
     (G.log||[]).filter(e=>e.type==='sub'&&e.half===p).forEach(e=>{
       events.push({period:p,time:e.time,off:[e.off],on:[e.on],done:true,past:true});
     });
   }
 
-  for(let p=G.half;p<=periodCount;p++){
-    let simSecs=(p===G.half)?G.secs:0;
+  for(let p=curP;p<=periodCount;p++){
+    let simSecs=(p===curP)?curSecs:0;
     const times=[]; for(let t=sfSec;t<hmSec;t+=sfSec) times.push(t);
     if(strat==='planned' && G.subPlan && G.subPlan.events && G.subPlan.events.length){
       const planEvts=G.subPlan.events.filter(e=>e.type==='sub' && e.half===p).sort((a,b)=>a.timeInHalf-b.timeInHalf);
       planEvts.forEach(ev=>{
         const t=ev.timeInHalf*60;
-        const done=(p===G.half)&&G.sd.includes(t);
+        const done=(p===curP)&&G.sd.includes(t);
         const off=ev.off||[], on=ev.on||[];
         const cc=Math.min(off.length,on.length);
         const slicedOff=off.slice(0,cc), slicedOn=on.slice(0,cc);
@@ -9233,7 +9303,7 @@ function buildPlanTimeline(){
         const dt=Math.max(0,t-simSecs);
         simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt; });
         simSecs=t; simClock=(p-1)*hmSec+t;
-        const done=(p===G.half)&&G.sd.includes(t);
+        const done=(p===curP)&&G.sd.includes(t);
         if(simBench.length===0){
           events.push({period:p,time:t,off:[],on:[],done,note:'no bench',stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
           return;
@@ -9296,7 +9366,12 @@ function getPlanScrubState(){
   const tl=_planTimeline;
   const futureEvents=tl?tl.events.filter(e=>!e.past):[];
   if(_planScrubIdx<=0||!futureEvents.length){
-    return {on:[...G.on], bench:[...G.bench], period:G.half, time:G.secs, idx:0, total:futureEvents.length, isLive:true};
+    // v2.8.7: at a break the pitch already shows the NEXT period's line-up
+    // (advH pre-applies the rotation), so label it with the period about to be
+    // played rather than the one that just ended — matching buildPlanTimeline.
+    const periodCount=(getSport(currentTeam).periodCount)||2;
+    const liveP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+    return {on:[...G.on], bench:[...G.bench], period:liveP, time:G.atBreak?0:G.secs, idx:0, total:futureEvents.length, isLive:true};
   }
   const N=Math.min(_planScrubIdx,futureEvents.length);
   const ev=futureEvents[N-1];
@@ -9327,8 +9402,13 @@ function computeProjectedMinutes(){
   const future=_planTimeline.events.filter(e=>!e.past);
   const byPeriod=new Map();
   future.forEach(ev=>{ if(!byPeriod.has(ev.period)) byPeriod.set(ev.period,[]); byPeriod.get(ev.period).push(ev); });
-  for(let p=G.half;p<=periodCount;p++){
-    let simSecs=(p===G.half)?G.secs:0;
+  // v2.8.7: same break correction as buildPlanTimeline — at a break the period
+  // still to be played is G.half+1, so projecting from G.half double-counted
+  // the finished period and started the 2nd half from the wrong roster.
+  const curP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+  const curSecs=G.atBreak?0:G.secs;
+  for(let p=curP;p<=periodCount;p++){
+    let simSecs=(p===curP)?curSecs:0;
     const evs=byPeriod.get(p)||[];
     evs.forEach(ev=>{
       const dt=Math.max(0,ev.time-simSecs);
@@ -9638,8 +9718,10 @@ function renderSubOrder(){
   html.push(`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start">`);
   for(let p=1;p<=periodCount;p++){
     const batches=sectionsByPeriod.get(p)||[];
-    const isCurrent=(p===G.half);
-    const titleCol=isCurrent?'#00d4aa':(p<G.half?'#666':'#9fb3c8');
+    // v2.8.7: at a break "NOW" belongs to the period about to be played.
+    const nowP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+    const isCurrent=(p===nowP);
+    const titleCol=isCurrent?'#00d4aa':(p<nowP?'#666':'#9fb3c8');
     html.push(`<div>`);   // period column
     html.push(`<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px"><div style="flex:1;height:1px;background:#1e2a45"></div><div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:${titleCol};text-transform:uppercase">${periodLbl(p)}${isCurrent?' · NOW':''}</div><div style="flex:1;height:1px;background:#1e2a45"></div></div>`);
     if(!batches.length){

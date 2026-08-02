@@ -8,6 +8,8 @@ name: smoke
 #   smoke       — core coach journey in headless Chromium
 #   sports      — every sport/format played to summary
 #   edge        — save/resume, injury, live roster edits, cadence, etc.
+#   secondhalf  — the period boundary: who takes the field and who is in goal
+#                 for the 2nd half, and what the Plan page shows at a break
 #   flow        — record a game the way the app does, then replay it and check
 #                 it reproduces step for step (proves a sent-in bug repros)
 #   replay      — replay every real game flow committed under flows/ (the
@@ -50,6 +52,9 @@ jobs:
 
       - name: Edge cases
         run: npm run edge
+
+      - name: Second-half setup (keeper + Plan page at a break)
+        run: npm run secondhalf
 
       - name: Game flow round-trip (record → replay)
         run: npm run flow

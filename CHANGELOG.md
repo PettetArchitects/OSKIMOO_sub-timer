@@ -4,6 +4,24 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.8.7-beta — Second-half setup fixes (the 2nd-half keeper, and the Plan page at a break)
+
+Both found by a targeted sweep of the period boundary after a coach reported "an issue with player setup in the second half".
+
+- 🧤 **The "2nd Half GK" setting now actually works.** It had never been wired to anything: it was stored, persisted, and rendered on the Plan page as **"HALFTIME GK SWAP"**, but nothing ever assigned it to the live keeper — so the first-half keeper played the whole match. The nominated player now takes the gloves at the break, and is brought on from the bench (displacing the outgoing keeper) if that's where they were.
+- 🎯 **Only an explicit pick swaps.** `gk2` auto-defaults to a *different* player than `gk1`, so every keeper-format game was silently displaying a halftime keeper change that never fired. A new `gk2Explicit` flag means the swap happens only when the coach actually chose someone — leaving the setting untouched changes nothing, and the Plan page no longer promises a swap it won't perform.
+- 🔒 **A defaulted 2nd-half keeper is no longer locked out of the rotation.** The plan generator excluded `gk2` from outfield rotation for the whole game on the assumption it would become the keeper; with the swap never firing, that pinned an outfielder on the pitch, never rotated, for 90 minutes.
+- 🧹 **The keeper choice no longer leaks between teams.** `gk1`/`gk2` are indices into a *specific* squad, and `selectTeam()` never reset them — so an explicit pick could have handed the gloves to whoever sat at that index in the next team. Cleared on team switch.
+- 📋 **The Plan page at a period break showed the wrong half.** At a break `G.half` is still the period that just *finished* (`startNextPeriod()` is what increments it), so the timeline regenerated the finished half's sub slots as upcoming: stepping the sub preview forward at half-time showed sub points that had already happened, the "NOW" tag sat on the wrong column, and the entire second-half projection — including projected minutes — was computed from a line-up that never existed. Display-only; it never corrupted the live game.
+
+### Architecture notes
+- New `applySecondHalfKeeper(upcoming)` runs from `startNextPeriod()` *before* `snapshotHalfStart()`, so RESET restores the correct keeper. Scoped to two-period sports (matching the setting's label and the plan's soccer-only `gk_swap` event); quarter sports change the keeper by tapping at the break, which already worked. Remaps `G.pairs` the same way `swapFieldPositions()` does, and logs a `gk` event.
+- `gk2Explicit` is set by the two GK `<select>` controls and by `setPlanKeeper()` for a later period; cleared wherever `gk2` is auto-defaulted or nulled, and in `selectTeam()`. Persisted through `saveActiveGame`/`resumeActiveGame`, plan profiles, and game flows.
+- `buildPlanTimeline()`, `computeProjectedMinutes()`, `getPlanScrubState()` and the period-column render all derive an effective current period `curP = G.atBreak ? G.half+1 : G.half` (and `curSecs = G.atBreak ? 0 : G.secs`) instead of using `G.half` directly.
+- New `test/secondhalf.mjs` (68 checks) added to the merge gate, covering both defects plus the must-NOT-swap default case, a benched pick, a break-time tap winning over an older setting, and survival across a refresh at the break.
+
+---
+
 ## v2.8.6-beta — Game flow recording (send a bug, don't describe it)
 
 - 🎞 **Every game is recorded as a replayable "flow"** — the setup it started from plus every tap you made, in order, stamped with the game clock and the line-up it produced. The last 12 games are kept.
