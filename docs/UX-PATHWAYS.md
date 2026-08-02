@@ -173,7 +173,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 ---
 
-## P7 — Account & cloud sync 🔴
+## P7 — Account & cloud sync 🟡
 
 **Goal:** keep teams + history across devices.
 
@@ -186,6 +186,9 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 5 | Sign in on another device | Teams + match history appear |
 
 🔴 Cloud flows need a cloud environment to test; currently unverified.
+
+✓ Sign-in is reachable from the menu once a team exists, not only on the empty landing screen.  [edge: sign-in reachable from the menu with a team saved · landing offers sign-in]
+⚠️ Signing in, syncing and signing out are otherwise unasserted — they need a real Supabase session, so they sit outside the headless suite.  [🔴 unguarded]
 
 ---
 

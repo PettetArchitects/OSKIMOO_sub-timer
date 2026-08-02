@@ -1,6 +1,6 @@
 # Data & Privacy Policy
 
-> **Written at v2.9.2-beta.** Internal engineering policy, not the public-facing
+> **Written at v2.9.4-beta.** Internal engineering policy, not the public-facing
 > privacy notice. Its job is to record what data exists, what leaves the device,
 > and what the rule is for the next feature.
 

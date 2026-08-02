@@ -1,6 +1,6 @@
 # Control Documents — register and gap audit
 
-> **Audited at v2.9.2-beta.** Companion to `PROCESS.md`, which describes the
+> **Audited at v2.9.4-beta.** Companion to `PROCESS.md`, which describes the
 > Map → Gate → Hunt → Replay method. This file answers a narrower question:
 > *which documents govern this app, which of them actually govern anything, and
 > what is missing.*
@@ -64,12 +64,22 @@ it stops people looking.
 
 ### Where category 4 is thin
 
-`UX-PATHWAYS.md` defines seven pathways. Two of them — **P5 Post-game & record**
-and **P7 Account & cloud sync** — contain **no ✓ invariants at all**. They
-describe steps but assert nothing, so nothing about them can be enforced or
-contradicted. Both are flagged 🔴 in the doc itself, honestly, but the
-consequence is worth stating plainly: saving a match and signing in are, today,
-outside the oracle.
+`UX-PATHWAYS.md` defines seven pathways. **P5 Post-game & record** still contains
+**no ✓ invariants at all** — it describes steps but asserts nothing, so nothing
+about it can be enforced or contradicted. Saving a match is outside the oracle.
+
+**P7 Account & cloud sync was in the same state until v2.9.4, and a real bug was
+living in exactly that gap.** Sign-in was reachable only from the landing hero,
+which renders when `teams.length===0 && !cloudUser` — so it vanished the moment a
+coach saved their first team, and there was no way back. `#authChip` was never in
+the markup, nothing opened `#appSettingsOv`, and the drawer's Sign in item was
+promised in a comment and never written. Cloud sync had been unreachable for
+every existing user, on production, for roughly 40 versions. Nobody noticed
+because nothing asserted it.
+
+That is the argument of this document in one incident: the empty pathway was not
+a documentation chore, it was the bug's hiding place. P7 now has its first
+assertion and is 🟡.
 
 ---
 

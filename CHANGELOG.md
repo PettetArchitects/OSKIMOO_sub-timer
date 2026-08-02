@@ -4,6 +4,26 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.4-beta — Fixed: sign-in was unreachable for anyone with a team
+
+Reported as "there is no login", and it was right — on production, for about 40 versions.
+
+**Sign-in had three routes and two were dead:**
+
+- `renderAuthChip()` writes into `#authChip` — **an element that has never existed in the markup**, so the function returns at its own guard and paints nothing.
+- The app-settings modal (`#appSettingsOv`) contains a working sign-in row, but **nothing anywhere opens that modal**.
+- The drawer's settings block — whose v2.7.85 comment explicitly promises "Sub-alert sound + Help & gestures + **Sign in if not already on home**" — only ever contained the first two.
+
+That left the landing hero, which renders only when `teams.length === 0 && !cloudUser`. **The moment a coach saved their first team, sign-in vanished** — and if they were already signed in, sign-out went with it. Cloud sync was unreachable for every existing user.
+
+- ✅ **Sign in / Sign out now lives in the menu**, on every screen, where the comment always said it should. The row refreshes each time the drawer opens, so it reflects the current session rather than being baked once.
+- 📴 **Honest when offline** — Supabase loads from a CDN, so with no connection there is no auth client at all. The row now says "Sign in — needs a connection" and disables itself, rather than opening a form that can only fail. That case became reachable in v2.9.3, when the service worker made the app open offline.
+
+### Notes
+This bug lived in **UX-PATHWAYS P7 (account & cloud sync)** — the pathway `docs/CONTROL-DOCS.md` flagged as having **no invariants at all**. The audit predicted the gap; the bug was sitting in it. P7 now has its first assertion and moves 🔴 → 🟡, guarded by `edge: sign-in reachable from the menu with a team saved`.
+
+---
+
 ## v2.9.3-beta — Works at a ground with no signal
 
 Prompted by a simple question — "fonts correct as well?" — applied with the same skepticism as the design and accessibility claims. The stack was fine. The delivery wasn't.

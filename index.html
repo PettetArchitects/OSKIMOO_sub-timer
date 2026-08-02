@@ -3956,12 +3956,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.3-beta';
+const APP_VERSION='v2.9.4-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.4-beta':{
+    title:'Fixed: you can sign in again',
+    items:['If you had any team saved, there was no way to sign in \u2014 the sign-in button only appeared on the empty welcome screen, so it disappeared the moment you created your first team. If you were already signed in, there was no way to sign out either. Cloud sync has been unreachable for anyone with a team.','<strong>Sign in</strong> now lives in the menu (\u2630), on every screen, and shows your account when you\u2019re signed in.']
+  },
   'v2.9.3-beta':{
     title:'Works at grounds with no signal',
     items:['The app now opens and runs with no reception at all. Before this, a cold start at a ground with no signal showed the browser\u2019s offline page \u2014 which is the one place you actually need it.','The digital clock font is now built into the app instead of being fetched. On a poor connection the clock used to fall back to plain text, so the scoreboard look just wasn\u2019t there.','The 3D pitch still needs a connection; without one you get the flat pitch, which works exactly the same for subs and timing.']
@@ -10035,6 +10039,7 @@ function openDrawer(menuId){
     block.innerHTML=`
       <button onclick="closeAnyDrawer();openSoundPicker&&openSoundPicker()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span style="flex:1">Sub-alert sound</span><span style="font-size:11px;color:#5bc0de;font-weight:800;letter-spacing:.3px">${pack.label}</span></button>
       <button onclick="closeAnyDrawer();openHelp&&openHelp()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help &amp; gestures</button>
+      <button class="drawer-auth" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19.5a9 9 0 1 0-11 0"/><circle cx="12" cy="10" r="3.2"/></svg><span class="drawer-auth-label">Sign in</span></button>
     `;
     // Insert before the drawer-donate footer if it exists; otherwise append.
     const footer=m.querySelector('.drawer-donate');
@@ -10051,6 +10056,27 @@ function openDrawer(menuId){
       <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" onclick="closeAnyDrawer()" style="width:100%;padding:13px 14px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);color:#ffc428;font-size:14px;font-weight:800;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;text-decoration:none;letter-spacing:.3px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>Donate</a>
     `;
     m.appendChild(foot);
+  }
+  // v2.9.4: refresh the auth row every time the drawer opens. The settings block
+  // is injected once and cached, but sign-in state changes underneath it — baked
+  // once, it would say "Sign in" to someone who just signed in.
+  const authBtn=m.querySelector('.drawer-auth');
+  if(authBtn){
+    const lbl=authBtn.querySelector('.drawer-auth-label');
+    if(cloudUser){
+      const email=cloudUser.email||'cloud';
+      if(lbl) lbl.textContent='Sign out ('+(email.split('@')[0]||'me')+')';
+      authBtn.onclick=()=>{ closeAnyDrawer(); signOutCloud(); };
+    } else if(!sb){
+      // Supabase comes from a CDN; offline there is no client at all. Say so
+      // rather than opening a form that can only fail.
+      if(lbl) lbl.textContent='Sign in — needs a connection';
+      authBtn.disabled=true; authBtn.style.opacity='.45'; authBtn.style.cursor='default';
+    } else {
+      if(lbl) lbl.textContent='Sign in for cloud sync';
+      authBtn.disabled=false; authBtn.style.opacity=''; authBtn.style.cursor='pointer';
+      authBtn.onclick=()=>{ closeAnyDrawer(); document.getElementById('authOv').classList.add('show'); };
+    }
   }
   m.classList.add('drawer-open');
   const sc=document.getElementById('appDrawerScrim'); if(sc) sc.classList.add('on');

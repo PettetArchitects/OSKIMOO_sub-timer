@@ -413,6 +413,52 @@ const SCENARIOS = [
     const dedup = await page.evaluate((c) => { importSharedTeam(parseTeamShareCode(c)); return teams.length; }, shared.code);
     chk('re-importing the same code does not duplicate', dedup === 1);
   }],
+
+  // P7 — Account & cloud sync. This pathway had no invariants at all, and a
+  // real bug was living in it: sign-in was reachable ONLY from the landing
+  // hero, which renders when `teams.length===0 && !cloudUser`. The moment a
+  // coach saved a team it vanished, and there was no way back to it — the
+  // #authChip container was never in the markup so renderAuthChip() no-op'd,
+  // nothing opened #appSettingsOv, and the drawer's Sign in item (promised in
+  // a v2.7.85 comment) was never added. Cloud sync was unreachable for every
+  // existing user. Shipped on main for ~40 versions.
+  ['sign-in stays reachable once a team exists', async (page, { chk, shot }) => {
+    const routes = () => page.evaluate(() => {
+      const visible = (e) => e && e.offsetParent !== null;
+      const found = [...document.querySelectorAll('button,[onclick]')].filter((e) => {
+        const oc = (e.getAttribute('onclick') || '') + (e.onclick ? e.onclick.toString() : '');
+        return /authOv|signOutCloud/.test(oc);
+      }).filter(visible);
+      return { n: found.length, labels: found.map((e) => (e.innerText || '').trim().slice(0, 40)) };
+    });
+
+    await page.evaluate(() => {
+      G = null; localStorage.clear(); teams = loadTeams();
+      document.querySelectorAll('.ov.show').forEach((o) => o.classList.remove('show'));
+      renderHome(); showScr('home');
+    });
+    await page.waitForTimeout(300);
+    const landing = await routes();
+    chk('landing offers sign-in', landing.n >= 1, landing.labels.join(' / '));
+
+    // Save a team — the state the bug hid in.
+    await page.evaluate(() => {
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Auth reach';
+      saveAndBack();
+      document.querySelectorAll('.ov.show').forEach((o) => o.classList.remove('show'));
+      showScr('home');
+    });
+    await page.waitForTimeout(300);
+
+    await page.evaluate(() => toggleGlobalMenu());
+    await page.waitForTimeout(500);
+    const drawer = await routes();
+    chk('sign-in reachable from the menu with a team saved', drawer.n >= 1, drawer.labels.join(' / '));
+    chk('and it is labelled for what it does', /sign in/i.test(drawer.labels.join(' ')), drawer.labels.join(' / '));
+    await shot(page, 'auth-in-drawer');
+    await page.evaluate(() => closeAnyDrawer());
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })
