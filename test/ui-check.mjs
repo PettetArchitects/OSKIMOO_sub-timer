@@ -32,7 +32,7 @@ const LIST = process.argv.includes('--list');
 const B = {
   tiny: Number(process.env.UI_TINY || 0) || 11,      // declarations below MIN_FONT
   fonts: Number(process.env.UI_FONTS || 0) || 20,    // distinct font-size values
-  radii: Number(process.env.UI_RADII || 0) || 11,    // distinct border-radius values
+  radii: Number(process.env.UI_RADII || 0) || 13,    // distinct border-radius values
   buttons: Number(process.env.UI_BUTTONS || 0) || 54, // distinct inline button styles
 };
 const MIN_FONT = 9;   // below this, text on a sunlit sideline is not glanceable
