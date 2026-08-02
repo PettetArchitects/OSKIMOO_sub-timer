@@ -4,6 +4,19 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.8.9-beta — The match log reads the way the game happened
+
+- 🕐 **The half-time change is no longer filed under the first half.** `advH()` pre-applies the recommended rotation at the break, and `confSub()` stamped those swaps with the clock as it stood when the half ended — so the log read `1H 20:00 Quinn → Sam` / `1H 20:00 Taylor → Jordan`, *above* the Halftime line, for two players who never took the field in the first half. It also made the halves look asymmetric: 1H showed subs at 5/10/15/**20**, 2H only 5/10/15. Those rows now read **HT** and sit under Halftime.
+- 🧹 **Removed the blank row at the top of every match log** — the `sub_strategy` entry recorded at kickoff, which no renderer handled and so drew an empty line stamped `1H 00:00`.
+- 🩹 **Injury subs, half resets and opposition-shape changes now render** instead of silently drawing empty rows for the same reason.
+
+### Architecture notes
+- `period_end` is now pushed by `advH()` when the break begins, not by `startNextPeriod()`. It has to be logged *before* the rotation is applied, or the break marker lands after the change it precedes.
+- `_breakRotation` is set around the `trigSub()`/`confSub()` call in `advH()`; `confSub()` tags the resulting entries `atBreak:true`.
+- New shared `_logTimeLabel(e)` (break rows and `atBreak` rows read "HT"/"Q3") and `_logRenders(e)` (filters `LOG_SILENT_TYPES`), used by both the summary and the match-history renderers so the two can't drift.
+
+---
+
 ## v2.8.8-beta — Dev mode: the test harness, inside the app
 
 Built after a run of screenshots showed `00:01` on the clock six minutes into a half. That was **not** the app — it was the throwaway fast-forward helper in the screenshot script, which advanced `G.secs` without `G.elapsedMs`. Every test script had been re-inventing that helper, and getting it subtly wrong. Now there is one implementation, in the app, that testing and debugging both use.

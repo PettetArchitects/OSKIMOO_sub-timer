@@ -2323,6 +2323,18 @@ function _logBreakName(e){
   if(q)return p===1?'Quarter Time':p===2?'Halftime':p===3?'Three-Quarter Time':'Break';
   return 'Halftime';
 }
+// v2.8.9: bookkeeping entries the match log has no row for. Left unfiltered they
+// still drew a row — the sub_strategy entry recorded at kickoff put a blank line
+// with a "1H 00:00" timestamp at the top of every game log.
+const LOG_SILENT_TYPES={sub_strategy:1};
+function _logRenders(e){ return !!e && !LOG_SILENT_TYPES[e.type]; }
+// The time column. A break, and the rotation applied AT that break, read "HT" /
+// "Q3" rather than a clock time inside the period that just finished.
+function _logTimeLabel(e){
+  if(e.type==='halftime'||e.type==='period_end') return _logBreakLabel(e);
+  if(e.atBreak) return _logBreakLabel({period:e.half});
+  return _logPeriodLabel(e.half)+' '+fmt(e.time);
+}
 const POS_TYPES=SPORTS.soccer.positions; // legacy alias for soccer-only callsites
 function getPlayerPos(team,name){ return (team.positions&&team.positions[name])||[]; }
 function setPlayerPos(team,name,pos){
@@ -3857,12 +3869,20 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.8-beta';
+const APP_VERSION='v2.8.9-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.9-beta':{
+    title:'The match log now reads the way the game happened',
+    items:[
+      'The half-time change used to appear as two substitutions at <strong>1H 20:00</strong> — the last second of the first half, listed <em>above</em> the Halftime line — even though those players never took the field in the first half. It now reads <strong>HT</strong>, under Halftime, where it belongs. Both halves show the same clean run of sub times.',
+      'Removed the blank line that sat at the top of every match log.',
+      'Injury subs, half resets and opposition-shape changes now show properly in the log instead of appearing as empty rows.'
+    ]
+  },
   'v2.8.8-beta':{
     title:'Dev mode (for testing — you won\'t see this)',
     items:['A hidden test panel for reproducing bugs: seed a game, jump the clock to any period and minute, replay a game flow step by step, and watch the live game state. Enabled only by visiting the app with <strong>?dev=1</strong> on your own device, and switched off from inside the panel. No coach will ever see it.']
@@ -7780,6 +7800,7 @@ function moveBenchDown(pIdx){
 //   swap   — tap two players to exchange positions (also sets starting line-up)
 //   keeper — tap a player to make them goalkeeper
 //   injury — tap the injured player, then tap who comes on from the bench
+let _breakRotation=false;   // true while advH() applies the period-break rotation
 let gameMode='swap';        // 'swap' | 'keeper' | 'injury'
 let fieldSwapSel=null;      // first player tapped in swap mode
 let injuryOffSel=null;      // injured player tapped, awaiting replacement pick
@@ -7968,7 +7989,10 @@ function confSub(){
   };
   const c=Math.min(off.length,on.length);
   for(let i=0;i<c;i++){
-    G.log.push({type:'sub',half:G.half,time:G.secs,off:avail[off[i]],on:avail[on[i]]});
+    // atBreak tags the rotation advH() applies at a period break, so the match
+    // log shows it under the break rather than as a sub at the death of the
+    // half the players never took part in.
+    G.log.push({type:'sub',half:G.half,time:G.secs,off:avail[off[i]],on:avail[on[i]],atBreak:_breakRotation||undefined});
   }
   // In-place swap: incoming player takes the position of the outgoing player
   for(let i=0;i<c;i++){
@@ -8054,14 +8078,23 @@ function advH(){
   // G.half holds the period number (1..N). After the final period, show summary.
   if(G.half<sport.periodCount){
     G.atBreak=true;
+    // v2.8.9: log the break HERE, before the rotation is applied. It used to be
+    // pushed by startNextPeriod(), which put it AFTER the rotation — so the
+    // match log read "1H 20:00 Quinn → Sam / 1H 20:00 Taylor → Jordan" and only
+    // then "Halftime". Those players never played the first half; that swap is
+    // the half-time change. Break first, then the change, is the true order.
+    G.log.push({type:'period_end',period:G.half,time:G.secs,scoreUs:G.scoreUs,scoreThem:G.scoreThem});
     // Get the 2nd-half line-up READY: auto-apply the recommended rotation so the
     // pitch already shows who's on for the next period. Undoable during the
     // break (Undo button), and the coach can still Swap/sub before starting.
     // Skip for manual / full-control — those coaches drive their own subs.
     const strat=G.subStrategy||'fair';
     if((strat==='fair'||strat==='paired') && G.bench.length){
-      trigSub();           // stage the recommended off/on (plays the break alert)
-      if(G.ps) confSub();  // apply it so the pitch shows the 2nd-half XI
+      _breakRotation=true;   // tags the resulting subs as belonging to the break
+      try{
+        trigSub();           // stage the recommended off/on (plays the break alert)
+        if(G.ps) confSub();  // apply it so the pitch shows the 2nd-half XI
+      } finally { _breakRotation=false; }
     } else {
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
       try{playSubAlert();}catch(e){}
@@ -8107,7 +8140,7 @@ function applySecondHalfKeeper(upcoming){
 // Tapping the primary button while at the break starts the next period.
 function startNextPeriod(){
   if(!G||!G.atBreak)return;
-  G.log.push({type:'period_end',period:G.half,time:G.secs,scoreUs:G.scoreUs,scoreThem:G.scoreThem});
+  // The period_end entry is logged by advH() when the break begins — see there.
   G.half++;
   applySecondHalfKeeper(G.half);   // before the snapshot, so RESET restores it
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
@@ -8171,13 +8204,19 @@ function showSum(){
   if(G.log.length===0){
     lc.innerHTML+='<div style="font-size:13px;color:#666;text-align:center">No events recorded</div>';
   } else {
-    G.log.forEach(e=>{
+    G.log.filter(_logRenders).forEach(e=>{
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
-      const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
+      const timeStr=_logTimeLabel(e);
       let icon='',detail='';
       if(e.type==='sub'){
         icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
+      } else if(e.type==='injury_sub'){
+        icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
+      } else if(e.type==='reset_half'){
+        icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
+      } else if(e.type==='opp_formation'){
+        icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;
       } else if(e.type==='gk'){
         icon=ic('target',14,'#e94560');detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#e94560">${fn(e.on)}</span>`;
       } else if(e.type==='goal'){
@@ -8314,12 +8353,15 @@ function showMatchDetail(m){
   lhdr.textContent='Game Log';lc.appendChild(lhdr);
   const teamName=m.team?m.team.split(' ')[0]:'Us';
   if(m.log&&m.log.length){
-    m.log.forEach(e=>{
+    m.log.filter(_logRenders).forEach(e=>{
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
-      const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
+      const timeStr=_logTimeLabel(e);
       let icon='',detail='';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
+      else if(e.type==='injury_sub'){icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;}
+      else if(e.type==='reset_half'){icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;}
+      else if(e.type==='opp_formation'){icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;}
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
       else if(e.type==='goal'){icon=ic('goal',14,e.afl==='behind'?'#5bc0de':'#00d4aa');detail=e.who==='us'?(e.afl==='behind'?`${teamName} behind`:(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`)):('Opposition '+(e.afl==='behind'?'behind':'goal'));if(e.who==='us'&&e.afl!=='behind'&&e.assist)detail+=` · assist ${fn(e.assist)}`;}
       else if(e.type==='halftime'||e.type==='period_end'){icon=ic('pause',14,'#888');detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}

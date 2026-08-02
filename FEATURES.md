@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.8-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.9-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -202,7 +202,9 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 |---|---|
 | Match summary card | Score, formation, half-time GK change. |
 | Playing time per player | Sorted by minutes desc. |
-| Game log | Subs, goals (with scorer), period boundaries. |
+| Game log | Subs, goals (with scorer), period boundaries, injury subs, half resets, opposition-shape changes. Rows are built via shared `_logTimeLabel()` / `_logRenders()` so the summary and match-history renderers can't drift. |
+| Break rotation attribution (v2.8.9) | The rotation `advH()` pre-applies at a break is tagged `atBreak` by `confSub()` and rendered as **HT** / **Q3**, below the break row — not as a substitution at the last second of the period that just ended. `period_end` is logged by `advH()` (when the break starts) rather than `startNextPeriod()`, so the break marker precedes the change. |
+| Silent log types | `LOG_SILENT_TYPES` filters bookkeeping entries (`sub_strategy`) that previously drew a blank timestamped row at the top of every log. |
 | Opponent + location fields | Free text, saved with match. |
 | **Save Match ✓** | Writes to localStorage + pushes to cloud. Active game cleared. |
 | Buy me a coffee CTA | Visible above the fold on summary. |
