@@ -6908,6 +6908,12 @@ function subTs(){
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
 
 function renderG(){
+  // v2.8.7: two render passes are DEFERRED — confSub schedules one 1.7s out to
+  // clear the sub highlight, tapFieldPlayer one 1.2s out for the swap pulse.
+  // If the game is torn down in between (end game / discard / a fresh game
+  // rebuilt from the squad page), the timer still fires and every line below
+  // dereferences a null G. Nothing to draw without a game.
+  if(!G) return;
   const _sport=getSport(currentTeam);
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(curMs/1000));
@@ -7287,7 +7293,8 @@ function _tickSecondBody(){
   return false;
 }
 function tickLoop(now){
-  if(!G.running)return;
+  // Same reasoning as renderG: a queued frame can outlive the game object.
+  if(!G||!G.running)return;
   const totalMs=G.elapsedMs+(now-G.lastTs);
   const newSecs=Math.floor(totalMs/1000);
   // Process whole-second logic for any seconds we crossed
