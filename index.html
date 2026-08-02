@@ -3869,12 +3869,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.9-beta';
+const APP_VERSION='v2.9.0-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.0-beta':{
+    title:'Housekeeping: a written policy for your team\'s data',
+    items:['No change to how the app works. There is now a written record of exactly what Sub Timer stores, what leaves your phone and what does not — plus an automated check so a future feature can\'t quietly start storing something new without it being written down. Game recordings you send for bug reports already replace player names with "Player 1, 2, 3…".']
+  },
   'v2.8.9-beta':{
     title:'The match log now reads the way the game happened',
     items:[

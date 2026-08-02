@@ -1,6 +1,6 @@
 # Control Documents — register and gap audit
 
-> **Audited at v2.8.9-beta.** Companion to `PROCESS.md`, which describes the
+> **Audited at v2.9.0-beta.** Companion to `PROCESS.md`, which describes the
 > Map → Gate → Hunt → Replay method. This file answers a narrower question:
 > *which documents govern this app, which of them actually govern anything, and
 > what is missing.*
@@ -55,7 +55,7 @@ it stops people looking.
 | 8 | Accessibility | `design.md` §8 | — | 🔴 **claims measurably false** |
 | 9 | Error / empty / loading states | `design.md` §6 | — | 🔴 a colour table, not a state catalogue |
 | 10 | Content, voice & tone | — | — | 🔴 **absent** |
-| 11 | Privacy & data handling | — | — | 🔴 **absent** |
+| 11 | Privacy & data handling | `docs/PRIVACY.md` | `test/privacy-check.mjs` (storage inventory) | ✅ enforced |
 | 12 | Security (auth, RLS, share links) | `DEPLOY.md` (deploy only) | — | 🔴 **absent** |
 | 13 | Performance budget | — | — | 🔴 absent |
 | 14 | Telemetry / analytics | — | — | 🔴 absent |
@@ -75,7 +75,16 @@ outside the oracle.
 
 ## Gaps, in the order worth closing
 
-### 1. Privacy & data handling — absent, highest stakes
+### 1. Privacy & data handling — ✅ CLOSED at v2.9.0 (`docs/PRIVACY.md`)
+
+Written up with a full data inventory and enforced by `test/privacy-check.mjs`,
+which fails if a `localStorage` key appears with no row in the document. Writing
+it surfaced two things bigger than the share link that started the discussion:
+**photo roster import** uploads an arbitrary photograph to a server-side vision
+model (a club team sheet carries far more than first names), and **match history
+has no delete path**. Both are recorded there with the open decisions marked.
+
+The original framing, kept because the reasoning still holds:
 
 This app holds **children's first names**. It syncs them to Supabase, and its
 share links carry an entire roster — names, jersey numbers, positions — encoded

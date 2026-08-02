@@ -4,6 +4,22 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.0-beta — Data & privacy policy (no functional change)
+
+No change to how the app works. `docs/PRIVACY.md` records what Sub Timer stores, what leaves the device, and the rule for the next feature; `test/privacy-check.mjs` fails the build if a `localStorage` key appears with no row in it.
+
+The policy is deliberately proportionate — a junior roster of first names and jersey numbers is low-sensitivity, and treating it as a compliance exercise would be silly. It exists because the app gained cloud sync, share links, photo import and flow export across ten versions, each reasonable alone, with nothing tracking the cumulative picture.
+
+Writing the inventory surfaced three things worth knowing, none of which was the share link that prompted the discussion:
+
+- **Photo roster import is the widest egress.** `extract-roster` uploads an arbitrary photograph to a server-side vision model. The intended subject is a team list, but a photographed club team sheet routinely carries surnames, parent phone numbers and dates of birth. Everything else the app sends is structured data whose shape we chose; this is the only path that can send data the app has never seen.
+- **Names are full names by design.** The screen shows first names, which makes it easy to assume that is all we hold. `fn()` splits on whitespace and renders the last word as an initial ("Sarah B") — so any coach with two Sarahs is pushed into entering surnames, and the raw string is what is stored, synced and shared.
+- **Match history has no delete path.** `matches` is insert-and-select only, so saved matches — names, minutes, location — can't be removed.
+
+Also adds `docs/CONTROL-DOCS.md`, a register of which documents govern this app and which of them actually enforce anything.
+
+---
+
 ## v2.8.9-beta — The match log reads the way the game happened
 
 - 🕐 **The half-time change is no longer filed under the first half.** `advH()` pre-applies the recommended rotation at the break, and `confSub()` stamped those swaps with the clock as it stood when the half ended — so the log read `1H 20:00 Quinn → Sam` / `1H 20:00 Taylor → Jordan`, *above* the Halftime line, for two players who never took the field in the first half. It also made the halves look asymmetric: 1H showed subs at 5/10/15/**20**, 2H only 5/10/15. Those rows now read **HT** and sit under Halftime.
