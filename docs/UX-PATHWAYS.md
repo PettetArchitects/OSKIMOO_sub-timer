@@ -114,8 +114,10 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | --- | --- | --- |
 | 1 | Reach a period break (HT, or **Q1/Q3 in quarter sports**) | Break state shown; clock stopped ⚠️ quarter breaks under-tested |
 | 2 | Change the keeper for the next period | **Keeper picker is available throughout the break**, regardless of sub-preview position ⚠️ |
+| 2b | Nominate a **2nd-half keeper before kickoff** (Settings → 2nd Half GK) | That player is in goal when the second half starts, coming on from the bench if needed. Leaving the setting untouched changes nothing — the first-half keeper plays on |
 | 3 | Adjust / confirm the next-period line-up | Edits apply to the upcoming period; 1st-period keeper stays on field next period (youth rule) |
 | 4 | Start the next period | Clock resets to 0; chosen keeper + line-up carry in |
+| 4b | Open the Plan page **at the break** | It describes the period about to be played — not the one that just ended. No already-past sub times listed as upcoming |
 | 5 | **Switch apps / lock phone mid-game** | Game is saved immediately; reopening offers Resume with clock + score intact ⚠️ |
 | 6 | Resume from Home banner | Restores the exact in-progress state |
 | 7 | Discard | Clears the saved game |
@@ -125,7 +127,15 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ Reset-half restores the kickoff XI + clock.  [edit: reset restores the kickoff XI]
 ✓ Backgrounding the app saves the live clock + score immediately.  [edit: backgrounding (hidden) saves the game / saved snapshot preserves the live clock + score]
 ✓ Resume restores the exact in-progress state; discard clears it.  [edit: clock/score/line-up restored · discardActiveGame clears storage]
-⚠️ Quarter-sport breaks (Q1/Q3) carry the same guarantees — only soccer half-time is tested.  [🔴 unguarded]
+✓ An explicitly chosen 2nd-half keeper takes the gloves when the half starts, on the field and out of the outfield rotation.  [secondhalf: the chosen player is in goal for the 2nd half · the new keeper is out of the outfield rotation]
+✓ An **untouched** 2nd Half GK setting changes nobody — no surprise keeper swap in an existing game.  [secondhalf: the keeper is unchanged in the 2nd half · no halftime swap promised on the Plan page]
+✓ A nominated keeper sitting on the bench is brought on, and the outgoing keeper goes to the bench.  [secondhalf: benched pick becomes the keeper · the outgoing keeper went to the bench]
+✓ A keeper tapped at the break beats an older setting.  [secondhalf: the keeper tapped at the break is the one in goal]
+✓ The keeper choice survives a refresh at the break.  [secondhalf: the 2nd-half keeper choice survives the reload · and still takes the gloves after resuming]
+✓ At a break the Plan page describes the upcoming period — no already-played sub times shown as upcoming.  [secondhalf: no phantom upcoming subs in the finished period · LIVE is labelled with the upcoming period]
+✓ The XI at the next kickoff is exactly what the coach set at the break.  [secondhalf: the XI at kickoff is the coach's pick]
+✓ Quarter-sport breaks carry the same Plan-page guarantee as half-time (netball verified).  [secondhalf: first scrub step is not in the finished period]
+⚠️ Quarter-sport **keeper** handling at Q1/Q3 is still untested — the 2nd-half keeper rule is scoped to two-period sports.  [🔴 unguarded]
 
 ---
 

@@ -81,11 +81,22 @@ console.log(`\nDocs drift check — code is at ${VERSION}\n`);
 // --- 4. UX-PATHWAYS test links resolve --------------------------------------
 {
   const pathways = read('docs/UX-PATHWAYS.md');
-  const suites = ['smoke', 'edge', 'sports'].map((s) => read(`test/${s}.mjs`)).join('\n');
-  const checkNames = new Set([...suites.matchAll(/chk\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]));
+  const suites = ['smoke', 'edge', 'sports', 'secondhalf'].map((s) => read(`test/${s}.mjs`)).join('\n');
+  // Check names are written as '...', "..." OR `...${format}...` — the
+  // parameterised suites build their labels from a template literal, so a
+  // quotes-only scan silently found none of them and every tag pointing at one
+  // looked dangling. Interpolations are stripped before matching.
+  const checkNames = new Set(
+    [...suites.matchAll(/chk\(\s*(?:`((?:\\.|[^`\\])*)`|'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")/g)]
+      .map((m) => (m[1] ?? m[2] ?? m[3])
+        .replace(/\$\{[^}]*\}/g, '')
+        .replace(/\\(['"`\\])/g, '$1')   // un-escape \' inside "the coach\'s pick"
+        .replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+  );
   // tags look like:  [smoke: <name> / <name2>]  ·  [edge: <name>]  ·  [hunt: I#]
   // A combined tag may chain suites:  [smoke: foo · hunt: I7].
-  const tagged = [...pathways.matchAll(/\[(smoke|edge|sports):\s*([^\]]+)\]/g)];
+  const tagged = [...pathways.matchAll(/\[(smoke|edge|sports|secondhalf):\s*([^\]]+)\]/g)];
   const dangling = [];
   for (const [, suite, body] of tagged) {
     body.split(/\s*(?:\/|·)\s*/).map((s) => s.trim()).filter(Boolean).forEach((name) => {

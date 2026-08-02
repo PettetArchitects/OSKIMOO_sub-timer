@@ -52,6 +52,30 @@ All colors are dark-theme. Light theme is not currently supported.
 | `--text-faint` | `#888` | Meta info, captions |
 | `--text-inverse` | `#06231d` | Text on green primary buttons |
 
+#### Neutral ramp
+
+The blue-tinted text tokens above are the *preferred* greys. Alongside them the
+app also uses a plain neutral ramp — mostly for de-emphasised text and hairlines
+inside dense lists (match log, plan rows, bench chips), where a blue cast reads
+as "interactive" and these read as "quiet".
+
+This table **documents what is in use**; it is not a licence to add more. See
+§11 backlog — nine greys for text is too many, and the target is to collapse
+this to roughly four. It is written down so the drift is visible and countable
+rather than invisible.
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--n-200` | `#ccc` | Dense-list body text |
+| `--n-300` | `#bbb` | Modal body copy |
+| `--n-400` | `#aaa` | Helper / explanatory copy under a control |
+| `--n-500` | `#999` | Meta text in list rows |
+| `--n-700` | `#666` | De-emphasised captions, empty-state text |
+| `--n-800` | `#555` | Placeholder / disabled label |
+| `--n-900` | `#444` | Hairline glyphs (the ⇄ between two names) |
+| `--n-950` | `#333` | Dark separators on card backgrounds |
+| `--n-1000` | `#222` | Match-log row dividers |
+
 #### Accent — primary action
 
 | Token | Hex | Usage |
@@ -73,6 +97,32 @@ All colors are dark-theme. Light theme is not currently supported.
 | `--accent-amber` | `#f0a500` | Bench chip, warning, BETA badge |
 | `--accent-purple` | `#a78bfa` | Custom plan profiles, Save action |
 | `--accent-yellow` | `#ffc428` | Donate / heart action |
+
+#### Position-tag palette
+
+Every position label (`.pos-tag-*` / `.pos-mini-*`) is a **pair**: a dark tinted
+background and a saturated foreground that also serves as the border. The hue
+carries meaning down the pitch — red at the back, green/teal in defence, indigo
+through the middle, sage on the wings, amber up front — so a coach can read a
+line-up by colour without reading the letters.
+
+Reuses `--accent-red`, `--accent-green`, `--accent-amber` and `--accent-cyan`
+as foregrounds where the hue already exists; the four below are unique to this
+family.
+
+| Position | Background | Foreground | Token |
+|---|---|---|---|
+| GK | `#3a1525` | `#e94560` | `--accent-red` |
+| DEF | `#0a2a2a` | `#00d4aa` | `--accent-green` |
+| MID · GD | `#1a1a3e` | `#7b8cff` | `--pos-indigo` |
+| WNG · WA | `#1a2a1a` | `#8dd68d` | `--pos-sage` |
+| FWD · GS | `#2a1f0a` | `#f0a500` | `--accent-amber` |
+| GA | `#2a1a14` | `#ff8c5a` | `--pos-coral` |
+| C | `#3a2a14` | `#ffc14d` | `--pos-gold` |
+| WD | `#1a2a2a` | `#5bc0de` | `--accent-cyan` |
+
+Backgrounds are ~12% tints of their foreground on `--surface-card`. A new sport
+adding positions must map onto this palette rather than introduce new hues.
 
 ### 2.2 Typography
 
@@ -593,14 +643,28 @@ When introducing or modifying components: update this document **first**, then i
 - ✅ Single app header (hamburger LEFT · logo CENTRE · version RIGHT) (v2.7.82)
 
 ### Still open
-1. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
-2. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
-3. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
-4. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
-5. **Light theme** — not supported. Document as out of scope or plan.
-6. **Basketball court accuracy** — match real NBA / FIBA markings: straight-side 3-point line, inner centre circle (4ft), backboard 4ft inside the baseline, half-dashed free-throw circle.
-7. **Water polo field viz** — `_buildWaterPolo()` builder + pool tinted ground + goal posts at each end.
-8. **3D pitch race on first paint** — occasionally renders black if the screen flips visible after afl3d.init runs at 0×0 size. Investigate ResizeObserver fallback timing.
+
+0. **Token coverage (v2.8.9)** — `npm run design` counts colours in `index.html`
+   that aren't written down here. It started at **64 colours / 232 uses**;
+   documenting the neutral ramp and the position-tag palette (both of which were
+   real, deliberate systems that had simply never been recorded) took it to
+   **43 / 59**. The check is ratcheted at 43: it may fall, never rise, so new
+   drift fails the gate immediately.
+   The remainder is mostly **gradient stop pairs** — nearly every raised button
+   and card has a light/dark stop derived from a token but undocumented, the way
+   `--accent-green-light/-dark/-deep` are for the primary button. Documenting
+   that family is the next pass and would take this close to zero.
+1. **Collapse the neutral ramp** — nine greys for text is too many. Target ~4.
+   This is a visual change on every dense list, so it needs an eye on it, not a
+   find-and-replace.
+2. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
+3. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
+4. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
+5. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
+6. **Light theme** — not supported. Document as out of scope or plan.
+7. **Basketball court accuracy** — match real NBA / FIBA markings: straight-side 3-point line, inner centre circle (4ft), backboard 4ft inside the baseline, half-dashed free-throw circle.
+8. **Water polo field viz** — `_buildWaterPolo()` builder + pool tinted ground + goal posts at each end.
+9. **3D pitch race on first paint** — occasionally renders black if the screen flips visible after afl3d.init runs at 0×0 size. Investigate ResizeObserver fallback timing.
 
 ---
 

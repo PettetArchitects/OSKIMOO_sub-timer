@@ -41,6 +41,9 @@ jobs:
       - name: Docs drift check
         run: npm run docs-check
 
+      - name: Design-system check (tokens + ratchet)
+        run: npm run design
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
