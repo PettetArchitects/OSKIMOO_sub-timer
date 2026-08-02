@@ -8,6 +8,10 @@ name: smoke
 #   smoke       — core coach journey in headless Chromium
 #   sports      — every sport/format played to summary
 #   edge        — save/resume, injury, live roster edits, cadence, etc.
+#   flow        — record a game the way the app does, then replay it and check
+#                 it reproduces step for step (proves a sent-in bug repros)
+#   replay      — replay every real game flow committed under flows/ (the
+#                 regression corpus of games that actually happened)
 # Screenshots from all suites are uploaded as an artifact for triage.
 on:
   pull_request:
@@ -46,6 +50,12 @@ jobs:
 
       - name: Edge cases
         run: npm run edge
+
+      - name: Game flow round-trip (record → replay)
+        run: npm run flow
+
+      - name: Replay recorded games (regression corpus)
+        run: npm run replay
 
       - name: Upload screenshots
         if: always()

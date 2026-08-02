@@ -632,6 +632,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- ===== GAME FLOW EXPORT (v2.8.6) — send a replayable recording of a game ===== -->
+<div class="ov" id="flowOv">
+  <div class="ab" style="max-width:400px;text-align:left">
+    <h2 style="text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="bug" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Send game flow</h2>
+    <p style="color:#aaa;font-size:13px;line-height:1.5;margin:6px 0 12px;text-align:center">Every game is recorded so a bug can be replayed exactly. Pick a game to send — player names are replaced with "Player 1, 2, 3…" before it leaves your phone.</p>
+    <div id="flowList" style="max-height:46vh;overflow-y:auto;margin-bottom:10px"></div>
+    <button class="btn btn-g" onclick="exportGameFlow()">Send all recorded games</button>
+    <button class="btn btn-o" style="margin-top:8px" onclick="document.getElementById('flowOv').classList.remove('show')">Close</button>
+  </div>
+</div>
+
 <!-- ===== SIGN-IN MODAL ===== -->
 <div id="authOv" class="ov">
   <div class="ab" style="max-width:340px;text-align:left">
@@ -1595,17 +1606,24 @@ function loadTeams(){
 function saveTeams(t){ saveTeamsRaw(t); }
 
 // ===== ACTIVE GAME PERSISTENCE (survives refresh / app switch) =====
-function saveActiveGame(){
-  if(!G||!currentTeam)return;
+// The full restorable state of the current game — one object that both the
+// refresh-survival save and the game-flow log record.
+function gameSnapshot(){
+  if(!G||!currentTeam)return null;
   let frozenMs=G.elapsedMs;
   if(G.running&&G.lastTs)frozenMs+=performance.now()-G.lastTs;
-  const snap={
+  return {
     teamId:currentTeam.id,
     curFmt,curFormation,avail,cfg,gk1,gk2,luOrd,rotPairs,
     G:Object.assign({},G,{raf:null,iv:null,running:false,lastTs:null,elapsedMs:frozenMs}),
     savedAt:Date.now()
   };
+}
+function saveActiveGame(){
+  const snap=gameSnapshot();
+  if(!snap)return;
   try{localStorage.setItem('subTimerActive',JSON.stringify(snap));}catch(e){}
+  flowUpdate(snap);
 }
 function clearActiveGame(){try{localStorage.removeItem('subTimerActive');}catch(e){}}
 function loadActiveGame(){
@@ -1629,10 +1647,330 @@ function resumeActiveGame(){
   // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
   if(G && G.subStrategy==='manual') G.subStrategy='planned';
   if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
+  flowResume();   // keep recording into the same flow across the reload
   showScr('s4');
   renderG();
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   return true;
+}
+
+// ===== v2.8.6: GAME FLOW RECORDER (replayable bug reports) =====
+// Every game is recorded as a "flow": the setup it started from, plus the
+// ordered list of coach actions with the game clock and a state fingerprint
+// after each one. Export a flow as JSON and `node test/replay.mjs <file>` will
+// replay it against any build — so a bug seen on the sideline reproduces on a
+// laptop, and the library of past games doubles as a regression corpus.
+//
+// Two design rules make replay trustworthy:
+//   1. Only TOP-LEVEL calls are recorded (_flowDepth guard). trigSub() calls
+//      confSub() internally; recording both would double-apply on replay.
+//      Replaying the outer call reproduces the nested ones naturally.
+//   2. Player names are pseudonymised on the way in ("Player 3"), consistently,
+//      so a flow can be shared without carrying a junior squad's real names.
+//      Duplicates stay duplicated — the two-Sarahs disambiguation path is
+//      itself a bug source, so the SHAPE of the roster is preserved exactly.
+const FLOW_V=1;               // record shape version — bump on breaking changes
+const FLOW_MAX_GAMES=12;      // keep this many recent games
+const FLOW_MAX_ACTIONS=4000;  // per-game cap so localStorage can't be blown out
+let _flow=null;               // flow record for the game in progress
+let _flowDepth=0;             // re-entrancy guard (see rule 1 above)
+let _flowInTick=0;            // >0 while inside tickSecond — see the `auto` flag
+let _flowSaveT=null;          // debounce handle for the localStorage write
+let _flowPending=null;        // newest snapshot awaiting that debounced write
+
+function loadFlows(){
+  try{const d=localStorage.getItem('subTimerFlows');return d?JSON.parse(d):[];}catch(e){return[];}
+}
+function saveFlows(f){
+  try{localStorage.setItem('subTimerFlows',JSON.stringify(f));}
+  catch(e){
+    // Quota exceeded — shed the oldest games and retry once. Recording must
+    // degrade quietly; it can never be the thing that breaks a live match.
+    try{localStorage.setItem('subTimerFlows',JSON.stringify(f.slice(0,3)));}catch(e2){}
+  }
+}
+function clearFlows(){try{localStorage.removeItem('subTimerFlows');}catch(e){} _flow=null;}
+
+// Stable pseudonyms: same real name → same "Player N" within one flow.
+function _flowAlias(flow,name){
+  if(name==null)return name;
+  if(!flow._alias)flow._alias={};
+  if(!(name in flow._alias))flow._alias[name]='Player '+(Object.keys(flow._alias).length+1);
+  return flow._alias[name];
+}
+// Deep-copy a value, swapping any known player name for its pseudonym. Names
+// turn up in awkward places — as strings inside args, as values in log entries,
+// and as the KEYS of G.pt (playing time is keyed by name) — so we walk both
+// keys and values generically rather than special-casing each shape.
+function _flowScrub(flow,v,names){
+  if(typeof v==='string')return names.has(v)?_flowAlias(flow,v):v;
+  if(Array.isArray(v))return v.map(x=>_flowScrub(flow,x,names));
+  if(v&&typeof v==='object'){
+    const o={};
+    for(const k in v){
+      if(!Object.prototype.hasOwnProperty.call(v,k))continue;
+      o[names.has(k)?_flowAlias(flow,k):k]=_flowScrub(flow,v[k],names);
+    }
+    return o;
+  }
+  return v;
+}
+
+// Start recording a new game. Called from startGame() — the one point where a
+// game's initial conditions are fully settled.
+function flowBegin(){
+  try{
+    if(!G||!currentTeam)return;
+    const names=new Set(avail||[]);
+    const flow={
+      v:FLOW_V,
+      id:Date.now(),
+      gameKey:G.startTime||String(Date.now()),  // survives a refresh — see flowResume
+      app:APP_VERSION,
+      startedAt:new Date().toISOString(),
+      sport:getSport(currentTeam).key,
+      format:curFmt,
+      formation:curFormation,
+      // Setup is everything test/replay.mjs needs to rebuild the exact game.
+      setup:{
+        cfg:JSON.parse(JSON.stringify(cfg||{})),
+        gk1,gk2,
+        luOrd:[...(luOrd||[])],
+        rotPairs:(rotPairs||[]).map(p=>({on:[...p.on]}))
+      },
+      actions:[],
+      truncated:false
+    };
+    flow._alias={};
+    // Alias the availability list first so indices line up with "Player N".
+    // team.players is an array of NAME STRINGS; numbers and position tags live
+    // in side maps keyed by that name.
+    flow.setup.avail=(avail||[]).map(n=>_flowAlias(flow,n));
+    flow.setup.squad=(currentTeam.players||[]).map(n=>({
+      name:_flowAlias(flow,n),
+      number:getPlayerNumber(currentTeam,n),
+      pos:[...getPlayerPos(currentTeam,n)]
+    }));
+    flow.setup.initialOn=[...(G.on||[])];
+    flow.setup.initialBench=[...(G.bench||[])];
+    flow.setup.initialGk=G.gk;
+    flow.setup.subStrategy=G.subStrategy||'fair';
+    flow.setup.subPlan=G.subPlan?JSON.parse(JSON.stringify(G.subPlan)):null;
+    flow._names=names;
+    _flow=flow;
+    flowFlush();
+  }catch(e){}
+}
+
+// Re-attach to the stored flow after a refresh / app switch. Module state is
+// lost on reload but the flow survives in localStorage, so a game interrupted
+// at half-time (a very common real-world path) stays ONE continuous recording
+// instead of splitting into two useless halves. G.startTime is the join key.
+function flowResume(){
+  try{
+    if(!G)return;
+    const key=G.startTime;
+    if(!key)return;
+    const stored=loadFlows().find(f=>f.gameKey===key);
+    if(!stored)return;
+    _flow=stored;
+    // Rebuild the alias map from the recorded avail list — positionally exact,
+    // so pseudonyms stay stable across the reload.
+    _flow._alias={};
+    _flow._names=new Set(avail||[]);
+    (avail||[]).forEach((n,i)=>{
+      const a=(stored.setup&&stored.setup.avail)?stored.setup.avail[i]:null;
+      if(a) _flow._alias[n]=a;
+    });
+    flowSeal(flowRecord('__resumed',[]));
+  }catch(e){}
+}
+
+// Open an action entry: the call and the clock it happened at. Args are copied
+// NOW because the action may mutate the arrays it was handed. Returns the entry
+// so the caller can close it once the action has actually run.
+function flowRecord(fn,args){
+  try{
+    if(!_flow||!G)return null;
+    if(_flow.actions.length>=FLOW_MAX_ACTIONS){_flow.truncated=true;return null;}
+    const entry={
+      i:_flow.actions.length,
+      fn,
+      args:_flowScrub(_flow,args,_flow._names||new Set()),
+      half:G.half,secs:G.secs,
+      // Clock-derived, not a coach tap: the auto-sub the timer fired, or the
+      // period ending at full time. A replay must NOT re-apply these — running
+      // the clock to this point fires them again on its own, and applying them
+      // a second time would double-substitute.
+      auto:_flowInTick>0
+    };
+    _flow.actions.push(entry);
+    return entry;
+  }catch(e){return null;}
+}
+// Close an action entry with the state it PRODUCED. This fingerprint is what
+// lets a replay say "diverged at step 12" instead of just "different", so it
+// has to be taken after the call returns — capturing it before (the first cut
+// of this code) silently recorded every action's *input* state and made every
+// replay look like it diverged at the first substitution.
+function flowSeal(entry){
+  try{
+    if(!entry||!G)return;
+    entry.after={on:[...(G.on||[])],bench:[...(G.bench||[])],gk:G.gk,atBreak:!!G.atBreak,running:!!G.running};
+    entry.halfAfter=G.half;entry.secsAfter=G.secs;
+  }catch(e){}
+}
+
+// Keep the flow's tail state current and persist (debounced — saveActiveGame
+// fires on nearly every mutation and a localStorage write per tick is wasteful).
+function flowUpdate(snap){
+  try{
+    if(!_flow||!snap)return;
+    _flowPending=snap;
+    if(_flowSaveT)return;
+    // Build the result and write it once per window, not on every call —
+    // saveActiveGame fires after every mutation and every 5s of game time, and
+    // the scrub walks the whole playing-time map and match log each time.
+    _flowSaveT=setTimeout(()=>{_flowSaveT=null;flowFlush();},1500);
+  }catch(e){}
+}
+// Fold the newest snapshot into the flow's tail state (scores, final line-up,
+// playing time, match log) with names scrubbed.
+function _flowDrain(){
+  const s=_flowPending; _flowPending=null;
+  if(!_flow||!s)return;
+  const g=s.G||{};
+  const names=_flow._names||new Set();
+  _flow.endedAt=new Date().toISOString();
+  _flow.result={
+    half:g.half,secs:g.secs,
+    scoreUs:g.scoreUs||0,scoreThem:g.scoreThem||0,
+    on:[...(g.on||[])],bench:[...(g.bench||[])],gk:g.gk,
+    pt:_flowScrub(_flow,g.pt||{},names),
+    log:_flowScrub(_flow,g.log||[],names)
+  };
+}
+// Write the in-progress flow into the stored library (most recent first).
+// Draining first means a direct flowFlush() always persists everything pending,
+// so an export never ships a flow missing its final state.
+function flowFlush(){
+  try{
+    if(!_flow)return;
+    _flowDrain();
+    const store=({..._flow});
+    delete store._alias; delete store._names;   // never persist the real-name map
+    const all=loadFlows().filter(f=>f.id!==store.id);
+    all.unshift(store);
+    saveFlows(all.slice(0,FLOW_MAX_GAMES));
+  }catch(e){}
+}
+
+// Install the recording wrappers. Each listed function is replaced by a version
+// that records the call (top-level only) then delegates. Wrapping beats editing
+// 30 call sites, and a throw inside the recorder can never reach the app.
+const FLOW_ACTIONS=[
+  // clock + period flow
+  'tog','advH','startNextPeriod','resetHalf',
+  // substitutions
+  'trigSub','confSub','manualSub','undoLastSub','injurySub','confInjury','tapBenchForInjury',
+  // on-pitch interaction
+  'tapFieldPlayer','swapFieldPositions','setGameMode',
+  // Plan-page setup (doubles as the 2nd-half setup at a break)
+  'setPlanKeeper','planClearField','planAddStarter','planRemoveStarter',
+  'planAutoFillStarters','planFinishStarters',
+  'planScrubStep','planScrubLive','planScrubJump',
+  // configuration changed mid-game
+  'pickSubStrategy','selectGameFormation','selectOppFormation','setPlanFormation',
+  // scoring
+  'adjScore','aflScore','aflUndo','chooseScorer','chooseAssist',
+  // navigation + lifecycle
+  'switchToView','resumeActiveGame'
+];
+function flowInstall(){
+  FLOW_ACTIONS.forEach(name=>{
+    const orig=window[name];
+    if(typeof orig!=='function'||orig.__flowWrapped)return;
+    const wrapped=function(){
+      let entry=null;
+      const top=(_flowDepth===0);
+      if(top){ try{entry=flowRecord(name,Array.prototype.slice.call(arguments));}catch(e){} }
+      _flowDepth++;
+      try{ return orig.apply(this,arguments); }
+      finally{ _flowDepth--; if(entry){ try{flowSeal(entry);}catch(e){} } }
+    };
+    wrapped.__flowWrapped=true;
+    window[name]=wrapped;
+  });
+}
+
+// ===== FLOW EXPORT (the "send me the game" button) =====
+// Bundles the recorded games into one JSON payload. Share sheet on mobile,
+// file download on desktop, clipboard as the last resort.
+function flowExportPayload(which){
+  try{ flowFlush(); }catch(e){}   // the game in progress must export complete
+  const all=loadFlows();
+  const flows=(which==null)?all:all.filter(f=>f.id===which);
+  return {
+    kind:'sub-timer-flow',
+    v:FLOW_V,
+    app:APP_VERSION,
+    exportedAt:new Date().toISOString(),
+    ua:(navigator.userAgent||'').slice(0,180),
+    flows
+  };
+}
+function openFlowExport(){
+  renderFlowList();
+  document.getElementById('flowOv').classList.add('show');
+}
+function renderFlowList(){
+  const host=document.getElementById('flowList');
+  if(!host)return;
+  const flows=loadFlows();
+  if(!flows.length){
+    host.innerHTML='<div style="font-size:13px;color:#666;text-align:center;padding:18px 8px">No games recorded yet. Play a game and it\'s captured automatically.</div>';
+    return;
+  }
+  host.innerHTML=flows.map(f=>{
+    const d=new Date(f.startedAt||f.id);
+    const when=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'});
+    const r=f.result||{};
+    const score=(r.scoreUs!=null)?`${r.scoreUs}-${r.scoreThem}`:'—';
+    const live=(_flow&&_flow.id===f.id)?'<span style="color:#00d4aa;font-weight:800"> · recording</span>':'';
+    return `<div onclick="exportGameFlow(${f.id})" style="padding:10px 12px;border:1px solid #1e2a45;border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;background:#0a1628">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#eee">${f.format||'?'} · ${f.sport||''} · ${score}${live}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${when} · ${(f.actions||[]).length} actions · ${f.app||''}</div>
+      </div>
+      <span style="font-size:11px;font-weight:800;color:#00d4aa;letter-spacing:.3px;flex-shrink:0">SEND</span>
+    </div>`;
+  }).join('');
+}
+async function exportGameFlow(which){
+  const payload=flowExportPayload(which);
+  if(!payload.flows.length){ alert('No games recorded yet — play a game and the flow is captured automatically.'); return; }
+  const json=JSON.stringify(payload,null,2);
+  const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const filename=`sub-timer-flow-${stamp}.json`;
+  // Share sheet first: on a phone this is the only route that reaches Messages
+  // / Mail, which is how a coach actually sends this from the sideline.
+  try{
+    const file=new File([json],filename,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Sub Timer game flow'});
+      return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError')return; }
+  try{
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
+    return;
+  }catch(e){}
+  try{ await navigator.clipboard.writeText(json); alert('Game flow copied to the clipboard — paste it into a message.'); }
+  catch(e){ alert('Could not export the game flow on this device.'); }
 }
 
 // ===== SPORTS (multi-sport core) =====
@@ -3244,12 +3582,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.5-beta';
+const APP_VERSION='v2.8.6-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.8.6-beta':{
+    title:'Hit a bug? Send me the game',
+    items:['Every game you play is now recorded as a <strong>game flow</strong> — the setup plus every tap, in order. If something goes wrong, open the menu and tap <strong>Send game flow</strong>: I can replay your exact game on my machine and see the bug happen, instead of guessing from a description. Player names are swapped for "Player 1, 2, 3…" before anything leaves your phone, and only the last 12 games are kept.']
+  },
   'v2.8.5-beta':{
     title:'Share your team with parents & co-coaches',
     items:['New <strong>Share team</strong> in the team menu — it makes a link that carries your whole setup: roster, positions, jersey numbers, format and game settings. Whoever opens it gets the team ready to go on their phone, no account needed — they just tap Play now. Got a link instead of sending one? There\'s also "Got a team link from your coach? Add it here" on the welcome screen.']
@@ -6489,6 +6831,7 @@ function startGame(){
     startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
+  flowBegin();           // start recording this game as a replayable flow
   renderG();showScr('s4');
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   saveActiveGame();
@@ -6881,36 +7224,49 @@ function updateClkSub(){
   if(lbl) lbl.style.color=d<=10?'#e94560':(d<=30?'#f0a500':'#00d4aa');
 }
 let _lastWholeSec=-1;
+// One whole second of game time: accrue playing minutes, fire any auto-sub due,
+// and end the period at full time. Returns true when the period ended (caller
+// must stop). Split out of tickLoop so the flow replayer can advance the clock
+// deterministically through the IDENTICAL logic — a replayed game and a live
+// game run the same code, which is the whole point of a replayable bug report.
+function tickSecond(){
+  _flowInTick++;   // actions fired from here are clock-derived, not coach taps
+  try{ return _tickSecondBody(); }
+  finally{ _flowInTick--; }
+}
+function _tickSecondBody(){
+  G.secs++;
+  G.on.forEach(p=>G.pt[avail[p]]++);
+  const ns=nxtST();
+  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
+    G.sd.push(ns);
+    // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
+    // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
+    // for any sub time; planned only when there's a matching plan event. Empty-plan
+    // 'planned' behaves like the old Manual — coach taps SUB to fire.
+    const strat=G.subStrategy||'fair';
+    let autoFire=(strat==='fair'||strat==='paired');
+    if(strat==='planned' && G.subPlan && G.subPlan.events){
+      const curMin=Math.floor(G.secs/60);
+      autoFire=G.subPlan.events.some(ev=>ev.type==='sub' && ev.half===G.half && ev.timeInHalf===curMin);
+    }
+    if(autoFire) trigSub();
+  }
+  if(G.secs>=cfg.hm*60){
+    G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
+    G.running=false;advH();saveActiveGame();
+    return true;
+  }
+  // Periodic checkpoint every 5s of game time so a refresh loses at most 5s
+  if(G.secs%5===0)saveActiveGame();
+  return false;
+}
 function tickLoop(now){
   if(!G.running)return;
   const totalMs=G.elapsedMs+(now-G.lastTs);
   const newSecs=Math.floor(totalMs/1000);
   // Process whole-second logic for any seconds we crossed
-  while(G.secs<newSecs){
-    G.secs++;
-    G.on.forEach(p=>G.pt[avail[p]]++);
-    const ns=nxtST();
-    if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
-      G.sd.push(ns);
-      // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
-      // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
-      // for any sub time; planned only when there's a matching plan event. Empty-plan
-      // 'planned' behaves like the old Manual — coach taps SUB to fire.
-      const strat=G.subStrategy||'fair';
-      let autoFire=(strat==='fair'||strat==='paired');
-      if(strat==='planned' && G.subPlan && G.subPlan.events){
-        const curMin=Math.floor(G.secs/60);
-        autoFire=G.subPlan.events.some(ev=>ev.type==='sub' && ev.half===G.half && ev.timeInHalf===curMin);
-      }
-      if(autoFire) trigSub();
-    }
-    if(G.secs>=cfg.hm*60){
-      G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
-      G.running=false;advH();saveActiveGame();return;
-    }
-    // Periodic checkpoint every 5s of game time so a refresh loses at most 5s
-    if(G.secs%5===0)saveActiveGame();
-  }
+  while(G.secs<newSecs){ if(tickSecond()) return; }
   // Update display (whole seconds — centiseconds were too noisy and overflowed on iPhone)
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(totalMs/1000));
   ce.className='tmr-c';
@@ -9187,6 +9543,7 @@ function openDrawer(menuId){
     foot.style.cssText='margin-top:auto;border-top:1px solid #1e2a45;padding-top:8px;display:flex;flex-direction:column;gap:2px';
     foot.innerHTML=`
       <button onclick="closeAnyDrawer();openFeedback&&openFeedback()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send feedback</button>
+      <button onclick="closeAnyDrawer();openFlowExport&&openFlowExport()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6M3 13h4M17 13h4M3 6.5 6 8M21 6.5 18 8M3 19.5 6 18M21 19.5 18 18"/></svg>Send game flow</button>
       <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" onclick="closeAnyDrawer()" style="width:100%;padding:13px 14px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);color:#ffc428;font-size:14px;font-weight:800;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;text-decoration:none;letter-spacing:.3px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>Donate</a>
     `;
     m.appendChild(foot);
@@ -9342,6 +9699,9 @@ function renderSubOrder(){
 setTimeout(()=>{ const s=document.getElementById('launchSplash'); if(s) s.remove(); }, 1700);
 // v2.7.71: paint the bottom tab bar on initial load so it's visible from the first frame.
 if(typeof renderViewSwitcher==='function') renderViewSwitcher();
+// v2.8.6: install the game-flow recorder LAST — the wrappers replace the real
+// functions, so every one of them must already be defined.
+try{ flowInstall(); }catch(e){}
 </script>
 </body>
 </html>

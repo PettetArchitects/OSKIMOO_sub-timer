@@ -4,6 +4,22 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.8.6-beta — Game flow recording (send a bug, don't describe it)
+
+- 🎞 **Every game is recorded as a replayable "flow"** — the setup it started from plus every tap you made, in order, stamped with the game clock and the line-up it produced. The last 12 games are kept.
+- 📤 **Send game flow** — new item in the menu (☰). Pick a game, and it goes out via the share sheet on a phone or downloads as a `.json` on desktop. A bug seen on the sideline can then be replayed exactly on a laptop instead of being guessed at from a description.
+- 🕶 **Names never leave the phone** — players become `Player 1, 2, 3…` before anything is stored, mapped consistently, with duplicates preserved so the two-players-with-the-same-name case still reproduces. Jersey numbers and position tags are kept, because they steer auto-fill and rotation.
+- ♻️ **Survives a refresh** — a game interrupted at half-time (app backgrounded, phone locked, browser reloaded) stays one continuous recording rather than splitting in two.
+- ✅ **Recorded games are now a test suite** — `npm run flow` plays ten scripted games, weighted to the second-half setup path, records each the way the app does and replays it; `npm run replay` re-runs every real game committed under `flows/`. Both are merge gates, so a game that once went wrong can never go wrong the same way again.
+
+### Architecture notes
+- `tickLoop()`'s per-second body factored out as `tickSecond()` so the live game and the replayer run **identical** logic — a replay exercises the real code path, not a model of it.
+- `flowInstall()` wraps the user-facing action functions; `flowRecord()` opens an entry (call + args + clock) and `flowSeal()` closes it with the resulting state. A `_flowDepth` guard records only top-level calls — `trigSub()` calls `confSub()` internally, and recording both would double-apply on replay. A `_flowInTick` counter flags clock-fired actions `auto:true`; the replayer reproduces those by running the clock rather than re-applying them.
+- `flowBegin()` at kickoff, `flowResume()` re-attaches after a reload via `G.startTime`. `_flowScrub()` walks both keys and values (playing time is keyed by player name). Storage is capped at 12 games / 4000 actions, and a quota failure sheds the oldest games instead of throwing mid-match.
+- New: `test/replay.mjs` (exports its in-page engine), `test/flow.mjs`, `flows/`. See `PROCESS.md` for the REPLAY layer this adds to Map → Gate → Hunt.
+
+---
+
 ## v2.8.5-beta — Team share link (access code for parents & co-coaches)
 
 - 🔗 **Share team** — new item in the team-action menu. Builds a link that carries the whole team setup: roster, position tags, jersey numbers, preferred sides/feet, format and saved game settings. Send it to a parent or co-coach; opening it installs the team on their phone with a **"TEAM IS READY — Play now"** welcome that lands them one tap from kickoff. No account needed on either end of the receive.

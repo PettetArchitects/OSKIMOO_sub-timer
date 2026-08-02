@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.5-beta · **Last reconciled:** see git history for this file
+**Version:** v2.8.6-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -208,6 +208,30 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 | Buy me a coffee CTA | Visible above the fold on summary. |
 | Match History (S6) | List of saved matches, most recent first. |
 | Match detail view | Read-only summary of a past match. |
+
+---
+
+## 7b. Game flow recording (v2.8.6)
+
+Every game is recorded as a replayable **flow** so a bug seen on the sideline can
+be reproduced exactly on a laptop, instead of being guessed at from a
+description. The library of recorded games doubles as a regression corpus.
+
+| Feature | Behaviour |
+|---|---|
+| Automatic recording | `flowBegin()` at kickoff captures the setup (squad, numbers, position tags, `cfg`, opening XI, keeper, rotation pairs, sub strategy/plan). Wrappers installed by `flowInstall()` then record every top-level coach action with the game clock and the state it produced. |
+| Top-level only | A `_flowDepth` guard records only the outermost call — `trigSub()` calls `confSub()` internally, and recording both would double-apply on replay. |
+| Auto vs tapped | Actions fired from inside `tickSecond()` (the timer's auto-sub, end of period) are flagged `auto:true`. The replayer reproduces those by running the clock, never by re-applying them. |
+| Survives a refresh | `flowResume()` re-attaches to the stored flow via `G.startTime`, so a game interrupted at half-time stays one continuous recording. |
+| Pseudonymised | Player names become `Player 1, 2, 3…` before anything is stored — consistently, and with duplicates preserved, so the two-players-same-name case still replays. Numbers and position tags are kept (they steer auto-fill and rotation). |
+| Bounded | Last 12 games, 4000 actions each; a quota failure sheds the oldest games rather than throwing mid-match. |
+| **Send game flow** | Menu (☰) → share sheet on mobile, file download on desktop, clipboard as fallback. Lists each recorded game with format, score and action count. |
+| Replay | `node test/replay.mjs flows/<file>.json` rebuilds the game and reports **DIVERGENCE** (this build differs from the phone, localised to one step) and **INVARIANT** violations (duplicate player, keeper off field, squad not conserved, keeper inside a rotation pair). |
+| Round-trip gate | `npm run flow` plays 10 scripted games — weighted to the second-half setup path — records each the way the app does, and replays it. That proves the recorder and the app agree, which is what makes a sent-in flow trustworthy. |
+
+`tickLoop()`'s per-second body is factored out as `tickSecond()` so the live game
+and the replayer run identical logic — the replay exercises the real code path,
+not a model of it.
 
 ---
 

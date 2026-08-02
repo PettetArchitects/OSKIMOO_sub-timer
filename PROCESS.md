@@ -35,8 +35,14 @@ Everything below exists to write intent down, enforce it, and discover the gaps.
   GATE  │  What CAN'T break (enforced on every merge)  │  ← machine-owned
         ├─────────────────────────────────────────────┤
   HUNT  │  What we DIDN'T think to check (discovery)   │  ← machine-found,
-        └─────────────────────────────────────────────┘     human-judged
+        ├─────────────────────────────────────────────┤     human-judged
+ REPLAY │  What ACTUALLY went wrong, out in the world  │  ← user-supplied,
+        └─────────────────────────────────────────────┘     machine-reproduced
 ```
+
+The fourth layer closes the loop from the real world. MAP/GATE/HUNT all reason
+about the app on a developer's machine; REPLAY brings the *actual failing game*
+back from the sideline so it can be reproduced exactly. See "REPLAY" below.
 
 ### 1. MAP — write intent down, separate from the code
 
@@ -102,6 +108,48 @@ judgment call, never an auto-merge.
 
 **The flywheel:** bug found → reproduce → fix → *add a regression test* → the
 gate is now stronger → the hunt moves to new ground. Coverage compounds.
+
+### 4. REPLAY — bring the real failure back from the world
+
+The expensive step in the flywheel is **"reproduce it"**. A user reports "the
+second-half player setup went wrong" and you have a description, not a failure.
+You guess at the sequence, often wrongly, and the bug survives.
+
+REPLAY removes the guessing. The app records every session as a **flow** — the
+setup it started from, plus every top-level user action in order, each stamped
+with the app's own clock and the state it produced. The user sends one file; a
+replayer rebuilds that exact session and reports where *this* build's behaviour
+parts company with what actually happened.
+
+| Piece | Job | This project |
+| --- | --- | --- |
+| **Recorder** | Wraps the user-facing actions; logs call + args + clock + resulting state | `flowInstall()` / `flowRecord()` / `flowSeal()` in `index.html` |
+| **Export** | One tap → share sheet / download, pseudonymised | menu → *Send game flow* |
+| **Replayer** | Rebuilds and re-runs the session; reports divergence + invariants | `test/replay.mjs` |
+| **Round-trip test** | Proves the recorder and the app agree | `test/flow.mjs` |
+| **Corpus** | Real failures, replayed on every PR | `flows/` |
+
+Four things make it work, and each one is a trap if you skip it:
+
+1. **Record the state *after* the call, not before.** The obvious wrapper
+   captures the fingerprint alongside the args, which silently records every
+   action's *input* state — and then every replay "diverges" at step one. Open
+   the entry before the call, seal it after.
+2. **Record only top-level actions.** Internals call each other; recording the
+   nested calls too makes the replay apply everything twice. A depth guard
+   fixes it — replaying the outer call reproduces the inner ones for free.
+3. **Separate what the user did from what the clock did.** Anything the app
+   fires on a timer must be flagged and reproduced *by running the clock*, never
+   by re-applying it. This means factoring the timer's per-tick body into a
+   function the replayer can drive (`tickSecond()`), so replay runs the real
+   code path rather than a model of it.
+4. **Pseudonymise on the way in.** Names are replaced before storage, mapped
+   consistently, with duplicates preserved so the shape of the data — including
+   the awkward collision cases — still reproduces. The file is then safe to send.
+
+**The payoff:** "it broke" becomes a file, the file becomes a red test, and once
+fixed the file joins the corpus and guards that fix forever. The reproduce step
+stops being the bottleneck.
 
 ---
 
@@ -186,15 +234,17 @@ one; this is the order of highest leverage.
 
 ## The names, for talking about it
 
-- The whole system: **Map → Gate → Hunt** (or "spec-anchored, test-gated,
-  fuzz-hunted" development).
+- The whole system: **Map → Gate → Hunt → Replay** (or "spec-anchored,
+  test-gated, fuzz-hunted, session-replayed" development).
 - The principle: **human owns intent, machine owns enforcement.**
 - The bug definition: **divergence from written intent.**
 - The flywheel: **every fix becomes a permanent guard.**
+- The replay rule: **a bug report should be a file, not a description.**
 
 ---
 
 _This file is the portable process. The Sub Timer artifacts that implement it:
 `FEATURES.md`, `docs/UX-PATHWAYS.md`, `docs/UIMAP.md`, `test/` (sanity, smoke,
-sports, edge, hunt, loop, uimap, docs-check), `.github/workflows/smoke.yml`,
-and the protected `main` branch. Copy the shapes, not the specifics._
+sports, edge, hunt, loop, uimap, docs-check, flow, replay), `flows/`,
+`.github/workflows/smoke.yml`, and the protected `main` branch. Copy the shapes,
+not the specifics._
