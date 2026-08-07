@@ -414,6 +414,71 @@ const SCENARIOS = [
     chk('re-importing the same code does not duplicate', dedup === 1);
   }],
 
+  // Found by the fairness hunt (seed 20260817), fixed in v2.9.5: paired
+  // rotation compared pairs by minute SUM, so the leftover odd pair (7
+  // outfielders in groups of 3 → [3,3,1]) could never outweigh a full triple
+  // and its occupant played the entire game — 96 of 100 minutes. Pairs now
+  // compare per-member AVERAGES. Same round: an out-for-game injury dropped
+  // the victim from their pair without seating the replacement, making the
+  // replacement invisible to rotation.
+  ['paired rotation: the leftover odd pair still rotates', async (page, { chk }) => {
+    const r = await page.evaluate(() => {
+      const stop = () => { if (G && G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; } if (G) { G.running = false; G.lastTs = null; G.elapsedMs = G.secs * 1000; } };
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('netball'); pickFormat('nb-go', 'netball');
+      editingTeam.players = Array.from({ length: 12 }, (_, i) => 'P' + (i + 1));
+      editingTeam.numbers = {}; editingTeam.positions = {};
+      document.getElementById('teamNameInput').value = 'Odd pair';
+      saveAndBack(); selectTeam(teams[teams.length - 1].id);
+      cfg.subStrategy = 'paired'; cfg.hm = 25; cfg.sf = 4; cfg.sc = 3; cfg.breaksOnly = false;
+      startFromSquad(); stop();
+      G.subStrategy = 'paired';
+      const singleton = (G.pairs || []).find((p) => p.on.length === 1);
+      let guard = 0;
+      while (guard++ < 40000) {
+        G.running = true; const ended = tickSecond(); stop();
+        if (G.atBreak) { startNextPeriod(); stop(); continue; }
+        if (ended && G.half >= 4) break;
+      }
+      const total = 4 * 25 * 60;
+      const maxPt = Math.max(...avail.map((n) => G.pt[n] || 0));
+      const offs = {};
+      (G.log || []).filter((e) => e.type === 'sub').forEach((e) => { offs[e.off] = (offs[e.off] || 0) + 1; });
+      const neverOff = avail.filter((n) => !offs[n]);
+      return { hadSingleton: !!singleton, total, maxPt, neverOff };
+    });
+    chk('the group split produced a leftover odd pair', r.hadSingleton);
+    chk('nobody plays essentially the whole game', r.maxPt <= r.total - 2 * 4 * 60,
+      `max ${Math.round(r.maxPt / 60)}m of ${Math.round(r.total / 60)}m`);
+    chk('every player is subbed off at least once', r.neverOff.length === 0, r.neverOff.join(', '));
+  }],
+
+  ['injury out-for-game: the replacement takes the pair seat', async (page, { chk }) => {
+    const r = await page.evaluate(() => {
+      const stop = () => { if (G && G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; } if (G) { G.running = false; G.lastTs = null; } };
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Pair seat';
+      saveAndBack(); selectTeam(teams[teams.length - 1].id);
+      cfg.subStrategy = 'paired';
+      startFromSquad(); stop();
+      G.subStrategy = 'paired';
+      const victim = (G.pairs[0] && G.pairs[0].on[0]);
+      const sizeBefore = G.pairs[0].on.length;
+      const replacement = G.bench[0];
+      injurySub(victim, replacement);
+      confInjury(true);   // out for the game
+      return {
+        sizeBefore, sizeAfter: G.pairs[0].on.length,
+        replacementSeated: G.pairs.some((p) => p.on.includes(replacement)),
+        victimGone: !G.pairs.some((p) => p.on.includes(victim)),
+      };
+    });
+    chk('the pair keeps its size', r.sizeAfter === r.sizeBefore, `${r.sizeBefore} → ${r.sizeAfter}`);
+    chk('the replacement is seated in the pair', r.replacementSeated);
+    chk('the injured player is out of every pair', r.victimGone);
+  }],
+
   // P7 — Account & cloud sync. This pathway had no invariants at all, and a
   // real bug was living in it: sign-in was reachable ONLY from the landing
   // hero, which renders when `teams.length===0 && !cloudUser`. The moment a

@@ -3967,7 +3967,7 @@ const APP_VERSION='v2.9.5-beta';
 const CHANGELOG_DATA={
   'v2.9.5-beta':{
     title:'Fairer subs after a keeper change',
-    items:['Time in goal no longer counts as game time for equal play. Before this, whoever kept the first half reached the break with the most minutes of anyone \u2014 so the moment they handed over the gloves, the equal-time rotation made them its favourite target: subbed off, forced back on, subbed straight off again.','Now only outfield minutes compete. The ex-keeper gets a proper run in the second half, and everyone\u2019s displayed minutes are unchanged \u2014 the summary still shows true total time.','If the keeper never changes, nothing is different.']
+    items:['Time in goal no longer counts as game time for equal play. Before this, whoever kept the first half reached the break with the most minutes of anyone \u2014 so the moment they handed over the gloves, the equal-time rotation made them its favourite target: subbed off, forced back on, subbed straight off again.','Now only outfield minutes compete. The ex-keeper gets a proper run in the second half, and everyone\u2019s displayed minutes are unchanged \u2014 the summary still shows true total time.','If the keeper never changes, nothing is different.','Also fixed in Matched rotation: with group sizes that don\u2019t divide the team evenly, the player in the leftover smaller group was almost never subbed \u2014 they could end up playing the entire game. And a player who came on for an out-for-game injury now joins the rotation properly instead of staying on untouched.']
   },
   'v2.9.4-beta':{
     title:'Fixed: you can sign in again',
@@ -7791,10 +7791,17 @@ function trigSub(){
     // come off — so groups stay together AND minutes balance out across the
     // game. Bench picks the longest-benched (lowest minutes) to come on.
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
+    // v2.9.5 (fairness hunt, seed 20260817): compare pairs by AVERAGE minutes
+    // per member, not by SUM. Groups of 3 into an outfield of 7 leave a
+    // leftover pair of one, and a single player's total can never outweigh a
+    // triple's combined total — so the odd player out was never rotated and
+    // played the entire game (96 of 100 minutes while teammates averaged 55).
+    // Any paired game whose outfield doesn't divide by the group size was
+    // affected, including 11v11 with groups of 3.
     const pairsByMinutes=G.pairs
       .map(pair=>({
         onFieldMembers:pair.on.filter(p=>onFieldElig.includes(p)),
-        totalMins:pair.on.reduce((s,p)=>s+_rotSecs(p),0)
+        totalMins:pair.on.reduce((s,p)=>s+_rotSecs(p),0)/Math.max(1,pair.on.length)
       }))
       .filter(x=>x.onFieldMembers.length>0)
       .sort((a,b)=>b.totalMins-a.totalMins);
@@ -8183,9 +8190,16 @@ function confInjury(outForGame){
   if(fieldIdx>=0) G.on[fieldIdx]=on[0];
   G.bench=G.bench.filter(p=>p!==on[0]);
   if(outForGame){
-    // Remove from rotation entirely — don't add to bench
+    // The injured player leaves the game — but their REPLACEMENT must take
+    // their slot in the rotation pair, exactly as the minor-knock branch does.
+    // v2.9.5 (found by the fairness hunt, seed 20260817): this used to FILTER
+    // the injured player out of the pair without putting anyone in, and in
+    // paired mode trigSub only ever subs off pair members — so the replacement
+    // became invisible to the rotation and played the entire rest of the game:
+    // 96 of 100 minutes with one sub-off, while teammates averaged ~55.
     G.pairs.forEach(pair=>{
-      pair.on=pair.on.filter(p=>p!==off[0]);
+      const oi=pair.on.indexOf(off[0]);
+      if(oi>=0) pair.on[oi]=on[0];
     });
   } else {
     // Minor knock — back to end of bench queue
@@ -9791,7 +9805,7 @@ function buildPlanTimeline(){
         if(strat==='paired' && G.pairs && G.pairs.length){
           const pairsByMins=G.pairs.map(pair=>({
             onMembers:pair.on.filter(pl=>eligibleOn.includes(pl)),
-            totalMins:pair.on.reduce((s,pl)=>s+(simRot[avail[pl]]||0),0),
+            totalMins:pair.on.reduce((s,pl)=>s+(simRot[avail[pl]]||0),0)/Math.max(1,pair.on.length),
             onSince:Math.min(...pair.on.map(pl=>onSince[pl]!=null?onSince[pl]:simClock))
           })).filter(x=>x.onMembers.length>0)
             .sort((a,b)=>b.totalMins-a.totalMins || a.onSince-b.onSince);

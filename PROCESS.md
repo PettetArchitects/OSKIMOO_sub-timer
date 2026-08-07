@@ -98,7 +98,16 @@ Tests assert what you *thought of*. The hunt finds what you didn't.
 | Tool | Does | This project |
 | --- | --- | --- |
 | **Hunter** | Fuzzes interaction sequences against invariants | `hunt` |
+| **Fairness hunter** | Simulates whole seeded games; judges each player's EXPERIENCE (stints, waits, off-counts, spread) rather than structural state | `fairness` |
 | **Loop** | Runs gate + hunt on repeat, stops on a finding | `loop` |
+
+The two hunters catch different bug classes. Structural invariants catch wrong
+STATES; Molly's bug (v2.9.5) violated none of them — squad conserved, keeper on
+field, minutes even — while one player was yanked off-on-off through a half.
+That is an EMERGENT bug: every component correct, the composition absurd, and
+visible only in a player's experience over time. The fairness hunter exists for
+that class, and found two engine bugs on its first sweep (the odd-pair
+starvation and the injury pair-seat loss).
 
 An **invariant** is something that must *always* hold (e.g. "the on-field count
 never exceeds the format size"; "what the chips show equals what the pitch

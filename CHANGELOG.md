@@ -22,6 +22,17 @@ Reproduced exactly (9-player 7v7, subs every 5): the keeper never rotates, so Mo
 
 Guarded by `secondhalf: H1 keeper is not rotation-targeted after handing over the gloves` (5 checks, red against v2.9.4).
 
+### The fairness hunt (`npm run fairness`) — and what it found in its first hour
+
+Molly's bug passed every structural gate; nothing was in a wrong *state* — one player's *experience over time* was absurd. `test/fairness.mjs` hunts that class: ~150 seeded games through the real engine (randomised squad, cadence, group size, strategy, keeper handovers, injuries), judging each player's stints, waits, off-counts and outfield spread. Exploratory like the hunt — findings are judgements, not merge blockers. Every game replays from its seed; the Molly game is pinned as game zero.
+
+**Two engine bugs found on the first sweep, both fixed and gated (`edge`):**
+
+- 🥇 **The odd pair never rotated.** Paired rotation compared pairs by minute **sum** — so the leftover pair from an uneven split (7 outfielders in 3s → `[3,3,1]`) could never outweigh a full triple, and its occupant played the whole game: **96 of 100 minutes while teammates averaged 55**. Affected every paired game whose outfield doesn't divide by the group size, including 11v11 in 3s. Pairs now compare per-member **averages** — live engine and Plan sim identically.
+- 🩹 **An out-for-game injury made the replacement invisible.** The victim was dropped from their pair without seating the replacement — and paired rotation only ever subs off pair members, so the replacement stayed on untouched. The replacement now takes the vacated pair seat.
+
+**Left open, deliberately — judgement calls, not bug fixes:** the greedy equal-time scheduler drifts up to ~3 intervals of spread with single-player swaps on quarter sports (a smarter scheduler is a product decision); and 22 of 151 random configs **mathematically cannot** cycle their bench (16 players, subs every 8, 30-minute game) — the engine can't fix arithmetic, but the app could warn at setup and today it doesn't.
+
 ---
 
 ## v2.9.4-beta — Fixed: sign-in was unreachable for anyone with a team
