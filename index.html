@@ -22,9 +22,15 @@
 <style>
 @font-face{
   font-family:'DSEG';
-  src:url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2'),
-      url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff') format('woff');
-  font-weight:bold;font-style:normal;font-display:swap;
+  /* v2.9.3: INLINED, not fetched. This was loaded from cdn.jsdelivr.net with no
+     service worker, so at a ground with no signal document.fonts.check() returned
+     false and the clock — the app's whole identity — fell back to plain monospace.
+     A grassroots oval on a Saturday morning is exactly where that happens.
+     DSEG7 Classic is a 7-segment face: 5KB raw, 6.7KB base64, on a 612KB file.
+     The 3D pitch still comes from a CDN, but that fallback is correct — the 2D
+     pitch renders fine and 600KB of Three.js is not worth inlining. The clock is. */
+  src:url('data:font/woff2;base64,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') format('woff2');
+  font-weight:bold;font-style:normal;font-display:block;
 }
 </style>
 <style>
@@ -106,6 +112,81 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btn-o{background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));border:1.5px solid #e94560;color:#e94560}
 .btn-s{padding:10px 16px;font-size:14px;margin-top:0;display:inline-block;width:auto;border-radius:var(--r-sm)}
 .btn-del{background:#3a1525;color:#e94560;border:1px solid #e94560}
+
+/* ===== v2.9.3: button system =====================================
+   Six variants replacing 54 ad-hoc inline treatments across 121 buttons.
+   Prefixed `ui-` so it cannot collide with the legacy .btn / .chip /
+   .st-btn classes while both exist — the old ones are removed screen by
+   screen as callers migrate, not in one sweep.
+
+   TREATMENT: fun, familiar, approachable — the audience is a volunteer
+   parent on a sideline, not an engineer. An earlier cut of this borrowed
+   from developer-tool design systems (flat, low-contrast, 600 weight) and
+   read cold and corporate for a kids' sport app. This one is chunkier and
+   more tactile instead:
+     · rounded type (`ui-rounded` → SF Pro Rounded on Apple, graceful
+       fallback elsewhere) — friendly, native, and costs nothing
+     · 16px radii — soft, not sharp
+     · a solid colour "lip" under the button that compresses on press, so
+       tapping feels physical rather than a colour change
+     · 700 weight — confident without the old 800 + letter-spacing shout
+     · generous 48–52px targets
+   Same palette. Zero new tokens: no new colours, nothing new on the type
+   or radius scales. */
+.ui-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;padding:14px 20px;border:none;border-radius:16px;
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:0;cursor:pointer;
+  transition:transform .08s ease,box-shadow .08s ease,background .15s;
+  -webkit-tap-highlight-color:transparent}
+.ui-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+/* One rule covers every button — closes the focus-ring gap design.md §8
+   has carried since it was written. */
+.ui-btn:focus-visible,.ui-chip:focus-visible,.ui-step:focus-visible{
+  outline:3px solid #5bc0de;outline-offset:2px}
+
+.ui-btn--primary{min-height:52px;padding:15px 24px;background:#00d4aa;color:#06231d;
+  font-size:16px;box-shadow:0 3px 0 #0a9d83}
+.ui-btn--primary:active{transform:translateY(3px);box-shadow:0 0 0 #0a9d83}
+
+.ui-btn--secondary{background:#13203a;color:#eee;box-shadow:0 3px 0 #0d1828}
+.ui-btn--secondary:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+/* Tone modifiers — meaning on top of shape, not new variants. */
+.ui-btn--secondary.is-go{background:rgba(0,212,170,.16);color:#00d4aa}
+.ui-btn--secondary.is-preview{background:rgba(91,192,222,.16);color:#5bc0de}
+.ui-btn--secondary.is-plan{background:rgba(167,139,250,.16);color:#a78bfa}
+.ui-btn--secondary.is-attention{background:rgba(240,165,0,.16);color:#f0a500}
+
+.ui-btn--ghost{width:100%;min-height:50px;padding:14px;background:none;color:#eee;
+  justify-content:flex-start;text-align:left;border-radius:14px;box-shadow:none}
+.ui-btn--ghost:active{transform:none;background:rgba(255,255,255,.07)}
+.ui-btn--ghost:hover{background:rgba(255,255,255,.05)}
+
+.ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
+.ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
+
+.ui-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:none;
+  border-radius:14px;background:#13203a;color:#eee;
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,transform .08s;
+  -webkit-tap-highlight-color:transparent}
+.ui-chip:active{transform:scale(.96)}
+.ui-chip.sel{background:rgba(0,212,170,.16);color:#00d4aa}
+
+/* 48×48 — sizing these removes 9 of the 34 undersized controls the
+   accessibility audit found, in one place instead of nine. */
+.ui-step{width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0;border:none;border-radius:16px;background:#13203a;color:#00d4aa;
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:20px;font-weight:700;line-height:1;cursor:pointer;
+  transition:background .15s,transform .08s;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 3px 0 #0d1828}
+.ui-step:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+.ui-step.is-danger{color:#ff7088}
+@media (prefers-reduced-motion:reduce){
+  .ui-btn,.ui-chip,.ui-step{transition:none}
+  .ui-btn:active,.ui-chip:active,.ui-step:active{transform:none}
+}
 
 /* Cards & chips */
 .card{background:linear-gradient(180deg,#1a2747,#141f3a);border-radius:var(--r-btn);padding:16px;margin-bottom:10px;box-shadow:var(--sh-raise)}
@@ -610,7 +691,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
     </div>
     <!-- v2.7.81: global Match History removed from home — match history is per-team now (Past Games in the team-action menu). The button + handler are kept hidden for any code path that still references them. -->
-    <button id="historyBtn" onclick="showHistory()" style="display:none"></button>
+    <!-- v2.9.1: the standalone Match History button is gone — the route is
+         Team card → ⋯ → Past Games (teamActionPastGames). The element was left
+         behind with its label stripped but renderHome still un-hid it, so home
+         carried an unlabelled 4×4 click target. -->
     <!-- v2.7.81: inline full-width donate replaced by a floating bottom-right heart button (#coffeeFab below). Element kept hidden so any code path still referencing it doesn't error. -->
     <a id="coffeeBtn" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
     <!-- v2.7.83: feedback link moved into the hamburger drawer. Element kept hidden so legacy refs don't break. -->
@@ -629,6 +713,65 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="feedbackStatus" style="font-size:12px;color:#aaa;min-height:16px;margin-bottom:8px;text-align:center"></div>
     <button class="btn btn-g" onclick="sendFeedback()">Send</button>
     <button class="btn btn-o" style="margin-top:8px" onclick="document.getElementById('feedbackOv').classList.remove('show')">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== DEV MODE (v2.8.8) — test harness inside the app itself =====
+     Hidden unless ?dev=1 has been visited on this device. Nothing below is
+     rendered or wired when dev mode is off. -->
+<button id="devFab" onclick="toggleDevPanel()" style="display:none;position:fixed;right:10px;bottom:70px;z-index:9998;padding:8px 12px;background:rgba(167,139,250,.15);border:1.5px solid #a78bfa;color:#a78bfa;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.5)">DEV</button>
+<div class="ov" id="devOv">
+  <div class="ab" style="max-width:420px;text-align:left;max-height:88vh;overflow-y:auto">
+    <h2 style="text-align:center;margin-bottom:2px;color:#a78bfa;display:flex;align-items:center;justify-content:center;gap:8px">DEV MODE</h2>
+    <p style="color:#888;font-size:11px;text-align:center;margin:0 0 10px">Test tools. Not visible to coaches — this device only.</p>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Seed a game</div>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <select id="devSeedFmt" class="input" style="flex:1;margin:0;padding:7px"></select>
+      <button onclick="devSeedGame()" style="padding:7px 12px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Seed</button>
+    </div>
+    <div style="font-size:10px;color:#666;margin-bottom:8px">Builds a team + squad and drops you on the pitch.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Jump the clock</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <span style="font-size:11px;color:#9fb3c8">Period</span>
+      <input id="devJumpP" type="number" min="1" value="1" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
+      <span style="font-size:11px;color:#9fb3c8">at</span>
+      <input id="devJumpM" type="number" min="0" value="0" class="input" style="width:52px;margin:0;padding:7px;text-align:center">
+      <span style="font-size:11px;color:#9fb3c8">min</span>
+      <button onclick="devJump()" style="flex:1;padding:7px 10px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Go</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="devSkipToBreak()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Skip to break</button>
+      <button onclick="devSkipToFullTime()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Skip to full time</button>
+    </div>
+    <div style="font-size:10px;color:#666;margin-bottom:8px">Runs the real per-second logic, so subs fire and minutes accrue exactly as in a live game. Rewinding works within the current period only.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Replay a game flow</div>
+    <textarea id="devFlowJson" placeholder="Paste an exported game flow JSON here…" rows="3" class="input" style="resize:vertical;margin-bottom:6px;font-family:monospace;font-size:11px"></textarea>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="devFlowLoad()" style="flex:1;padding:7px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Load</button>
+      <button onclick="devFlowStep()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Step ▸</button>
+      <button onclick="devFlowPlay()" style="flex:1;padding:7px;background:none;border:1px solid #00d4aa;color:#00d4aa;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Play ▶</button>
+    </div>
+    <div id="devFlowStatus" style="font-size:11px;color:#888;margin-bottom:8px">No flow loaded.</div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">State</div>
+    <div id="devState" style="font-size:11px;font-family:monospace;color:#9fb3c8;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:8px;line-height:1.6;margin-bottom:10px">—</div>
+
+    <button class="btn btn-o" onclick="document.getElementById('devOv').classList.remove('show')">Close</button>
+    <button class="btn" style="margin-top:8px;background:none;border:1px solid #e94560;color:#e94560" onclick="setDevMode(false)">Turn dev mode OFF</button>
+  </div>
+</div>
+
+<!-- ===== GAME FLOW EXPORT (v2.8.6) — send a replayable recording of a game ===== -->
+<div class="ov" id="flowOv">
+  <div class="ab" style="max-width:400px;text-align:left">
+    <h2 style="text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="bug" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Send game flow</h2>
+    <p style="color:#aaa;font-size:13px;line-height:1.5;margin:6px 0 12px;text-align:center">Every game is recorded so a bug can be replayed exactly. Pick a game to send — player names are replaced with "Player 1, 2, 3…" before it leaves your phone.</p>
+    <div id="flowList" style="max-height:46vh;overflow-y:auto;margin-bottom:10px"></div>
+    <button class="btn btn-g" onclick="exportGameFlow()">Send all recorded games</button>
+    <button class="btn btn-o" style="margin-top:8px" onclick="document.getElementById('flowOv').classList.remove('show')">Close</button>
   </div>
 </div>
 
@@ -805,7 +948,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
       <div class="set-row" style="margin-top:0">
         <label>2nd Half GK</label>
-        <select id="gk2SettingSel" onchange="gk2=parseInt(this.value)" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
+        <select id="gk2SettingSel" onchange="gk2=parseInt(this.value);gk2Explicit=true" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
@@ -822,7 +965,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <span style="font-size:10px;color:#e94560;font-weight:700;letter-spacing:.5px">1H</span>
       <select id="gk1Sel" onchange="gk1=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
       <span style="font-size:10px;color:#e94560;font-weight:700;letter-spacing:.5px;margin-left:2px">2H</span>
-      <select id="gk2Sel" onchange="gk2=parseInt(this.value);renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
+      <select id="gk2Sel" onchange="gk2=parseInt(this.value);gk2Explicit=true;renderS3()" style="background:#0a1628;color:#eee;border:1px solid #e94560;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;font-family:inherit;outline:none"></select>
     </div>
   </div>
   <!-- Pitch fills the whole remaining space. -->
@@ -1257,7 +1400,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 </div>
 <div id="bottomTabBar"></div>
 <!-- v2.7.83: drawer scrim — darkens the page behind the side drawer; tap to close. -->
-<div id="appDrawerScrim" onclick="closeAnyDrawer()"></div>
+<!-- Decorative click-catcher behind an open drawer. aria-hidden because the
+     drawer has its own labelled close affordances; exposing an unnamed
+     full-screen region to a screen reader is noise, not an extra control. -->
+<div id="appDrawerScrim" onclick="closeAnyDrawer()" aria-hidden="true"></div>
 <!-- v2.7.81→.83: donate moved INSIDE the hamburger drawer (.drawer-donate). FAB kept hidden in case any code path still references it. -->
 <a id="coffeeFab" href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" style="display:none"></a>
 
@@ -1595,17 +1741,24 @@ function loadTeams(){
 function saveTeams(t){ saveTeamsRaw(t); }
 
 // ===== ACTIVE GAME PERSISTENCE (survives refresh / app switch) =====
-function saveActiveGame(){
-  if(!G||!currentTeam)return;
+// The full restorable state of the current game — one object that both the
+// refresh-survival save and the game-flow log record.
+function gameSnapshot(){
+  if(!G||!currentTeam)return null;
   let frozenMs=G.elapsedMs;
   if(G.running&&G.lastTs)frozenMs+=performance.now()-G.lastTs;
-  const snap={
+  return {
     teamId:currentTeam.id,
-    curFmt,curFormation,avail,cfg,gk1,gk2,luOrd,rotPairs,
+    curFmt,curFormation,avail,cfg,gk1,gk2,gk2Explicit,luOrd,rotPairs,
     G:Object.assign({},G,{raf:null,iv:null,running:false,lastTs:null,elapsedMs:frozenMs}),
     savedAt:Date.now()
   };
+}
+function saveActiveGame(){
+  const snap=gameSnapshot();
+  if(!snap)return;
   try{localStorage.setItem('subTimerActive',JSON.stringify(snap));}catch(e){}
+  flowUpdate(snap);
 }
 function clearActiveGame(){try{localStorage.removeItem('subTimerActive');}catch(e){}}
 function loadActiveGame(){
@@ -1618,7 +1771,7 @@ function resumeActiveGame(){
   if(!t){clearActiveGame();return false;}
   currentTeam=t;
   curFmt=s.curFmt;curFormation=s.curFormation;
-  avail=s.avail;cfg=s.cfg;gk1=s.gk1;gk2=s.gk2;
+  avail=s.avail;cfg=s.cfg;gk1=s.gk1;gk2=s.gk2;gk2Explicit=!!s.gk2Explicit;
   setDisplayNameList(avail);
   luOrd=s.luOrd;rotPairs=s.rotPairs;
   G=s.G;
@@ -1629,10 +1782,552 @@ function resumeActiveGame(){
   // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
   if(G && G.subStrategy==='manual') G.subStrategy='planned';
   if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
+  flowResume();   // keep recording into the same flow across the reload
   showScr('s4');
   renderG();
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   return true;
+}
+
+// ===== v2.8.6: GAME FLOW RECORDER (replayable bug reports) =====
+// Every game is recorded as a "flow": the setup it started from, plus the
+// ordered list of coach actions with the game clock and a state fingerprint
+// after each one. Export a flow as JSON and `node test/replay.mjs <file>` will
+// replay it against any build — so a bug seen on the sideline reproduces on a
+// laptop, and the library of past games doubles as a regression corpus.
+//
+// Two design rules make replay trustworthy:
+//   1. Only TOP-LEVEL calls are recorded (_flowDepth guard). trigSub() calls
+//      confSub() internally; recording both would double-apply on replay.
+//      Replaying the outer call reproduces the nested ones naturally.
+//   2. Player names are pseudonymised on the way in ("Player 3"), consistently,
+//      so a flow can be shared without carrying a junior squad's real names.
+//      Duplicates stay duplicated — the two-Sarahs disambiguation path is
+//      itself a bug source, so the SHAPE of the roster is preserved exactly.
+const FLOW_V=1;               // record shape version — bump on breaking changes
+const FLOW_MAX_GAMES=12;      // keep this many recent games
+const FLOW_MAX_ACTIONS=4000;  // per-game cap so localStorage can't be blown out
+let _flow=null;               // flow record for the game in progress
+let _flowDepth=0;             // re-entrancy guard (see rule 1 above)
+let _flowInTick=0;            // >0 while inside tickSecond — see the `auto` flag
+let _flowSaveT=null;          // debounce handle for the localStorage write
+let _flowPending=null;        // newest snapshot awaiting that debounced write
+
+function loadFlows(){
+  try{const d=localStorage.getItem('subTimerFlows');return d?JSON.parse(d):[];}catch(e){return[];}
+}
+function saveFlows(f){
+  try{localStorage.setItem('subTimerFlows',JSON.stringify(f));}
+  catch(e){
+    // Quota exceeded — shed the oldest games and retry once. Recording must
+    // degrade quietly; it can never be the thing that breaks a live match.
+    try{localStorage.setItem('subTimerFlows',JSON.stringify(f.slice(0,3)));}catch(e2){}
+  }
+}
+function clearFlows(){try{localStorage.removeItem('subTimerFlows');}catch(e){} _flow=null;}
+
+// Stable pseudonyms: same real name → same "Player N" within one flow.
+function _flowAlias(flow,name){
+  if(name==null)return name;
+  if(!flow._alias)flow._alias={};
+  if(!(name in flow._alias))flow._alias[name]='Player '+(Object.keys(flow._alias).length+1);
+  return flow._alias[name];
+}
+// Deep-copy a value, swapping any known player name for its pseudonym. Names
+// turn up in awkward places — as strings inside args, as values in log entries,
+// and as the KEYS of G.pt (playing time is keyed by name) — so we walk both
+// keys and values generically rather than special-casing each shape.
+function _flowScrub(flow,v,names){
+  if(typeof v==='string')return names.has(v)?_flowAlias(flow,v):v;
+  if(Array.isArray(v))return v.map(x=>_flowScrub(flow,x,names));
+  if(v&&typeof v==='object'){
+    const o={};
+    for(const k in v){
+      if(!Object.prototype.hasOwnProperty.call(v,k))continue;
+      o[names.has(k)?_flowAlias(flow,k):k]=_flowScrub(flow,v[k],names);
+    }
+    return o;
+  }
+  return v;
+}
+
+// Start recording a new game. Called from startGame() — the one point where a
+// game's initial conditions are fully settled.
+function flowBegin(){
+  try{
+    if(!G||!currentTeam)return;
+    const names=new Set(avail||[]);
+    const flow={
+      v:FLOW_V,
+      id:Date.now(),
+      gameKey:G.startTime||String(Date.now()),  // survives a refresh — see flowResume
+      app:APP_VERSION,
+      startedAt:new Date().toISOString(),
+      sport:getSport(currentTeam).key,
+      format:curFmt,
+      formation:curFormation,
+      // Setup is everything test/replay.mjs needs to rebuild the exact game.
+      setup:{
+        cfg:JSON.parse(JSON.stringify(cfg||{})),
+        gk1,gk2,gk2Explicit,
+        luOrd:[...(luOrd||[])],
+        rotPairs:(rotPairs||[]).map(p=>({on:[...p.on]}))
+      },
+      actions:[],
+      truncated:false
+    };
+    flow._alias={};
+    // Alias the availability list first so indices line up with "Player N".
+    // team.players is an array of NAME STRINGS; numbers and position tags live
+    // in side maps keyed by that name.
+    flow.setup.avail=(avail||[]).map(n=>_flowAlias(flow,n));
+    flow.setup.squad=(currentTeam.players||[]).map(n=>({
+      name:_flowAlias(flow,n),
+      number:getPlayerNumber(currentTeam,n),
+      pos:[...getPlayerPos(currentTeam,n)]
+    }));
+    flow.setup.initialOn=[...(G.on||[])];
+    flow.setup.initialBench=[...(G.bench||[])];
+    flow.setup.initialGk=G.gk;
+    flow.setup.subStrategy=G.subStrategy||'fair';
+    flow.setup.subPlan=G.subPlan?JSON.parse(JSON.stringify(G.subPlan)):null;
+    flow._names=names;
+    _flow=flow;
+    flowFlush();
+  }catch(e){}
+}
+
+// Re-attach to the stored flow after a refresh / app switch. Module state is
+// lost on reload but the flow survives in localStorage, so a game interrupted
+// at half-time (a very common real-world path) stays ONE continuous recording
+// instead of splitting into two useless halves. G.startTime is the join key.
+function flowResume(){
+  try{
+    if(!G)return;
+    const key=G.startTime;
+    if(!key)return;
+    const stored=loadFlows().find(f=>f.gameKey===key);
+    if(!stored)return;
+    _flow=stored;
+    // Rebuild the alias map from the recorded avail list — positionally exact,
+    // so pseudonyms stay stable across the reload.
+    _flow._alias={};
+    _flow._names=new Set(avail||[]);
+    (avail||[]).forEach((n,i)=>{
+      const a=(stored.setup&&stored.setup.avail)?stored.setup.avail[i]:null;
+      if(a) _flow._alias[n]=a;
+    });
+    flowSeal(flowRecord('__resumed',[]));
+  }catch(e){}
+}
+
+// Open an action entry: the call and the clock it happened at. Args are copied
+// NOW because the action may mutate the arrays it was handed. Returns the entry
+// so the caller can close it once the action has actually run.
+function flowRecord(fn,args){
+  try{
+    if(!_flow||!G)return null;
+    if(_flow.actions.length>=FLOW_MAX_ACTIONS){_flow.truncated=true;return null;}
+    const entry={
+      i:_flow.actions.length,
+      fn,
+      args:_flowScrub(_flow,args,_flow._names||new Set()),
+      half:G.half,secs:G.secs,
+      // Clock-derived, not a coach tap: the auto-sub the timer fired, or the
+      // period ending at full time. A replay must NOT re-apply these — running
+      // the clock to this point fires them again on its own, and applying them
+      // a second time would double-substitute.
+      auto:_flowInTick>0
+    };
+    _flow.actions.push(entry);
+    return entry;
+  }catch(e){return null;}
+}
+// Close an action entry with the state it PRODUCED. This fingerprint is what
+// lets a replay say "diverged at step 12" instead of just "different", so it
+// has to be taken after the call returns — capturing it before (the first cut
+// of this code) silently recorded every action's *input* state and made every
+// replay look like it diverged at the first substitution.
+function flowSeal(entry){
+  try{
+    if(!entry||!G)return;
+    entry.after={on:[...(G.on||[])],bench:[...(G.bench||[])],gk:G.gk,atBreak:!!G.atBreak,running:!!G.running};
+    entry.halfAfter=G.half;entry.secsAfter=G.secs;
+  }catch(e){}
+}
+
+// Keep the flow's tail state current and persist (debounced — saveActiveGame
+// fires on nearly every mutation and a localStorage write per tick is wasteful).
+function flowUpdate(snap){
+  try{
+    if(!_flow||!snap)return;
+    _flowPending=snap;
+    if(_flowSaveT)return;
+    // Build the result and write it once per window, not on every call —
+    // saveActiveGame fires after every mutation and every 5s of game time, and
+    // the scrub walks the whole playing-time map and match log each time.
+    _flowSaveT=setTimeout(()=>{_flowSaveT=null;flowFlush();},1500);
+  }catch(e){}
+}
+// Fold the newest snapshot into the flow's tail state (scores, final line-up,
+// playing time, match log) with names scrubbed.
+function _flowDrain(){
+  const s=_flowPending; _flowPending=null;
+  if(!_flow||!s)return;
+  const g=s.G||{};
+  const names=_flow._names||new Set();
+  _flow.endedAt=new Date().toISOString();
+  _flow.result={
+    half:g.half,secs:g.secs,
+    scoreUs:g.scoreUs||0,scoreThem:g.scoreThem||0,
+    on:[...(g.on||[])],bench:[...(g.bench||[])],gk:g.gk,
+    pt:_flowScrub(_flow,g.pt||{},names),
+    log:_flowScrub(_flow,g.log||[],names)
+  };
+}
+// Write the in-progress flow into the stored library (most recent first).
+// Draining first means a direct flowFlush() always persists everything pending,
+// so an export never ships a flow missing its final state.
+function flowFlush(){
+  try{
+    if(!_flow)return;
+    _flowDrain();
+    const store=({..._flow});
+    delete store._alias; delete store._names;   // never persist the real-name map
+    const all=loadFlows().filter(f=>f.id!==store.id);
+    all.unshift(store);
+    saveFlows(all.slice(0,FLOW_MAX_GAMES));
+  }catch(e){}
+}
+
+// Install the recording wrappers. Each listed function is replaced by a version
+// that records the call (top-level only) then delegates. Wrapping beats editing
+// 30 call sites, and a throw inside the recorder can never reach the app.
+const FLOW_ACTIONS=[
+  // clock + period flow
+  'tog','advH','startNextPeriod','resetHalf',
+  // substitutions
+  'trigSub','confSub','manualSub','undoLastSub','injurySub','confInjury','tapBenchForInjury',
+  // on-pitch interaction
+  'tapFieldPlayer','swapFieldPositions','setGameMode',
+  // Plan-page setup (doubles as the 2nd-half setup at a break)
+  'setPlanKeeper','planClearField','planAddStarter','planRemoveStarter',
+  'planAutoFillStarters','planFinishStarters',
+  'planScrubStep','planScrubLive','planScrubJump',
+  // configuration changed mid-game
+  'pickSubStrategy','selectGameFormation','selectOppFormation','setPlanFormation',
+  // scoring
+  'adjScore','aflScore','aflUndo','chooseScorer','chooseAssist',
+  // navigation + lifecycle
+  'switchToView','resumeActiveGame'
+];
+function flowInstall(){
+  FLOW_ACTIONS.forEach(name=>{
+    const orig=window[name];
+    if(typeof orig!=='function'||orig.__flowWrapped)return;
+    const wrapped=function(){
+      let entry=null;
+      const top=(_flowDepth===0);
+      if(top){ try{entry=flowRecord(name,Array.prototype.slice.call(arguments));}catch(e){} }
+      _flowDepth++;
+      try{ return orig.apply(this,arguments); }
+      finally{ _flowDepth--; if(entry){ try{flowSeal(entry);}catch(e){} } }
+    };
+    wrapped.__flowWrapped=true;
+    window[name]=wrapped;
+  });
+}
+
+// ===== FLOW EXPORT (the "send me the game" button) =====
+// Bundles the recorded games into one JSON payload. Share sheet on mobile,
+// file download on desktop, clipboard as the last resort.
+function flowExportPayload(which){
+  try{ flowFlush(); }catch(e){}   // the game in progress must export complete
+  const all=loadFlows();
+  const flows=(which==null)?all:all.filter(f=>f.id===which);
+  return {
+    kind:'sub-timer-flow',
+    v:FLOW_V,
+    app:APP_VERSION,
+    exportedAt:new Date().toISOString(),
+    ua:(navigator.userAgent||'').slice(0,180),
+    flows
+  };
+}
+function openFlowExport(){
+  renderFlowList();
+  document.getElementById('flowOv').classList.add('show');
+}
+function renderFlowList(){
+  const host=document.getElementById('flowList');
+  if(!host)return;
+  const flows=loadFlows();
+  if(!flows.length){
+    host.innerHTML='<div style="font-size:13px;color:#666;text-align:center;padding:18px 8px">No games recorded yet. Play a game and it\'s captured automatically.</div>';
+    return;
+  }
+  host.innerHTML=flows.map(f=>{
+    const d=new Date(f.startedAt||f.id);
+    const when=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'});
+    const r=f.result||{};
+    const score=(r.scoreUs!=null)?`${r.scoreUs}-${r.scoreThem}`:'—';
+    const live=(_flow&&_flow.id===f.id)?'<span style="color:#00d4aa;font-weight:800"> · recording</span>':'';
+    return `<div onclick="exportGameFlow(${f.id})" style="padding:10px 12px;border:1px solid #1e2a45;border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;background:#0a1628">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#eee">${f.format||'?'} · ${f.sport||''} · ${score}${live}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${when} · ${(f.actions||[]).length} actions · ${f.app||''}</div>
+      </div>
+      <span style="font-size:11px;font-weight:800;color:#00d4aa;letter-spacing:.3px;flex-shrink:0">SEND</span>
+    </div>`;
+  }).join('');
+}
+async function exportGameFlow(which){
+  const payload=flowExportPayload(which);
+  if(!payload.flows.length){ alert('No games recorded yet — play a game and the flow is captured automatically.'); return; }
+  const json=JSON.stringify(payload,null,2);
+  const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const filename=`sub-timer-flow-${stamp}.json`;
+  // Share sheet first: on a phone this is the only route that reaches Messages
+  // / Mail, which is how a coach actually sends this from the sideline.
+  try{
+    const file=new File([json],filename,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Sub Timer game flow'});
+      return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError')return; }
+  try{
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);
+    return;
+  }catch(e){}
+  try{ await navigator.clipboard.writeText(json); alert('Game flow copied to the clipboard — paste it into a message.'); }
+  catch(e){ alert('Could not export the game flow on this device.'); }
+}
+
+// ===== v2.8.8: DEV MODE — the test harness, inside the app =====
+// Every test script in this repo used to hand-roll its own "jump the game to
+// state X" helper, and they drifted from the real app: advancing G.secs without
+// G.elapsedMs produced screenshots showing 00:01 six minutes into a half. This
+// is ONE implementation of time travel that goes through tickSecond() — the
+// same per-second logic tickLoop runs — so a dev jump can't diverge from a
+// real game. Off unless ?dev=1 has been visited on this device.
+let devMode=false;
+let _devTimer=null;
+function loadDevMode(){
+  try{
+    const u=new URL(location.href);
+    const q=u.searchParams.get('dev');
+    if(q==='1'){ localStorage.setItem('subTimerDevMode','1'); }
+    else if(q==='0'){ localStorage.removeItem('subTimerDevMode'); }
+    if(q!==null){
+      // Strip the flag so a shared/bookmarked URL doesn't carry dev mode along.
+      u.searchParams.delete('dev');
+      history.replaceState(null,'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams:'')+u.hash);
+    }
+    devMode=localStorage.getItem('subTimerDevMode')==='1';
+  }catch(e){ devMode=false; }
+  applyDevMode();
+}
+function setDevMode(on){
+  devMode=!!on;
+  try{ on?localStorage.setItem('subTimerDevMode','1'):localStorage.removeItem('subTimerDevMode'); }catch(e){}
+  if(!on) document.getElementById('devOv').classList.remove('show');
+  applyDevMode();
+}
+function applyDevMode(){
+  const fab=document.getElementById('devFab');
+  if(fab) fab.style.display=devMode?'block':'none';
+  if(!devMode&&_devTimer){ clearInterval(_devTimer); _devTimer=null; }
+}
+function toggleDevPanel(){
+  if(!devMode) return;
+  const ov=document.getElementById('devOv');
+  const opening=!ov.classList.contains('show');
+  ov.classList.toggle('show',opening);
+  if(opening){
+    devFillFormats();
+    devRefresh();
+    if(!_devTimer) _devTimer=setInterval(devRefresh,400);   // live state readout
+  } else if(_devTimer){ clearInterval(_devTimer); _devTimer=null; }
+}
+function devFillFormats(){
+  const s=document.getElementById('devSeedFmt');
+  if(!s||s.options.length) return;
+  s.innerHTML=Object.keys(FORMATS).map(k=>`<option value="${k}">${k} · ${FORMATS[k].sport}</option>`).join('');
+  s.value='7v7';
+}
+
+// Stop the clock and put the DISPLAY source back in step with the game clock.
+// renderG paints from G.elapsedMs while tickSecond only moves G.secs (the live
+// rAF loop is what normally reconciles them) — skipping this is exactly the bug
+// that made hand-rolled test harnesses show the wrong time.
+function devFreezeClock(){
+  if(!G) return;
+  if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; }
+  G.running=false; G.lastTs=null;
+  G.elapsedMs=G.secs*1000;
+}
+// Advance to (period, secs) by running the real per-second logic. Subs fire and
+// minutes accrue exactly as they would live. Returns false if the target is in
+// the past and can't be reached.
+function devAdvanceTo(period,secs){
+  if(!G) return false;
+  const periodCount=(getSport(currentTeam).periodCount)||2;
+  period=Math.max(1,Math.min(period,periodCount));
+  secs=Math.max(0,Math.min(secs,(cfg.hm||0)*60));
+  // Going backwards inside the current period: restore this period's kickoff
+  // snapshot, then simulate forward. Backwards ACROSS periods isn't supported —
+  // nothing records enough history to rebuild an earlier period faithfully.
+  // At a break the game sits at the END of G.half, so measure from there —
+  // treating the break as "G.secs" made a rewind request from half-time neither
+  // happen nor get refused; it silently did nothing.
+  const curSecs=G.atBreak?(cfg.hm||0)*60:G.secs;
+  const behind=(period<G.half)||(period===G.half&&secs<curSecs);
+  if(behind){
+    if(period!==G.half||!G._halfStart) return false;
+    const s=G._halfStart;
+    G.on=[...s.on]; G.bench=[...s.bench]; G.gk=s.gk; G.pt={...s.pt};
+    G.pairs=s.pairs.map(p=>({on:[...p.on]})); G.pairIdx=s.pairIdx;
+    G.secs=0; G.sd=[]; G.lastSub=null; G.ps=null; G.atBreak=false;
+    devFreezeClock();
+  }
+  let guard=0;
+  while(G&&guard++<200000){
+    if(G.atBreak){
+      if(G.half>=period) break;      // the break we were asked for
+      startNextPeriod(); devFreezeClock(); continue;
+    }
+    if(G.half>period) break;
+    if(G.half===period&&G.secs>=secs) break;
+    G.running=true;
+    const ended=tickSecond();
+    devFreezeClock();
+    if(ended&&G.half>=period) break;
+  }
+  devFreezeClock();
+  saveActiveGame();
+  renderG();
+  return true;
+}
+function devJump(){
+  if(!G){ alert('No game in progress — seed one first.'); return; }
+  const p=parseInt(document.getElementById('devJumpP').value,10)||1;
+  const m=parseInt(document.getElementById('devJumpM').value,10)||0;
+  if(!devAdvanceTo(p,m*60)) alert('Can\'t rewind into an earlier period — only within the current one.');
+  devRefresh();
+}
+function devSkipToBreak(){
+  if(!G) return;
+  devAdvanceTo(G.atBreak?G.half+1:G.half,(cfg.hm||0)*60);
+  devRefresh();
+}
+function devSkipToFullTime(){
+  if(!G) return;
+  devAdvanceTo((getSport(currentTeam).periodCount)||2,(cfg.hm||0)*60);
+  devRefresh();
+}
+function devSeedGame(){
+  const fmtKey=document.getElementById('devSeedFmt').value||'7v7';
+  const sportKey=FORMATS[fmtKey].sport;
+  if(G){ if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; } G.running=false; }
+  G=null;
+  teams=loadTeams();
+  newTeam(); pickSport(sportKey); pickFormat(fmtKey,sportKey); fillSampleSquad();
+  const inp=document.getElementById('teamNameInput'); if(inp) inp.value='DEV '+fmtKey;
+  saveAndBack();
+  selectTeam(teams[teams.length-1].id);
+  startFromSquad();
+  devFreezeClock();
+  renderG();
+  devRefresh();
+}
+
+// --- in-app flow replay ------------------------------------------------------
+let _devFlow=null, _devFlowIdx=0;
+function devFlowStatus(msg){ const e=document.getElementById('devFlowStatus'); if(e) e.textContent=msg; }
+function devFlowLoad(){
+  const raw=(document.getElementById('devFlowJson').value||'').trim();
+  if(!raw){ devFlowStatus('Paste a flow first.'); return; }
+  let j; try{ j=JSON.parse(raw); }catch(e){ devFlowStatus('Not valid JSON: '+e.message); return; }
+  const flow=Array.isArray(j)?j[0]:(j.flows?j.flows[0]:j);
+  if(!flow||!flow.actions){ devFlowStatus('No flow found in that JSON.'); return; }
+  _devFlow=flow; _devFlowIdx=0;
+  // Rebuild the game the flow started from, same as test/replay.mjs does.
+  const s=flow.setup||{};
+  const fmtKey=flow.format, sportKey=(FORMATS[fmtKey]||{}).sport||flow.sport;
+  if(G){ if(G.raf){ try{cancelAnimationFrame(G.raf);}catch(e){} G.raf=null; } G.running=false; }
+  G=null; teams=loadTeams();
+  newTeam(); pickSport(sportKey); pickFormat(fmtKey,sportKey); fillSampleSquad();
+  const squad=s.squad||[];
+  if(squad.length){
+    editingTeam.players=squad.map(p=>p.name);
+    editingTeam.numbers={}; editingTeam.positions={};
+    squad.forEach(p=>{ if(p.number) editingTeam.numbers[p.name]=p.number; if(p.pos&&p.pos.length) editingTeam.positions[p.name]=[...p.pos]; });
+  }
+  const inp=document.getElementById('teamNameInput'); if(inp) inp.value='FLOW '+fmtKey;
+  saveAndBack();
+  selectTeam(teams[teams.length-1].id);
+  if(s.cfg) Object.assign(cfg,s.cfg);
+  if(Array.isArray(s.luOrd)&&s.luOrd.length) luOrd=[...s.luOrd];
+  if(Array.isArray(s.rotPairs)) rotPairs=s.rotPairs.map(p=>({on:[...p.on]}));
+  if(s.gk1!=null) gk1=s.gk1;
+  if(s.gk2!=null){ gk2=s.gk2; gk2Explicit=!!s.gk2Explicit; }
+  startFromSquad();
+  if(Array.isArray(s.initialOn)&&s.initialOn.length){
+    G.on=[...s.initialOn]; G.bench=[...(s.initialBench||[])];
+    if(s.initialGk!==undefined) G.gk=s.initialGk;
+  }
+  if(s.subStrategy) G.subStrategy=s.subStrategy;
+  if(s.subPlan) G.subPlan=JSON.parse(JSON.stringify(s.subPlan));
+  devFreezeClock();
+  renderG(); devRefresh();
+  devFlowStatus(`Loaded ${flow.actions.length} actions (${flow.format} · ${flow.app||'?'}). Step or Play.`);
+}
+function devFlowStep(){
+  if(!_devFlow){ devFlowStatus('No flow loaded.'); return false; }
+  if(_devFlowIdx>=_devFlow.actions.length){ devFlowStatus('Flow finished.'); return false; }
+  const a=_devFlow.actions[_devFlowIdx++];
+  if(a.half!=null&&a.secs!=null) devAdvanceTo(a.half,a.secs);
+  // Clock-fired actions are reproduced BY the clock advance above; re-applying
+  // them would double-substitute.
+  if(!a.auto&&a.fn!=='__resumed'&&typeof window[a.fn]==='function'){
+    try{ window[a.fn].apply(window,a.args||[]); }catch(e){ devFlowStatus('Step '+a.i+' ('+a.fn+') threw: '+e.message); }
+  }
+  devFreezeClock(); renderG(); devRefresh();
+  devFlowStatus(`Step ${_devFlowIdx}/${_devFlow.actions.length} — ${a.fn}()${a.auto?' [auto]':''} at P${a.half} ${Math.floor((a.secs||0)/60)}:${String((a.secs||0)%60).padStart(2,'0')}`);
+  return _devFlowIdx<_devFlow.actions.length;
+}
+function devFlowPlay(){
+  if(!_devFlow) return;
+  const tick=()=>{ if(devFlowStep()) setTimeout(tick,420); };
+  tick();
+}
+
+function devRefresh(){
+  const host=document.getElementById('devState');
+  if(!host) return;
+  if(!G){ host.textContent='No game in progress.'; return; }
+  const nm=i=>(avail&&avail[i]!=null)?avail[i]:('#'+i);
+  const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  const pairs=(G.pairs||[]).map(p=>'['+(p.on||[]).map(nm).join(', ')+']').join(' ')||'—';
+  const pt=avail?avail.map(n=>`${n} ${mm(G.pt[n]||0)}`).join(' · '):'—';
+  host.innerHTML=[
+    `period <b style="color:#a78bfa">${G.half}</b> / ${(getSport(currentTeam).periodCount)||2}` +
+      `  clock <b style="color:#a78bfa">${mm(G.secs)}</b>` +
+      (G.atBreak?'  <b style="color:#f0a500">AT BREAK</b>':'')+(G.running?'  <b style="color:#00d4aa">RUNNING</b>':''),
+    `on: ${(G.on||[]).map(nm).join(', ')||'—'}`,
+    `bench: ${(G.bench||[]).map(nm).join(', ')||'—'}`,
+    `gk: <b style="color:#e94560">${G.gk!=null?nm(G.gk):'none'}</b>` +
+      `   gk2: ${gk2!=null?nm(gk2):'none'}${gk2Explicit?' <b style="color:#00d4aa">(explicit)</b>':' (default)'}`,
+    `pairs: ${pairs}   pairIdx ${G.pairIdx}`,
+    `subs done this period: [${(G.sd||[]).map(mm).join(', ')}]`,
+    `strategy: ${G.subStrategy}   half ${cfg.hm}min   sub every ${cfg.sf}min ×${cfg.sc}`,
+    `mins: ${pt}`
+  ].join('<br>');
 }
 
 // ===== SPORTS (multi-sport core) =====
@@ -1714,6 +2409,18 @@ function _logBreakName(e){
   const q=_logCtxSport.key==='netball'||_logCtxSport.key==='basketball'||_logCtxSport.key==='afl';
   if(q)return p===1?'Quarter Time':p===2?'Halftime':p===3?'Three-Quarter Time':'Break';
   return 'Halftime';
+}
+// v2.8.9: bookkeeping entries the match log has no row for. Left unfiltered they
+// still drew a row — the sub_strategy entry recorded at kickoff put a blank line
+// with a "1H 00:00" timestamp at the top of every game log.
+const LOG_SILENT_TYPES={sub_strategy:1};
+function _logRenders(e){ return !!e && !LOG_SILENT_TYPES[e.type]; }
+// The time column. A break, and the rotation applied AT that break, read "HT" /
+// "Q3" rather than a clock time inside the period that just finished.
+function _logTimeLabel(e){
+  if(e.type==='halftime'||e.type==='period_end') return _logBreakLabel(e);
+  if(e.atBreak) return _logBreakLabel({period:e.half});
+  return _logPeriodLabel(e.half)+' '+fmt(e.time);
 }
 const POS_TYPES=SPORTS.soccer.positions; // legacy alias for soccer-only callsites
 function getPlayerPos(team,name){ return (team.positions&&team.positions[name])||[]; }
@@ -2069,6 +2776,11 @@ let curFmt='7v7';
 let curFormation='2-3-1';
 let cfg={hm:20,sf:5,sc:2,subStrategy:'fair',breaksOnly:false};
 let avail=[],luOrd=[],swI=null,gk1=null,gk2=null;
+// v2.8.7: did the coach actually CHOOSE a 2nd-half keeper, or is gk2 just the
+// auto-default? gk2 defaults to player index 1 while gk1 defaults to 0, so
+// without this every keeper-format game would look like a halftime keeper
+// change was requested. Only an explicit pick arms the swap.
+let gk2Explicit=false;
 let rotPairs=[]; // [[onFieldIdx,benchIdx], ...] — paired rotation groups
 let pairSel=null; // for re-pairing: {pairIdx, slot:'on'|'bench'}
 let G=null; // game state
@@ -3244,12 +3956,56 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.8.5-beta';
+const APP_VERSION='v2.9.4-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.4-beta':{
+    title:'Fixed: you can sign in again',
+    items:['If you had any team saved, there was no way to sign in \u2014 the sign-in button only appeared on the empty welcome screen, so it disappeared the moment you created your first team. If you were already signed in, there was no way to sign out either. Cloud sync has been unreachable for anyone with a team.','<strong>Sign in</strong> now lives in the menu (\u2630), on every screen, and shows your account when you\u2019re signed in.']
+  },
+  'v2.9.3-beta':{
+    title:'Works at grounds with no signal',
+    items:['The app now opens and runs with no reception at all. Before this, a cold start at a ground with no signal showed the browser\u2019s offline page \u2014 which is the one place you actually need it.','The digital clock font is now built into the app instead of being fetched. On a poor connection the clock used to fall back to plain text, so the scoreboard look just wasn\u2019t there.','The 3D pitch still needs a connection; without one you get the flat pitch, which works exactly the same for subs and timing.']
+  },
+  'v2.9.2-beta':{
+    title:'Tightening the look, and a note about the pitch',
+    items:['Nothing you\u2019ll notice day to day \u2014 a few one-off corner radii were snapped back onto the standard set so buttons and cards match each other exactly.','Flagged for a proper fix: the player chips on the pitch carry the smallest text in the app, and on AFL (18 players) they drop to 7px. That\u2019s the one thing you read at a glance mid-game, so it shouldn\u2019t be the hardest to read. Working out how to fix it without losing players off the pitch.']
+  },
+  'v2.9.1-beta':{
+    title:'Fixed a stray invisible button, and an accessibility check',
+    items:['Removed an invisible 4\u00d74 pixel button on the Home screen \u2014 a leftover from when Match History moved into the team menu. It did nothing visible but was still tappable.','Behind the scenes: an automated accessibility check now runs on every change. Every button and control must have a name a screen reader can announce, and the number of controls smaller than Apple\u2019s 44pt minimum can only go down from here.']
+  },
+  'v2.9.0-beta':{
+    title:'Housekeeping: a written policy for your team\'s data',
+    items:['No change to how the app works. There is now a written record of exactly what Sub Timer stores, what leaves your phone and what does not — plus an automated check so a future feature can\'t quietly start storing something new without it being written down. Game recordings you send for bug reports already replace player names with "Player 1, 2, 3…".']
+  },
+  'v2.8.9-beta':{
+    title:'The match log now reads the way the game happened',
+    items:[
+      'The half-time change used to appear as two substitutions at <strong>1H 20:00</strong> — the last second of the first half, listed <em>above</em> the Halftime line — even though those players never took the field in the first half. It now reads <strong>HT</strong>, under Halftime, where it belongs. Both halves show the same clean run of sub times.',
+      'Removed the blank line that sat at the top of every match log.',
+      'Injury subs, half resets and opposition-shape changes now show properly in the log instead of appearing as empty rows.'
+    ]
+  },
+  'v2.8.8-beta':{
+    title:'Dev mode (for testing — you won\'t see this)',
+    items:['A hidden test panel for reproducing bugs: seed a game, jump the clock to any period and minute, replay a game flow step by step, and watch the live game state. Enabled only by visiting the app with <strong>?dev=1</strong> on your own device, and switched off from inside the panel. No coach will ever see it.']
+  },
+  'v2.8.7-beta':{
+    title:'Fixed: your 2nd-half keeper now actually goes in goal',
+    items:[
+      'The <strong>2nd Half GK</strong> setting had never been connected to anything. You could pick a second-half keeper, it saved, and the Plan page even showed you a "HALFTIME GK SWAP" line — but when the second half kicked off your first-half keeper was still in goal. That player now takes the gloves at the break, coming off the bench if that\'s where they were.',
+      'It only swaps when you\'ve actually <strong>chosen</strong> a second-half keeper. The setting used to pre-fill itself with a different player than your first-half keeper, so honouring that would have started changing keepers in everyone\'s games. Leave it alone and nothing changes.',
+      'Fixed: at half-time (and every quarter break) the Plan page was replaying <em>the half that just finished</em> — stepping through the upcoming subs showed times that had already been and gone, and the projected minutes for the rest of the game were worked out from a line-up that never took the field. It now starts from the period you\'re about to play.'
+    ]
+  },
+  'v2.8.6-beta':{
+    title:'Hit a bug? Send me the game',
+    items:['Every game you play is now recorded as a <strong>game flow</strong> — the setup plus every tap, in order. If something goes wrong, open the menu and tap <strong>Send game flow</strong>: I can replay your exact game on my machine and see the bug happen, instead of guessing from a description. Player names are swapped for "Player 1, 2, 3…" before anything leaves your phone, and only the last 12 games are kept.']
+  },
   'v2.8.5-beta':{
     title:'Share your team with parents & co-coaches',
     items:['New <strong>Share team</strong> in the team menu — it makes a link that carries your whole setup: roster, positions, jersey numbers, format and game settings. Whoever opens it gets the team ready to go on their phone, no account needed — they just tap Play now. Got a link instead of sending one? There\'s also "Got a team link from your coach? Add it here" on the welcome screen.']
@@ -4330,13 +5086,11 @@ function renderHome(){
   // Toggle footer buttons + heading visibility based on state
   const heading=document.getElementById('teamsHeading');
   const newBtn=document.getElementById('newTeamBtn');
-  const histBtn=document.getElementById('historyBtn');
   const hdrBrand=document.getElementById('hdrBrand');
   const hdrTagline=document.getElementById('hdrTagline');
   const isLanding=teams.length===0&&!cloudUser;
   if(heading)heading.style.display=isLanding?'none':'';
   if(newBtn)newBtn.style.display=isLanding?'none':'';
-  if(histBtn)histBtn.style.display=isLanding?'none':'';
   // v2.7.84: legacy body-level Donate / Send-feedback elements now live in the drawer.
   // Keep them permanently hidden so they don't render as 1px-tall flex strips.
   const coffeeBtn=document.getElementById('coffeeBtn');
@@ -4695,6 +5449,11 @@ function importWelcomeClose(){
 
 function selectTeam(id){
   currentTeam=teams.find(t=>t.id==id);
+  // v2.8.7: a 2nd-half keeper choice belongs to the squad it was made for —
+  // gk1/gk2 are indices into THIS team's roster, so an explicit pick must not
+  // survive a team switch and hand the gloves to whoever happens to sit at
+  // that index in the new squad.
+  gk2Explicit=false;
   sel.clear();
   currentTeam.players.forEach((_,i)=>sel.add(i));
   if(currentTeam.format&&FORMATS[currentTeam.format]){
@@ -5604,7 +6363,7 @@ function removeAvailIndex(idx){
   if(Array.isArray(luOrd)) luOrd=purge(luOrd);
   rotPairs=purgePairs(rotPairs);
   if(gk1===idx) gk1=null; else if(gk1!=null) gk1=dec(gk1);
-  if(gk2===idx) gk2=null; else if(gk2!=null) gk2=dec(gk2);
+  if(gk2===idx){ gk2=null; gk2Explicit=false; } else if(gk2!=null) gk2=dec(gk2);
   avail.splice(idx,1);
 }
 function goSettings(){
@@ -5627,7 +6386,7 @@ function goSettings(){
 function updateGkSettings(){
   const fmt=FORMATS[curFmt];
   const sec=document.getElementById('gkSettingsSection');
-  if(!fmt.hasGk){ sec.style.display='none'; gk1=null; gk2=null; return; }
+  if(!fmt.hasGk){ sec.style.display='none'; gk1=null; gk2=null; gk2Explicit=false; return; }
   sec.style.display='';
   if(gk1===null) gk1=0;
   if(gk2===null) gk2=Math.min(1,avail.length-1);
@@ -5642,7 +6401,7 @@ function quickStart(){
   if(fmt.hasGk){
     if(gk1===null) gk1=0;
     if(gk2===null) gk2=Math.min(1,avail.length-1);
-  } else { gk1=null; gk2=null; }
+  } else { gk1=null; gk2=null; gk2Explicit=false; }
   smartAssign();
   buildPairs();
   // Start game directly
@@ -5865,7 +6624,11 @@ function generateAutoPlan(){
     simOn.forEach(p=>{simPt[p]+=elapsed;});
     lastMin=gameMin;
     // Halftime GK swap?
-    if(sport.key==='soccer'&&fmt.hasGk&&gameMin===cfg.hm&&gk1!==null&&gk2!==null&&gk1!==gk2){
+    // v2.8.7: only promise the halftime keeper change when the coach actually
+    // asked for one. gk2 auto-defaults to a different player than gk1, so this
+    // used to render "HALFTIME GK SWAP" on every keeper-format plan — a swap
+    // the live game never performed.
+    if(sport.key==='soccer'&&fmt.hasGk&&gk2Explicit&&gameMin===cfg.hm&&gk1!==null&&gk2!==null&&gk1!==gk2){
       events.push({type:'gk_swap',gameMin,off:gk1,on:gk2,half:1});
       if(simBench.includes(gk2)){
         simBench=simBench.filter(p=>p!==gk2);
@@ -5876,7 +6639,10 @@ function generateAutoPlan(){
     }
     if(subTimesGame.includes(gameMin)){
       const c=Math.min(cfg.sc,simBench.length);
-      const elig=fmt.hasGk&&gkIdx!==null?simOn.filter(p=>p!==gkIdx&&p!==gk2):simOn.slice();
+      // Hold gk2 out of the outfield rotation only when they really are going
+      // to take the gloves at halftime. Excluding an auto-defaulted gk2 pinned
+      // that player on the pitch for the whole game, never rotated.
+      const elig=fmt.hasGk&&gkIdx!==null?simOn.filter(p=>p!==gkIdx&&!(gk2Explicit&&p===gk2)):simOn.slice();
       // Off: highest minutes first (equal time)
       const off=[...elig].sort((a,b)=>simPt[b]-simPt[a]).slice(0,c);
       // On: lowest minutes first
@@ -6145,7 +6911,7 @@ function goLineup(){
   if(fmt.hasGk){
     if(gk1===null)gk1=0;
     if(gk2===null)gk2=Math.min(1,avail.length-1);
-  } else { gk1=null;gk2=null; }
+  } else { gk1=null;gk2=null; gk2Explicit=false; }
   smartAssign();
   buildPairs();renderS3();showScr('s3');
 }
@@ -6489,6 +7255,7 @@ function startGame(){
     startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
+  flowBegin();           // start recording this game as a replayable flow
   renderG();showScr('s4');
   renderSoundPicker(); // initialise the alert-chip label on the game screen
   saveActiveGame();
@@ -6540,6 +7307,12 @@ function subTs(){
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
 
 function renderG(){
+  // v2.8.7: two render passes are DEFERRED — confSub schedules one 1.7s out to
+  // clear the sub highlight, tapFieldPlayer one 1.2s out for the swap pulse.
+  // If the game is torn down in between (end game / discard / a fresh game
+  // rebuilt from the squad page), the timer still fires and every line below
+  // dereferences a null G. Nothing to draw without a game.
+  if(!G) return;
   const _sport=getSport(currentTeam);
   const curMs=G.running&&G.lastTs?G.elapsedMs+(performance.now()-G.lastTs):G.elapsedMs;
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(curMs/1000));
@@ -6881,36 +7654,50 @@ function updateClkSub(){
   if(lbl) lbl.style.color=d<=10?'#e94560':(d<=30?'#f0a500':'#00d4aa');
 }
 let _lastWholeSec=-1;
+// One whole second of game time: accrue playing minutes, fire any auto-sub due,
+// and end the period at full time. Returns true when the period ended (caller
+// must stop). Split out of tickLoop so the flow replayer can advance the clock
+// deterministically through the IDENTICAL logic — a replayed game and a live
+// game run the same code, which is the whole point of a replayable bug report.
+function tickSecond(){
+  _flowInTick++;   // actions fired from here are clock-derived, not coach taps
+  try{ return _tickSecondBody(); }
+  finally{ _flowInTick--; }
+}
+function _tickSecondBody(){
+  G.secs++;
+  G.on.forEach(p=>G.pt[avail[p]]++);
+  const ns=nxtST();
+  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
+    G.sd.push(ns);
+    // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
+    // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
+    // for any sub time; planned only when there's a matching plan event. Empty-plan
+    // 'planned' behaves like the old Manual — coach taps SUB to fire.
+    const strat=G.subStrategy||'fair';
+    let autoFire=(strat==='fair'||strat==='paired');
+    if(strat==='planned' && G.subPlan && G.subPlan.events){
+      const curMin=Math.floor(G.secs/60);
+      autoFire=G.subPlan.events.some(ev=>ev.type==='sub' && ev.half===G.half && ev.timeInHalf===curMin);
+    }
+    if(autoFire) trigSub();
+  }
+  if(G.secs>=cfg.hm*60){
+    G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
+    G.running=false;advH();saveActiveGame();
+    return true;
+  }
+  // Periodic checkpoint every 5s of game time so a refresh loses at most 5s
+  if(G.secs%5===0)saveActiveGame();
+  return false;
+}
 function tickLoop(now){
-  if(!G.running)return;
+  // Same reasoning as renderG: a queued frame can outlive the game object.
+  if(!G||!G.running)return;
   const totalMs=G.elapsedMs+(now-G.lastTs);
   const newSecs=Math.floor(totalMs/1000);
   // Process whole-second logic for any seconds we crossed
-  while(G.secs<newSecs){
-    G.secs++;
-    G.on.forEach(p=>G.pt[avail[p]]++);
-    const ns=nxtST();
-    if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
-      G.sd.push(ns);
-      // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
-      // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
-      // for any sub time; planned only when there's a matching plan event. Empty-plan
-      // 'planned' behaves like the old Manual — coach taps SUB to fire.
-      const strat=G.subStrategy||'fair';
-      let autoFire=(strat==='fair'||strat==='paired');
-      if(strat==='planned' && G.subPlan && G.subPlan.events){
-        const curMin=Math.floor(G.secs/60);
-        autoFire=G.subPlan.events.some(ev=>ev.type==='sub' && ev.half===G.half && ev.timeInHalf===curMin);
-      }
-      if(autoFire) trigSub();
-    }
-    if(G.secs>=cfg.hm*60){
-      G.elapsedMs=G.secs*1000;G.lastTs=performance.now();
-      G.running=false;advH();saveActiveGame();return;
-    }
-    // Periodic checkpoint every 5s of game time so a refresh loses at most 5s
-    if(G.secs%5===0)saveActiveGame();
-  }
+  while(G.secs<newSecs){ if(tickSecond()) return; }
   // Update display (whole seconds — centiseconds were too noisy and overflowed on iPhone)
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(totalMs/1000));
   ce.className='tmr-c';
@@ -7118,6 +7905,7 @@ function moveBenchDown(pIdx){
 //   swap   — tap two players to exchange positions (also sets starting line-up)
 //   keeper — tap a player to make them goalkeeper
 //   injury — tap the injured player, then tap who comes on from the bench
+let _breakRotation=false;   // true while advH() applies the period-break rotation
 let gameMode='swap';        // 'swap' | 'keeper' | 'injury'
 let fieldSwapSel=null;      // first player tapped in swap mode
 let injuryOffSel=null;      // injured player tapped, awaiting replacement pick
@@ -7306,7 +8094,10 @@ function confSub(){
   };
   const c=Math.min(off.length,on.length);
   for(let i=0;i<c;i++){
-    G.log.push({type:'sub',half:G.half,time:G.secs,off:avail[off[i]],on:avail[on[i]]});
+    // atBreak tags the rotation advH() applies at a period break, so the match
+    // log shows it under the break rather than as a sub at the death of the
+    // half the players never took part in.
+    G.log.push({type:'sub',half:G.half,time:G.secs,off:avail[off[i]],on:avail[on[i]],atBreak:_breakRotation||undefined});
   }
   // In-place swap: incoming player takes the position of the outgoing player
   for(let i=0;i<c;i++){
@@ -7392,14 +8183,23 @@ function advH(){
   // G.half holds the period number (1..N). After the final period, show summary.
   if(G.half<sport.periodCount){
     G.atBreak=true;
+    // v2.8.9: log the break HERE, before the rotation is applied. It used to be
+    // pushed by startNextPeriod(), which put it AFTER the rotation — so the
+    // match log read "1H 20:00 Quinn → Sam / 1H 20:00 Taylor → Jordan" and only
+    // then "Halftime". Those players never played the first half; that swap is
+    // the half-time change. Break first, then the change, is the true order.
+    G.log.push({type:'period_end',period:G.half,time:G.secs,scoreUs:G.scoreUs,scoreThem:G.scoreThem});
     // Get the 2nd-half line-up READY: auto-apply the recommended rotation so the
     // pitch already shows who's on for the next period. Undoable during the
     // break (Undo button), and the coach can still Swap/sub before starting.
     // Skip for manual / full-control — those coaches drive their own subs.
     const strat=G.subStrategy||'fair';
     if((strat==='fair'||strat==='paired') && G.bench.length){
-      trigSub();           // stage the recommended off/on (plays the break alert)
-      if(G.ps) confSub();  // apply it so the pitch shows the 2nd-half XI
+      _breakRotation=true;   // tags the resulting subs as belonging to the break
+      try{
+        trigSub();           // stage the recommended off/on (plays the break alert)
+        if(G.ps) confSub();  // apply it so the pitch shows the 2nd-half XI
+      } finally { _breakRotation=false; }
     } else {
       if(navigator.vibrate)navigator.vibrate([200,100,200]);
       try{playSubAlert();}catch(e){}
@@ -7408,11 +8208,46 @@ function advH(){
     renderG();
   }else showSum();
 }
+// v2.8.7: put the nominated 2nd-half keeper in goal at the start of the second
+// half. The "2nd Half GK" setting had never been wired to anything — it was
+// stored, persisted and rendered on the Plan page as "HALFTIME GK SWAP", but
+// nothing assigned it to G.gk, so the first-half keeper played the whole match.
+// Only an EXPLICIT pick fires (gk2Explicit); gk2 auto-defaults to a different
+// player than gk1, so honouring the default would silently start swapping
+// keepers in every existing game.
+function applySecondHalfKeeper(upcoming){
+  if(!G||!gk2Explicit||gk2==null)return;
+  const fmt=FORMATS[curFmt];
+  if(!fmt||!fmt.hasGk)return;
+  // Scoped to two-period sports, matching the setting's label and the Plan
+  // page's gk_swap event. Quarter sports change the keeper by tapping them at
+  // the break, which already works and doesn't need a "2nd half" rule.
+  const periodCount=(getSport(currentTeam).periodCount)||2;
+  if(periodCount!==2||upcoming!==2)return;
+  if(gk2===G.gk)return;                       // already in goal — nothing to do
+  const old=G.gk;
+  if(!G.on.includes(gk2)){
+    // Nominated keeper is benched: bring them on in the outgoing keeper's slot.
+    G.bench=(G.bench||[]).filter(p=>p!==gk2);
+    const slot=(old!=null)?G.on.indexOf(old):-1;
+    if(slot>=0){ G.on[slot]=gk2; G.bench.unshift(old); }
+    else if(G.on.length<Math.min(fmt.onField||99,avail.length)){ G.on.push(gk2); }
+    else { const off=G.on.pop(); if(off!=null) G.bench.unshift(off); G.on.push(gk2); }
+  }
+  G.gk=gk2;
+  // The new keeper leaves the outfield rotation and the old one rejoins it —
+  // same remapping swapFieldPositions does for an on-pitch keeper change.
+  if(G.pairs&&G.pairs.length&&old!=null){
+    G.pairs.forEach(pair=>{ pair.on=pair.on.map(p=>p===gk2?old:p); });
+  }
+  if(old!=null) G.log.push({type:'gk',half:upcoming,time:0,off:avail[old],on:avail[gk2]});
+}
 // Tapping the primary button while at the break starts the next period.
 function startNextPeriod(){
   if(!G||!G.atBreak)return;
-  G.log.push({type:'period_end',period:G.half,time:G.secs,scoreUs:G.scoreUs,scoreThem:G.scoreThem});
+  // The period_end entry is logged by advH() when the break begins — see there.
   G.half++;
+  applySecondHalfKeeper(G.half);   // before the snapshot, so RESET restores it
   G.secs=0;G.elapsedMs=0;G.lastTs=null;G.sd=[];G.pairIdx=0;
   G.lastSub=null;   // undo doesn't cross the period boundary
   G.atBreak=false;
@@ -7474,13 +8309,19 @@ function showSum(){
   if(G.log.length===0){
     lc.innerHTML+='<div style="font-size:13px;color:#666;text-align:center">No events recorded</div>';
   } else {
-    G.log.forEach(e=>{
+    G.log.filter(_logRenders).forEach(e=>{
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
-      const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
+      const timeStr=_logTimeLabel(e);
       let icon='',detail='';
       if(e.type==='sub'){
         icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
+      } else if(e.type==='injury_sub'){
+        icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
+      } else if(e.type==='reset_half'){
+        icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
+      } else if(e.type==='opp_formation'){
+        icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;
       } else if(e.type==='gk'){
         icon=ic('target',14,'#e94560');detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#e94560">${fn(e.on)}</span>`;
       } else if(e.type==='goal'){
@@ -7617,12 +8458,15 @@ function showMatchDetail(m){
   lhdr.textContent='Game Log';lc.appendChild(lhdr);
   const teamName=m.team?m.team.split(' ')[0]:'Us';
   if(m.log&&m.log.length){
-    m.log.forEach(e=>{
+    m.log.filter(_logRenders).forEach(e=>{
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
-      const timeStr=(e.type==='halftime'||e.type==='period_end')?_logBreakLabel(e):_logPeriodLabel(e.half)+' '+fmt(e.time);
+      const timeStr=_logTimeLabel(e);
       let icon='',detail='';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
+      else if(e.type==='injury_sub'){icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;}
+      else if(e.type==='reset_half'){icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;}
+      else if(e.type==='opp_formation'){icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;}
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
       else if(e.type==='goal'){icon=ic('goal',14,e.afl==='behind'?'#5bc0de':'#00d4aa');detail=e.who==='us'?(e.afl==='behind'?`${teamName} behind`:(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`)):('Opposition '+(e.afl==='behind'?'behind':'goal'));if(e.who==='us'&&e.afl!=='behind'&&e.assist)detail+=` · assist ${fn(e.assist)}`;}
       else if(e.type==='halftime'||e.type==='period_end'){icon=ic('pause',14,'#888');detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}
@@ -8305,7 +9149,7 @@ function snapshotCurrentPlan(name){
     subStrategy:G?G.subStrategy:cfg.subStrategy,
     subPlan:(cfg.subPlan?JSON.parse(JSON.stringify(cfg.subPlan)):null),
     luOrd:G?[...G.on, ...G.bench]:[...(luOrd||[])],   // starting XI then bench
-    gk1, gk2,
+    gk1, gk2, gk2Explicit,
     rotPairs:(G&&G.pairs)?G.pairs.map(p=>({on:[...p.on]})):(rotPairs||[]).map(p=>({on:[...p.on]}))
   };
 }
@@ -8327,7 +9171,7 @@ function applyPlanProfile(plan){
       G.bench=plan.luOrd.slice(onCount);
     }
     if(plan.gk1!=null) gk1=plan.gk1;
-    if(plan.gk2!=null) gk2=plan.gk2;
+    if(plan.gk2!=null){ gk2=plan.gk2; gk2Explicit=!!plan.gk2Explicit; }
     if(plan.rotPairs && plan.rotPairs.length){
       G.pairs=plan.rotPairs.map(p=>({on:[...p.on]}));
     }
@@ -8538,7 +9382,7 @@ function setPlanKeeper(idx){
   }
   G.gk=idx;
   const upcoming=G.atBreak?G.half+1:G.half;
-  if(upcoming<=1) gk1=idx; else gk2=idx;
+  if(upcoming<=1) gk1=idx; else { gk2=idx; gk2Explicit=true; }   // tapping a keeper IS an explicit pick
   if(planSetupPhase()) commitPlanLineup();  // keep the keeper out of the rotation pairs
   saveActiveGame();
   renderPlanRosterOverview();
@@ -8835,6 +9679,16 @@ function buildPlanTimeline(){
   const periodCount=sport.periodCount||2;
   const hmSec=(cfg.hm||0)*60, sfSec=(cfg.sf||1)*60;
 
+  // v2.8.7: at a period break G.half is still the period that just FINISHED —
+  // startNextPeriod() is what increments it. Simulating from G.half therefore
+  // regenerated the finished half's sub slots as if they were still to come:
+  // scrubbing forward at half-time previewed period-1 sub points that had
+  // already happened, and the whole 2nd-half projection was computed from a
+  // line-up that never existed. Everything below keys off the period the game
+  // is about to play, not the one it just left.
+  const curP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+  const curSecs=G.atBreak?0:G.secs;
+
   let simOn=[...G.on], simBench=[...G.bench];
   const simPt=Object.assign({},G.pt);
   const events=[];
@@ -8844,27 +9698,27 @@ function buildPlanTimeline(){
   // they came on ('on then straight off'). Track a global clock (seconds since
   // kickoff) and, per player, when they last came on / off so equal-minute ties
   // break by "been on longest comes off" and "been waiting longest comes on".
-  let simClock=(G.half-1)*hmSec + ((G.half===G.half)?G.secs:0);
+  let simClock=(curP-1)*hmSec + curSecs;
   const onSince={}, offSince={};
   simOn.forEach(pl=>{ onSince[pl]=simClock; });
   simBench.forEach(pl=>{ offSince[pl]=simClock; });
 
   // Past — read confirmed swaps from the log. State-after isn't recorded for
   // history (would need to invert from current), so scrub only walks future.
-  for(let p=1;p<G.half;p++){
+  for(let p=1;p<curP;p++){
     (G.log||[]).filter(e=>e.type==='sub'&&e.half===p).forEach(e=>{
       events.push({period:p,time:e.time,off:[e.off],on:[e.on],done:true,past:true});
     });
   }
 
-  for(let p=G.half;p<=periodCount;p++){
-    let simSecs=(p===G.half)?G.secs:0;
+  for(let p=curP;p<=periodCount;p++){
+    let simSecs=(p===curP)?curSecs:0;
     const times=[]; for(let t=sfSec;t<hmSec;t+=sfSec) times.push(t);
     if(strat==='planned' && G.subPlan && G.subPlan.events && G.subPlan.events.length){
       const planEvts=G.subPlan.events.filter(e=>e.type==='sub' && e.half===p).sort((a,b)=>a.timeInHalf-b.timeInHalf);
       planEvts.forEach(ev=>{
         const t=ev.timeInHalf*60;
-        const done=(p===G.half)&&G.sd.includes(t);
+        const done=(p===curP)&&G.sd.includes(t);
         const off=ev.off||[], on=ev.on||[];
         const cc=Math.min(off.length,on.length);
         const slicedOff=off.slice(0,cc), slicedOn=on.slice(0,cc);
@@ -8877,7 +9731,7 @@ function buildPlanTimeline(){
         const dt=Math.max(0,t-simSecs);
         simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt; });
         simSecs=t; simClock=(p-1)*hmSec+t;
-        const done=(p===G.half)&&G.sd.includes(t);
+        const done=(p===curP)&&G.sd.includes(t);
         if(simBench.length===0){
           events.push({period:p,time:t,off:[],on:[],done,note:'no bench',stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
           return;
@@ -8940,7 +9794,12 @@ function getPlanScrubState(){
   const tl=_planTimeline;
   const futureEvents=tl?tl.events.filter(e=>!e.past):[];
   if(_planScrubIdx<=0||!futureEvents.length){
-    return {on:[...G.on], bench:[...G.bench], period:G.half, time:G.secs, idx:0, total:futureEvents.length, isLive:true};
+    // v2.8.7: at a break the pitch already shows the NEXT period's line-up
+    // (advH pre-applies the rotation), so label it with the period about to be
+    // played rather than the one that just ended — matching buildPlanTimeline.
+    const periodCount=(getSport(currentTeam).periodCount)||2;
+    const liveP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+    return {on:[...G.on], bench:[...G.bench], period:liveP, time:G.atBreak?0:G.secs, idx:0, total:futureEvents.length, isLive:true};
   }
   const N=Math.min(_planScrubIdx,futureEvents.length);
   const ev=futureEvents[N-1];
@@ -8971,8 +9830,13 @@ function computeProjectedMinutes(){
   const future=_planTimeline.events.filter(e=>!e.past);
   const byPeriod=new Map();
   future.forEach(ev=>{ if(!byPeriod.has(ev.period)) byPeriod.set(ev.period,[]); byPeriod.get(ev.period).push(ev); });
-  for(let p=G.half;p<=periodCount;p++){
-    let simSecs=(p===G.half)?G.secs:0;
+  // v2.8.7: same break correction as buildPlanTimeline — at a break the period
+  // still to be played is G.half+1, so projecting from G.half double-counted
+  // the finished period and started the 2nd half from the wrong roster.
+  const curP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+  const curSecs=G.atBreak?0:G.secs;
+  for(let p=curP;p<=periodCount;p++){
+    let simSecs=(p===curP)?curSecs:0;
     const evs=byPeriod.get(p)||[];
     evs.forEach(ev=>{
       const dt=Math.max(0,ev.time-simSecs);
@@ -9175,6 +10039,7 @@ function openDrawer(menuId){
     block.innerHTML=`
       <button onclick="closeAnyDrawer();openSoundPicker&&openSoundPicker()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span style="flex:1">Sub-alert sound</span><span style="font-size:11px;color:#5bc0de;font-weight:800;letter-spacing:.3px">${pack.label}</span></button>
       <button onclick="closeAnyDrawer();openHelp&&openHelp()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help &amp; gestures</button>
+      <button class="drawer-auth" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19.5a9 9 0 1 0-11 0"/><circle cx="12" cy="10" r="3.2"/></svg><span class="drawer-auth-label">Sign in</span></button>
     `;
     // Insert before the drawer-donate footer if it exists; otherwise append.
     const footer=m.querySelector('.drawer-donate');
@@ -9187,9 +10052,31 @@ function openDrawer(menuId){
     foot.style.cssText='margin-top:auto;border-top:1px solid #1e2a45;padding-top:8px;display:flex;flex-direction:column;gap:2px';
     foot.innerHTML=`
       <button onclick="closeAnyDrawer();openFeedback&&openFeedback()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Send feedback</button>
+      <button onclick="closeAnyDrawer();openFlowExport&&openFlowExport()" style="width:100%;padding:13px 14px;background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:700;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6M3 13h4M17 13h4M3 6.5 6 8M21 6.5 18 8M3 19.5 6 18M21 19.5 18 18"/></svg>Send game flow</button>
       <a href="https://buymeacoffee.com/spettet" target="_blank" rel="noopener" onclick="closeAnyDrawer()" style="width:100%;padding:13px 14px;background:rgba(255,196,40,.08);border:1px solid rgba(255,196,40,.4);color:#ffc428;font-size:14px;font-weight:800;text-align:left;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;font-family:inherit;text-decoration:none;letter-spacing:.3px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>Donate</a>
     `;
     m.appendChild(foot);
+  }
+  // v2.9.4: refresh the auth row every time the drawer opens. The settings block
+  // is injected once and cached, but sign-in state changes underneath it — baked
+  // once, it would say "Sign in" to someone who just signed in.
+  const authBtn=m.querySelector('.drawer-auth');
+  if(authBtn){
+    const lbl=authBtn.querySelector('.drawer-auth-label');
+    if(cloudUser){
+      const email=cloudUser.email||'cloud';
+      if(lbl) lbl.textContent='Sign out ('+(email.split('@')[0]||'me')+')';
+      authBtn.onclick=()=>{ closeAnyDrawer(); signOutCloud(); };
+    } else if(!sb){
+      // Supabase comes from a CDN; offline there is no client at all. Say so
+      // rather than opening a form that can only fail.
+      if(lbl) lbl.textContent='Sign in — needs a connection';
+      authBtn.disabled=true; authBtn.style.opacity='.45'; authBtn.style.cursor='default';
+    } else {
+      if(lbl) lbl.textContent='Sign in for cloud sync';
+      authBtn.disabled=false; authBtn.style.opacity=''; authBtn.style.cursor='pointer';
+      authBtn.onclick=()=>{ closeAnyDrawer(); document.getElementById('authOv').classList.add('show'); };
+    }
   }
   m.classList.add('drawer-open');
   const sc=document.getElementById('appDrawerScrim'); if(sc) sc.classList.add('on');
@@ -9281,8 +10168,10 @@ function renderSubOrder(){
   html.push(`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start">`);
   for(let p=1;p<=periodCount;p++){
     const batches=sectionsByPeriod.get(p)||[];
-    const isCurrent=(p===G.half);
-    const titleCol=isCurrent?'#00d4aa':(p<G.half?'#666':'#9fb3c8');
+    // v2.8.7: at a break "NOW" belongs to the period about to be played.
+    const nowP=G.atBreak?Math.min(G.half+1,periodCount):G.half;
+    const isCurrent=(p===nowP);
+    const titleCol=isCurrent?'#00d4aa':(p<nowP?'#666':'#9fb3c8');
     html.push(`<div>`);   // period column
     html.push(`<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px"><div style="flex:1;height:1px;background:#1e2a45"></div><div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:${titleCol};text-transform:uppercase">${periodLbl(p)}${isCurrent?' · NOW':''}</div><div style="flex:1;height:1px;background:#1e2a45"></div></div>`);
     if(!batches.length){
@@ -9342,6 +10231,21 @@ function renderSubOrder(){
 setTimeout(()=>{ const s=document.getElementById('launchSplash'); if(s) s.remove(); }, 1700);
 // v2.7.71: paint the bottom tab bar on initial load so it's visible from the first frame.
 if(typeof renderViewSwitcher==='function') renderViewSwitcher();
+// v2.8.6: install the game-flow recorder LAST — the wrappers replace the real
+// functions, so every one of them must already be defined.
+try{ flowInstall(); }catch(e){}
+// v2.8.8: dev mode reads ?dev=1 and paints its launcher (no-op when off).
+try{ loadDevMode(); }catch(e){}
+// v2.9.3: register the service worker so a cold start works with no signal.
+// Deferred to 'load' so it never competes with first paint — a coach opening
+// this at kickoff should see the app, not wait on a worker. Registration
+// failing is not an error worth surfacing: the app runs fine without it, it
+// just won't open offline.
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

@@ -4,6 +4,146 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.4-beta — Fixed: sign-in was unreachable for anyone with a team
+
+Reported as "there is no login", and it was right — on production, for about 40 versions.
+
+**Sign-in had three routes and two were dead:**
+
+- `renderAuthChip()` writes into `#authChip` — **an element that has never existed in the markup**, so the function returns at its own guard and paints nothing.
+- The app-settings modal (`#appSettingsOv`) contains a working sign-in row, but **nothing anywhere opens that modal**.
+- The drawer's settings block — whose v2.7.85 comment explicitly promises "Sub-alert sound + Help & gestures + **Sign in if not already on home**" — only ever contained the first two.
+
+That left the landing hero, which renders only when `teams.length === 0 && !cloudUser`. **The moment a coach saved their first team, sign-in vanished** — and if they were already signed in, sign-out went with it. Cloud sync was unreachable for every existing user.
+
+- ✅ **Sign in / Sign out now lives in the menu**, on every screen, where the comment always said it should. The row refreshes each time the drawer opens, so it reflects the current session rather than being baked once.
+- 📴 **Honest when offline** — Supabase loads from a CDN, so with no connection there is no auth client at all. The row now says "Sign in — needs a connection" and disables itself, rather than opening a form that can only fail. That case became reachable in v2.9.3, when the service worker made the app open offline.
+
+### Notes
+This bug lived in **UX-PATHWAYS P7 (account & cloud sync)** — the pathway `docs/CONTROL-DOCS.md` flagged as having **no invariants at all**. The audit predicted the gap; the bug was sitting in it. P7 now has its first assertion and moves 🔴 → 🟡, guarded by `edge: sign-in reachable from the menu with a team saved`.
+
+---
+
+## v2.9.3-beta — Works at a ground with no signal
+
+Prompted by a simple question — "fonts correct as well?" — applied with the same skepticism as the design and accessibility claims. The stack was fine. The delivery wasn't.
+
+- 🔤 **The clock font is inlined, not fetched.** DSEG-7 Classic came from `cdn.jsdelivr.net` with no service worker, so `document.fonts.check()` returned **false** offline and the clock fell back to plain monospace — the scoreboard identity simply absent, in the exact place the app is used. Now a base64 data URI: 5KB raw, 6.7KB inlined, on a 612KB file. Verified by loading with the CDN blocked.
+- 📴 **Service worker — the app opens with no reception.** `manifest.json` declared `display:standalone`, so it installed to the home screen looking native, and then needed a network to render its own clock. A cold start offline previously showed the browser's offline page. Verified: network fully down, cold start, full app with the DSEG clock.
+- 🌐 **Network-first, deliberately.** The obvious choice for an offline app is cache-first, but this app ships often and cache-first is how PWAs strand users on a three-week-old build. Network-first gives current-when-online, last-good-when-offline. Also **no `skipWaiting()`** — a worker taking over mid-match could reload the page during a game; new versions activate on the next cold start instead.
+- 🎨 **Three.js stays on the CDN.** 600KB isn't worth inlining and the 2D pitch fallback renders correctly without it. Cloud sync failing offline is also correct. The clock was the only cosmetic dependency, and it was the app's identity.
+
+### Notes
+- `docs/PRIVACY.md` gains a Cache Storage row. It holds no personal data — shell and icons only — but rule 1 says a new place to put data gets a row *before* it ships, not after. The rule is about the place, not the contents.
+- `design.md` §2.2 now documents delivery, not just the stack.
+
+---
+
+## v2.9.2-beta — UI consistency check, and the pitch-legibility finding
+
+- 🔎 **`test/ui-check.mjs`** — in the gate and CI. Ratchets four counts so the gap between `design.md` and the code can shrink but never grow: sub-9px text (11), distinct font sizes (20), distinct radii (11), distinct inline button treatments (54).
+- 🎯 **Radius sprawl measured, not changed** — 13 distinct corner radii against a 7-step scale. Three were briefly snapped onto the scale and then reverted: they were only changed to satisfy a metric introduced the same day, and the pixels they altered were working. The ratchet holds at 13, which is what stops NEW ones appearing.
+- 📉 **The pitch carries the smallest text in the app.** All 11 sub-9px declarations are on the 3D player chips, and AFL is worst: 18 players force position labels to **7px** and names to 8px. That is in direct tension with design principle #1 — *"the coach is on a sideline in sunlight… readable in one glance"* — because the pitch is precisely the surface read at a glance mid-game. **Recorded, not silently changed:** fixing it is a density trade-off (18 chips have to fit), so it needs a decision, not a token edit.
+- 📐 **One Button, 54 treatments.** `design.md` §4.1 documents a single Button component, but **121 of 158 buttons are inline-styled** across 54 distinct padding/size/radius/weight combinations. A document can't govern a component the code doesn't use. Ratcheted, with convergence (promoting the common signatures to classes — the top 8 cover ~65 buttons) recorded as backlog.
+- 📝 `design.md` §2.2 now states the real count next to the eight documented roles, rather than implying the roles are the whole story.
+
+---
+
+## v2.9.1-beta — Accessibility check, and the stray button it found
+
+- 🐛 **Removed an invisible 4×4 pixel button from the Home screen.** `#historyBtn` was left behind when Match History moved into the team-action menu — its label stripped, but `renderHome` still un-hiding it. Tappable, unlabelled, doing nothing a coach could see. The accessibility lens found it before any functional test did, because it was invisible rather than broken.
+- 🔎 **`test/a11y-check.mjs`** — walks eight screens in a real browser at 390×844, in the gate and CI.
+  - **Accessible names: hard fail.** All 114 controls pass. A control with no name a screen reader can announce now fails the build.
+  - **Hit targets: ratcheted at 34.** 34 controls sit below the 44×44pt minimum `design.md` §8 requires; the count can fall, never rise.
+  - **Focus rings:** reported every run until closed.
+- 📝 **`design.md` §8 now states what's true.** It asserted the 44pt minimum flatly while most controls failed it — and being written down is exactly what stopped anyone checking. It now reads as a target with the real number beside it, per `docs/CONTROL-DOCS.md`: a control that asserts the opposite of reality is worse than no control.
+- 🔇 The drawer scrim is `aria-hidden` — a decorative click-catcher shouldn't appear to a screen reader as an unnamed full-screen control when the drawer already has labelled close affordances.
+
+Checking all eight screens rather than only the game screen roughly doubled the count (18 → 34). The worst offenders are the clock steppers (18×18) and tip-carousel arrows (24×24); sizing those is a layout decision, since the steppers are deliberately small so two clock anchors fit side by side on a phone.
+
+---
+
+## v2.9.0-beta — Data & privacy policy (no functional change)
+
+No change to how the app works. `docs/PRIVACY.md` records what Sub Timer stores, what leaves the device, and the rule for the next feature; `test/privacy-check.mjs` fails the build if a `localStorage` key appears with no row in it.
+
+The policy is deliberately proportionate — a junior roster of first names and jersey numbers is low-sensitivity, and treating it as a compliance exercise would be silly. It exists because the app gained cloud sync, share links, photo import and flow export across ten versions, each reasonable alone, with nothing tracking the cumulative picture.
+
+Writing the inventory surfaced three things worth knowing, none of which was the share link that prompted the discussion:
+
+- **Photo roster import is the widest egress.** `extract-roster` uploads an arbitrary photograph to a server-side vision model. The intended subject is a team list, but a photographed club team sheet routinely carries surnames, parent phone numbers and dates of birth. Everything else the app sends is structured data whose shape we chose; this is the only path that can send data the app has never seen.
+- **Names are full names by design.** The screen shows first names, which makes it easy to assume that is all we hold. `fn()` splits on whitespace and renders the last word as an initial ("Sarah B") — so any coach with two Sarahs is pushed into entering surnames, and the raw string is what is stored, synced and shared.
+- **Match history has no delete path.** `matches` is insert-and-select only, so saved matches — names, minutes, location — can't be removed.
+
+Also adds `docs/CONTROL-DOCS.md`, a register of which documents govern this app and which of them actually enforce anything.
+
+---
+
+## v2.8.9-beta — The match log reads the way the game happened
+
+- 🕐 **The half-time change is no longer filed under the first half.** `advH()` pre-applies the recommended rotation at the break, and `confSub()` stamped those swaps with the clock as it stood when the half ended — so the log read `1H 20:00 Quinn → Sam` / `1H 20:00 Taylor → Jordan`, *above* the Halftime line, for two players who never took the field in the first half. It also made the halves look asymmetric: 1H showed subs at 5/10/15/**20**, 2H only 5/10/15. Those rows now read **HT** and sit under Halftime.
+- 🧹 **Removed the blank row at the top of every match log** — the `sub_strategy` entry recorded at kickoff, which no renderer handled and so drew an empty line stamped `1H 00:00`.
+- 🩹 **Injury subs, half resets and opposition-shape changes now render** instead of silently drawing empty rows for the same reason.
+
+### Architecture notes
+- `period_end` is now pushed by `advH()` when the break begins, not by `startNextPeriod()`. It has to be logged *before* the rotation is applied, or the break marker lands after the change it precedes.
+- `_breakRotation` is set around the `trigSub()`/`confSub()` call in `advH()`; `confSub()` tags the resulting entries `atBreak:true`.
+- New shared `_logTimeLabel(e)` (break rows and `atBreak` rows read "HT"/"Q3") and `_logRenders(e)` (filters `LOG_SILENT_TYPES`), used by both the summary and the match-history renderers so the two can't drift.
+
+---
+
+## v2.8.8-beta — Dev mode: the test harness, inside the app
+
+Built after a run of screenshots showed `00:01` on the clock six minutes into a half. That was **not** the app — it was the throwaway fast-forward helper in the screenshot script, which advanced `G.secs` without `G.elapsedMs`. Every test script had been re-inventing that helper, and getting it subtly wrong. Now there is one implementation, in the app, that testing and debugging both use.
+
+- 🧪 **Hidden dev panel**, gated on visiting the app with **`?dev=1`**. The flag is stripped from the URL immediately (so a shared or bookmarked link never carries it) and the choice is remembered on that device. Turn it off from inside the panel or with `?dev=0`. Nothing renders or wires when it's off — coaches will never see it.
+- ⏱ **Jump the clock** to any period and minute. Runs the **real** per-second logic (`tickSecond()`), so auto-subs fire and playing minutes accrue exactly as in a live game — a jumped-to state is indistinguishable from a played-to one. Plus skip-to-break and skip-to-full-time.
+- ⏪ **Rewind within the current period** by restoring the kickoff snapshot and re-simulating. Rewinding *across* periods is refused outright rather than silently doing nothing — nothing records enough history to rebuild an earlier period faithfully.
+- 🌱 **Seed a game** in one tap for any of the 23 formats — team, squad, settings, straight onto the pitch. No more clicking through setup to test a half-time behaviour.
+- 🎞 **Replay a game flow on screen.** Paste an exported flow and step or play through it in the real app, watching the bug happen, instead of only headlessly via `test/replay.mjs`.
+- 🔍 **State inspector** — live readout of period, clock, on-field, bench, keeper (and whether `gk2` is an explicit pick or the default), rotation pairs, subs done and per-player minutes.
+
+### Architecture notes
+- `devFreezeClock()` stops the loop and reconciles `G.elapsedMs = G.secs*1000`. `renderG` paints the clock from `elapsedMs` while `tickSecond` only advances `secs` (the live rAF loop is what normally reconciles them) — every ad-hoc harness that skipped this displayed the wrong time.
+- `devAdvanceTo(period, secs)` drives `tickSecond()` in a loop and calls `startNextPeriod()` across breaks. At a break the current position is taken as the *end* of `G.half`, since `G.half` is still the finished period; treating it as `G.secs` made a rewind request from half-time neither happen nor get refused.
+- In-app flow replay mirrors `test/replay.mjs`: rebuild from `flow.setup`, advance the clock to each action, and skip `auto` actions (they are reproduced by the clock, and re-applying them would double-substitute).
+
+---
+
+## v2.8.7-beta — Second-half setup fixes (the 2nd-half keeper, and the Plan page at a break)
+
+Both found by a targeted sweep of the period boundary after a coach reported "an issue with player setup in the second half".
+
+- 🧤 **The "2nd Half GK" setting now actually works.** It had never been wired to anything: it was stored, persisted, and rendered on the Plan page as **"HALFTIME GK SWAP"**, but nothing ever assigned it to the live keeper — so the first-half keeper played the whole match. The nominated player now takes the gloves at the break, and is brought on from the bench (displacing the outgoing keeper) if that's where they were.
+- 🎯 **Only an explicit pick swaps.** `gk2` auto-defaults to a *different* player than `gk1`, so every keeper-format game was silently displaying a halftime keeper change that never fired. A new `gk2Explicit` flag means the swap happens only when the coach actually chose someone — leaving the setting untouched changes nothing, and the Plan page no longer promises a swap it won't perform.
+- 🔒 **A defaulted 2nd-half keeper is no longer locked out of the rotation.** The plan generator excluded `gk2` from outfield rotation for the whole game on the assumption it would become the keeper; with the swap never firing, that pinned an outfielder on the pitch, never rotated, for 90 minutes.
+- 🧹 **The keeper choice no longer leaks between teams.** `gk1`/`gk2` are indices into a *specific* squad, and `selectTeam()` never reset them — so an explicit pick could have handed the gloves to whoever sat at that index in the next team. Cleared on team switch.
+- 📋 **The Plan page at a period break showed the wrong half.** At a break `G.half` is still the period that just *finished* (`startNextPeriod()` is what increments it), so the timeline regenerated the finished half's sub slots as upcoming: stepping the sub preview forward at half-time showed sub points that had already happened, the "NOW" tag sat on the wrong column, and the entire second-half projection — including projected minutes — was computed from a line-up that never existed. Display-only; it never corrupted the live game.
+
+### Architecture notes
+- New `applySecondHalfKeeper(upcoming)` runs from `startNextPeriod()` *before* `snapshotHalfStart()`, so RESET restores the correct keeper. Scoped to two-period sports (matching the setting's label and the plan's soccer-only `gk_swap` event); quarter sports change the keeper by tapping at the break, which already worked. Remaps `G.pairs` the same way `swapFieldPositions()` does, and logs a `gk` event.
+- `gk2Explicit` is set by the two GK `<select>` controls and by `setPlanKeeper()` for a later period; cleared wherever `gk2` is auto-defaulted or nulled, and in `selectTeam()`. Persisted through `saveActiveGame`/`resumeActiveGame`, plan profiles, and game flows.
+- `buildPlanTimeline()`, `computeProjectedMinutes()`, `getPlanScrubState()` and the period-column render all derive an effective current period `curP = G.atBreak ? G.half+1 : G.half` (and `curSecs = G.atBreak ? 0 : G.secs`) instead of using `G.half` directly.
+- New `test/secondhalf.mjs` (68 checks) added to the merge gate, covering both defects plus the must-NOT-swap default case, a benched pick, a break-time tap winning over an older setting, and survival across a refresh at the break.
+
+---
+
+## v2.8.6-beta — Game flow recording (send a bug, don't describe it)
+
+- 🎞 **Every game is recorded as a replayable "flow"** — the setup it started from plus every tap you made, in order, stamped with the game clock and the line-up it produced. The last 12 games are kept.
+- 📤 **Send game flow** — new item in the menu (☰). Pick a game, and it goes out via the share sheet on a phone or downloads as a `.json` on desktop. A bug seen on the sideline can then be replayed exactly on a laptop instead of being guessed at from a description.
+- 🕶 **Names never leave the phone** — players become `Player 1, 2, 3…` before anything is stored, mapped consistently, with duplicates preserved so the two-players-with-the-same-name case still reproduces. Jersey numbers and position tags are kept, because they steer auto-fill and rotation.
+- ♻️ **Survives a refresh** — a game interrupted at half-time (app backgrounded, phone locked, browser reloaded) stays one continuous recording rather than splitting in two.
+- ✅ **Recorded games are now a test suite** — `npm run flow` plays ten scripted games, weighted to the second-half setup path, records each the way the app does and replays it; `npm run replay` re-runs every real game committed under `flows/`. Both are merge gates, so a game that once went wrong can never go wrong the same way again.
+
+### Architecture notes
+- `tickLoop()`'s per-second body factored out as `tickSecond()` so the live game and the replayer run **identical** logic — a replay exercises the real code path, not a model of it.
+- `flowInstall()` wraps the user-facing action functions; `flowRecord()` opens an entry (call + args + clock) and `flowSeal()` closes it with the resulting state. A `_flowDepth` guard records only top-level calls — `trigSub()` calls `confSub()` internally, and recording both would double-apply on replay. A `_flowInTick` counter flags clock-fired actions `auto:true`; the replayer reproduces those by running the clock rather than re-applying them.
+- `flowBegin()` at kickoff, `flowResume()` re-attaches after a reload via `G.startTime`. `_flowScrub()` walks both keys and values (playing time is keyed by player name). Storage is capped at 12 games / 4000 actions, and a quota failure sheds the oldest games instead of throwing mid-match.
+- New: `test/replay.mjs` (exports its in-page engine), `test/flow.mjs`, `flows/`. See `PROCESS.md` for the REPLAY layer this adds to Map → Gate → Hunt.
+
+---
+
 ## v2.8.5-beta — Team share link (access code for parents & co-coaches)
 
 - 🔗 **Share team** — new item in the team-action menu. Builds a link that carries the whole team setup: roster, position tags, jersey numbers, preferred sides/feet, format and saved game settings. Send it to a parent or co-coach; opening it installs the team on their phone with a **"TEAM IS READY — Play now"** welcome that lands them one tap from kickoff. No account needed on either end of the receive.

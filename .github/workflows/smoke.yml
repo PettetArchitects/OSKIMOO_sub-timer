@@ -8,6 +8,12 @@ name: smoke
 #   smoke       — core coach journey in headless Chromium
 #   sports      — every sport/format played to summary
 #   edge        — save/resume, injury, live roster edits, cadence, etc.
+#   secondhalf  — the period boundary: who takes the field and who is in goal
+#                 for the 2nd half, and what the Plan page shows at a break
+#   flow        — record a game the way the app does, then replay it and check
+#                 it reproduces step for step (proves a sent-in bug repros)
+#   replay      — replay every real game flow committed under flows/ (the
+#                 regression corpus of games that actually happened)
 # Screenshots from all suites are uploaded as an artifact for triage.
 on:
   pull_request:
@@ -35,6 +41,15 @@ jobs:
       - name: Docs drift check
         run: npm run docs-check
 
+      - name: Design-system check (tokens + ratchet)
+        run: npm run design
+
+      - name: UI consistency check (type/radius/button ratchets)
+        run: npm run ui
+
+      - name: Privacy inventory check
+        run: npm run privacy
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
@@ -46,6 +61,18 @@ jobs:
 
       - name: Edge cases
         run: npm run edge
+
+      - name: Second-half setup (keeper + Plan page at a break)
+        run: npm run secondhalf
+
+      - name: Accessibility check (names + hit-target ratchet)
+        run: npm run a11y
+
+      - name: Game flow round-trip (record → replay)
+        run: npm run flow
+
+      - name: Replay recorded games (regression corpus)
+        run: npm run replay
 
       - name: Upload screenshots
         if: always()

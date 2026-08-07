@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.8.5-beta · **Last reconciled:** see git history for this file
+**Version:** v2.9.4-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -202,12 +202,72 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 |---|---|
 | Match summary card | Score, formation, half-time GK change. |
 | Playing time per player | Sorted by minutes desc. |
-| Game log | Subs, goals (with scorer), period boundaries. |
+| Game log | Subs, goals (with scorer), period boundaries, injury subs, half resets, opposition-shape changes. Rows are built via shared `_logTimeLabel()` / `_logRenders()` so the summary and match-history renderers can't drift. |
+| Break rotation attribution (v2.8.9) | The rotation `advH()` pre-applies at a break is tagged `atBreak` by `confSub()` and rendered as **HT** / **Q3**, below the break row — not as a substitution at the last second of the period that just ended. `period_end` is logged by `advH()` (when the break starts) rather than `startNextPeriod()`, so the break marker precedes the change. |
+| Silent log types | `LOG_SILENT_TYPES` filters bookkeeping entries (`sub_strategy`) that previously drew a blank timestamped row at the top of every log. |
 | Opponent + location fields | Free text, saved with match. |
 | **Save Match ✓** | Writes to localStorage + pushes to cloud. Active game cleared. |
 | Buy me a coffee CTA | Visible above the fold on summary. |
 | Match History (S6) | List of saved matches, most recent first. |
 | Match detail view | Read-only summary of a past match. |
+
+---
+
+## 6b. Period boundary / second-half setup (v2.8.7)
+
+| Feature | Behaviour |
+|---|---|
+| 2nd-half keeper | `applySecondHalfKeeper()` runs from `startNextPeriod()` before `snapshotHalfStart()`. Puts the nominated `gk2` in goal at the start of the second half, bringing them on from the bench (displacing the outgoing keeper) if needed, remapping `G.pairs` so the new keeper leaves the outfield rotation and the old one rejoins, and logging a `gk` event. |
+| Explicit-pick only | `gk2Explicit` gates the swap. `gk2` auto-defaults to a different player than `gk1`, so honouring the default would swap keepers in every keeper-format game. Set by the two GK `<select>`s and by `setPlanKeeper()` for a later period; cleared wherever `gk2` is defaulted/nulled and on `selectTeam()` (indices belong to one squad). Persisted through save/resume, plan profiles and game flows. |
+| Scope | Two-period sports only, matching the setting's label and the plan's soccer-only `gk_swap` event. Quarter sports change the keeper by tapping at the break. |
+| Break-aware Plan page | At a break `G.half` is still the *finished* period. `buildPlanTimeline()`, `computeProjectedMinutes()`, `getPlanScrubState()` and the period-column render all use `curP = G.atBreak ? G.half+1 : G.half` (and `curSecs = G.atBreak ? 0 : G.secs`) so the preview, the "NOW" tag and the projected minutes describe the period about to be played. |
+| Guarded by | `test/secondhalf.mjs` — 68 checks, in the merge gate. |
+
+---
+
+## 7c. Dev mode (v2.8.8) — the test harness, inside the app
+
+Hidden unless `?dev=1` has been visited on this device. Exists because every
+test script used to hand-roll its own "jump the game to state X" helper, and
+they drifted from the app: advancing `G.secs` without `G.elapsedMs` produced
+screenshots reading `00:01` six minutes into a half. This is **one**
+implementation of time travel, and it runs through `tickSecond()` — the same
+per-second logic `tickLoop` runs — so a dev jump cannot diverge from a real game.
+
+| Feature | Behaviour |
+|---|---|
+| Gating | `?dev=1` sets `subTimerDevMode` in localStorage and the flag is stripped from the URL (so a shared link never carries it). `?dev=0` or the in-panel button clears it. Nothing renders or wires when off. |
+| Launcher | A `DEV` pill, bottom-right, `display:none` unless enabled. |
+| Seed a game | `devSeedGame()` builds team → squad → format and lands on the pitch, for any of the 23 formats. |
+| Jump the clock | `devAdvanceTo(period, secs)` simulates forward through `tickSecond()`, so subs fire and minutes accrue exactly as live. Skip-to-break and skip-to-full-time included. |
+| Rewind | Supported **within the current period** by restoring `G._halfStart` and re-simulating; at a break the game is treated as sitting at the end of `G.half`. Rewinding across periods returns `false` (nothing records enough history to rebuild an earlier period faithfully) rather than silently doing nothing. |
+| Clock coherence | `devFreezeClock()` stops the loop and sets `G.elapsedMs = G.secs*1000`. `renderG` paints from `elapsedMs` while `tickSecond` moves `secs`; skipping this reconciliation is the exact bug that made hand-rolled harnesses display the wrong time. |
+| Replay a flow in-app | Paste an exported flow, `devFlowLoad()` rebuilds the game from `setup`, then Step/Play walk the actions. `auto` actions are reproduced by the clock advance, never re-applied. |
+| State inspector | Live readout (400ms) of period, clock, on/bench, `gk` and `gk2` (flagged explicit vs default), pairs, `pairIdx`, subs done, settings and per-player minutes. |
+
+---
+
+## 7b. Game flow recording (v2.8.6)
+
+Every game is recorded as a replayable **flow** so a bug seen on the sideline can
+be reproduced exactly on a laptop, instead of being guessed at from a
+description. The library of recorded games doubles as a regression corpus.
+
+| Feature | Behaviour |
+|---|---|
+| Automatic recording | `flowBegin()` at kickoff captures the setup (squad, numbers, position tags, `cfg`, opening XI, keeper, rotation pairs, sub strategy/plan). Wrappers installed by `flowInstall()` then record every top-level coach action with the game clock and the state it produced. |
+| Top-level only | A `_flowDepth` guard records only the outermost call — `trigSub()` calls `confSub()` internally, and recording both would double-apply on replay. |
+| Auto vs tapped | Actions fired from inside `tickSecond()` (the timer's auto-sub, end of period) are flagged `auto:true`. The replayer reproduces those by running the clock, never by re-applying them. |
+| Survives a refresh | `flowResume()` re-attaches to the stored flow via `G.startTime`, so a game interrupted at half-time stays one continuous recording. |
+| Pseudonymised | Player names become `Player 1, 2, 3…` before anything is stored — consistently, and with duplicates preserved, so the two-players-same-name case still replays. Numbers and position tags are kept (they steer auto-fill and rotation). |
+| Bounded | Last 12 games, 4000 actions each; a quota failure sheds the oldest games rather than throwing mid-match. |
+| **Send game flow** | Menu (☰) → share sheet on mobile, file download on desktop, clipboard as fallback. Lists each recorded game with format, score and action count. |
+| Replay | `node test/replay.mjs flows/<file>.json` rebuilds the game and reports **DIVERGENCE** (this build differs from the phone, localised to one step) and **INVARIANT** violations (duplicate player, keeper off field, squad not conserved, keeper inside a rotation pair). |
+| Round-trip gate | `npm run flow` plays 10 scripted games — weighted to the second-half setup path — records each the way the app does, and replays it. That proves the recorder and the app agree, which is what makes a sent-in flow trustworthy. |
+
+`tickLoop()`'s per-second body is factored out as `tickSecond()` so the live game
+and the replayer run identical logic — the replay exercises the real code path,
+not a model of it.
 
 ---
 

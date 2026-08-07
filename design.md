@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.7.83
+> Last updated: v2.9.4
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -10,7 +10,7 @@
 1. **Game day clarity over screen real-estate** — the coach is on a sideline in sunlight watching twelve seven-year-olds. Every screen must be readable in one glance. Big DSEG clocks, big sub buttons, no precious typography.
 2. **One consistent app shell, many views** — two persistent anchors (top brand bar + bottom tab bar) wrap every screen so the coach never loses orientation. Per-page chrome lives inside that shell.
 3. **Auto by default, custom by intent** — the app picks fair subs unless the coach explicitly builds a plan. The custom path is one tap deeper, not the default.
-4. **Tactile, gestural** — tap to swap, long-press for injury sub, drag to reorder. Buttons are large; hit targets exceed 44×44pt.
+4. **Tactile, gestural** — tap to swap, long-press for injury sub, drag to reorder. Primary actions are large. 44×44pt is the hit-target *target*, not yet the floor — see §8 for the current count and the ratchet holding it.
 5. **Dark by default** — coaches use this outdoors in glare; dark UI with high-contrast accent colors reads better than light, and matches the iOS PWA aesthetic.
 
 ---
@@ -52,6 +52,30 @@ All colors are dark-theme. Light theme is not currently supported.
 | `--text-faint` | `#888` | Meta info, captions |
 | `--text-inverse` | `#06231d` | Text on green primary buttons |
 
+#### Neutral ramp
+
+The blue-tinted text tokens above are the *preferred* greys. Alongside them the
+app also uses a plain neutral ramp — mostly for de-emphasised text and hairlines
+inside dense lists (match log, plan rows, bench chips), where a blue cast reads
+as "interactive" and these read as "quiet".
+
+This table **documents what is in use**; it is not a licence to add more. See
+§11 backlog — nine greys for text is too many, and the target is to collapse
+this to roughly four. It is written down so the drift is visible and countable
+rather than invisible.
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--n-200` | `#ccc` | Dense-list body text |
+| `--n-300` | `#bbb` | Modal body copy |
+| `--n-400` | `#aaa` | Helper / explanatory copy under a control |
+| `--n-500` | `#999` | Meta text in list rows |
+| `--n-700` | `#666` | De-emphasised captions, empty-state text |
+| `--n-800` | `#555` | Placeholder / disabled label |
+| `--n-900` | `#444` | Hairline glyphs (the ⇄ between two names) |
+| `--n-950` | `#333` | Dark separators on card backgrounds |
+| `--n-1000` | `#222` | Match-log row dividers |
+
 #### Accent — primary action
 
 | Token | Hex | Usage |
@@ -74,6 +98,32 @@ All colors are dark-theme. Light theme is not currently supported.
 | `--accent-purple` | `#a78bfa` | Custom plan profiles, Save action |
 | `--accent-yellow` | `#ffc428` | Donate / heart action |
 
+#### Position-tag palette
+
+Every position label (`.pos-tag-*` / `.pos-mini-*`) is a **pair**: a dark tinted
+background and a saturated foreground that also serves as the border. The hue
+carries meaning down the pitch — red at the back, green/teal in defence, indigo
+through the middle, sage on the wings, amber up front — so a coach can read a
+line-up by colour without reading the letters.
+
+Reuses `--accent-red`, `--accent-green`, `--accent-amber` and `--accent-cyan`
+as foregrounds where the hue already exists; the four below are unique to this
+family.
+
+| Position | Background | Foreground | Token |
+|---|---|---|---|
+| GK | `#3a1525` | `#e94560` | `--accent-red` |
+| DEF | `#0a2a2a` | `#00d4aa` | `--accent-green` |
+| MID · GD | `#1a1a3e` | `#7b8cff` | `--pos-indigo` |
+| WNG · WA | `#1a2a1a` | `#8dd68d` | `--pos-sage` |
+| FWD · GS | `#2a1f0a` | `#f0a500` | `--accent-amber` |
+| GA | `#2a1a14` | `#ff8c5a` | `--pos-coral` |
+| C | `#3a2a14` | `#ffc14d` | `--pos-gold` |
+| WD | `#1a2a2a` | `#5bc0de` | `--accent-cyan` |
+
+Backgrounds are ~12% tints of their foreground on `--surface-card`. A new sport
+adding positions must map onto this palette rather than introduce new hues.
+
 ### 2.2 Typography
 
 | Role | Size | Weight | Letter-spacing | Notes |
@@ -87,7 +137,30 @@ All colors are dark-theme. Light theme is not currently supported.
 | Pill label | 11-12px | 700 | .3px | |
 | Meta / caption | 10-11px | 600 | .4px | |
 
-Font stack: `-apple-system, BlinkMacSystemFont, sans-serif`. DSEG-7 Classic Bold loaded via `@font-face` for the digital clocks.
+Font stack: `-apple-system, BlinkMacSystemFont, sans-serif`. DSEG-7 Classic Bold
+for the digital clocks, and `ui-rounded` for `ui-` button labels (§4.1.0).
+
+**Delivery (v2.9.3).** DSEG is **inlined as a base64 data URI**, not fetched. It
+used to come from `cdn.jsdelivr.net` with no service worker, so at a ground with
+no signal `document.fonts.check()` returned false and the clock — the app's whole
+identity — fell back to plain monospace. 5KB raw, 6.7KB base64, on a 612KB file.
+Verified by loading with the CDN blocked.
+Three.js still comes from a CDN and that is deliberate: 600KB is not worth
+inlining, and the 2D pitch fallback renders correctly without it.
+`ui-rounded` is a CSS generic family, so it needs no download at all — Apple
+devices resolve SF Pro Rounded, everything else falls through the stack.
+
+**Reality check (v2.9.2).** Those are eight *roles*; the code uses **20 distinct
+font sizes**, including `7px`, `8px` and `12.5px`. `npm run ui` counts them and
+ratchets, so the sprawl can shrink but not grow. See §11 backlog.
+
+**Legibility floor.** `ui-check` flags any declaration below **9px**. There are
+11, all on the 3D pitch player chips — worst on AFL, where 18 players force
+position labels to 7px and names to 8px. That is in direct tension with §1
+principle 1 ("readable in one glance" on a sunlit sideline): the pitch is the
+one surface a coach reads at a glance mid-game, and it carries the smallest text
+in the app. Recorded rather than silently changed, because fixing it is a
+density decision — 18 chips have to fit.
 
 ### 2.3 Spacing scale
 
@@ -188,7 +261,65 @@ Game screen (`#s4`) and Plan screen (`#subOrderOv`) override with overflow:hidde
 
 ### 4.1 Button
 
-#### 4.1.1 Primary action — `.gd-go`
+> **The `ui-` system (v2.9.3) — in progress.** Everything documented below §4.1.0
+> is the **legacy** treatment. It is what 121 inline-styled buttons, in 54
+> distinct combinations, actually look like today. The set below replaces it.
+
+#### 4.1.0 The `ui-` button system
+
+Six variants. Prefixed `ui-` so it cannot collide with the legacy `.btn` /
+`.chip` / `.st-btn` classes while both exist — the old ones are removed screen
+by screen as callers migrate, never in one sweep.
+
+| Class | Role | Size |
+|---|---|---|
+| `.ui-btn--primary` | The one action a screen exists for. At most one per view. | 48px min |
+| `.ui-btn--secondary` | Everything supporting. Takes a tone modifier for meaning. | 44px min |
+| `.ui-btn--ghost` | Menu and drawer rows. Full width, left-aligned. | 48px min |
+| `.ui-btn--danger` | Loses data or ends something. | 44px min |
+| `.ui-chip` | Compact, inline with content — tags, toggles, scores. | — |
+| `.ui-step` | The −/+ steppers. | **44×44** |
+
+Tone modifiers sit **on top of** `--secondary` rather than multiplying into new
+variants: `.is-go` (green), `.is-preview` (cyan), `.is-plan` (purple),
+`.is-attention` (amber). Same meanings as §2.1.
+
+**The treatment: fun, familiar, approachable.** The audience is a volunteer
+parent on a sideline, not an engineer. An earlier cut borrowed from
+developer-tool design systems (Linear, Vercel Geist — flat, low-contrast, 600
+weight) and read cold and corporate for a kids' sport app. The reference set is
+now apps a grassroots coach already has on their phone: GameChanger, TeamSnap,
+Spond, Heja, Stack Team App — and Duolingo for the tactile press.
+
+| | Legacy | `ui-` |
+|---|---|---|
+| Type | system sans, 800, +.3px tracking | `ui-rounded` (SF Pro Rounded on Apple), 700 |
+| Press | 1px nudge | 3px colour lip that compresses — most of the "fun" |
+| Fill | `linear-gradient(180deg,…)` | solid, confident |
+| Radius | 8px | 16px (14px chips) |
+| Height | 7–13px padding | 48–52px min-height |
+
+`ui-rounded` is a CSS generic family, so Apple devices — most of the audience —
+get rounded type natively, with a graceful fallback elsewhere. No webfont, no
+CSP problem, no download.
+
+**Zero new tokens** — no new colours, and nothing new on the type or radius
+scales. That was not true of the first draft, and both gates caught it:
+`ui-check` rejected `999px` and `19px` (pulled back to the existing `14px` and
+`18px`, visually identical at these sizes), and `design-check` rejected nine
+invented tints — every one of which turned out to have an exact token already,
+`#04201a` being `--text-inverse`, whose documented usage is literally "text on
+green primary buttons". Worth recording: the ratchets caught a claim of "no new
+colours" that was wrong by nine.
+
+Two documented gaps close with it: `.ui-step` at 44×44 removes 9 of the 34
+undersized controls (§8), and one `:focus-visible` rule on the base classes
+closes the focus-ring gap §8 has carried since it was written.
+
+**Migration** — step 1 (define the classes, no markup touched) is done; nothing
+uses them yet. Steps 2–5 are in §11 backlog item 1b.
+
+#### 4.1.1 Primary action — `.gd-go` *(legacy)*
 
 ```css
 flex: 1.5;
@@ -437,6 +568,28 @@ Player shirt + name + minutes, positioned absolutely. Variants:
 - `.fc-just-on` — green pulse animation (just subbed on)
 - `.fc-just-swap` — cyan pulse (just swapped)
 
+### 4.9 Dev-mode panel (v2.8.8) — non-coach surface
+
+The only component in the app not intended for a coach. Hidden unless `?dev=1`
+has been visited on this device (`#devFab` is `display:none` otherwise).
+
+| Element | Spec |
+|---|---|
+| Launcher `#devFab` | Fixed pill, `right:10px bottom:70px` (clears the tab bar), `z-index:9998`. `--accent-purple` border + label on a `.15` tint. Label `DEV`, 11px/800, 1px tracking. |
+| Panel `#devOv` | Standard `.ov` / `.ab` modal (§4.5), `max-width:400px`, `max-height:88vh`, scrolls internally. |
+| Section eyebrows | 10px/800, 1px tracking, uppercase, `--accent-purple`. |
+| Primary actions | `--accent-purple` border + label on `rgba(167,139,250,.15)`. |
+| Secondary actions | `--border-emphasized` border, `--text-secondary` label (matches §4.1 secondary). |
+| State readout | Monospace 11px, `--surface-card` on `--border-subtle`, `line-height:1.6`. |
+| Destructive | "Turn dev mode OFF" uses `--accent-red`, per §4.1. |
+
+**Colour note.** This panel first shipped with three invented purples
+(`#a06cd5`, `#c9a6f0`, `#2b1a3d`) because it was built without consulting this
+document — the exact failure §10 warns about. Corrected in v2.8.9 to the
+existing `--accent-purple` `#a78bfa`, which the Game Plan panel and "Save plan
+profile" already use. Purple means *"planning / meta"* in this app; dev mode
+belongs to that family.
+
 ---
 
 ## 5. Patterns
@@ -532,12 +685,27 @@ Position labels (rendered on shirt or chip):
 
 ## 8. Accessibility
 
-- All interactive elements include `aria-label` or visible text
-- Hit targets ≥ 44×44pt (iOS HIG minimum)
-- Color is never the sole indicator of state — labels accompany colour cues
-- DSEG digits and tabular nums prevent layout shift as time changes
-- Safe-area insets respected for iPhone notch + home indicator
-- Focus rings: not currently styled — relies on browser default. **Outstanding gap.**
+Verified by `npm run a11y` (`test/a11y-check.mjs`), which walks eight screens in
+a real browser at 390×844. Claims below are marked with how they stand.
+
+- ✅ **All interactive elements include `aria-label` or visible text.** Enforced —
+  a control with no accessible name fails the build. 114 controls checked.
+  Elements inside an `aria-hidden` subtree (the drawer scrim) are deliberately
+  excluded; that is what `aria-hidden` means.
+- 🟡 **Hit targets ≥ 44×44pt (iOS HIG minimum).** This is the **target**, not the
+  current state: **34 controls are below it** and the check is ratcheted at that
+  number, so it can fall but never rise.
+  Until v2.9.1 this section asserted the minimum flatly, which was simply false —
+  and being written down stopped anyone checking. The worst offenders are the
+  clock steppers (18×18) and the tip-carousel arrows (24×24). Sizing them up is a
+  layout change, not a token change: the steppers are small so two clock anchors
+  fit side by side on a phone. Either they change or this standard does — but the
+  document and the app must not disagree again.
+- ✅ Color is never the sole indicator of state — labels accompany colour cues
+- ✅ DSEG digits and tabular nums prevent layout shift as time changes
+- ✅ Safe-area insets respected for iPhone notch + home indicator
+- 🔴 **Focus rings** — one rule exists; there is no systematic `:focus-visible`
+  treatment. Reported by the check on every run until it is closed.
 
 ---
 
@@ -571,14 +739,57 @@ When introducing or modifying components: update this document **first**, then i
 - ✅ Single app header (hamburger LEFT · logo CENTRE · version RIGHT) (v2.7.82)
 
 ### Still open
-1. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
-2. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
-3. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
-4. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
-5. **Light theme** — not supported. Document as out of scope or plan.
-6. **Basketball court accuracy** — match real NBA / FIBA markings: straight-side 3-point line, inner centre circle (4ft), backboard 4ft inside the baseline, half-dashed free-throw circle.
-7. **Water polo field viz** — `_buildWaterPolo()` builder + pool tinted ground + goal posts at each end.
-8. **3D pitch race on first paint** — occasionally renders black if the screen flips visible after afl3d.init runs at 0×0 size. Investigate ResizeObserver fallback timing.
+
+0. **Token coverage (v2.8.9)** — `npm run design` counts colours in `index.html`
+   that aren't written down here. It started at **64 colours / 232 uses**;
+   documenting the neutral ramp and the position-tag palette (both of which were
+   real, deliberate systems that had simply never been recorded) took it to
+   **43 / 59**. The check is ratcheted at 43: it may fall, never rise, so new
+   drift fails the gate immediately.
+   The remainder is mostly **gradient stop pairs** — nearly every raised button
+   and card has a light/dark stop derived from a token but undocumented, the way
+   `--accent-green-light/-dark/-deep` are for the primary button. Documenting
+   that family is the next pass and would take this close to zero.
+1. **Collapse the neutral ramp** — nine greys for text is too many. Target ~4.
+   This is a visual change on every dense list, so it needs an eye on it, not a
+   find-and-replace.
+1a. **Pitch-chip legibility — DECIDED: keep current sizes (v2.9.2)**
+   11 declarations of sub-9px text sit on the 3D player chips; AFL uses **7px**
+   position labels and 8px names because 18 players must fit.
+   A dynamic version was built and rejected: `--chip-scale` derived from
+   container width and chip count, text floored at 9px via `max()`, with a
+   `[data-dense]` mode shedding the minutes badge and position code. It did
+   raise AFL to 9px, but it changes a surface that works today, and the owner's
+   call was to keep the current sizes. Kept in `git stash` on
+   `claude/game-flow-recorder` if it's ever wanted.
+   **Do not re-attempt without a fresh decision.** Two things learned if it is
+   revisited: (a) crowding must only ever *shrink* type — scaling sparse
+   formations up made labels wider and collided harder, because a 7v7 pitch is
+   the same size as an 11v11 one; (b) the sub-9px count is the *symptom*, and
+   the real constraint is label **width**, not font size.
+   Note the separate, pre-existing issue this surfaced: on soccer, `LB`/`RB`
+   labels overlap the keeper's shirt at the current sizes too. Unrelated to the
+   above, unfixed.
+1b. **Migrate onto the `ui-` button system (v2.9.3)** — the six variants are
+   defined (§4.1.0) and nothing uses them yet. 121 of 158 buttons remain
+   inline-styled in 54 combinations. Remaining steps, each verifiable alone with
+   a before/after screenshot and the `ui` ratchet lowered deliberately after:
+   **2.** drawer + menu rows → `.ui-btn--ghost` (46 buttons, near-identical already)
+   **3.** steppers + chips → `.ui-step` / `.ui-chip` (21; where the 44pt fix lands)
+   **4.** outline actions → `.ui-btn--secondary` + tone modifiers (27)
+   **5.** primary/destructive, then judge the rest — genuinely singular things
+   may stay inline if naming them adds nothing.
+   Note this step **does** change how the app looks, unlike the rest of the
+   consistency work, which deliberately moved no pixels. Scope is chrome only:
+   the clock, pitch and player chips are the app's identity and are out.
+2. **Team-action menu hierarchy** — "Edit team" greyed pill clashes with the three coloured action items. Either match the colours or move into the drawer.
+3. **Tab bar icon contrast** — verify the inactive icon stroke is bright enough against the dark bar on real-device displays.
+4. **Equal-time ideal tile** — large text block on the Plan page; reduce to one tight line or roll into the clock anchor as a tag.
+5. **Focus rings** — none defined; add a visible focus indicator for keyboard navigation.
+6. **Light theme** — not supported. Document as out of scope or plan.
+7. **Basketball court accuracy** — match real NBA / FIBA markings: straight-side 3-point line, inner centre circle (4ft), backboard 4ft inside the baseline, half-dashed free-throw circle.
+8. **Water polo field viz** — `_buildWaterPolo()` builder + pool tinted ground + goal posts at each end.
+9. **3D pitch race on first paint** — occasionally renders black if the screen flips visible after afl3d.init runs at 0×0 size. Investigate ResizeObserver fallback timing.
 
 ---
 
