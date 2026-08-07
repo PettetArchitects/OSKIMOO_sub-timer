@@ -1779,6 +1779,9 @@ function resumeActiveGame(){
   // resetHalf has something to restore (best-effort: current state, not
   // true kickoff state since that wasn't recorded).
   if(G && !G._halfStart) snapshotHalfStart();
+  // v2.9.5: games saved before keeper-time tracking — treat prior minutes as
+  // outfield (no way to know), start tracking from here.
+  if(G && !G.gkt) G.gkt={};
   // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
   if(G && G.subStrategy==='manual') G.subStrategy='planned';
   if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
@@ -3956,12 +3959,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.4-beta';
+const APP_VERSION='v2.9.5-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.5-beta':{
+    title:'Fairer subs after a keeper change',
+    items:['Time in goal no longer counts as game time for equal play. Before this, whoever kept the first half reached the break with the most minutes of anyone \u2014 so the moment they handed over the gloves, the equal-time rotation made them its favourite target: subbed off, forced back on, subbed straight off again.','Now only outfield minutes compete. The ex-keeper gets a proper run in the second half, and everyone\u2019s displayed minutes are unchanged \u2014 the summary still shows true total time.','If the keeper never changes, nothing is different.']
+  },
   'v2.9.4-beta':{
     title:'Fixed: you can sign in again',
     items:['If you had any team saved, there was no way to sign in \u2014 the sign-in button only appeared on the empty welcome screen, so it disappeared the moment you created your first team. If you were already signed in, there was no way to sign out either. Cloud sync has been unreachable for anyone with a team.','<strong>Sign in</strong> now lives in the menu (\u2630), on every screen, and shows your account when you\u2019re signed in.']
@@ -6615,13 +6622,20 @@ function generateAutoPlan(){
   let simOn=[...start];
   let simBench=avail.map((_,i)=>i).filter(i=>!simOn.includes(i));
   const simPt=Object.fromEntries(avail.map((_,i)=>[i,0]));
+  // v2.9.5: simRot is the equal-play ledger — keeper minutes excluded, matching
+  // the live engine's _rotSecs(). simPt stays TOTAL for display. simGk is
+  // MUTABLE: it flips to gk2 at the halftime gk_swap. Previously gkIdx was
+  // constant, so after the swap the plan kept excluding the EX-keeper from
+  // rotation — pinning them on the pitch for the whole second half.
+  const simRot=Object.fromEntries(avail.map((_,i)=>[i,0]));
   const gkIdx=fmt.hasGk?(gk1!==null?gk1:start[0]):null;
+  let simGk=gkIdx;
   const events=[];
   let lastMin=0;
   // Walk the timeline minute-by-minute crediting playing time + applying scheduled subs
   for(let gameMin=1;gameMin<=cfg.hm*totalPeriods;gameMin++){
     const elapsed=gameMin-lastMin;
-    simOn.forEach(p=>{simPt[p]+=elapsed;});
+    simOn.forEach(p=>{simPt[p]+=elapsed; if(p!==simGk) simRot[p]+=elapsed;});
     lastMin=gameMin;
     // Halftime GK swap?
     // v2.8.7: only promise the halftime keeper change when the coach actually
@@ -6636,17 +6650,18 @@ function generateAutoPlan(){
         simOn.unshift(gk2);
         simBench.push(gk1);
       }
+      simGk=gk2;   // the gloves change hands — the ex-keeper rotates like anyone
     }
     if(subTimesGame.includes(gameMin)){
       const c=Math.min(cfg.sc,simBench.length);
       // Hold gk2 out of the outfield rotation only when they really are going
       // to take the gloves at halftime. Excluding an auto-defaulted gk2 pinned
       // that player on the pitch for the whole game, never rotated.
-      const elig=fmt.hasGk&&gkIdx!==null?simOn.filter(p=>p!==gkIdx&&!(gk2Explicit&&p===gk2)):simOn.slice();
-      // Off: highest minutes first (equal time)
-      const off=[...elig].sort((a,b)=>simPt[b]-simPt[a]).slice(0,c);
-      // On: lowest minutes first
-      const on=[...simBench].sort((a,b)=>simPt[a]-simPt[b]).slice(0,c);
+      const elig=fmt.hasGk&&simGk!==null?simOn.filter(p=>p!==simGk&&!(gk2Explicit&&p===gk2)):simOn.slice();
+      // Off: highest OUTFIELD minutes first — keeper time doesn't count (v2.9.5)
+      const off=[...elig].sort((a,b)=>simRot[b]-simRot[a]).slice(0,c);
+      // On: lowest outfield minutes first
+      const on=[...simBench].sort((a,b)=>simRot[a]-simRot[b]).slice(0,c);
       // v2.8.2: period-aware (1..N), not hardcoded to 2 halves — quarter sports
       // place subs in Q1..Q4. timeInHalf is the minute WITHIN its period.
       const _period=Math.floor((gameMin-1)/cfg.hm)+1;
@@ -7254,6 +7269,7 @@ function startGame(){
     log:[{type:'sub_strategy',time:0,strategy:cfg.subStrategy||'fair'}],
     startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
+  G.gkt={};   // seconds spent IN GOAL, per player — see _rotSecs()
   snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
   flowBegin();           // start recording this game as a replayable flow
   renderG();showScr('s4');
@@ -7271,6 +7287,7 @@ function snapshotHalfStart(){
     bench:[...G.bench],
     gk:G.gk,
     pt:{...G.pt},
+    gkt:{...(G.gkt||{})},
     pairs:(G.pairs||[]).map(p=>({on:[...p.on]})),
     pairIdx:G.pairIdx||0
   };
@@ -7627,6 +7644,7 @@ function resetHalf(){
   G.bench=[...s.bench];
   G.gk=s.gk;
   G.pt={...s.pt};
+  G.gkt={...(s.gkt||{})};
   G.pairs=s.pairs.map(p=>({on:[...p.on]}));
   G.pairIdx=s.pairIdx;
   G.secs=0; G.elapsedMs=0; G.lastTs=null; G.sd=[];
@@ -7667,6 +7685,10 @@ function tickSecond(){
 function _tickSecondBody(){
   G.secs++;
   G.on.forEach(p=>G.pt[avail[p]]++);
+  // Keeper seconds are tracked separately: displayed minutes stay TOTAL (a
+  // parent sees the real time their kid was on), but equal-play decisions use
+  // outfield time only — see _rotSecs() and the v2.9.5 note there.
+  if(G.gk!=null&&G.on.includes(G.gk)){if(!G.gkt)G.gkt={};G.gkt[avail[G.gk]]=(G.gkt[avail[G.gk]]||0)+1;}
   const ns=nxtST();
   if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
     G.sd.push(ns);
@@ -7706,6 +7728,16 @@ function tickLoop(now){
   G.raf=requestAnimationFrame(tickLoop);
 }
 
+// v2.9.5: TIME IN GOAL DOES NOT COUNT AS GAME TIME FOR EQUAL PLAY (owner's
+// rule, from a real game). The keeper never rotates, so whoever kept the first
+// half reaches the break with the most total minutes of anyone — and because
+// equal-time always pulls the highest-minutes player off, the moment they
+// handed over the gloves they became the rotation's permanent target: off at
+// 5', forced back on at 10' by a two-deep bench, off again at 15'. Molly's
+// game. Selection therefore sorts on OUTFIELD seconds (pt − gkt). Displayed
+// minutes everywhere remain the true total. When the keeper never changes,
+// gkt cancels out of every comparison and behaviour is identical to before.
+function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0);}
 function trigSub(){
   // DON'T pause the clock — keep running, show banner for coach to confirm
   if(!G.bench.length)return;
@@ -7725,23 +7757,23 @@ function trigSub(){
       if(off.length===0||on.length===0){
         const c=Math.min(cfg.sc,G.bench.length);
         const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-        off=[...elig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0)).slice(0,c);
-        on=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0)).slice(0,c);
+        off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
+        on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
       }
     } else {
       // No planned event at this time — coach hit SUB manually outside the plan
       const c=Math.min(cfg.sc,G.bench.length);
       const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-      off=[...elig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0)).slice(0,c);
-      on=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0)).slice(0,c);
+      off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
+      on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
     }
   } else if(strat==='fair'){
     // Equal-time: pick the on-field player(s) with the most playing time to come off,
     // and the bench player(s) with the least playing time to come on.
     const c=Math.min(cfg.sc,G.bench.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
-    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
+    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(strat==='manual'){
@@ -7749,8 +7781,8 @@ function trigSub(){
     // but trigSub is only ever called via the manual SUB button (not auto-tick).
     const c=Math.min(cfg.sc,G.bench.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
-    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
+    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
@@ -7762,13 +7794,13 @@ function trigSub(){
     const pairsByMinutes=G.pairs
       .map(pair=>({
         onFieldMembers:pair.on.filter(p=>onFieldElig.includes(p)),
-        totalMins:pair.on.reduce((s,p)=>s+(G.pt[avail[p]]||0),0)
+        totalMins:pair.on.reduce((s,p)=>s+_rotSecs(p),0)
       }))
       .filter(x=>x.onFieldMembers.length>0)
       .sort((a,b)=>b.totalMins-a.totalMins);
     if(pairsByMinutes.length>0){
       off=pairsByMinutes[0].onFieldMembers;
-      const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+      const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
       on=sortedBench.slice(0,off.length);
     } else {
       const c=Math.min(cfg.sc,G.bench.length);
@@ -8496,8 +8528,10 @@ function getNextSwap(){
     // Equal-time logic: longest-on come off, longest-benched come on
     const c=Math.min(cfg.sc,G.bench.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    const sortedOn=[...onFieldElig].sort((a,b)=>(G.pt[avail[b]]||0)-(G.pt[avail[a]]||0));
-    const sortedBench=[...G.bench].sort((a,b)=>(G.pt[avail[a]]||0)-(G.pt[avail[b]]||0));
+    // v2.9.5: same basis as trigSub — outfield seconds, keeper time excluded —
+    // or the pitch would preview a different swap than the one that fires.
+    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
+    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     offArr=sortedOn.slice(0,c);
     onArr=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
@@ -9691,6 +9725,11 @@ function buildPlanTimeline(){
 
   let simOn=[...G.on], simBench=[...G.bench];
   const simPt=Object.assign({},G.pt);
+  // v2.9.5: selection uses OUTFIELD seconds (keeper time excluded), matching
+  // the live engine — otherwise the plan would promise different swaps than
+  // trigSub fires after a keeper handover. simPt stays TOTAL for the
+  // projected-minutes display; simRot is the fairness ledger.
+  const simRot={}; (avail||[]).forEach(n=>{ simRot[n]=(G.pt[n]||0)-((G.gkt&&G.gkt[n])||0); });
   const events=[];
   // v2.7.98: fair tiebreakers for the equal-time rotation. Sorting only by
   // minutes ties on array order, which made the engine pull/return the SAME
@@ -9729,7 +9768,8 @@ function buildPlanTimeline(){
     } else {
       times.forEach(t=>{
         const dt=Math.max(0,t-simSecs);
-        simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt; });
+        simOn.forEach(pl=>{ simPt[avail[pl]]=(simPt[avail[pl]]||0)+dt;
+          if(pl!==G.gk) simRot[avail[pl]]=(simRot[avail[pl]]||0)+dt; });
         simSecs=t; simClock=(p-1)*hmSec+t;
         const done=(p===curP)&&G.sd.includes(t);
         if(simBench.length===0){
@@ -9744,14 +9784,14 @@ function buildPlanTimeline(){
         // Measuring both sides the same way makes minutes converge and stops a
         // just-arrived player being pulled at the next sub.
         const offSorted=[...eligibleOn].sort((a,b)=>
-          (simPt[avail[b]]||0)-(simPt[avail[a]]||0) || (onSince[a]||0)-(onSince[b]||0));
+          (simRot[avail[b]]||0)-(simRot[avail[a]]||0) || (onSince[a]||0)-(onSince[b]||0));
         const onSorted=[...simBench].sort((a,b)=>
-          (simPt[avail[a]]||0)-(simPt[avail[b]]||0) || (offSince[a]||0)-(offSince[b]||0));
+          (simRot[avail[a]]||0)-(simRot[avail[b]]||0) || (offSince[a]||0)-(offSince[b]||0));
         let off=[],on=[];
         if(strat==='paired' && G.pairs && G.pairs.length){
           const pairsByMins=G.pairs.map(pair=>({
             onMembers:pair.on.filter(pl=>eligibleOn.includes(pl)),
-            totalMins:pair.on.reduce((s,pl)=>s+(simPt[avail[pl]]||0),0),
+            totalMins:pair.on.reduce((s,pl)=>s+(simRot[avail[pl]]||0),0),
             onSince:Math.min(...pair.on.map(pl=>onSince[pl]!=null?onSince[pl]:simClock))
           })).filter(x=>x.onMembers.length>0)
             .sort((a,b)=>b.totalMins-a.totalMins || a.onSince-b.onSince);

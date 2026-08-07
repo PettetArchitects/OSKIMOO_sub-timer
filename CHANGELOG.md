@@ -4,6 +4,26 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.5-beta — Time in goal doesn't count as game time for equal play
+
+From a real game, better described the second time: **Molly kept the whole first half, handed over the gloves at the break, and was then subbed off "way too many times" in the second half.**
+
+Reproduced exactly (9-player 7v7, subs every 5): the keeper never rotates, so Molly reached HT on 20 minutes when nobody else had more than 15. Equal-time always pulls the highest-minutes player off — so as an outfielder she became the permanent target: **off at 5', forced back on at 10' by the two-deep bench, off again at 15'.** Two yanks in a half, 5-minute stints, worst of any player.
+
+**The owner's rule, now implemented: keeper time is not game time for equal play.**
+
+- ⏱ `G.gkt` tracks seconds in goal per player. All rotation *selection* — live engine (`trigSub`, every strategy), the on-pitch next-sub preview (`getNextSwap`), the Plan-page simulation (`buildPlanTimeline`) and the Full-Control plan generator (`generateAutoPlan`) — sorts on **outfield seconds** (`pt − gkt`). Plan and live stay in agreement, per the v2.8.2 principle.
+- 🖥 **Displayed minutes are unchanged everywhere** — pitch chips, summary, history show true total time. Only the fairness ledger changed.
+- 🎿 When the keeper never changes, `gkt` cancels out of every comparison — behaviour is provably identical. The rule only bites at a handover.
+- 🔁 Survives refresh (snapshot + reset-half carry `gkt`; old saves backfill empty and start tracking).
+- 🐛 Fixed in passing: `generateAutoPlan`'s keeper was constant, so after its HT `gk_swap` the plan kept excluding the **ex**-keeper from rotation — pinning them on the pitch for the entire second half. `simGk` now follows the gloves.
+
+**The stated trade-off:** the H1 keeper now tends to play the whole second half (Molly: 40 total vs ~30 for others — but 20 *outfield* vs their ~28, which is what the rule says matters). Flagged for real-game judgement.
+
+Guarded by `secondhalf: H1 keeper is not rotation-targeted after handing over the gloves` (5 checks, red against v2.9.4).
+
+---
+
 ## v2.9.4-beta — Fixed: sign-in was unreachable for anyone with a team
 
 Reported as "there is no login", and it was right — on production, for about 40 versions.
