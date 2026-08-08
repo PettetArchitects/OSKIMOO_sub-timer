@@ -12,6 +12,74 @@
 
 ---
 
+## 2026-08-08 (Session 4) — The constitution session: Plan/Play modes, the Saturday rehearsal, and five shipped builds
+
+**State:** `main` = **v2.9.10-beta**, all green, six merges today (PRs #28–#33), production current.
+Gate ~460 checks / 14 suites (brief-check + screen-audit joined). **Pick up at Play mode 4.**
+
+### The design constitution (merged, gate-enforced — read these before touching UI)
+- **`docs/SCREEN-BRIEFS.md`** — per-screen contract: purpose, pathways, ONE primary action, must-show,
+  boundaries, choice budget, **Mode: PLAN|PLAY|BOTH** (required field). Enforced by `test/brief-check.mjs`
+  in the gate: actions must exist in code, P# refs must resolve, every runtime screen briefed.
+- **The governing split (owner-stamped): PLAN mode / PLAY mode.** Play = matchday, sparse & loud
+  (squad → line-up review + announce → game → whistle ritual). Plan = midweek, dense & calm (teams,
+  roster/strengths, sub-plan scenarios, history + opposition notes, sharing, seasonal settings).
+  The grammar of every PLAY surface: **engine proposes → coach reviews → coach announces to children.**
+- **`docs/FLOW.md`** — screen map + the coach's workflow tree v3 (stamped) + service blueprint.
+  FigJam mirror: https://www.figma.com/board/ZAF9tiQaaylLSszKzdafkH (tree v3 is authoritative; delete v1/v2 there).
+- **`test/screen-audit.mjs`** (`npm run screen-audit`) — per-screen tappables/objects/<44px/fonts/colours/
+  anims/dominance. Headlines: live game 25 tappables + dominance 1.0 (no visual primary); Home-with-teams
+  dominance 13.2 *on the wrong action* (New Team); team editor = worst a11y (23 sub-44px).
+
+### The Saturday rehearsal (the session's engine — ~15 owner decisions, all in the briefs)
+Walking the owner's real matchday produced, among others: **timing is seasonal** (settings leave the
+matchday path) · **announce views** (the screen scripts what the coach reads to the huddle, at kickoff
+and every break) · **the relay card** (sub = a shout: who on, for whom, at which position; outgoing name
+is the kid's wayfinding) · break ritual = keeper → shape → positions → announce · score = standing
+one-tap interrupt · full-time = confirm score + **player of the match** (new feature) · plan page does
+NOT live on the game view · **Home is the Plan/Play fork** · plan-ahead = named **game-day scenarios**
+pulled up in Play mode (smart-offer by headcount/opponent = gap) · **opposition log** (new feature domain).
+
+### Shipped today (each gated, each traceable to a rehearsal decision)
+| Ver | PR | What |
+|---|---|---|
+| v2.9.5 | #28 | Keeper-time rule + fairness hunt (from prior session, merged today) |
+| v2.9.6 | #29 | Drawer rows → `.ui-btn--ghost` (migration step 02) + ghost tones |
+| — | #30 | The constitution: briefs + brief-check + FLOW.md + screen-audit |
+| v2.9.7 | #31 | **Play mode 1** — timing confirm strip; s2 formally out of the matchday path |
+| v2.9.8 | #32 | **Play mode 2** — announce views (pre-kickoff door + break door) |
+| v2.9.9 | direct | **Play mode 3a** — the relay card (⚠️ committed straight to main by mistake; gate was green locally; CI doesn't run on main pushes) |
+| v2.9.10 | #33 | **De-outline** (owner directive): borders off all buttons/panels; selection = tinted fills. Kept: shell hairlines, inputs, pos-tags |
+
+### Figma (all under the UI Atlas file qh2yjSJ10gSWBrpb4120qb + flows board)
+Atlas sections regrouped **by mode** (PLAY rows / PLAN rows × phone/iPad/web), 07 frames current to
+v2.9.8, announce view added as frame 14. **Needs: v2.9.10 re-shoot of most frames (borderless look).**
+UI Kit page: variables (Primitives + Semantic w/ Light/Dark modes), ui- component sets, WCAG audit
+(dark passes AA everywhere; AAA table + fixes computed). Control Styles page: A/B/C tiles + type-scale
+(20→8 roles) + spacing audit (**102 padding combos**, no grid → 9-step scale proposed) + AAA contrast.
+Look Explorations: direction tiles + owner's reference mocks (RING/TAKEOVER/WHISTLE, lime-on-ink) —
+**parked by owner: "flow first, current UI".** Real-iPad screenshot slot still empty (owner task).
+
+### Next session — pick up here
+1. **Re-shoot the atlas for v2.9.10** (borderless) — all sections, three sizes (procedure in the
+   figma memory / prior session pattern; swap fills by nodeId, never re-place).
+2. **Play mode 4** — Plan tab leaves the live game's tab bar/view cycle (brief: subOrderOv). Careful:
+   `switchToView('plan')`, `renderViewSwitcher()` (~line 3809), break-hint link now points at announce
+   + plan; the Plan page stays reachable from team context (teamActionPlanAhead) + break line-up editing
+   (which currently lives on the Plan page — needs a home decision before the tab goes).
+3. **Play mode 5** — Home as the Plan/Play fork (resume-primary-when-live · team card → Play ·
+   quiet PLAN door; New Team loses red + matchday prominence).
+4. Then: feature backlog born today — player of the match + edit-from-history (s5 gaps ① ②),
+   opposition log (s6 gap), scenario smart-offer (subOrderOv), ranked player strengths (editTeam gap),
+   cognitive-check ratchets (budgets + dominance + taps-to-kickoff), flow-walker + tree-path coverage.
+5. Owner's open calls: borderless look OK on iPad? · real-iPad screenshot into the atlas slot ·
+   ui-rounded check (only matters if/when the ui- font ships beyond drawers).
+
+**Standing directive: flow first on the current UI — restyle decisions (incl. the lime reference
+language) wait until the flow work is done.**
+
+---
+
 ## 2026-08-08 — Two marathon sessions: flows, gates, fairness — and a UI system awaiting migration
 
 **State:** [PR #28](https://github.com/PettetArchitects/OSKIMOO_sub-timer/pull/28) **merged 2026-08-08** — `main` = v2.9.5-beta.
