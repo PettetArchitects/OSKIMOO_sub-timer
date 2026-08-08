@@ -101,6 +101,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 7 | Equal-time rotation over the game | Minutes converge to even; nobody benched the interval after they came on ⚠️ |
 
 ✓ A sub changes the on-field set; undo restores it exactly.  [smoke: trigSub changed the on-field set / undoLastSub restores the line-up]
+✓ The moment a sub fires, the relay card scripts the shout — who comes on, for whom, at which position, in speaking order; undo dismisses it; break rotations skip it.  [edge: relay card scripts the shout / relay names the position / undo dismisses the relay / break rotation skips the relay]
 ✓ Manual + injury subs preserve the field size.  [edit: manual sub changed the line-up · injury(minor/out): field size preserved]
 ✓ Equal-time rotation evens minutes (spread ≤ 5m), no on-then-off churn.  [smoke: outfield minutes are even / no player benched right after coming on · hunt: I5]
 ✓ Score increments log a goal; decrement removes the most recent; never negative.  [sports: score never negative / decrement removed a logged goal]

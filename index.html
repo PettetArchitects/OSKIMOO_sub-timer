@@ -1056,6 +1056,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button class="strip-link" onclick="openMatchSettings()">Change</button>
   </div>
 
+  <!-- v2.9.9: the RELAY CARD — the moment a sub fires, the screen scripts the
+       shout in speaking order: who comes on, for whom, at which position.
+       Tap (or 12s) to dismiss. Suppressed during break auto-rotation — the
+       announce view owns breaks. -->
+  <div id="relayCard" onclick="hideRelay()" role="status" style="display:none;margin:0 14px 4px;padding:12px 14px;background:#16213e;border:1.5px solid #00d4aa;border-radius:12px;cursor:pointer;flex-shrink:0"></div>
+
   <!-- Pitch — fills the middle, flexes to whatever space is left. v2.7.9 wraps it in
        a position:relative parent so the View cycle button can sit overlaid bottom-left. -->
   <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
@@ -3989,12 +3995,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.8-beta';
+const APP_VERSION='v2.9.9-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.9-beta':{
+    title:'The sub tells you what to shout',
+    items:['When a sub fires, a card now spells out the shout: <strong>who comes on, for whom, at which position</strong> — in the order you’d say it to the kids. "You’re on for Riley" doubles as directions: run to where Riley is.','Tap the card (or wait 12 seconds) to dismiss. Undo still works as before; break rotations skip the card — the announce view covers those.']
+  },
   'v2.9.8-beta':{
     title:'Announce the line-up',
     items:['New before kick-off and at every break: <strong>announce the line-up</strong> — a big, read-aloud view of who starts where (keeper marked) and who begins on the bench. Built for the huddle: you read, they run.','Find it under the clock before kick-off, and next to the break options at half/quarter time.']
@@ -6448,6 +6458,42 @@ function openAnnounce(){
   document.getElementById('announceOv').classList.add('show');
 }
 function closeAnnounce(){ document.getElementById('announceOv').classList.remove('show'); }
+
+// v2.9.9: position label for an on-field player — same slot mapping as
+// renderRoster (GK = slot 0, outfield in G.on order minus the keeper).
+function posLabelFor(pIdx){
+  const positions=getPositions();
+  if(FORMATS[curFmt].hasGk&&G.gk!==null){
+    if(pIdx===G.gk) return positions[0].label;
+    const i=G.on.filter(p=>p!==G.gk).indexOf(pIdx);
+    return i>=0&&positions[i+1]?positions[i+1].label:'';
+  }
+  const i=G.on.indexOf(pIdx);
+  return i>=0&&positions[i]?positions[i].label:'';
+}
+
+// v2.9.9: the relay card. Called AFTER the swap applies, so the incoming
+// player already owns the outgoing player's slot — the position shown is
+// where the kid should run to. "You're on for Riley" is wayfinding: the
+// outgoing name tells the incoming kid where to go.
+let _relayTimer=null;
+function showRelay(off,on){
+  const el=document.getElementById('relayCard'); if(!el||!G) return;
+  const c=Math.min(off.length,on.length);
+  let rows='';
+  for(let i=0;i<c;i++){
+    const pos=posLabelFor(on[i]);
+    rows+=`<div style="font-size:16px;font-weight:800;color:#eee;padding:2px 0"><span style="color:#00d4aa">${avail[on[i]]}</span> <span style="font-weight:600;color:#9fb3c8">on for</span> <span style="color:#ff7088">${avail[off[i]]}</span>${pos?` <span style="font-weight:600;color:#9fb3c8">·</span> <span style="color:#5bc0de">${pos}</span>`:''}</div>`;
+  }
+  el.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#00d4aa;margin-bottom:2px">SUB MADE — TELL THEM</div>`+rows;
+  el.style.display='block';
+  if(_relayTimer)clearTimeout(_relayTimer);
+  _relayTimer=setTimeout(hideRelay,12000);
+}
+function hideRelay(){
+  const el=document.getElementById('relayCard'); if(el)el.style.display='none';
+  if(_relayTimer){clearTimeout(_relayTimer);_relayTimer=null;}
+}
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
   setDisplayNameList(avail);
@@ -8254,6 +8300,9 @@ function confSub(){
   setTimeout(()=>{ window._justSubbed=null; if(typeof renderG==='function') renderG(); }, 1700);
   document.getElementById('subBanner').style.display='none';
   document.getElementById('subOv').classList.remove('show');
+  // v2.9.9: script the shout. After the swap, positions are final — show the
+  // relay card. Break auto-rotation is excluded: the announce view owns breaks.
+  if(!_breakRotation) showRelay(off,on);
   saveActiveGame();
   renderG();
 }
@@ -8262,6 +8311,7 @@ function confSub(){
 // players. Only the most recent sub is undoable; advH() clears the snapshot.
 function undoLastSub(){
   if(!G||!G.lastSub)return;
+  hideRelay(); // the shout no longer applies
   const ls=G.lastSub;
   G.on=ls.prevOn;
   G.bench=ls.prevBench;

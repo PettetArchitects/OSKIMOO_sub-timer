@@ -582,6 +582,35 @@ const SCENARIOS = [
     const brk = await open();
     chk('break announce titles the upcoming period', /2nd-half|Period 2/i.test(brk.title), brk.title);
   }],
+
+  // v2.9.9 — the relay card: the moment a sub fires, the screen scripts the
+  // shout (who on, for whom, at which position). Undo withdraws the shout;
+  // break auto-rotation is silent (the announce view owns breaks).
+  ['relay card — the shout script at every sub', async (page, { chk }) => {
+    await bootstrap(page);
+    const fired = await page.evaluate(() => {
+      trigSub(); // auto-applies via confSub
+      const el = document.getElementById('relayCard');
+      const last = G.lastSub;
+      return {
+        shown: el.style.display !== 'none',
+        text: el.innerText,
+        onName: avail[last.on[0]],
+        offName: avail[last.off[0]],
+        pos: posLabelFor(last.on[0]),
+      };
+    });
+    chk('relay card scripts the shout', fired.shown && fired.text.includes(fired.onName) && fired.text.includes(fired.offName), fired.text.replace(/\n/g, ' · '));
+    chk('relay names the position', !fired.pos || fired.text.includes(fired.pos), fired.pos || 'no slot label');
+    const undone = await page.evaluate(() => { undoLastSub(); return document.getElementById('relayCard').style.display === 'none'; });
+    chk('undo dismisses the relay', undone);
+    // Break rotation must NOT raise the card.
+    const atBreak = await page.evaluate(() => {
+      G.secs = cfg.hm * 60; advH();
+      return { atBreak: G.atBreak, relayShown: document.getElementById('relayCard').style.display !== 'none' };
+    });
+    chk('break rotation skips the relay', atBreak.atBreak && !atBreak.relayShown);
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })
