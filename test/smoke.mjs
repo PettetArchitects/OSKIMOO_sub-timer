@@ -445,6 +445,47 @@ const SCENARIOS = [
     await shot(page, 'potm');
   }],
 
+  // v2.9.15: edit-from-history (s5 gap ②) — the deferred fields (opponent,
+  // location, scorers, potm) are editable after save; the facts are not.
+  ['edit-from-history: enrich a saved match from the car park', async (page) => {
+    const r = await page.evaluate(() => {
+      // fixture: give the saved match an unattributed goal to name a scorer for
+      const all = loadMatches();
+      all[0].log.push({ type: 'goal', who: 'us', time: 60, half: 1 });
+      saveMatches(all);
+      showMatchDetail(loadMatches()[0]);
+      histEditStart();
+      const editing = !!document.getElementById('histOpponent');
+      document.getElementById('histOpponent').value = 'Wanderers';
+      document.getElementById('histLocation').value = 'Blackman Park';
+      // name the scorer via the inline strip
+      const goalBtn = [...document.querySelectorAll('#sumLog button')].find(b => /name the scorer/i.test(b.textContent));
+      if (goalBtn) goalBtn.click();
+      const chip = [...document.querySelectorAll('#sumLog .ui-chip')].find(c => c.textContent !== 'No scorer');
+      const scorerName = chip ? chip.textContent : null;
+      if (chip) chip.click();
+      // re-grab the inputs (renderMatchDetail rebuilt them), then save
+      document.getElementById('histOpponent').value = 'Wanderers';
+      document.getElementById('histLocation').value = 'Blackman Park';
+      histEditSave();
+      const m = loadMatches()[0];
+      const goal = m.log.find(e => e.type === 'goal' && e.who === 'us');
+      return { editing, scorerName, opponent: m.opponent, location: m.location, savedScorer: goal && goal.scorer, backToRead: !document.getElementById('histOpponent') };
+    });
+    chk('edit mode opens from history detail', r.editing);
+    chk('opponent + location editable after save', r.opponent === 'Wanderers' && r.location === 'Blackman Park');
+    chk('goal scorer named from history', !!r.scorerName && r.savedScorer === r.scorerName);
+    chk('save returns to the read-only view', r.backToRead);
+    const cancel = await page.evaluate(() => {
+      histEditStart();
+      document.getElementById('histOpponent').value = 'SHOULD-NOT-STICK';
+      histEditCancel();
+      return loadMatches()[0].opponent;
+    });
+    chk('cancel discards edits', cancel === 'Wanderers');
+    await shot(page, 'edit-history');
+  }],
+
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
     await page.reload({ waitUntil: 'load' });

@@ -4008,12 +4008,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.14-beta';
+const APP_VERSION='v2.9.15-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.15-beta':{
+    title:'Fill in the details later',
+    items:['Full time is for the huddle; details are for the car park. Any saved game now has <strong>Edit details</strong> in history: add the opponent and ground, name who scored each goal, pick or change the player of the match — whenever you get a minute.','The match facts stay locked: score, minutes and event times are the record. You’re only ever filling in the story around them. Edits sync to your other devices.']
+  },
   'v2.9.14-beta':{
     title:'iPad fix: no more stuck zoom',
     items:['On iPad (and iPhone), tapping into a text box — team name, player names, opponent — could make Safari zoom the whole page in and stay zoomed, cutting off the right side of the app. Text boxes are now sized so that zoom never fires.','If your iPad is currently stuck zoomed: pinch out once (or reload the page) and it won’t happen again.']
@@ -8692,20 +8696,58 @@ function showHistory(filterTeamId){
   showScr('s6');
 }
 
+// v2.9.15: edit-from-history (s5 gap ②) — car-park enrichment. The record's
+// FACTS stay read-only (score, minutes, event times); the DEFERRED fields
+// (opponent, location, scorers, player of the match) are editable afterwards.
+// Edits work on a deep copy (_histEdit) and only land on Save.
+let _histM=null;        // the saved match currently shown in the detail view
+let _histEdit=null;     // working copy while editing (null = read mode)
+let _histScorerOpen=null; // log index whose scorer strip is expanded
+
 function showMatchDetail(m){
-  // Reuse summary screen to show historical match
+  _histM=m; _histEdit=null; _histScorerOpen=null;
+  renderMatchDetail();
+}
+function renderMatchDetail(){
+  const editing=!!_histEdit;
+  const m=editing?_histEdit:_histM;
+  if(!m)return;
   // Disambiguate names within the saved roster of this match (so two Sarahs read as Sarah B / Sarah M)
-  if(m&&Array.isArray(m.playingTime))setDisplayNameList(m.playingTime.map(p=>p.name));
+  if(Array.isArray(m.playingTime))setDisplayNameList(m.playingTime.map(p=>p.name));
   const mc=document.getElementById('sumMatch');
   const d=new Date(m.date);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   const _potm=_matchPotm(m);
   mc.innerHTML=`<div style="text-align:center">
-    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px">${dateStr}${m.location?' · '+m.location:''}</div>
+    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px">${dateStr}${!editing&&m.location?' · '+m.location:''}</div>
     <div style="font-size:36px;font-weight:800;margin:4px 0"><span style="color:#00d4aa">${m.scoreUs}</span> <span style="color:#444">—</span> <span style="color:#e94560">${m.scoreThem}</span></div>
-    <div style="font-size:13px;color:#666">${m.team||'Team'} vs ${m.opponent||'?'} · ${m.format}</div>
-    ${_potm?`<div style="font-size:13px;color:#f0a500;font-weight:800;margin-top:6px">${ic('star',13,'#f0a500')} Player of the match: ${fn(_potm)}</div>`:''}
+    <div style="font-size:13px;color:#666">${m.team||'Team'}${editing?'':' vs '+(m.opponent||'?')} · ${m.format}</div>
+    ${!editing&&_potm?`<div style="font-size:13px;color:#f0a500;font-weight:800;margin-top:6px">${ic('star',13,'#f0a500')} Player of the match: ${fn(_potm)}</div>`:''}
   </div>`;
+  if(editing){
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<div style="display:flex;gap:8px;margin-top:10px">
+      <input class="input" id="histOpponent" placeholder="Opponent name" style="flex:1;margin-bottom:0">
+      <input class="input" id="histLocation" placeholder="Location / ground" style="flex:1;margin-bottom:0">
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:11px;color:#f0a500;text-transform:uppercase;letter-spacing:1px;font-weight:800;text-align:center;margin-bottom:8px">${ic('star',12,'#f0a500')} Player of the match</div>
+      <div id="histPotmChips" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
+    </div>`;
+    mc.appendChild(wrap);
+    document.getElementById('histOpponent').value=m.opponent==='Unknown'?'':(m.opponent||'');
+    document.getElementById('histLocation').value=m.location||'';
+    const chips=document.getElementById('histPotmChips');
+    (m.playingTime||[]).slice().sort((a,b)=>b.secs-a.secs).forEach(({name})=>{
+      const b=document.createElement('button');
+      b.className='ui-chip'+(m.potm===name?' sel':'');
+      b.style.cssText='min-height:44px;padding:10px 16px'+(m.potm===name?';background:rgba(240,165,0,.18);color:#f0a500':'');
+      b.textContent=fn(name);
+      b.setAttribute('aria-pressed',m.potm===name?'true':'false');
+      b.onclick=()=>{ m.potm=(m.potm===name)?null:name; renderMatchDetail(); };
+      chips.appendChild(b);
+    });
+  }
 
   const c=document.getElementById('sumCard');c.innerHTML='';
   const hdr=document.createElement('h2');
@@ -8733,11 +8775,13 @@ function showMatchDetail(m){
   lhdr.textContent='Game Log';lc.appendChild(lhdr);
   const teamName=m.team?m.team.split(' ')[0]:'Us';
   if(m.log&&m.log.length){
-    m.log.filter(_logRenders).forEach(e=>{
+    m.log.forEach((e,li)=>{
+      if(!_logRenders(e))return;
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
       const timeStr=_logTimeLabel(e);
       let icon='',detail='';
+      const editableGoal=editing&&e.type==='goal'&&e.who==='us'&&e.afl!=='behind';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
       else if(e.type==='injury_sub'){icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;}
       else if(e.type==='reset_half'){icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;}
@@ -8745,17 +8789,77 @@ function showMatchDetail(m){
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
       else if(e.type==='goal'){icon=ic('goal',14,e.afl==='behind'?'#5bc0de':'#00d4aa');detail=e.who==='us'?(e.afl==='behind'?`${teamName} behind`:(e.scorer?`${fn(e.scorer)} scored`:`${teamName} goal!`)):('Opposition '+(e.afl==='behind'?'behind':'goal'));if(e.who==='us'&&e.afl!=='behind'&&e.assist)detail+=` · assist ${fn(e.assist)}`;}
       else if(e.type==='halftime'||e.type==='period_end'){icon=ic('pause',14,'#888');detail=`${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}`;}
+      // Edit mode: our goals grow a scorer affordance — the car-park question
+      // is "who scored that one?", answered with one tap per goal.
+      if(editableGoal)detail+=` <button onclick="histToggleScorer(${li})" style="background:rgba(0,212,170,.12);border:none;color:#00d4aa;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${e.scorer?'change scorer':'name the scorer'}</button>`;
       row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
       lc.appendChild(row);
+      if(editableGoal&&_histScorerOpen===li){
+        const strip=document.createElement('div');
+        strip.style.cssText='display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 10px 52px;border-bottom:1px solid #222';
+        const names=(m.playingTime||[]).map(p=>p.name);
+        names.concat([null]).forEach(name=>{
+          const b=document.createElement('button');
+          b.className='ui-chip'+(name&&e.scorer===name?' sel':'');
+          b.style.cssText='min-height:44px;padding:10px 14px'+(name===null?';color:#888':'');
+          b.textContent=name===null?'No scorer':fn(name);
+          b.onclick=()=>{
+            if(name===null){delete e.scorer;delete e.assist;}          // no scorer → no assist either
+            else{e.scorer=name;if(e.assist===name)delete e.assist;}    // can't assist your own goal
+            _histScorerOpen=null;renderMatchDetail();
+          };
+          strip.appendChild(b);
+        });
+        lc.appendChild(strip);
+      }
     });
   } else {
     lc.innerHTML+='<div style="font-size:13px;color:#666;text-align:center">No log</div>';
   }
 
-  // Hide save button, change Done to go back to history
+  // Footer: read mode = back + the edit door; edit mode = save/cancel.
   const sec=document.querySelector('#s5 .sec');
-  sec.innerHTML='<button class="btn btn-o" onclick="showHistory()">← Back to History</button>';
+  sec.innerHTML=editing
+    ?'<button class="btn btn-g" onclick="histEditSave()">Save changes</button><button class="btn btn-o" style="margin-top:8px" onclick="histEditCancel()">Cancel</button>'
+    :'<button class="btn btn-o" onclick="showHistory()">← Back to History</button><button class="ui-btn ui-btn--ghost is-plan" style="margin-top:8px;justify-content:center" onclick="histEditStart()">'+ic('pencil',14)+'Edit details — opponent, scorers, player of the match</button>';
   showScr('s5');
+}
+function histToggleScorer(li){ _histScorerOpen=(_histScorerOpen===li)?null:li; renderMatchDetail(); }
+function histEditStart(){
+  if(!_histM)return;
+  _histEdit=JSON.parse(JSON.stringify(_histM));
+  // normalise: potm may only exist as a log event on cloud-merged matches
+  _histEdit.potm=_matchPotm(_histEdit);
+  _histScorerOpen=null;
+  renderMatchDetail();
+}
+function histEditCancel(){ _histEdit=null; _histScorerOpen=null; renderMatchDetail(); }
+function histEditSave(){
+  if(!_histEdit)return;
+  const m=_histEdit;
+  m.opponent=(document.getElementById('histOpponent').value||'').trim()||'Unknown';
+  m.location=(document.getElementById('histLocation').value||'').trim()||'';
+  // keep the log-borne potm (cloud transport) in step with the field
+  m.log=(m.log||[]).filter(e=>!(e&&e.type==='potm'));
+  if(m.potm)m.log.push({type:'potm',time:0,half:1,name:m.potm});
+  else delete m.potm;
+  const all=loadMatches();
+  const idx=all.findIndex(x=>x.id===m.id);
+  if(idx>=0){all[idx]=m;saveMatches(all);}
+  if(cloudUser)updateCloudMatch(m);
+  _histM=m;_histEdit=null;_histScorerOpen=null;
+  renderMatchDetail();
+}
+// v2.9.15: history edits sync — UPDATE (the insert path is pushCloudMatch).
+// Only the deferred fields travel; the row's facts are never rewritten.
+async function updateCloudMatch(match){
+  if(!sb||!cloudUser||!match.cloud_id)return;
+  syncStart();
+  try{
+    const{error}=await sb.from('matches').update({opponent:match.opponent||null,location:match.location||null,log:match.log||[]}).eq('id',match.cloud_id);
+    if(error){console.warn('updateCloudMatch',error);syncEnd(true);return;}
+    syncEnd(false);
+  }catch(e){console.warn('updateCloudMatch',e);syncEnd(true);}
 }
 
 // ===== PITCH VISUALIZATION =====

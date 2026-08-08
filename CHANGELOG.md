@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.15-beta — Edit-from-history (s5 gap ②)
+
+The enrich-later half of the whistle ritual: history detail grows an **Edit details** door. Editable: opponent, location, per-goal scorer (one tap per goal, inline chip strip; clearing a scorer clears its assist; a scorer can't assist their own goal), and player of the match. **The record's facts stay read-only** — score, minutes, event times are never editable, resolving the P5.4 tension flagged in the s6 brief. Edits work on a deep copy and land on Save: local matches store updated in place; signed-in edits sync via a new `updateCloudMatch()` UPDATE path (only the deferred fields travel — opponent, location, log). The log-borne potm event is kept in step with the field on every save. Smoke: scenario covers the full edit round-trip including cancel-discards.
+
 ## v2.9.14-beta — iPad fix: input focus auto-zoom (right side clipped)
 
 Owner report: the right side of the app was clipped on the iPad. Cause: iOS Safari zooms the page when a focused text field is under 16px, and with `user-scalable=no` the zoom can stick after blur — the app then sits zoomed with its right edge off-screen. Every text field (`.input` was 15px; share-link 11px; team-code 12px; dev flow-JSON 11px) is now 16px — the documented iOS fix; pinch zoom untouched, no layout change otherwise. New a11y gate check: every focusable text field must be ≥16px, full-DOM, so the trap can't be reintroduced. (A stuck iPad clears with one pinch-out or a reload.)

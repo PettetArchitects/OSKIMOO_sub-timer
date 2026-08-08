@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.14-beta** · 0 static + 106 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.15-beta** · 0 static + 110 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -28,6 +28,7 @@ These are emitted by `innerHTML` templates; a static parse can't say which
 screen shows them. See §C for the runtime-verified placement.
 
 - **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBulkTag`, `closeGameMenu`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `exportGameFlow`, `fillSampleSquad`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
+- **`renderMatchDetail()`** → `histEditCancel`, `histEditSave`, `histEditStart`, `histToggleScorer`, `showHistory`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
 - **`renderScore()`** → `adjScore`, `aflScore`, `aflUndo`
@@ -43,7 +44,6 @@ screen shows them. See §C for the runtime-verified placement.
 - **`openPlanSwapEditor()`** → `closePlanEdit`
 - **`renderG()`** → `openAnnounce`
 - **`injurySub()`** → `confInjury`
-- **`showMatchDetail()`** → `showHistory`
 - **`renderSsStratGrid()`** → `ssSetStrat`
 - **`renderPlanFormationChips()`** → `setPlanFormation`
 - **`renderSubOrderTabs()`** → `subOrderPick`

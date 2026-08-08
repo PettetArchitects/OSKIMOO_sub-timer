@@ -156,7 +156,8 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 1b | Pick the **player of the match** (v2.9.13) | One tap on a name chip (playing-time order); tap again clears; announced to the huddle from the screen |
 | 2 | Add opponent / location, pick goal scorers | Fields + scorer tags saved with the match ⚠️ scorer picker untested |
 | 3 | Save Match | Written locally (+ cloud if signed in); active game cleared; potm saved in the record **and** in the log (cloud transport) |
-| 4 | Match History → open a past game | Read-only summary of that match, star line when a player of the match was named |
+| 4 | Match History → open a past game | Summary of that match, star line when a player of the match was named. **Facts read-only** (score, minutes, times) |
+| 4b | **Edit details** from history (v2.9.15 — the car-park half of the whistle ritual) | Opponent, location, per-goal scorer (one tap per goal), player of the match — editable any time after save; Cancel discards; edits sync to cloud |
 
 ✓ Player of the match: pick → save → reread from history, including the log-borne cloud shape.  [smoke: player of the match persists into the saved match · potm rides in the log for cloud sync · history detail shows the player of the match]
 🔴 Scorer/assist picker and the history list view are not yet covered by automated tests (Save Match now is — via the potm scenario).

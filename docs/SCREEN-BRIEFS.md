@@ -163,7 +163,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Secondary:** score confirm, `pickPotm()` (player-of-the-match chips — huddle-fast, one tap, no overlay; v2.9.13), opponent/location fields (deferred-friendly), scorer picker (deferred-friendly), `showScr()` (skip/home)
 **Must show:** final score front and centre for confirmation; the player-of-the-match chips (playing-time order — likely candidates float up); per-player minutes (true totals, including keeper time); the game log.
 **Boundaries:** displayed minutes are true totals even though rotation used outfield-only seconds (v2.9.5 rule); saving clears the active game (P5.3); the potm chips are one semantic decision, not N choices — they don't count against the budget individually.
-**Feature gaps:** ① player of the match — **shipped v2.9.13** (`G.potm` → `match.potm` + a `{type:'potm'}` log event for cloud transport; `_matchPotm()` reads either shape; star line in history detail). ② enrich-later — history detail is read-only (P5.4), so deferred fields (opponent, location, scorers, potm) still have nowhere to be filled in afterwards; deciding scorers in the car park needs edit-from-history — **next build**.
+**Feature gaps:** ① player of the match — **shipped v2.9.13** (`G.potm` → `match.potm` + a `{type:'potm'}` log event for cloud transport; `_matchPotm()` reads either shape; star line in history detail). ② enrich-later — **shipped v2.9.15**: history detail has an Edit details door (`histEditStart()`) for the deferred fields only — opponent, location, per-goal scorer, potm; the record's facts (score, minutes, event times) stay read-only.
 **Choice budget:** 5
 
 ## Match history · `s6`
@@ -174,7 +174,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Primary action:** `showMatchDetail()` on a match row.
 **Secondary:** `showScr()` (back), `toggleGlobalMenu()`
 **Must show:** matches newest-first with result and date; empty state that says how history gets here.
-**Boundaries:** detail view is read-only (P5.4) — in tension with the enrich-later decision (see `s5` gap ②).
+**Boundaries:** the record's FACTS are read-only (P5.4 — score, minutes, event times never change after save); the DEFERRED fields (opponent, location, scorers, potm) are editable via the detail view's Edit details door (v2.9.15, resolves the old tension with `s5` gap ②). Edits work on a copy and land only on Save.
 **Feature gap (owner-requested, 2026-08-08): the opposition log.** Opponents become entities that accumulate across matches — formation they played, notes for next time, results record — and surface as pre-game intel during setup when the same opponent is picked again ("last met: their shape, your notes, the result"). History is where the log is browsed; setup is where it pays off.
 **Choice budget:** 5
 
