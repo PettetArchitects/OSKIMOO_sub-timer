@@ -16,3 +16,4 @@ playwright-report/
 # sent in from the sideline get committed to flows/ as the regression corpus.
 flows/generated/
 test/tmp-*.mjs
+screen-audit.json
