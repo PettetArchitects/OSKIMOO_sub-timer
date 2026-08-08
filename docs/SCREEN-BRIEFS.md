@@ -78,7 +78,14 @@
 **Secondary:** `ssAdj()` steppers (period length, sub frequency, players-per-sub), `ssSetStrat()` strategy, 2nd-half GK nomination
 **Must show:** current values for every setting; what the strategy means in one line.
 **Boundaries:** values clamp to valid ranges (P2.3); players-per-sub 1–4; an untouched 2nd Half GK changes nobody (P4 ✓).
-**Open flow question (owner rehearsal, 2026-08-08):** the coach *confirms* timing late in their real sequence (after positions + keeper), but this screen interrupts between squad and line-up. Candidate: collapse to a confirm strip on `s3` and make settings opt-in. A P2 pathway change — decide deliberately, not in a restyle.
+**DECIDED (owner, 2026-08-08): timing is seasonal, not matchday.** Period
+length and format are set once for the season (team-level config); the only
+week-to-week variable is sub cadence, which depends on who turned up (the
+suggested-cadence calc already keys off squad size). This screen therefore
+LEAVES the default matchday path: line-up (`s3`) carries a one-line timing
+confirm strip ("20 min halves · subs every 5 · pairs — change"), and this
+screen opens only from that strip or from team setup. Matchday becomes
+squad → line-up/keeper (+ glance) → announce → kick off.
 **Choice budget:** 8
 
 ## Line-up + keeper · `s3`
