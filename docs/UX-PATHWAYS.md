@@ -72,7 +72,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | --- | --- | --- |
 | 1 | Team card → Play now | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
 | 2 | **Deselect the no-shows** — tap any player who isn't here to take them out | Tapped players are removed (greyed/struck-through); footer shows playing / out / subs count; can't proceed below the format's onField |
-| 3 | (Optional) Settings: period length, sub frequency, **players-per-sub (1–4)**, strategy | Values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
+| 3 | Glance the **timing confirm strip** on the pre-kickoff screen (timing is seasonal, set per team); tap **Change** only when something's unusual | Strip shows period length · sub cadence · group size · strategy; Change opens Settings on demand; values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
 | 4 | Pick starting line-up + keeper (or auto-fill) | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
 | 5 | Kick off | Live game screen; clock at 0; correct XI on the pitch |
 
@@ -81,6 +81,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ Keeper is the coach's manual pick; a benched pick swaps onto the field.  [smoke: benched player becomes keeper, on field]
 ✓ Projected minutes reflect the chosen keeper + line-up (keeper = full game).  [smoke: keeper is the top projected-minutes player / keeper is credited the full game]
 ✓ Squad-select can't proceed below onField; exactly-onField = no bench.  [edit: squad equals onField (no bench)]
+✓ Pre-kickoff shows the timing confirm strip with the seasonal settings; it disappears once the game is genuinely underway.  [edge: timing strip shown pre-kickoff / timing strip hidden once underway]
 
 ---
 

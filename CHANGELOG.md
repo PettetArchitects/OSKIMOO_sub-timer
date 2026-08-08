@@ -4,6 +4,16 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.7-beta — Play mode 1: the timing confirm strip (game-day setup simplifies)
+
+First code to land from the owner's Saturday rehearsal (docs/SCREEN-BRIEFS.md): **timing is seasonal, not matchday** — period length, cadence, group size and strategy are per-team config, set once. The pre-kickoff review now carries a one-line **timing confirm strip** ("20′ halves · subs every 5′ · 2 per sub · Equal time — *Change*"); Change opens the settings screen on demand, Apply returns to the review.
+
+- 🧭 The settings screen (`s2`) formally leaves the matchday path — code archaeology showed it had already fallen out (`goSettings()` had no live callers since squad-select started routing straight to the game); the strip gives it a deliberate on-demand door instead of none, and its button now reads **Apply settings**.
+- 📜 UX-PATHWAYS P2.3 rewritten to match intent; new invariant gated in `edge`: the strip shows pre-kickoff with the seasonal values and vanishes once the game is genuinely underway.
+- 🧱 Zero new colours; the strip wears existing tokens.
+
+Matchday is now: squad → pre-kickoff review (+ glance) → kick off.
+
 ## v2.9.6-beta — Drawer rows move onto the `ui-` button system (migration step 02)
 
 First step of the button-system migration that changes pixels (step 01 defined the classes and touched nothing). The 12 drawer/menu rows — game menu (Edit Team, Sub Plan, End game), plan menu (Edit Team, Save plan profile, Edit Lineup, End game) and the rows `openDrawer()` injects into every drawer (Sub-alert sound, Help & gestures, Sign in, Send feedback, Send game flow) — are now `.ui-btn--ghost` instead of twelve near-identical inline style strings.

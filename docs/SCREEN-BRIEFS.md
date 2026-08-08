@@ -43,6 +43,7 @@ one question: *which mode does this belong to?*
 
 ## Home · `home`
 
+**Mode:** PLAY
 **Purpose:** The mode fork (owner, 2026-08-08: the Plan/Play split IS the start screen). **PLAY** — get to today's game: resume banner when live (primary-when-present), then team card → squad select. **PLAN** — the midweek door: new/edit team, sub plans, history + opposition notes, share; clearly there, never shouting on a Saturday.
 **Serves:** P1.1, P2.1, P7.1
 **Primary action:** tap a team card `selectTeam()` — straight into squad select. (First run: `newTeam()` is primary until a team exists; game live: Resume outranks everything.)
@@ -53,6 +54,7 @@ one question: *which mode does this belong to?*
 
 ## Sport picker · `sportPicker`
 
+**Mode:** PLAN
 **Purpose:** Pick the sport — one decision, nothing else.
 **Serves:** P1.2
 **Primary action:** `pickSport()` on a sport tile.
@@ -63,6 +65,7 @@ one question: *which mode does this belong to?*
 
 ## Format picker · `gradePicker`
 
+**Mode:** PLAN
 **Purpose:** Pick the on-field size for the team's grade — one decision.
 **Serves:** P1.3
 **Primary action:** `pickFormat()` on a format tile.
@@ -73,7 +76,9 @@ one question: *which mode does this belong to?*
 
 ## Team editor · `editTeam`
 
-**Purpose:** Get the roster in — names, positions, numbers — as fast as paste-or-snap allows. A midweek surface (owner, 2026-08-08: creating a team for the weekend or editing a current one is the routine midweek visit — density welcome here, and team creation belongs to midweek prominence, never matchday prominence).
+**Mode:** PLAN
+**Purpose:** Get the roster in and **set each player's default strengths** — the positions they play, side, foot — the data every Play-mode proposal (auto-fill, rotation, relay cards) draws from (owner, 2026-08-08: Plan mode teaches the engine; Play mode watches it propose). A midweek surface — density welcome here, and team creation belongs to midweek prominence, never matchday prominence.
+**Feature gap (owner-implied):** strengths are currently unranked tags — a *primary* position vs positions a player can cover would sharpen every auto-fill proposal.
 **Serves:** P1.4, P1.5, P1.6
 **Primary action:** `saveAndBack()` once the squad is entered.
 **Secondary:** `addPlayerField()`, `removePlayerField()`, `fillSampleSquad()`, `openBulkTag()` / `applyBulkTag()`, photo import, `toggleGlobalMenu()`
@@ -83,6 +88,7 @@ one question: *which mode does this belong to?*
 
 ## Squad select · `s1`
 
+**Mode:** PLAY
 **Purpose:** Mark who turned up. Everyone starts selected; the coach *deselects* the no-shows. **For a planning coach this is where the preset plan meets reality** (owner, 2026-08-08: the sub plan is decided midweek or preset — matchday reconciles it with attendance): applying the saved plan is the expected path, not the detour, and the plan must adapt gracefully when attendance differs from what it assumed.
 **Serves:** P2.1, P2.2, P6.4
 **Primary action:** `startFromSquad()` (Next → line-up).
@@ -93,9 +99,10 @@ one question: *which mode does this belong to?*
 
 ## Game settings · `s2`
 
-**Purpose:** Confirm how subs will run — period length, cadence, group size, strategy. Defaults should already be right.
+**Mode:** PLAN
+**Purpose:** Confirm how subs will run — period length, cadence, group size, strategy. Defaults should already be right. **Reached on demand only** (v2.9.7): the pre-kickoff timing strip's Change button is its production door.
 **Serves:** P2.3
-**Primary action:** `showScr()` forward to line-up (`s3`).
+**Primary action:** `quickStart()` — Apply settings, back to the pre-kickoff review.
 **Secondary:** `ssAdj()` steppers (period length, sub frequency, players-per-sub), `ssSetStrat()` strategy, 2nd-half GK nomination
 **Must show:** current values for every setting; what the strategy means in one line.
 **Boundaries:** values clamp to valid ranges (P2.3); players-per-sub 1–4; an untouched 2nd Half GK changes nobody (P4 ✓).
@@ -111,6 +118,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Line-up + keeper · `s3`
 
+**Mode:** PLAY
 **Purpose:** Put the starting XI on the pitch and give one of them the gloves.
 **Serves:** P2.4, P2.5
 **Primary action:** `startGame()` — kick off.
@@ -121,19 +129,22 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Live game · `s4`
 
+**Mode:** PLAY
 **Purpose:** Run the match: clock, next sub, score — glanceable from three metres in sunlight.
 **Serves:** P3 (all), P4.1, P4.5
 **Primary action:** `tog()` — start/pause the clock (and the sub-confirm banner when a sub is due).
 **Secondary:** `confSub()`, `undoLastSub()`, `adjScore()`, `injurySub()` (long-press), `cycleView()` / `toggleGameFormation()`, bench reorder, `clkAdj()`, game drawer
-**Must show:** period clock + next-sub countdown (the pair), score, on-field XI with positions, bench with rest times, whose sub is next — and when a sub is due, **the swap as a relay card**: incoming name, outgoing name, POSITION, in speaking order, readable at arm's length (owner rehearsal, 2026-08-08: mid-play the coach's job is warning kids and giving clear position instructions — the screen scripts what the coach shouts).
+**Must show:** period clock + next-sub countdown (the pair), score, on-field XI with positions, bench with rest times, whose sub is next; **pre-kickoff only: the timing confirm strip** (v2.9.7 — seasonal settings at a glance, Change opens them on demand) — and when a sub is due, **the swap as a relay card**: incoming name, outgoing name, POSITION, in speaking order, readable at arm's length (owner rehearsal, 2026-08-08: mid-play the coach's job is warning kids and giving clear position instructions — the screen scripts what the coach shouts).
 **Hierarchy (three states, three kings):** ambient — the countdown dominates (the screen answers "when"); sub-due — the relay card dominates and everything else recedes (the screen answers "who, where, say it"); break — keeper picker + the proposed next-period line-up as reviewable defaults dominate, ending in the announce view (owner, 2026-08-08: half-time = choose the new keeper → adjust formation if the game demands it → review/adjust default positions → tell everyone the new line-up — the setup ritual in miniature, with formation change as a first-class break action, not buried). The current screen's dominance-1.0 failure is trying to be all of these at once. **Score keeping is the standing exception** (owner, 2026-08-08): goals arrive at random moments — score entry stays one tap away in ALL states, never dominant, always undoable, attribution deferred to the summary.
 **Boundaries:** time accrues only while running; undo restores exactly; field size preserved through every sub type; sub times match the Plan page (P3 ✓ block); backgrounding saves immediately (P4.5).
 **Choice budget:** 8 *(current UIMAP count: 12 — the declutter target)*
 
 ## Plan page · `subOrderOv`
 
+**Mode:** PLAN
 **Purpose:** See and shape the whole game's sub schedule — **a midweek planning tool, full stop** (owner, 2026-08-08: planning happens during the week or is preset; and the Plan page does NOT live on the game view — a second cockpit inside the live game complicates it). Mid-game doubt is answered by the game screen's own ambient info (countdown, coming swaps, bench rest) — never by dropping the coach into build mode. Preview never lies about the live game.
 **Flow change this creates (build work):** the Plan tab leaves the live game's tab bar / view cycle; the Plan page is reached from the team context (midweek) instead.
+**Scenarios (owner, 2026-08-08):** the Plan-mode object is the **game-day scenario** — multiple named plans per team ("full squad", "only 9", "vs Wanderers"), built midweek, pulled up in Play mode. The saved-profile machinery (P6) already does the storage/apply; the gaps are identity (name plans as scenarios, not profiles) and **smart offer** — squad select knows the headcount (and, with the opposition log, the opponent) and should propose the matching scenario rather than make the coach browse.
 **Serves:** P6 (all), P4.4b
 **Primary action:** `subOrderApply()` — apply the plan to the game.
 **Secondary:** `planScrubStep()` / `planScrubLive()` preview, `setPlanFormation()`, `planClearField()` / pick starters, `soAdj()` steppers, `saveCurrentPlanPrompt()` (menu), `applyPlanProfile()` / `pickSquadPlan()`, plan drawer
@@ -143,6 +154,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Summary · `s5`
 
+**Mode:** PLAY
 **Purpose:** The whistle ritual: **confirm the score, name player of the match** — then pocket the phone. Enrichment (opponent, location, scorers) is car-park work, not huddle work (owner rehearsal, 2026-08-08).
 **Serves:** P5.1, P5.2, P5.3
 **Primary action:** `saveMatch()`
@@ -154,6 +166,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Match history · `s6`
 
+**Mode:** PLAN
 **Purpose:** Find a past game and reread it. A midweek surface — calm, two-handed, density welcome (owner, 2026-08-08: midweek screens may be information-rich; matchday screens may not).
 **Serves:** P5.4
 **Primary action:** `showMatchDetail()` on a match row.
@@ -165,6 +178,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## App drawer (all screens) · `drawer`
 
+**Mode:** BOTH
 **Purpose:** Everything that is not the game: settings, help, account, feedback — one predictable place, same shape on every screen.
 **Serves:** P7.1, P7.4
 **Primary action:** context row for the current screen (Edit Team / Sub Plan / End game).
