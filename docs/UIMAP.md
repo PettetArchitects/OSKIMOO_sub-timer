@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.5-beta** · 0 static + 105 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.6-beta** · 0 static + 105 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 

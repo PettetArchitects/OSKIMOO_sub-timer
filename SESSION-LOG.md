@@ -14,9 +14,10 @@
 
 ## 2026-08-08 — Two marathon sessions: flows, gates, fairness — and a UI system awaiting migration
 
-**State:** `main` = v2.9.5-beta pending: [PR #28](https://github.com/PettetArchitects/OSKIMOO_sub-timer/pull/28)
-(keeper-time rule + fairness hunt, 2 commits, CI green, **unmerged — merge this first**).
-v2.9.4 is live on production. Gate is now ~590 checks across 12 suites.
+**State:** [PR #28](https://github.com/PettetArchitects/OSKIMOO_sub-timer/pull/28) **merged 2026-08-08** — `main` = v2.9.5-beta.
+UI migration step 02 (drawer rows → `.ui-btn--ghost`, v2.9.6-beta) is on branch
+`claude/ui-step02-drawer-ghost` awaiting the owner's explicit go on the before/after
+screenshots — first step that changes how the app looks. Gate is ~590 checks across 12 suites.
 
 ### Shipped (PR #27, merged → production)
 - **Game-flow recorder** — every game records as a replayable flow; menu → *Send game flow*;

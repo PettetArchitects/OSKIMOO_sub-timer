@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.5
+> Last updated: v2.9.6
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -282,7 +282,10 @@ by screen as callers migrate, never in one sweep.
 
 Tone modifiers sit **on top of** `--secondary` rather than multiplying into new
 variants: `.is-go` (green), `.is-preview` (cyan), `.is-plan` (purple),
-`.is-attention` (amber). Same meanings as §2.1.
+`.is-attention` (amber). Same meanings as §2.1. `--ghost` takes colour-only
+tones (no fill — a menu row stays a row): `.is-plan` for plan-scoped rows,
+`.is-danger` (the `.ui-step.is-danger` colour) for destructive rows like
+End game.
 
 **The treatment: fun, familiar, approachable.** The audience is a volunteer
 parent on a sideline, not an engineer. An earlier cut borrowed from
@@ -316,8 +319,9 @@ Two documented gaps close with it: `.ui-step` at 44×44 removes 9 of the 34
 undersized controls (§8), and one `:focus-visible` rule on the base classes
 closes the focus-ring gap §8 has carried since it was written.
 
-**Migration** — step 1 (define the classes, no markup touched) is done; nothing
-uses them yet. Steps 2–5 are in §11 backlog item 1b.
+**Migration** — step 1 (define the classes, no markup touched) and step 2
+(drawer/menu rows → `--ghost`, v2.9.6) are done. Steps 3–5 are in §11 backlog
+item 1b.
 
 #### 4.1.1 Primary action — `.gd-go` *(legacy)*
 
@@ -771,10 +775,14 @@ When introducing or modifying components: update this document **first**, then i
    labels overlap the keeper's shirt at the current sizes too. Unrelated to the
    above, unfixed.
 1b. **Migrate onto the `ui-` button system (v2.9.3)** — the six variants are
-   defined (§4.1.0) and nothing uses them yet. 121 of 158 buttons remain
-   inline-styled in 54 combinations. Remaining steps, each verifiable alone with
+   defined (§4.1.0). Remaining steps, each verifiable alone with
    a before/after screenshot and the `ui` ratchet lowered deliberately after:
-   **2.** drawer + menu rows → `.ui-btn--ghost` (46 buttons, near-identical already)
+   **2.** ~~drawer + menu rows → `.ui-btn--ghost`~~ **done v2.9.6** — the 12
+   true drawer rows (game menu 3, plan menu 4, `openDrawer()` injected 5)
+   migrated; ghost gained colour-only `.is-plan` / `.is-danger` tones. The
+   original "46" count was the file-wide `text-align:left` tally, which
+   includes modal containers and the team-action menu — those belong to
+   steps 4–5.
    **3.** steppers + chips → `.ui-step` / `.ui-chip` (21; where the 44pt fix lands)
    **4.** outline actions → `.ui-btn--secondary` + tone modifiers (27)
    **5.** primary/destructive, then judge the rest — genuinely singular things
