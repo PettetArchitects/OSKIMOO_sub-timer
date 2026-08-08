@@ -249,6 +249,66 @@ const scenarios = [
     await t.shot(page, 'plan-at-break');
   }],
 
+  // Reported from a real game: Molly kept goal for the whole first half, handed
+  // the gloves over at the break, and was then subbed off "way too many times"
+  // in the second half. Cause: the keeper never rotates, so she reached HT with
+  // the most minutes of anyone — and equal-time always pulls the highest-minutes
+  // player off, so the moment she became an outfielder she was the permanent
+  // target (off at 5', forced back on at 10' by a 2-deep bench, off again at 15').
+  // Owner's rule, v2.9.5: TIME IN GOAL DOES NOT COUNT AS GAME TIME FOR EQUAL
+  // PLAY. Only outfield minutes compete. When the keeper never changes this is
+  // behaviour-identical to before — the rule only bites at a handover.
+  ['H1 keeper is not rotation-targeted after handing over the gloves', async (page, t) => {
+    const r = await page.evaluate(() => {
+      const stop = () => { if (G && G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} G.raf = null; } if (G) { G.running = false; G.lastTs = null; G.elapsedMs = G.secs * 1000; } };
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer');
+      // 9 players → bench of 2, the worst case: the ex-keeper is forced back on
+      // at every rotation and (pre-fix) straight off again.
+      editingTeam.players = ['Molly', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+      editingTeam.numbers = {}; editingTeam.positions = {};
+      document.getElementById('teamNameInput').value = 'Molly churn';
+      saveAndBack(); selectTeam(teams[teams.length - 1].id);
+      cfg.subStrategy = 'fair';
+      startFromSquad(); stop();
+      G.subStrategy = 'fair';
+      const molly = avail.indexOf('Molly');
+      setPlanKeeper(molly);                 // Molly keeps all of H1
+      tog(); stop();
+      let g = 0; while (G && !G.atBreak && g++ < 20000) { G.running = true; const e = tickSecond(); stop(); if (e) break; }
+      const htMolly = G.pt['Molly'] || 0;
+      const gktMolly = (G.gkt && G.gkt['Molly']) || 0;
+      setPlanKeeper(G.on.find((p) => p !== molly && p !== G.gk));   // gloves handed over
+      startNextPeriod(); stop();
+      g = 0; while (G && g++ < 20000) { G.running = true; const e = tickSecond(); stop(); if (e || G.atBreak) break; }
+      const h2 = (G.log || []).filter((e) => e.type === 'sub' && e.half === 2);
+      const offs = {};
+      h2.forEach((e) => { offs[e.off] = (offs[e.off] || 0) + 1; });
+      // Churn: anyone subbed OFF who came ON at the immediately preceding sub time.
+      const times = [...new Set(h2.map((e) => e.time))].sort((a, b) => a - b);
+      let churned = [];
+      for (let i = 1; i < times.length; i++) {
+        const prevOn = h2.filter((e) => e.time === times[i - 1]).map((e) => e.on);
+        h2.filter((e) => e.time === times[i]).forEach((e) => { if (prevOn.includes(e.off)) churned.push(e.off + '@' + times[i]); });
+      }
+      return {
+        htMolly, gktMolly,
+        mollyOffs: offs['Molly'] || 0,
+        maxOtherOffs: Math.max(0, ...avail.filter((n) => n !== 'Molly').map((n) => offs[n] || 0)),
+        churned,
+        ptMolly: G.pt['Molly'] || 0,
+      };
+    });
+    t.chk('Molly kept the whole first half', r.htMolly >= 1150, `pt=${r.htMolly}s`);
+    t.chk('her keeper time is tracked separately', r.gktMolly >= 1150, `gkt=${r.gktMolly}s`);
+    t.chk('she is NOT subbed off more than anyone else in H2', r.mollyOffs <= r.maxOtherOffs,
+      `Molly ${r.mollyOffs} offs vs worst other ${r.maxOtherOffs}`);
+    t.chk('nobody is benched at the rotation right after coming on', r.churned.length === 0,
+      `churned: ${r.churned.join(', ') || 'none'}`);
+    t.chk('her displayed total minutes still include the keeper half', r.ptMolly >= r.htMolly,
+      `total=${r.ptMolly}s`);
+  }],
+
   ['second-half XI is exactly what the coach set at the break', async (page, t) => {
     await setup(page, { format: '7v7', sport: 'soccer' });
     const r = await page.evaluate(() => {

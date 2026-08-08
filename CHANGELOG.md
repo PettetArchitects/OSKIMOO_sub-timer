@@ -4,6 +4,37 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.5-beta — Time in goal doesn't count as game time for equal play
+
+From a real game, better described the second time: **Molly kept the whole first half, handed over the gloves at the break, and was then subbed off "way too many times" in the second half.**
+
+Reproduced exactly (9-player 7v7, subs every 5): the keeper never rotates, so Molly reached HT on 20 minutes when nobody else had more than 15. Equal-time always pulls the highest-minutes player off — so as an outfielder she became the permanent target: **off at 5', forced back on at 10' by the two-deep bench, off again at 15'.** Two yanks in a half, 5-minute stints, worst of any player.
+
+**The owner's rule, now implemented: keeper time is not game time for equal play.**
+
+- ⏱ `G.gkt` tracks seconds in goal per player. All rotation *selection* — live engine (`trigSub`, every strategy), the on-pitch next-sub preview (`getNextSwap`), the Plan-page simulation (`buildPlanTimeline`) and the Full-Control plan generator (`generateAutoPlan`) — sorts on **outfield seconds** (`pt − gkt`). Plan and live stay in agreement, per the v2.8.2 principle.
+- 🖥 **Displayed minutes are unchanged everywhere** — pitch chips, summary, history show true total time. Only the fairness ledger changed.
+- 🎿 When the keeper never changes, `gkt` cancels out of every comparison — behaviour is provably identical. The rule only bites at a handover.
+- 🔁 Survives refresh (snapshot + reset-half carry `gkt`; old saves backfill empty and start tracking).
+- 🐛 Fixed in passing: `generateAutoPlan`'s keeper was constant, so after its HT `gk_swap` the plan kept excluding the **ex**-keeper from rotation — pinning them on the pitch for the entire second half. `simGk` now follows the gloves.
+
+**The stated trade-off:** the H1 keeper now tends to play the whole second half (Molly: 40 total vs ~30 for others — but 20 *outfield* vs their ~28, which is what the rule says matters). Flagged for real-game judgement.
+
+Guarded by `secondhalf: H1 keeper is not rotation-targeted after handing over the gloves` (5 checks, red against v2.9.4).
+
+### The fairness hunt (`npm run fairness`) — and what it found in its first hour
+
+Molly's bug passed every structural gate; nothing was in a wrong *state* — one player's *experience over time* was absurd. `test/fairness.mjs` hunts that class: ~150 seeded games through the real engine (randomised squad, cadence, group size, strategy, keeper handovers, injuries), judging each player's stints, waits, off-counts and outfield spread. Exploratory like the hunt — findings are judgements, not merge blockers. Every game replays from its seed; the Molly game is pinned as game zero.
+
+**Two engine bugs found on the first sweep, both fixed and gated (`edge`):**
+
+- 🥇 **The odd pair never rotated.** Paired rotation compared pairs by minute **sum** — so the leftover pair from an uneven split (7 outfielders in 3s → `[3,3,1]`) could never outweigh a full triple, and its occupant played the whole game: **96 of 100 minutes while teammates averaged 55**. Affected every paired game whose outfield doesn't divide by the group size, including 11v11 in 3s. Pairs now compare per-member **averages** — live engine and Plan sim identically.
+- 🩹 **An out-for-game injury made the replacement invisible.** The victim was dropped from their pair without seating the replacement — and paired rotation only ever subs off pair members, so the replacement stayed on untouched. The replacement now takes the vacated pair seat.
+
+**Left open, deliberately — judgement calls, not bug fixes:** the greedy equal-time scheduler drifts up to ~3 intervals of spread with single-player swaps on quarter sports (a smarter scheduler is a product decision); and 22 of 151 random configs **mathematically cannot** cycle their bench (16 players, subs every 8, 30-minute game) — the engine can't fix arithmetic, but the app could warn at setup and today it doesn't.
+
+---
+
 ## v2.9.4-beta — Fixed: sign-in was unreachable for anyone with a team
 
 Reported as "there is no login", and it was right — on production, for about 40 versions.
