@@ -4072,12 +4072,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.17-beta';
+const APP_VERSION='v2.9.18-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.18-beta':{
+    title:'Name the scorer any time',
+    items:['Missed the "Who scored?" moment mid-game? At full time, every goal in the summary’s game log now carries a <strong>name the scorer</strong> button (or <strong>change scorer</strong> if you picked the wrong kid) — same picker, same one tap.','So the scorer can be named at the goal, at full time, or later from history — it’s never locked out.']
+  },
   'v2.9.17-beta':{
     title:'Setup, one step at a time',
     items:['Starting a game now walks the pre-match ritual as its own pages: pick your squad → <strong>who’s in goal?</strong> → <strong>what shape?</strong> → review the line-up on the pitch → announce → kick off. Each page comes pre-filled with the app’s suggestion — if it’s right, it’s just a tap of Next.','Sports without a keeper skip the keeper page; sports with one fixed shape skip the shape page. The GK and shape buttons stay on the pitch for quick changes later — including at breaks.']
@@ -7927,6 +7931,11 @@ function closeGoalPicker(){
   _scorerLogIdx=null;
   _goalStep='scorer';
   _goalScorer=null;
+  // v2.9.18: the picker is also reachable from the summary's game log —
+  // repaint just that card so the named scorer appears (never re-run showSum
+  // here: it would rebuild the opponent/location inputs and wipe typed text).
+  const s5=document.getElementById('s5');
+  if(s5&&s5.classList.contains('active')&&typeof renderSumLog==='function')renderSumLog();
 }
 // Back-compat alias (was wired to the old skip button).
 function skipScorer(){ closeGoalPicker(); }
@@ -8694,54 +8703,69 @@ function showSum(){
     c.appendChild(b);
   });
 
-  // Game log card
-  const lc=document.getElementById('sumLog');lc.innerHTML='';
+  // Game log card — factored into renderSumLog (v2.9.18) so the scorer picker
+  // can re-render just this card without wiping the opponent/location inputs.
+  renderSumLog();
+
+  // Reset buttons for live game
+  const sec=document.querySelector('#s5 .sec');
+  sec.innerHTML='<button class="btn btn-g" onclick="saveMatch()">Save Match ✓</button><button class="btn btn-o" style="margin-top:8px" onclick="showScr(\'home\')">Done</button>';
+  showScr('s5');
+}
+// v2.9.18 (owner report: "the note who scored the goal didn't work after logging
+// it"): the at-goal picker was the ONLY pre-save chance to name a scorer — a
+// skipped prompt dead-ended until the match was saved (edit-from-history). The
+// summary's own game log now carries the affordance: our goals get "name the
+// scorer" / "change scorer", routed through the same live picker (promptScorer
+// writes G.log; the picker re-renders this card on close).
+function renderSumLog(){
+  const lc=document.getElementById('sumLog');
+  if(!lc||!G)return;
+  lc.innerHTML='';
+  const teamName=currentTeam?currentTeam.name.split(' ')[0]:'Us';
   const lhdr=document.createElement('h2');
   lhdr.style.cssText='font-size:13px;color:#e94560;font-weight:700;margin-bottom:8px';
   lhdr.textContent='Game Log';
   lc.appendChild(lhdr);
   if(G.log.length===0){
     lc.innerHTML+='<div style="font-size:13px;color:#666;text-align:center">No events recorded</div>';
-  } else {
-    G.log.filter(_logRenders).forEach(e=>{
-      const row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
-      const timeStr=_logTimeLabel(e);
-      let icon='',detail='';
-      if(e.type==='sub'){
-        icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
-      } else if(e.type==='injury_sub'){
-        icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
-      } else if(e.type==='reset_half'){
-        icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
-      } else if(e.type==='opp_formation'){
-        icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;
-      } else if(e.type==='gk'){
-        icon=ic('target',14,'#e94560');detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#e94560">${fn(e.on)}</span>`;
-      } else if(e.type==='goal'){
-        icon=ic('goal',14,e.afl==='behind'?'#5bc0de':'#00d4aa');
-        if(e.who==='us'){
-          if(e.afl==='behind'){
-            detail=`<span style="color:#5bc0de">${teamName} behind</span>`;
-          } else {
-            detail=e.scorer?`<span style="color:#00d4aa">${fn(e.scorer)} scored${e.afl==='goal'?' (goal)':''}</span>`:`<span style="color:#00d4aa">${teamName} goal!</span>`;
-            if(e.assist) detail+=`<span style="color:#5bc0de"> · assist ${fn(e.assist)}</span>`;
-          }
-        }else{
-          detail=`<span style="color:#e94560">Opposition ${e.afl==='behind'?'behind':'goal'}</span>`;
-        }
-      } else if(e.type==='halftime'||e.type==='period_end'){
-        icon=ic('pause',14,'#888');detail=`<span style="color:#888">${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}</span>`;
-      }
-      row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
-      lc.appendChild(row);
-    });
+    return;
   }
-
-  // Reset buttons for live game
-  const sec=document.querySelector('#s5 .sec');
-  sec.innerHTML='<button class="btn btn-g" onclick="saveMatch()">Save Match ✓</button><button class="btn btn-o" style="margin-top:8px" onclick="showScr(\'home\')">Done</button>';
-  showScr('s5');
+  G.log.forEach((e,li)=>{
+    if(!_logRenders(e))return;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222;font-size:13px';
+    const timeStr=_logTimeLabel(e);
+    let icon='',detail='';
+    if(e.type==='sub'){
+      icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
+    } else if(e.type==='injury_sub'){
+      icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
+    } else if(e.type==='reset_half'){
+      icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
+    } else if(e.type==='opp_formation'){
+      icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;
+    } else if(e.type==='gk'){
+      icon=ic('target',14,'#e94560');detail=`GK: <span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#e94560">${fn(e.on)}</span>`;
+    } else if(e.type==='goal'){
+      icon=ic('goal',14,e.afl==='behind'?'#5bc0de':'#00d4aa');
+      if(e.who==='us'){
+        if(e.afl==='behind'){
+          detail=`<span style="color:#5bc0de">${teamName} behind</span>`;
+        } else {
+          detail=e.scorer?`<span style="color:#00d4aa">${fn(e.scorer)} scored${e.afl==='goal'?' (goal)':''}</span>`:`<span style="color:#00d4aa">${teamName} goal!</span>`;
+          if(e.assist) detail+=`<span style="color:#5bc0de"> · assist ${fn(e.assist)}</span>`;
+          detail+=` <button onclick="promptScorer(${li})" style="background:rgba(0,212,170,.12);border:none;color:#00d4aa;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${e.scorer?'change scorer':'name the scorer'}</button>`;
+        }
+      }else{
+        detail=`<span style="color:#e94560">Opposition ${e.afl==='behind'?'behind':'goal'}</span>`;
+      }
+    } else if(e.type==='halftime'||e.type==='period_end'){
+      icon=ic('pause',14,'#888');detail=`<span style="color:#888">${_logBreakName(e)} — ${e.scoreUs}-${e.scoreThem}</span>`;
+    }
+    row.innerHTML=`<span style="width:52px;color:#666;font-variant-numeric:tabular-nums;flex-shrink:0">${timeStr}</span><span style="display:inline-flex;align-items:center">${icon}</span><span style="flex:1">${detail}</span>`;
+    lc.appendChild(row);
+  });
 }
 
 // ===== MATCH HISTORY =====

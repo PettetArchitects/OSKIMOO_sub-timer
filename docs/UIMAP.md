@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.17-beta** · 0 static + 115 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.18-beta** · 0 static + 116 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -46,6 +46,7 @@ screen shows them. See §C for the runtime-verified placement.
 - **`openPlanSwapEditor()`** → `closePlanEdit`
 - **`renderG()`** → `openAnnounce`
 - **`injurySub()`** → `confInjury`
+- **`renderSumLog()`** → `promptScorer`
 - **`renderSsStratGrid()`** → `ssSetStrat`
 - **`renderPlanFormationChips()`** → `setPlanFormation`
 - **`renderSubOrderTabs()`** → `subOrderPick`

@@ -495,6 +495,33 @@ const SCENARIOS = [
     await shot(page, 'summary');
   }],
 
+  // v2.9.18: a goal whose "Who scored?" was skipped mid-game is nameable from
+  // the summary's game log (owner report — the scorer is never locked out).
+  ['summary: name a skipped goal’s scorer from the game log', async (page) => {
+    const r = await page.evaluate(() => {
+      // fixture: an unattributed goal in the log (the coach skipped the picker)
+      G.log.push({ type: 'goal', who: 'us', time: 30, half: 1 });
+      const opp = document.getElementById('sumOpponent');
+      opp.value = 'Typed Opponent';                       // must survive the repaint
+      renderSumLog();
+      const btn = [...document.querySelectorAll('#sumLog button')].find((b) => /name the scorer/i.test(b.textContent));
+      if (!btn) return { hasBtn: false };
+      btn.click();                                        // opens the live picker
+      const ovShown = document.getElementById('scorerOv').classList.contains('show');
+      const chip = document.querySelector('#scorerGrid .chip');
+      const picked = chip ? chip.querySelector('div').textContent : null;
+      if (chip) chip.click();                             // scorer step
+      skipGoalStep();                                     // no assist
+      const goal = G.log.find((e) => e.type === 'goal' && e.time === 30);
+      const rowText = document.getElementById('sumLog').innerText;
+      return { hasBtn: true, ovShown, picked, savedScorer: goal && goal.scorer, rowShows: new RegExp(picked + ' scored').test(rowText), oppSurvived: document.getElementById('sumOpponent').value === 'Typed Opponent' };
+    });
+    chk('unattributed goal offers "name the scorer" on the summary', r.hasBtn && r.ovShown);
+    chk('summary pick writes the scorer to the log', !!r.picked && r.savedScorer === r.picked);
+    chk('the log card repaints with the scorer named', r.rowShows);
+    chk('typed opponent text survives the repaint', r.oppSurvived);
+  }],
+
   // v2.9.13: player of the match (s5 gap ①) — huddle-fast chip pick on the
   // summary, persisted into the match record (and into the log for cloud sync),
   // shown in the history detail.
