@@ -11,6 +11,7 @@
     "edge": "node test/edge.mjs",
     "docs-check": "node test/docs-check.mjs",
     "brief": "node test/brief-check.mjs",
+    "screen-audit": "node test/screen-audit.mjs",
     "design": "node test/design-check.mjs",
     "privacy": "node test/privacy-check.mjs",
     "a11y": "node test/a11y-check.mjs",
