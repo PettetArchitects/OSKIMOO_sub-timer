@@ -106,6 +106,9 @@ export async function bootstrap(page, { format = '7v7', name = 'Test Team', extr
     saveAndBack();
     selectTeam(teams[teams.length - 1].id);
     startFromSquad();
+    // v2.9.17: startFromSquad routes through the setup step pages (keeper →
+    // shape) before s4. Walk them like a coach tapping Next twice.
+    if (typeof finishSetupSteps === 'function') finishSetupSteps();
   }, { format, name, extraBench, squad });
   await page.waitForTimeout(250);
 }

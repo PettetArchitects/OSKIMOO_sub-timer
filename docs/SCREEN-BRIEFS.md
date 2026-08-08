@@ -98,6 +98,28 @@ one question: *which mode does this belong to?*
 **Boundaries:** deselect-the-no-shows is the decided model — never invert to "pick who's playing" (owner decision on record); cannot proceed below the format's onField (P2 ✓).
 **Choice budget:** 5
 
+## Keeper page · `gkStep`
+
+**Mode:** PLAY
+**Purpose:** Step 1 of the explicit setup ritual (owner directive, 2026-08-08: keeper and shape are pages BEFORE the game screen, not controls on it). The game is already built — the engine's proposed keeper is marked; the coach confirms with one tap of Next or taps a different name. A benched pick comes onto the field, the old keeper steps off (same `setPlanKeeper()` rules as everywhere).
+**Serves:** P2.4
+**Primary action:** `gkStepNext()` (Next → shape, or straight to the line-up for single-shape sports).
+**Secondary:** tap a player chip to take the gloves, `showScr()` (back to squad)
+**Must show:** every available player (on-field first, bench under a separator); who currently has the gloves, unmissably.
+**Boundaries:** skipped entirely for keeperless sports (netball); the page reviews the live G — there is no draft state to lose; the GK pill on the game screen remains the re-entry door (and the break-time door).
+**Choice budget:** 12 *(one chip per available player — a single semantic decision — plus Next and back)*
+
+## Shape page · `shapeStep`
+
+**Mode:** PLAY
+**Purpose:** Step 2 of the explicit setup ritual: how do we line up today? Current shape marked; one tap changes it, Next confirms.
+**Serves:** P2.4
+**Primary action:** `shapeStepNext()` (Next → line-up review on the game screen).
+**Secondary:** tap a formation tile `selectGameFormation()`, `shapeStepBack()` (back to keeper, or squad for keeperless sports)
+**Must show:** every formation for the format; the current one, unmissably.
+**Boundaries:** skipped for fixed-formation sports (netball / AFL); operates on the live G; the formation pill on the game screen remains the re-entry door.
+**Choice budget:** 6 *(one tile per formation plus Next and back)*
+
 ## Game settings · `s2`
 
 **Mode:** PLAN

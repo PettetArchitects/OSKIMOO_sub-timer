@@ -206,7 +206,7 @@ const SCENARIOS = [
       window.prompt = () => 'Strong XI';
       newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
       document.getElementById('teamNameInput').value = 'Plan FC'; saveAndBack();
-      selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      selectTeam(teams[teams.length - 1].id); startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); switchToView('plan');
       // build a distinctive plan: a non-default keeper
       planClearField();
       const n = FORMATS[curFmt].onField; while (G.on.length < n && G.bench.length) planAddStarter(G.bench[0]);
@@ -216,7 +216,7 @@ const SCENARIOS = [
       const saved = (currentTeam.plans || []).length === 1;
       const planId = currentTeam.plans[currentTeam.plans.length - 1].id;
       // start a FRESH game applying the saved plan
-      _squadPickedPlanId = planId; startFromSquad();
+      _squadPickedPlanId = planId; startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps();
       const appliedKeeper = avail[G.gk];
       // modify on game day: change keeper, then re-pick the XI
       switchToView('plan');
@@ -253,7 +253,7 @@ const SCENARIOS = [
       localStorage.clear(); teams = loadTeams(); if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch (e) {} } G = null; }
       newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
       document.getElementById('teamNameInput').value = 'Auto FC'; saveAndBack();
-      selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      selectTeam(teams[teams.length - 1].id); startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); switchToView('plan');
       if (typeof ssSetStrat === 'function') ssSetStrat('auto');   // default mode
       if (typeof renderSubOrder === 'function') renderSubOrder();
       const menu = document.getElementById('planMenu');
@@ -431,7 +431,7 @@ const SCENARIOS = [
       document.getElementById('teamNameInput').value = 'Odd pair';
       saveAndBack(); selectTeam(teams[teams.length - 1].id);
       cfg.subStrategy = 'paired'; cfg.hm = 25; cfg.sf = 4; cfg.sc = 3; cfg.breaksOnly = false;
-      startFromSquad(); stop();
+      startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); stop();
       G.subStrategy = 'paired';
       const singleton = (G.pairs || []).find((p) => p.on.length === 1);
       let guard = 0;
@@ -461,7 +461,7 @@ const SCENARIOS = [
       document.getElementById('teamNameInput').value = 'Pair seat';
       saveAndBack(); selectTeam(teams[teams.length - 1].id);
       cfg.subStrategy = 'paired';
-      startFromSquad(); stop();
+      startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); stop();
       G.subStrategy = 'paired';
       const victim = (G.pairs[0] && G.pairs[0].on[0]);
       const sizeBefore = G.pairs[0].on.length;

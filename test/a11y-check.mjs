@@ -24,7 +24,9 @@ import { loadChromium, browserExecutable, startServer } from './harness.mjs';
 
 // Ratchet: distinct controls below the 44×44 minimum at the time of writing.
 // Lower it as they're fixed; the build fails if it grows.
-const BUDGET = Number(process.env.A11Y_BUDGET || 0) || 34;
+// v2.9.17: 34 → 31 — the shared .back-btn grew to 44px (four entries cleared;
+// the setup step pages' back buttons arrived at full size). Ratchet: never rise.
+const BUDGET = Number(process.env.A11Y_BUDGET || 0) || 31;
 const LIST = process.argv.includes('--list');
 const MIN = 44;
 
@@ -33,6 +35,8 @@ const MIN = 44;
 const SCREENS = [
   ['home', () => { showScr('home'); }],
   ['squad (S1)', () => { renderS1(); showScr('s1'); }],
+  ['keeper step', () => { renderGkStep(); showScr('gkStep'); }],
+  ['shape step', () => { renderShapeStep(); showScr('shapeStep'); }],
   ['settings (S2)', () => { goSettings(); }],
   ['lineup (S3)', () => { goLineup(); }],
   ['game (S4)', () => { switchToView('game'); }],
