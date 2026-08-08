@@ -52,7 +52,7 @@
 
 ## Team editor · `editTeam`
 
-**Purpose:** Get the roster in — names, positions, numbers — as fast as paste-or-snap allows.
+**Purpose:** Get the roster in — names, positions, numbers — as fast as paste-or-snap allows. A midweek surface (owner, 2026-08-08: creating a team for the weekend or editing a current one is the routine midweek visit — density welcome here, and team creation belongs to midweek prominence, never matchday prominence).
 **Serves:** P1.4, P1.5, P1.6
 **Primary action:** `saveAndBack()` once the squad is entered.
 **Secondary:** `addPlayerField()`, `removePlayerField()`, `fillSampleSquad()`, `openBulkTag()` / `applyBulkTag()`, photo import, `toggleGlobalMenu()`
@@ -132,12 +132,13 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Match history · `s6`
 
-**Purpose:** Find a past game and reread it.
+**Purpose:** Find a past game and reread it. A midweek surface — calm, two-handed, density welcome (owner, 2026-08-08: midweek screens may be information-rich; matchday screens may not).
 **Serves:** P5.4
 **Primary action:** `showMatchDetail()` on a match row.
 **Secondary:** `showScr()` (back), `toggleGlobalMenu()`
 **Must show:** matches newest-first with result and date; empty state that says how history gets here.
-**Boundaries:** detail view is read-only (P5.4).
+**Boundaries:** detail view is read-only (P5.4) — in tension with the enrich-later decision (see `s5` gap ②).
+**Feature gap (owner-requested, 2026-08-08): the opposition log.** Opponents become entities that accumulate across matches — formation they played, notes for next time, results record — and surface as pre-game intel during setup when the same opponent is picked again ("last met: their shape, your notes, the result"). History is where the log is browsed; setup is where it pays off.
 **Choice budget:** 5
 
 ## App drawer (all screens) · `drawer`
