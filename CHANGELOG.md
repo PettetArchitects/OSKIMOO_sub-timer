@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.13-beta — Player of the match (s5 gap ①)
+
+First feature from the rehearsal backlog. The summary grows a huddle-fast picker: one row of name chips under a star heading, playing-time order (likely candidates float up), one tap picks, tap again clears — no overlay, no extra screen. `G.potm` persists through backgrounding via the active-game save; `saveMatch()` writes `match.potm` **and** a `{type:'potm'}` log event so the pick survives the cloud round-trip without a schema change (the `matches` table has no potm column; `log` is jsonb — `_matchPotm()` reads either shape). History detail shows the star line. The log renderer silences the potm event (the star line is its display). Smoke: new scenario covers pick → save → reread from history — the first automated coverage on the save-match path.
+
 ## v2.9.12-beta — Play mode 5: Home is the Plan/Play fork
 
 The start screen now IS the mode split (owner-stamped brief). PLAY: the team card tap goes straight into squad select — no action menu in between — and when a game is live the card resumes it (resume outranks everything). PLAN: the card's quiet purple clipboard button opens the midweek sheet (Plan ahead / Past games / Edit / Share — "Play now" left the sheet since the card does it), and **+ New Team** loses its matchday red for the quiet plan tone (`ui-btn--secondary is-plan`). First-run landing keeps its own primary CTA. Share copy updated ("tap the team to play"). `teamActionPlayNow()` removed.
