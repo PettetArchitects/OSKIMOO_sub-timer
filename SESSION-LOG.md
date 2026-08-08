@@ -12,9 +12,81 @@
 
 ---
 
+## 2026-08-08 — Two marathon sessions: flows, gates, fairness — and a UI system awaiting migration
+
+**State:** `main` = v2.9.5-beta pending: [PR #28](https://github.com/PettetArchitects/OSKIMOO_sub-timer/pull/28)
+(keeper-time rule + fairness hunt, 2 commits, CI green, **unmerged — merge this first**).
+v2.9.4 is live on production. Gate is now ~590 checks across 12 suites.
+
+### Shipped (PR #27, merged → production)
+- **Game-flow recorder** — every game records as a replayable flow; menu → *Send game flow*;
+  `test/replay.mjs` reproduces a sent game exactly. `flows/README.md`.
+- **Second-half fixes** — 2nd Half GK setting was never wired (now explicit-pick only, `gk2Explicit`);
+  Plan page at a break simulated the finished period; match-log HT ordering; injury rows rendering blank.
+- **Dev mode** — `?dev=1`: seed a game, jump the clock (real `tickSecond`), replay a flow on screen, state inspector.
+- **Offline** — DSEG clock font inlined (was CDN-only → plain monospace at grounds with no signal);
+  service worker, network-first, no `skipWaiting`. Cold-start offline verified.
+- **Sign-in fix** — was unreachable for anyone with a team (~40 versions on production). Now in the drawer.
+- **Five doc gates** — `design-check` (colour tokens, ratchet 43), `privacy-check` (storage inventory),
+  `a11y-check` (names hard-fail; hit-target ratchet 34), `ui-check` (type/radius/button ratchets),
+  plus `docs-check` grew teeth. `docs/CONTROL-DOCS.md` is the register; `docs/PRIVACY.md` the policy.
+
+### Pending in PR #28
+- **Owner's rule: time in goal ≠ game time for equal play** (`G.gkt`, `_rotSecs`) — fixes Molly
+  (H1 keeper yanked off-on-off through H2). Trade-off, flagged: the H1 keeper now tends to play all of H2.
+- **Fairness hunt** (`npm run fairness`) — seeded whole-game sims judged on player *experience*.
+  Found + fixed on first sweep: paired rotation starved the leftover odd group (sum→per-member average);
+  out-for-game injury replacement never seated in its pair. Both gated in `edge`.
+- **Open findings** (owner judgement, changelog v2.9.5): greedy fair scheduler drifts ~3 intervals on
+  quarter sports with sc=1; ~15% of random configs mathematically can't cycle their bench → a setup
+  warning would be a nice small feature.
+
+### ── UI WORK HANDOFF — resume here ─────────────────────────────
+**Where it stands:** the `ui-` button system (six variants, "fun familiar approachable" —
+GameChanger/TeamSnap/Spond/Duolingo references, NOT dev-tool aesthetics) is **defined on main and used by
+nothing**. Step 01 of 5 done. Mockup artifact (before/after, press the buttons):
+https://claude.ai/code/artifact/27175a1e-913d-4d88-bd19-d9f6cc8e73f9
+
+**The system** (index.html, search `v2.9.3: button system`; documented `design.md` §4.1.0):
+`.ui-btn--primary/--secondary/--ghost/--danger`, `.ui-chip`, `.ui-step` (48×48) + tone modifiers
+`.is-go/.is-preview/.is-plan/.is-attention`. `ui-rounded` type, 3px colour "lip" that compresses on
+press, 16px radii, solid fills. Zero new tokens (both ratchets caught the first draft trying).
+
+**Migration order** (`design.md` §11 item 1b) — each step: migrate → before/after screenshots →
+lower `UI_BUTTONS` budget in `test/ui-check.mjs` (now 54) → gate → commit:
+1. ~~Define classes~~ ✅ shipped, inert
+2. Drawer/menu rows → `.ui-btn--ghost` (46 buttons — biggest, near-identical already)
+3. Steppers + chips → `.ui-step`/`.ui-chip` (21; **closes 9 of the 34 a11y hit-target failures**)
+4. Outline actions → `.ui-btn--secondary` + tones (27)
+5. Primary/danger; judge the rest (singular things may stay inline)
+
+**Blockers/decisions before step 02:**
+- ⚠️ **`ui-rounded` unverified on a real iPhone** — headless has no SF Pro Rounded. 30-second check
+  (`?dev=1`, look at the DEV panel labels). If it doesn't land, pick the face before migrating 46 rows.
+- This step **changes how the app looks** (everything before it moved no pixels). Owner has been
+  rightly wary of behaviour changes — get an explicit go on the drawer screenshots.
+
+**Related open UI threads (don't re-litigate the decided ones):**
+- **DECIDED, do not re-attempt:** pitch-chip sizes stay as-is (`design.md` §11 1a); the dynamic
+  chip-scale experiment is stashed on `claude/game-flow-recorder` (`stash@{0}: dynamic-chip-scale`).
+- Soccer pitch: LB/RB labels overlap the keeper's shirt — pre-existing, unfixed, noted in §11 1a.
+- `design.md` §1 principle 5 justifies dark-only with "reads better in glare" — research says the
+  opposite (NN/G etc.); the *reason* needs rewriting even if dark stays. Never done.
+- Neutral ramp: 9 greys → target ~4 (§11 item 1). Gradient stop pairs still undocumented (§11 item 0).
+- a11y focus-ring gap: one `:focus-visible` rule exists on `ui-` classes only; app-wide once migrated.
+### ──────────────────────────────────────────────────────────
+
+**Ratchet dashboard** (lower deliberately, never raise): colours 43 · hit targets 34 · sub-9px 11 ·
+font sizes 20 · radii 13 · button styles 54.
+
+**Also useful:** `npm run fairness` (FAIR_SEED replays one game) · `?dev=1` dev panel ·
+flows corpus empty until a real game is sent in.
+
+---
+
 ## Current state (top of tree)
 
-- **Version:** v2.8.5-beta · **main:** green, docs in sync.
+- **Version:** v2.9.4-beta on main (v2.9.5 in PR #28) · **main:** green, docs in sync.
 - **Gate:** `npm run gate` = sanity → docs-check → smoke → sports → edge, enforced
   in CI on protected `main`. ~315 checks. Plus `hunt` / `loop` (discovery, not gated)
   and `uimap` (regenerate the UI map).
