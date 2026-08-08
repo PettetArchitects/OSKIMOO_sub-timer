@@ -507,6 +507,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-just-on{animation:pillEnterGlow 1.6s ease-out}
 .afl3d-overlay .fc-bench3d.fc-just-off{animation:pillExitGlow 1.6s ease-out;opacity:1!important;filter:saturate(1)!important}
 .afl3d-overlay .fc-just-swap{animation:pillSwapGlow 1.1s ease-out}
+/* v2.9.19: the half-time override button, next to PAUSE (owner placement call).
+   Amber — the break colour: this button IS the break arriving early. Existing
+   attention tokens only (rgba(240,165,0,.16) / #f0a500), no new colours. */
+.gd-btn.gd-endhalf{background:rgba(240,165,0,.16);color:#f0a500}
+
 /* v2.9.16: the keeper door — GK pill overlaying the pitch top-right, visible only
    in the ritual window (pre-kickoff + breaks; renderGameDash manages display).
    Styled here, not inline, so it doesn't add an inline-button signature. 44px. */
@@ -1169,6 +1174,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
     <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
+    <!-- v2.9.19: the half-time override lives next to PAUSE (owner placement call —
+         the period-label affordance wasn't obvious). Shown only while play is on. -->
+    <button class="gd-btn gd-endhalf" id="gdEndHalf" onclick="endPeriodNow()" style="display:none"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
@@ -4072,12 +4080,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.18-beta';
+const APP_VERSION='v2.9.19-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.19-beta':{
+    title:'When the whistle beats the clock',
+    items:['Ref called half time but the app’s clock disagrees? A new <strong>END HALF</strong> button sits next to PAUSE while play is on — tap it, confirm, and the period ends right there, with the clock recorded where it actually stopped. On the last period it reads <strong>FULL TIME</strong>.','Everything that normally happens at the break still happens: the half-time rotation is proposed, the keeper and shape are one tap away, and the announce view reads the new line-up.']
+  },
   'v2.9.18-beta':{
     title:'Name the scorer any time',
     items:['Missed the "Who scored?" moment mid-game? At full time, every goal in the summary’s game log now carries a <strong>name the scorer</strong> button (or <strong>change scorer</strong> if you picked the wrong kid) — same picker, same one tap.','So the scorer can be named at the goal, at full time, or later from history — it’s never locked out.']
@@ -8387,6 +8399,20 @@ function renderGameDash(){
       fmt.innerHTML=`${ic('layout-grid',13)}<span>${curFormation||'Formation'}</span>`;
     }
   }
+  // v2.9.19: the half-time override, next to PAUSE (owner placement). Visible
+  // only while a period is genuinely underway — the same window endPeriodNow
+  // accepts (never at a break, never pre-kick). Sport-aware label; the final
+  // period reads FULL TIME.
+  const ehBtn=document.getElementById('gdEndHalf');
+  if(ehBtn){
+    if(G && !G.atBreak && (G.running||gameInProgress())){
+      const _spt=getSport(currentTeam);
+      const lbl=G.half>=_spt.periodCount?'FULL TIME':(_spt.periodCount===2?'END HALF':`END ${_spt.periodShort(G.half)}`);
+      ehBtn.style.display='inline-flex';
+      ehBtn.innerHTML=ic('flag',18)+`<span>${lbl}</span>`;
+      ehBtn.setAttribute('aria-label','The whistle went? '+(G.half>=_spt.periodCount?'Full time now':'End the period now'));
+    } else ehBtn.style.display='none';
+  }
   // v2.9.16: the keeper door — visible exactly in the ritual window (pre-kickoff
   // + breaks, planSetupPhase). Label carries the current keeper's name so the
   // review step reads at a glance; "Pick keeper" when nobody has the gloves.
@@ -8575,6 +8601,25 @@ function confInjury(outForGame){
 // button) and the coach can swap / sub on the pitch before starting the next
 // period. Keeper change at the break is just a normal Swap (tap the GK), so the
 // old halftime GK picker is gone.
+// v2.9.19 (owner request): "we need something to override it and say it's
+// already half time." The ref's whistle doesn't wait for the app's clock —
+// tapping the period label ends the period AT the current clock, through the
+// exact same path as the natural expiry (advH: break state, true-order log,
+// auto rotation; final period → summary). Guarded: no-op at a break or before
+// anything has happened (a pre-kickoff mistap must not eat the first half).
+function endPeriodNow(){
+  // "underway" = clock running OR anything already happened — so the button
+  // works from the very first second of the half, but a pre-kickoff mistap
+  // still can't eat the period.
+  if(!G||G.atBreak||!(G.running||gameInProgress()))return;
+  const sport=getSport(currentTeam);
+  const isFinal=G.half>=sport.periodCount;
+  const breakName=isFinal?'full time':((sport.breakLabels&&sport.breakLabels[G.half])||'the break').toLowerCase();
+  const lbl=sport.periodShort(G.half);
+  if(!confirm(`It’s already ${breakName}? End the ${lbl.toLowerCase()} now — the clock stops at ${fmt(G.secs)}.`))return;
+  advH();
+}
+
 function advH(){
   if(G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
   const sport=getSport(currentTeam);

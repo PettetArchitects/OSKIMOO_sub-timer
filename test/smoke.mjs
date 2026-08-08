@@ -592,6 +592,52 @@ const SCENARIOS = [
     await shot(page, 'edit-history');
   }],
 
+  // v2.9.19: the half-time override — the ref's whistle beats the clock. Tap
+  // the period label → confirm → the period ends at the current clock via the
+  // same advH path as the natural expiry. Fresh bootstrap: no state bleed.
+  ['half-time override: the period label ends the half early', async (page) => {
+    // One synchronous evaluate for the WHOLE journey: cross-evaluate gaps let
+    // leftover rAF/timer state from earlier scenarios advance the game between
+    // steps (observed: a fresh game mutating to half 2 across a 250ms gap).
+    const r = await page.evaluate(() => {
+      if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch {} G.raf = null; } }
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Override FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id);
+      startFromSquad(); if (typeof finishSetupSteps === 'function') finishSetupSteps();
+      window.confirm = () => true;                     // the coach confirms
+      // wiring: the END HALF button sits in the dashboard next to PAUSE (owner
+      // placement); hidden pre-kick, shown while a period is underway
+      const btn = document.getElementById('gdEndHalf');
+      const wired = !!btn && /endPeriodNow/.test(btn.getAttribute('onclick') || '');
+      const hiddenPreKick = btn.style.display === 'none';
+      const preKick = (() => { endPeriodNow(); return !G.atBreak; })(); // guard: pre-kick tap does nothing
+      tog(); renderGameDash();
+      const shownMidPlay = btn.style.display !== 'none' && /END HALF/i.test(btn.textContent);
+      G.elapsedMs = 7 * 60 * 1000; G.secs = 7 * 60;    // 7' into a 20' half
+      endPeriodNow();                                   // the tap
+      const hiddenAtBreak = (renderGameDash(), btn.style.display === 'none');
+      const pe = G.log.find((e) => e.type === 'period_end');
+      const atBreak = !!G.atBreak, paused = !G.running;
+      const again = (() => { endPeriodNow(); return G.half === 1 && !!G.atBreak; })(); // no-op at the break
+      // final-period branch: 2nd half underway, whistle beats the clock → summary
+      startNextPeriod();
+      if (!G.running) tog();
+      G.elapsedMs = 12 * 60 * 1000; G.secs = 12 * 60;
+      endPeriodNow();
+      const onSummary = document.getElementById('s5').classList.contains('active');
+      G.running = false;                                // leave nothing ticking for later scenarios
+      return { wired, hiddenPreKick, shownMidPlay, hiddenAtBreak, preKick, atBreak, paused, peTime: pe && pe.time, again, onSummary };
+    });
+    chk('END HALF button wired next to PAUSE', r.wired);
+    chk('END HALF hidden pre-kick, shown mid-play, hidden at the break', r.hiddenPreKick && r.shownMidPlay && r.hiddenAtBreak);
+    chk('pre-kickoff call is a no-op (guard)', r.preKick);
+    chk('label tap ends the half at the current clock', r.atBreak && r.paused && r.peTime === 7 * 60);
+    chk('tapping again at the break is a no-op', r.again);
+    chk('override on the final period goes to full time (summary)', r.onSummary);
+  }],
+
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
     await page.reload({ waitUntil: 'load' });

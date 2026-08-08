@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.19-beta — The half-time override (owner request)
+
+"We need something to override it and say it's already half time." An **END HALF** button (amber, flag icon — FULL TIME on the last period, END Q2 on quarter sports) sits in the game dashboard **next to PAUSE** — the owner's placement call after a first pass on the period label proved too subtle. Shown only while a period is genuinely underway (never pre-kick, never at a break — the same window `endPeriodNow()` accepts); tap → sport-aware confirm → the period ends at the current clock through the exact same `advH()` path as the natural expiry: break state, true-order period_end log with the clock where it actually stopped, auto break-rotation, summary on the final period.
+
 ## v2.9.18-beta — The summary scorer picker (owner report)
 
 "The note who scored the goal didn't work after logging it." The at-goal picker works (verified live) — the hole was the gap between the moments: a skipped "Who scored?" had NO affordance on the full-time summary; scorer editing only existed after saving (edit-from-history, v2.9.15). The summary's game log now gives our goals the same "name the scorer / change scorer" button, routed through the existing live picker (`promptScorer` — scorer + assist, writes `G.log`). `showSum`'s log block factored into `renderSumLog()`; `closeGoalPicker` repaints just that card so typed opponent/location text survives. The scorer is now nameable at all three moments: at the goal, at full time, and from history.

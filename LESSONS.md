@@ -267,6 +267,21 @@ After each version bump, do a quick smoke test of the new features end-to-end. C
 
 Don't ship the AI photo-import pipeline without uploading a real handwritten plan through it. We were two versions deep before realising the AI was leaving position letters in player names. **Test the killer feature on the killer use-case before declaring done.**
 
+### Smoke scenarios: one evaluate, no gaps (the cross-evaluate mutation hazard)
+
+Discovered debugging the v2.9.19 half-time override test: a scenario that
+`await bootstrap(page)` then ran its assertions in a SECOND `page.evaluate`
+found the freshly-built game mutated across the gap — `G.half` at 2, the clock
+having ticked ~1.5s of real time, the squad screen active — even though
+bootstrap's own evaluate returned a clean half-1 game at s4. Leftover rAF/timer
+state from earlier scenarios runs in the space *between* evaluates and can
+advance a game that is briefly left running. The same scenario passes every
+time when the whole journey (bootstrap steps + assertions) runs in ONE
+synchronous evaluate. Rules of thumb: scenarios that depend on precise game
+state should do bootstrap + act + assert in a single evaluate; always leave
+`G.running=false` at scenario end; suspect this hazard whenever a smoke check
+fails in the full run but passes in isolation.
+
 ### Documentation grows with the product, not after it
 
 `FEATURES.md`, `CHANGELOG.md`, `LESSONS.md` all live in the same folder as the source HTML. Each gets updated in the same commit as the feature it documents. If we'd left documentation until "later" it would never have happened.
