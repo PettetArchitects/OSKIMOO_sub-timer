@@ -35,9 +35,9 @@ flowchart TD
     gradePicker -->|"pick format"| editTeam
     editTeam -->|"save"| home
 
-    home ==>|"team card → Play now"| s1
-    home -.->|"⋯ → Past games"| s6
-    home -.->|"⋯ → Plan ahead"| subOrderOv
+    home ==>|"tap team card (Play)"| s1
+    home -.->|"clipboard → Past games"| s6
+    home -.->|"clipboard → Plan ahead"| subOrderOv
     home ==>|"Resume (game live)"| s4
 
     s1 -->|"Settings"| s2
