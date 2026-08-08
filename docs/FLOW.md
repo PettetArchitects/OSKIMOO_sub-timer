@@ -78,6 +78,15 @@ diamond is a decision the UI must make obvious.
 
 > **Stamped by the owner 2026-08-08** (v2 — entry is a neutral "Open app";
 > matchday is a branch, not a premise; midweek intents drawn explicitly).
+>
+> **v3 (rehearsal decisions, same day — FigJam board has the full redraw):**
+> the two branches ARE the app's two modes — **PLAY mode** (matchday: squad →
+> review keeper/shape/positions + timing glance → ANNOUNCE → kick off; in-play
+> relay cards; break ritual keeper→shape→positions→announce; full-time =
+> confirm score + player of the match, enrichment deferred to the car park)
+> and **PLAN mode** (midweek: create/edit teams, set the sub plan, review +
+> opposition notes, share). Settings are seasonal. The Plan page does NOT
+> live on the game view. See SCREEN-BRIEFS.md "The governing split".
 
 ```mermaid
 flowchart TD

@@ -20,6 +20,27 @@
 
 ---
 
+## The governing split: PLAN mode and PLAY mode
+
+**Stamped by the owner 2026-08-08.** The app has two modes for two mental
+states, and every screen belongs to exactly one:
+
+| | PLAY mode | PLAN mode |
+|---|---|---|
+| When | Matchday | Midweek |
+| Context | One hand, sunlight, kids | Couch, two hands, calm |
+| Density | Sparse and loud | Rich and dense |
+| Screens | Squad select → line-up review + announce → live game → summary ritual | Teams, roster editor, sub-plan builder, match history, opposition notes, sharing, seasonal settings |
+| Decisions | Who's here · keeper · shape confirm · confirm subs · score · player of the match | Everything else — made calmly, in advance |
+
+The grammar shared by every PLAY surface: **the engine proposes → the coach
+reviews → the coach announces to children.** The Plan page does not live on
+the game view; settings are seasonal; the tab bar's job is mode-appropriate
+navigation, not everything-everywhere. Prominence disputes are settled by
+one question: *which mode does this belong to?*
+
+---
+
 ## Home · `home`
 
 **Purpose:** Choose a team and start — or resume — a game with the fewest taps in the app.
@@ -111,7 +132,8 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Plan page · `subOrderOv`
 
-**Purpose:** See and shape the whole game's sub schedule — **primarily a midweek planning tool** (owner, 2026-08-08: substitution planning happens during the week or is preset), secondarily the in-game "peek at the whole schedule" view. Preview never lies about the live game.
+**Purpose:** See and shape the whole game's sub schedule — **a midweek planning tool, full stop** (owner, 2026-08-08: planning happens during the week or is preset; and the Plan page does NOT live on the game view — a second cockpit inside the live game complicates it). Mid-game doubt is answered by the game screen's own ambient info (countdown, coming swaps, bench rest) — never by dropping the coach into build mode. Preview never lies about the live game.
+**Flow change this creates (build work):** the Plan tab leaves the live game's tab bar / view cycle; the Plan page is reached from the team context (midweek) instead.
 **Serves:** P6 (all), P4.4b
 **Primary action:** `subOrderApply()` — apply the plan to the game.
 **Secondary:** `planScrubStep()` / `planScrubLive()` preview, `setPlanFormation()`, `planClearField()` / pick starters, `soAdj()` steppers, `saveCurrentPlanPrompt()` (menu), `applyPlanProfile()` / `pickSquadPlan()`, plan drawer
