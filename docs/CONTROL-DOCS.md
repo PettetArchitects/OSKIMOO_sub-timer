@@ -49,6 +49,7 @@ it stops people looking.
 | 2 | Component inventory | `design.md` §3–4 | `test/ui-check.mjs` (type/radius/button ratchets) | 🟡 counted, not yet governed |
 | 3 | Information architecture | `docs/UIMAP.md`, `architecture.md` §2 | `docs-check` (every wired control listed) | ✅ enforced |
 | 4 | UX journeys | `docs/UX-PATHWAYS.md` | `docs-check` (test tags must resolve) | 🟡 partial — see below |
+| 4b | Per-screen contract | `docs/SCREEN-BRIEFS.md` | `test/brief-check.mjs` (actions + pathway refs must resolve; choice budgets reported) | ✅ enforced |
 | 5 | State & data model | `architecture.md` §3 | — | 🟡 described |
 | 6 | Interaction & motion | `design.md` §2.6, §5.1 | — | 🟡 described |
 | 7 | Feature catalogue | `FEATURES.md` | `docs-check` (version) | ✅ enforced |
