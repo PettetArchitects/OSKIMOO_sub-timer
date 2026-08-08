@@ -303,6 +303,43 @@ const SCENARIOS = [
     await shot(page, 'keeper-autofill');
   }],
 
+  // v2.9.16: the keeper door — the game screen's own gloves control, visible
+  // exactly in the ritual window (pre-kickoff + breaks), hidden mid-play.
+  // Routes through setPlanKeeper, so benched picks displace the old keeper.
+  ['keeper door: pick from the pitch pre-kickoff', async (page) => {
+    const r = await page.evaluate(() => {
+      const btn = document.getElementById('gkToggle');
+      const shownPreKick = btn && btn.style.display !== 'none';
+      openGkPick();
+      const ovShown = document.getElementById('gkPickOv').classList.contains('show');
+      const chips = [...document.querySelectorAll('#gkPickGrid .chip')];
+      // pick a BENCHED player as keeper — must come on, old keeper must step off
+      const oldGk = G.gk;
+      const benchIdx = (G.bench || [])[0];
+      pickGk(benchIdx);
+      return {
+        shownPreKick, ovShown, chipCount: chips.length,
+        newGk: G.gk, benchIdx, oldGk,
+        newKeeperOnField: G.on.includes(benchIdx),
+        oldKeeperOff: !G.on.includes(oldGk),
+        closed: !document.getElementById('gkPickOv').classList.contains('show'),
+        label: document.getElementById('gkToggle').textContent,
+      };
+    });
+    chk('GK pill shows on the pitch pre-kickoff', r.shownPreKick);
+    chk('keeper picker opens with the full squad', r.ovShown && r.chipCount > 0);
+    chk('benched pick takes the gloves and comes on', r.newGk === r.benchIdx && r.newKeeperOnField);
+    chk('displaced keeper steps off the field', r.oldKeeperOff);
+    chk('GK pill names the new keeper', r.closed && /GK ·/.test(r.label));
+    const mid = await page.evaluate(() => {
+      tog(); renderG(); // clock running — ritual window closed
+      const hidden = document.getElementById('gkToggle').style.display === 'none';
+      tog(); renderG();
+      return hidden;
+    });
+    chk('GK pill hides once the clock runs', mid);
+  }],
+
   ['game: start / pause clock', async (page) => {
     await page.evaluate(() => switchToView('game'));
     await page.waitForTimeout(200);
@@ -344,6 +381,17 @@ const SCENARIOS = [
     // "set 2nd-half line-up" detour to the Plan page is gone (owner-stamped ritual).
     chk('break screen exposes the announce touch point', /announce/i.test(brk.nsi));
     chk('break hint no longer detours to the Plan page', !/set .*line-up/i.test(brk.nsi));
+    // v2.9.16: the keeper door is part of the break ritual — pill visible, and a
+    // pick through it is an EXPLICIT 2nd-half keeper (gk2Explicit).
+    const gk = await page.evaluate(() => {
+      const shown = document.getElementById('gkToggle').style.display !== 'none';
+      openGkPick();
+      const other = (G.on || []).find(i => i !== G.gk);
+      pickGk(other);
+      return { shown, picked: other, gk: G.gk, explicit: !!gk2Explicit };
+    });
+    chk('GK pill shows at the break', gk.shown);
+    chk('break pick via the pill is an explicit 2nd-half keeper', gk.gk === gk.picked && gk.explicit);
     await shot(page, 'halftime');
     // set a distinct 2nd-half keeper + custom XI on the Plan, then start the period
     await page.evaluate(() => openSubOrder()); await page.waitForTimeout(400);

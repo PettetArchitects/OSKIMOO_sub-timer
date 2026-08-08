@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.16-beta — The keeper door (owner report: "where is the keeper workflow?")
+
+Play mode 4 removed the live game's doors to the Plan page — and the keeper picker lived there, so choosing the keeper silently lost its only discoverable path (field tap-swap transfers the gloves, but nobody would find it). The game screen now owns the gloves: a **GK pill on the pitch** (top-right, 44px, shows the current keeper's name) appears exactly in the ritual window (`planSetupPhase()` — pre-kickoff + breaks, never mid-play) and opens a chip picker (on-field first, bench under a separator). Taps route through the existing `setPlanKeeper()`, so all the established behaviour holds: a benched pick swaps onto the field and displaces the old keeper; a break pick is an explicit 2nd-half keeper (`gk2Explicit`); the keeper stays out of the rotation pairs. Smoke: setup pick, benched pick (displacement asserted), break pick (gk2Explicit asserted), and mid-play hiding.
+
 ## v2.9.15-beta — Edit-from-history (s5 gap ②)
 
 The enrich-later half of the whistle ritual: history detail grows an **Edit details** door. Editable: opponent, location, per-goal scorer (one tap per goal, inline chip strip; clearing a scorer clears its assist; a scorer can't assist their own goal), and player of the match. **The record's facts stay read-only** — score, minutes, event times are never editable, resolving the P5.4 tension flagged in the s6 brief. Edits work on a deep copy and land on Save: local matches store updated in place; signed-in edits sync via a new `updateCloudMatch()` UPDATE path (only the deferred fields travel — opponent, location, log). The log-borne potm event is kept in step with the field on every save. Smoke: scenario covers the full edit round-trip including cancel-discards.
