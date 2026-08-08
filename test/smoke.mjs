@@ -91,7 +91,7 @@ async function bootstrap(page, { sport = 'soccer', onField = 7, name = 'Smoke FC
     const inp = document.getElementById('teamNameInput'); if (inp) inp.value = name;
     saveAndBack();
     selectTeam(teams[teams.length - 1].id);
-    startFromSquad();
+    startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps();
   }, { sport, onField, name, needGk });
   await page.waitForTimeout(300);
 }
@@ -282,7 +282,7 @@ const SCENARIOS = [
         [p[4]]: ['MID'], [p[5]]: ['MID'], [p[6]]: ['FWD'], [p[7]]: ['DEF'], [p[8]]: ['FWD'],
       });
       document.getElementById('teamNameInput').value = 'GK FC';
-      saveAndBack(); selectTeam(teams[teams.length - 1].id); startFromSquad(); switchToView('plan');
+      saveAndBack(); selectTeam(teams[teams.length - 1].id); startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); switchToView('plan');
       // Pick an OUTFIELDER (a midfielder) as keeper, then auto-fill.
       setPlanKeeper(avail.indexOf(p[4]));
       planAutoFillStarters();
@@ -301,6 +301,37 @@ const SCENARIOS = [
     chk('field is full', r.onCount === r.onField);
     chk('displaced pure keeper is benched, not stranded outfield', !r.pureGkOnField, r.pureGkSlot ? `(was at ${r.pureGkSlot})` : '');
     await shot(page, 'keeper-autofill');
+  }],
+
+  // v2.9.17: the setup ritual as explicit pages — squad → keeper → shape → s4
+  // (owner directive). Engine proposes; each page is a one-tap review.
+  ['setup steps: squad → keeper page → shape page → field', async (page) => {
+    const r = await page.evaluate(() => {
+      selectTeam(teams[teams.length - 1].id);
+      startFromSquad();
+      const onGk = document.getElementById('gkStep').classList.contains('active');
+      const chips = document.querySelectorAll('#gkStepGrid .chip').length;
+      const other = G.on.find((i) => i !== G.gk);
+      const chip = [...document.querySelectorAll('#gkStepGrid .chip')].find((c) => c.textContent.includes(fn(avail[other])));
+      if (chip) chip.click();
+      const gkChanged = G.gk === other;
+      gkStepNext();
+      const onShape = document.getElementById('shapeStep').classList.contains('active');
+      const tiles = [...document.querySelectorAll('#shapeStepGrid .chip')];
+      const otherTile = tiles.find((t) => t.textContent !== curFormation);
+      const target = otherTile ? otherTile.textContent : null;
+      if (otherTile) otherTile.click();
+      const shapeChanged = target ? curFormation === target : true;
+      shapeStepNext();
+      const onGame = document.getElementById('s4').classList.contains('active');
+      return { onGk, chips, gkChanged, onShape, shapeChanged, onGame };
+    });
+    chk('squad Next lands on the keeper page', r.onGk && r.chips > 0);
+    chk('keeper changes from the keeper page', r.gkChanged);
+    chk('keeper Next lands on the shape page', r.onShape);
+    chk('shape changes from the shape page', r.shapeChanged);
+    chk('shape Next lands on the game screen', r.onGame);
+    await shot(page, 'setup-steps');
   }],
 
   // v2.9.16: the keeper door — the game screen's own gloves control, visible

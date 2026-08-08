@@ -270,7 +270,7 @@ const scenarios = [
       document.getElementById('teamNameInput').value = 'Molly churn';
       saveAndBack(); selectTeam(teams[teams.length - 1].id);
       cfg.subStrategy = 'fair';
-      startFromSquad(); stop();
+      startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); stop();
       G.subStrategy = 'fair';
       const molly = avail.indexOf('Molly');
       setPlanKeeper(molly);                 // Molly keeps all of H1

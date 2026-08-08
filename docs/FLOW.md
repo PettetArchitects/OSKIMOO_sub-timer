@@ -42,7 +42,9 @@ flowchart TD
 
     s1 -->|"Settings"| s2
     s2 --> s3
-    s1 ==>|"quick start"| s4
+    s1 ==>|"Next"| gkStep["Keeper page · gkStep"]
+    gkStep ==>|"Next"| shapeStep["Shape page · shapeStep"]
+    shapeStep ==>|"Next"| s4
     s3 ==>|"kick off"| s4
     s1 -.->|"apply saved plan"| s4
 

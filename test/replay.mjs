@@ -109,7 +109,7 @@ export function installReplayEngine() {
     if (s.gk1 != null) gk1 = s.gk1;
     if (s.gk2 != null) gk2 = s.gk2;
 
-    startFromSquad();
+    startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps();
 
     // startGame() derives on/bench from luOrd; if the recording captured a
     // different opening XI (coach edited on the Plan page pre-kickoff), honour

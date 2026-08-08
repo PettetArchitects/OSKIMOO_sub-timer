@@ -4,15 +4,17 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.16-beta** · 0 static + 112 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.17-beta** · 0 static + 115 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
 - `home` — Home (8 routes in)
-- `s4` — Live game (6 routes in)
+- `s4` — Live game (8 routes in)
+- `s1` — Squad select (4 routes in)
 - `sportPicker` — Sport picker (2 routes in)
-- `s1` — Squad select (2 routes in)
 - `editTeam` — Team editor (2 routes in)
+- `gkStep` (2 routes in)
+- `shapeStep` (2 routes in)
 - `s3` — Lineup + GK (2 routes in)
 - `s5` — Summary (2 routes in)
 - `s6` — Match history (2 routes in)
@@ -27,7 +29,7 @@
 These are emitted by `innerHTML` templates; a static parse can't say which
 screen shows them. See §C for the runtime-verified placement.
 
-- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `exportGameFlow`, `fillSampleSquad`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
+- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
 - **`renderMatchDetail()`** → `histEditCancel`, `histEditSave`, `histEditStart`, `histToggleScorer`, `showHistory`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
@@ -91,23 +93,13 @@ visible/clickable. This corrects §A/§B guesses.
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Live game `s4` — 15 visible
+### Live game `s4` — 5 visible
 
-- `adjScore()`
-- `clkAdj()`
 - `closeAnyDrawer()`
-- `closeGameMenu()`
-- `cycleView()`
-- `moveBenchDown()`
-- `moveBenchUp()`
-- `openAnnounce()`
-- `openGkPick()`
-- `openMatchSettings()`
+- `gkStepNext()`
+- `showScr()`
 - `switchToView()`
-- `tog()`
-- `toggleGameFormation()`
 - `toggleGlobalMenu()`
-- `undoLastSub()`
 
 ### Plan page `subOrderOv` — 12 visible
 

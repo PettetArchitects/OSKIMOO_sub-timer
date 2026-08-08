@@ -86,7 +86,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .hdr .sub{font-size:11px;color:#aaa;margin-top:1px}
 .hdr-row{display:flex;align-items:center;justify-content:space-between}
 .hdr-row h1{font-size:16px}
-.back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:4px 8px}
+/* v2.9.17: 44px minimum — back buttons were 24px tall (a11y §8); the header
+   row centres them so the extra height costs no layout. */
+.back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px}
 
 .scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;justify-content:flex-start}.scr.active{display:flex}#s3.active{justify-content:flex-start;overflow:hidden}#s4.active{overflow:hidden;justify-content:flex-start}#home.active,#s1.active,#s2.active,#editTeam.active,#sportPicker.active,#gradePicker.active,#s5.active{justify-content:flex-start}
 .sec{padding:16px}
@@ -901,6 +903,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="squadPlanPicker" style="margin-top:14px"></div>
     <button class="btn btn-g" id="nextBtn1" disabled onclick="startFromSquad()" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
     <!-- v2.7.45: "Game options for today" + footer hint removed. The squad page is for marking who's here, not a fork to settings. Sub frequency / group size / strategy all live on the Plan page (next screen); team-level prefs live in Edit Team. -->
+  </div>
+</div>
+
+<!-- ===== v2.9.17: SETUP STEP 1 — THE KEEPER PAGE =====
+     Owner directive: the setup ritual's steps are explicit pages before the game
+     screen. squad → KEEPER → SHAPE → line-up review (s4) → announce → kick off.
+     The game is already built (engine proposes); each page is a review with the
+     proposal preselected — confirm is one tap. Skipped for keeperless sports. -->
+<div id="gkStep" class="scr">
+  <div class="hdr">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="showScr('s1')">← Squad</button>
+      <h1>WHO'S IN GOAL?</h1>
+      <div style="width:60px"></div>
+    </div>
+  </div>
+  <div class="info">The proposed keeper is marked — tap a name to change. A benched pick comes on.</div>
+  <div class="sec" style="display:flex;flex-direction:column;flex:1">
+    <div class="chip-grid" id="gkStepGrid"></div>
+    <button class="btn btn-g" id="gkStepNextBtn" onclick="gkStepNext()" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+  </div>
+</div>
+
+<!-- ===== v2.9.17: SETUP STEP 2 — THE SHAPE PAGE =====
+     Skipped for fixed-formation sports (netball / AFL). -->
+<div id="shapeStep" class="scr">
+  <div class="hdr">
+    <div class="hdr-row">
+      <button class="back-btn" onclick="shapeStepBack()">← <span id="shapeBackLbl">Keeper</span></button>
+      <h1>SHAPE</h1>
+      <div style="width:60px"></div>
+    </div>
+  </div>
+  <div class="info">How do we line up today? The current shape is marked.</div>
+  <div class="sec" style="display:flex;flex-direction:column;flex:1">
+    <div class="chip-grid" id="shapeStepGrid" style="grid-template-columns:1fr 1fr"></div>
+    <button class="btn btn-g" onclick="shapeStepNext()" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
   </div>
 </div>
 
@@ -4033,12 +4072,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.16-beta';
+const APP_VERSION='v2.9.17-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.17-beta':{
+    title:'Setup, one step at a time',
+    items:['Starting a game now walks the pre-match ritual as its own pages: pick your squad → <strong>who’s in goal?</strong> → <strong>what shape?</strong> → review the line-up on the pitch → announce → kick off. Each page comes pre-filled with the app’s suggestion — if it’s right, it’s just a tap of Next.','Sports without a keeper skip the keeper page; sports with one fixed shape skip the shape page. The GK and shape buttons stay on the pitch for quick changes later — including at breaks.']
+  },
   'v2.9.16-beta':{
     title:'The keeper button',
     items:['Before kick-off and at every break, the pitch now carries a <strong>GK button</strong> (top-right) showing who has the gloves. Tap it, tap a name, done — pick anyone: a benched keeper comes onto the field and the old keeper steps off.','This is the first step of the setup ritual — keeper, then shape, then positions, then announce — all on the game screen. (Choosing the keeper used to live on the Plan page, which left the game view recently; now the game screen has its own gloves control.)']
@@ -6370,10 +6413,82 @@ function startFromSquad(){
     const p=currentTeam.plans.find(x=>x.id===_pickedPlanId);
     if(p && typeof applyPlanProfile==='function') applyPlanProfile(p);
   }
-  // v2.7.54: Play Now → game screen directly. Previously this auto-opened the
-  // Plan page so the coach saw the projected sub list before kickoff, but the
-  // extra hop is friction (and orphaned the 3D pitch in #planFieldWrap when
-  // they tapped Done — see closeSubOrder fix below).
+  // v2.9.17 (owner directive): the setup ritual's first steps are explicit pages
+  // BEFORE the game screen — squad → keeper → shape → line-up review (s4).
+  // The game is already built (quickStart: engine proposes); the pages review it.
+  // Keeperless sports skip the keeper page; fixed-formation sports skip shape.
+  routeSetupSteps();
+}
+// --- v2.9.17: setup step routing -------------------------------------------
+function _shapeHasChoices(){
+  const forms=FORMATIONS[curFmt];
+  return !!(forms && Object.keys(forms).length>1);
+}
+function routeSetupSteps(){
+  const fmt=FORMATS[curFmt];
+  if(fmt&&fmt.hasGk){ renderGkStep(); showScr('gkStep'); }
+  else if(_shapeHasChoices()){ renderShapeStep(); showScr('shapeStep'); }
+  // else: quickStart already landed on s4 — nothing between squad and the field.
+}
+function renderGkStep(){
+  const g=document.getElementById('gkStepGrid');
+  if(!g||!G)return;
+  g.innerHTML='';
+  const onField=G.on||[], bench=G.bench||[];
+  [...onField,null,...bench].forEach(pIdx=>{
+    if(pIdx===null){
+      if(bench.length){
+        const sep=document.createElement('div');
+        sep.style.cssText='grid-column:1/-1;text-align:center;font-size:10px;color:#666;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin:6px 0 2px';
+        sep.textContent='Bench';
+        g.appendChild(sep);
+      }
+      return;
+    }
+    const name=avail[pIdx];
+    const cur=G.gk===pIdx;
+    const c=document.createElement('button');
+    c.className='chip'+(cur?' sel':'');
+    c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit'+(cur?';background:rgba(255,123,172,.16)':'');
+    c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.onclick=()=>{ setPlanKeeper(pIdx); renderGkStep(); };
+    g.appendChild(c);
+  });
+  _li();
+}
+function gkStepNext(){
+  if(_shapeHasChoices()){ renderShapeStep(); showScr('shapeStep'); }
+  else showScr('s4');
+}
+function renderShapeStep(){
+  const g=document.getElementById('shapeStepGrid');
+  if(!g)return;
+  g.innerHTML='';
+  const back=document.getElementById('shapeBackLbl');
+  if(back)back.textContent=(FORMATS[curFmt]&&FORMATS[curFmt].hasGk)?'Keeper':'Squad';
+  Object.keys(FORMATIONS[curFmt]||{}).forEach(k=>{
+    const sel=(curFormation===k);
+    const c=document.createElement('button');
+    c.className='chip'+(sel?' sel':'');
+    c.style.cssText='padding:18px 8px;min-height:56px;font-size:17px;font-weight:800;letter-spacing:.5px;cursor:pointer;border:none;font-family:inherit;color:'+(sel?'#5bc0de':'#eee')+(sel?';background:rgba(91,192,222,.16)':'');
+    c.textContent=k;
+    c.onclick=()=>{ selectGameFormation(k); renderShapeStep(); };
+    g.appendChild(c);
+  });
+  _li();
+}
+function shapeStepBack(){
+  if(FORMATS[curFmt]&&FORMATS[curFmt].hasGk){ renderGkStep(); showScr('gkStep'); }
+  else showScr('s1');
+}
+function shapeStepNext(){ showScr('s4'); }
+// Programmatic completion — tests and replay bootstraps walk the same journey a
+// coach does; this taps Next through whichever step pages are showing.
+function finishSetupSteps(){
+  const gk=document.getElementById('gkStep');
+  if(gk&&gk.classList.contains('active'))gkStepNext();
+  const sh=document.getElementById('shapeStep');
+  if(sh&&sh.classList.contains('active'))shapeStepNext();
 }
 
 // ===== v2.7.89: LIVE SQUAD EDITING =====

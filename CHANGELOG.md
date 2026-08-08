@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.17-beta — The setup step pages (owner directive)
+
+Keeper and shape become explicit pages BEFORE the game screen: squad → **keeper page** (`gkStep`) → **shape page** (`shapeStep`) → line-up review (s4) → announce → kick off. The game is built first (`quickStart` — engine proposes), so each page is a one-tap review with the proposal marked; picks route through the existing `setPlanKeeper()` / `selectGameFormation()`. Keeperless sports skip the keeper page, fixed-formation sports skip the shape page (`routeSetupSteps()`); the v2.9.16 GK/formation pills stay as re-entry + break doors. `finishSetupSteps()` is the programmatic walk-through used by the test harness and every direct `startFromSquad()` caller (13 sites). New briefs for both screens; screen-audit + a11y audit them; FLOW.md map updated.
+
 ## v2.9.16-beta — The keeper door (owner report: "where is the keeper workflow?")
 
 Play mode 4 removed the live game's doors to the Plan page — and the keeper picker lived there, so choosing the keeper silently lost its only discoverable path (field tap-swap transfers the gloves, but nobody would find it). The game screen now owns the gloves: a **GK pill on the pitch** (top-right, 44px, shows the current keeper's name) appears exactly in the ritual window (`planSetupPhase()` — pre-kickoff + breaks, never mid-play) and opens a chip picker (on-field first, bench under a separator). Taps route through the existing `setPlanKeeper()`, so all the established behaviour holds: a benched pick swaps onto the field and displaces the old keeper; a break pick is an explicit 2nd-half keeper (`gk2Explicit`); the keeper stays out of the rotation pairs. Smoke: setup pick, benched pick (displacement asserted), break pick (gk2Explicit asserted), and mid-play hiding.

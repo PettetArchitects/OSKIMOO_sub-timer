@@ -203,7 +203,7 @@ async function playGame(page, game) {
     selectTeam(teams[teams.length - 1].id);
     if (game.strategy) cfg.subStrategy = game.strategy;
     if (game.breaksOnly != null) cfg.breaksOnly = !!game.breaksOnly;
-    startFromSquad();
+    startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps();
     window.__stopClock();
     if (game.strategy) G.subStrategy = game.strategy;
 

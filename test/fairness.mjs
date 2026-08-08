@@ -99,7 +99,7 @@ function installRunner() {
     document.getElementById('teamNameInput').value = 'Fair ' + C.seed;
     saveAndBack(); selectTeam(teams[teams.length - 1].id);
     cfg.subStrategy = C.strategy; cfg.hm = C.hm; cfg.sf = C.sf; cfg.sc = C.sc; cfg.breaksOnly = false;
-    startFromSquad(); stop();
+    startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps(); stop();
     G.subStrategy = C.strategy;
 
     const transitions = [];

@@ -67,7 +67,7 @@ async function huntFormat(page, cfg, R, opts) {
     G = null; localStorage.clear(); teams = loadTeams();
     newTeam(); pickSport(sport); pickFormat(fmt, sport); fillSampleSquad();
     document.getElementById('teamNameInput').value = 'Hunt ' + fmt;
-    saveAndBack(); selectTeam(teams[teams.length - 1].id); startFromSquad();
+    saveAndBack(); selectTeam(teams[teams.length - 1].id); startFromSquad(); if(typeof finishSetupSteps==="function")finishSetupSteps();
     switchToView('plan');
     // install in-page move helpers + the invariant checker. Each helper guards
     // its own PRECONDITION so the hunt only applies moves reachable in the real

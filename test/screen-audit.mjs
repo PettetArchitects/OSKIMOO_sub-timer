@@ -86,7 +86,10 @@ try {
   await step('Team editor', 'editTeam', () => { pickFormat('7v7', 'soccer'); fillSampleSquad(); });
   await step('Home (teams)', 'home', () => { document.getElementById('teamNameInput').value = 'Audit'; saveAndBack(); });
   await step('Squad select', 's1', () => selectTeam(teams[teams.length - 1].id));
-  await step('Live game', 's4', () => startFromSquad());
+  // v2.9.17: the setup ritual is explicit pages — squad → keeper → shape → s4.
+  await step('Keeper page', 'gkStep', () => startFromSquad());
+  await step('Shape page', 'shapeStep', () => gkStepNext());
+  await step('Live game', 's4', () => shapeStepNext());
   await step('Game drawer open', 'drawer', () => openDrawer('gameMenu'));
   await step('Plan page', 'subOrderOv', () => { closeAnyDrawer(); switchToView('plan'); });
   await step('Summary', 's5', () => { switchToView('live'); G.half = getSport(currentTeam).periodCount; advH(); });
