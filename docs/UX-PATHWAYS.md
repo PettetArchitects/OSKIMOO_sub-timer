@@ -120,9 +120,9 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 1 | Reach a period break (HT, or **Q1/Q3 in quarter sports**) | Break state shown; clock stopped ⚠️ quarter breaks under-tested |
 | 2 | Change the keeper for the next period | **Keeper picker is available throughout the break**, regardless of sub-preview position ⚠️ |
 | 2b | Nominate a **2nd-half keeper before kickoff** (Settings → 2nd Half GK) | That player is in goal when the second half starts, coming on from the bench if needed. Leaving the setting untouched changes nothing — the first-half keeper plays on |
-| 3 | Adjust / confirm the next-period line-up | Edits apply to the upcoming period; 1st-period keeper stays on field next period (youth rule) |
+| 3 | Adjust / confirm the next-period line-up **on the field** (v2.9.11: the break edits on the game screen — tap-swap, keeper, formation — then announce; the "set next line-up" detour to the Plan page is gone) | Edits apply to the upcoming period; 1st-period keeper stays on field next period (youth rule) |
 | 4 | Start the next period | Clock resets to 0; chosen keeper + line-up carry in |
-| 4b | Open the Plan page **at the break** | It describes the period about to be played — not the one that just ended. No already-past sub times listed as upcoming |
+| 4b | The Plan page seen **while a break is live** (programmatic/midweek route only — the live game no longer links there, v2.9.11) | It describes the period about to be played — not the one that just ended. No already-past sub times listed as upcoming |
 | 5 | **Switch apps / lock phone mid-game** | Game is saved immediately; reopening offers Resume with clock + score intact ⚠️ |
 | 6 | Resume from Home banner | Restores the exact in-progress state |
 | 7 | Discard | Clears the saved game |

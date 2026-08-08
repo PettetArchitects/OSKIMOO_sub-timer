@@ -46,7 +46,6 @@ flowchart TD
     s3 ==>|"kick off"| s4
     s1 -.->|"apply saved plan"| s4
 
-    s4 <-->|"Sub Plan (drawer) / Plan tab"| subOrderOv
     subOrderOv -->|"apply plan"| s4
 
     s4 ==>|"full time"| s5
@@ -61,8 +60,10 @@ flowchart TD
 
 **Reading it:** bold edges (⇒) are the Saturday path — Home → squad →
 kick off → full time → save. Thin edges are setup and detours; dotted are
-menu routes. The Live game ⇄ Plan page pair is the app's working core: the
-same game seen as "now" and as "the whole schedule".
+menu routes. Since v2.9.11 the Live game and the Plan page belong to
+different modes: the game view is matchday's only cockpit, and the Plan
+page is reached midweek via the team card's Plan ahead (its one remaining
+edge into the game is "apply plan" at build time).
 
 _Not drawn: the drawer (overlays every screen — see `SCREEN-BRIEFS.md`
 `drawer`), modals (feedback, share, sound picker, what's-new), and the dev
@@ -124,7 +125,7 @@ flowchart TD
     injury -->|yes| benchInj["Back-to-bench<br/>(stays in rotation)"] --> during
     injury -->|no| outInj["Out-for-game<br/>(replacement joins rotation)"] --> during
     during -->|"break (HT/Q)"| break_["Break: change keeper?<br/>confirm next line-up"] --> during
-    during -->|"doubt (any time)"| plan["Peek the Plan page:<br/>whole schedule + minutes"] --> during
+    during -->|"doubt (any time)"| ambient["Glance the screen's own info:<br/>countdown · coming swaps · bench rest"] --> during
     during -->|"phone locks / app switched"| saved["Auto-saved instantly —<br/>resume banner on return"] --> during
     during -->|"abandon early (drawer)"| abandoned(["End game — nothing saved<br/>unless summary reached"])
 

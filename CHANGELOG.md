@@ -4,6 +4,12 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.11-beta — Play mode 4: the Plan tab leaves the live game
+
+The constitution's split lands in the tab bar: the Plan page is midweek-only. The Plan tab, the game drawer's Sub Plan row, the break-hint's "set next line-up" link, and the dead `subOrderBtn` are removed from the live game — its only door is now the team card's **Plan ahead**. Mid-game doubt is answered by the game screen's ambient info (countdown, coming swaps, bench rest), never by dropping the coach into build mode.
+
+**Decision recorded (follows the owner-stamped s4 break ritual):** break line-up editing lives on the game screen's break state, on the field — tap-swap positions, keeper pick, formation change — ending in the announce view. The P4.4b engine guarantee (plan-at-break describes only the upcoming period) stays gated for the programmatic/midweek route. `switchToView('plan')` survives as the programmatic route (tests, replay flows). While the Plan page is open, no tab highlights; exit via Game/Team/Roster.
+
 ## v2.9.10-beta — De-outline: the first visual clean-up (owner directive)
 
 Outlines removed from buttons and panels app-wide — chips, dashboard buttons, outline buttons, steppers, modals (the 3px red frame), drawers, pop-up menus, tip cards, banners, and the JS-rendered pickers (squad-plan, strategy, formation, plan tabs). Fills and colour now carry hierarchy and selection; selected states switched from coloured rings to tinted fills. Kept: the two structural shell hairlines (brand bar, tab bar), form inputs, and the position-tag pairs (colour-coded identity). Zero behaviour changes.
