@@ -78,6 +78,7 @@
 **Secondary:** `ssAdj()` steppers (period length, sub frequency, players-per-sub), `ssSetStrat()` strategy, 2nd-half GK nomination
 **Must show:** current values for every setting; what the strategy means in one line.
 **Boundaries:** values clamp to valid ranges (P2.3); players-per-sub 1–4; an untouched 2nd Half GK changes nobody (P4 ✓).
+**Open flow question (owner rehearsal, 2026-08-08):** the coach *confirms* timing late in their real sequence (after positions + keeper), but this screen interrupts between squad and line-up. Candidate: collapse to a confirm strip on `s3` and make settings opt-in. A P2 pathway change — decide deliberately, not in a restyle.
 **Choice budget:** 8
 
 ## Line-up + keeper · `s3`
@@ -86,7 +87,7 @@
 **Serves:** P2.4, P2.5
 **Primary action:** `startGame()` — kick off.
 **Secondary:** tap players to place/swap, keeper pick, auto-fill, `showScr()` (back)
-**Must show:** the pitch with placed players; who is keeper; bench remainder; projected minutes.
+**Must show:** the pitch with placed players; who is keeper; bench remainder; projected minutes; **an announceable starters/bench split** — the coach reads this screen ALOUD to the team (owner rehearsal, 2026-08-08): big names, two unmistakable groups. The pitch graphic serves the coach; the announcement serves the huddle.
 **Boundaries:** field fills to onField, keeper on field, a pure-GK never auto-placed outfield (P2 ✓); keeper is always the coach's manual pick (owner decision on record).
 **Choice budget:** 6
 
