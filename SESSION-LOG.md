@@ -12,6 +12,44 @@
 
 ---
 
+## 2026-08-08 (Session 5) — Play modes 4+5 land; the atlas current twice over
+
+**State:** `main` = **v2.9.12-beta**, all green, two merges (PRs #35, #36), production current.
+Session 4's pickup list is fully worked. **Pick up at the feature backlog** (below).
+
+### Shipped
+| Ver | PR | What |
+|---|---|---|
+| v2.9.11 | #35 | **Play mode 4** — the Plan tab leaves the live game. Removed: Plan tab, game-drawer Sub Plan row, break-hint "set next line-up" link, dead `subOrderBtn`. Plan page's one door = team card → Plan ahead. `switchToView('plan')` kept as the programmatic route. Smoke's break-hint check now asserts the announce door + the absence of the Plan detour. |
+| v2.9.12 | #36 | **Play mode 5** — Home is the Plan/Play fork. Card tap → squad select (resume when live); quiet 44×44 clipboard button = the PLAN door (sheet: Plan ahead / Past games / Edit / Share — "Play now" removed); + New Team → `ui-btn--secondary is-plan` (matchday red gone — the screen-audit "dominance on the wrong action" headline addressed). |
+
+### Decision resolved (recorded in SCREEN-BRIEFS Plan page + s4, UX-PATHWAYS P4)
+**Break line-up editing lives on the game screen's break state, on the field** — tap-swap, keeper pick,
+formation change, ending in the announce view — NOT on the Plan page. Follows the owner-stamped s4 break
+ritual; the field at a break already shows the proposed next-period line-up as reviewable defaults.
+P4.4b's engine guarantee (plan-at-break describes only the upcoming period) stays gated.
+
+### Figma atlas
+Re-shot **twice**: all 40 frames at v2.9.10 (borderless), then again at v2.9.12 after the tab-bar/home/drawer
+changes. Legend (node 1:20) updated both times. Procedure re-codified in Claude's project memory
+(`figma-atlas-reshoot`) — the prior "figma memory" hadn't persisted; the log's summary + `test/screen-audit.mjs`
+were enough to rebuild it. Shoot script pattern: screen-audit journey × 3 viewports, `upload_assets` with
+nodeId per frame (fills swapped, frames never re-placed).
+
+### Next session — pick up here
+1. Feature backlog from the rehearsal: player of the match + edit-from-history (s5 gaps ① ②),
+   opposition log (s6 gap), scenario smart-offer (subOrderOv), ranked player strengths (editTeam gap),
+   cognitive-check ratchets (budgets + dominance + taps-to-kickoff), flow-walker + tree-path coverage.
+2. Owner's open calls: borderless look OK on iPad? · real-iPad screenshot into the atlas slot ·
+   ui-rounded check (only matters if/when the ui- font ships beyond drawers).
+3. Watch item: returning to the game view from the Plan page with the top-h field view can transiently
+   cluster the jerseys top-left for a frame (pre-existing render timing, seen while verifying #35 — not gated).
+
+**Standing directive unchanged: flow first on the current UI — restyle decisions (incl. the lime
+reference language) wait until the flow work is done.**
+
+---
+
 ## 2026-08-08 (Session 4) — The constitution session: Plan/Play modes, the Saturday rehearsal, and five shipped builds
 
 **State:** `main` = **v2.9.10-beta**, all green, six merges today (PRs #28–#33), production current.
