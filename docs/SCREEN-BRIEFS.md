@@ -104,7 +104,8 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Serves:** P3 (all), P4.1, P4.5
 **Primary action:** `tog()` — start/pause the clock (and the sub-confirm banner when a sub is due).
 **Secondary:** `confSub()`, `undoLastSub()`, `adjScore()`, `injurySub()` (long-press), `cycleView()` / `toggleGameFormation()`, bench reorder, `clkAdj()`, game drawer
-**Must show:** period clock + next-sub countdown (the pair), score, on-field XI with positions, bench with rest times, whose sub is next.
+**Must show:** period clock + next-sub countdown (the pair), score, on-field XI with positions, bench with rest times, whose sub is next — and when a sub is due, **the swap as a relay card**: incoming name, outgoing name, POSITION, in speaking order, readable at arm's length (owner rehearsal, 2026-08-08: mid-play the coach's job is warning kids and giving clear position instructions — the screen scripts what the coach shouts).
+**Hierarchy (two states, two kings):** ambient — the countdown dominates (the screen answers "when"); sub-due — the relay card dominates and everything else recedes (the screen answers "who, where, say it"). The current screen's dominance-1.0 failure is trying to be both at once.
 **Boundaries:** time accrues only while running; undo restores exactly; field size preserved through every sub type; sub times match the Plan page (P3 ✓ block); backgrounding saves immediately (P4.5).
 **Choice budget:** 8 *(current UIMAP count: 12 — the declutter target)*
 
