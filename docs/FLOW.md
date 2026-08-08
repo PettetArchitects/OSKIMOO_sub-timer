@@ -76,15 +76,23 @@ The same app from the coach's side: what they're deciding, not what screen
 they're on. This is the tree the cognitive-load budgets protect — every
 diamond is a decision the UI must make obvious.
 
+> **Stamped by the owner 2026-08-08** (v2 — entry is a neutral "Open app";
+> matchday is a branch, not a premise; midweek intents drawn explicitly).
+
 ```mermaid
 flowchart TD
-    open(["Open app<br/>(Saturday, one hand, sunlight)"]) --> live{"Game<br/>already live?"}
+    open(["Open app"]) --> live{"Game<br/>already live?"}
     live -->|yes| resume["RESUME<br/>→ straight back to the clock"]
     live -->|no| team{"Team exists?"}
 
     team -->|no — first time| create["Create team once:<br/>sport → format → roster<br/>(paste / photo / sample)"]
-    create --> ready
-    team -->|yes| ready{"Planned this game<br/>in advance?"}
+    create --> day
+    team -->|yes| day{"Matchday?"}
+
+    day -->|"no — midweek"| midweek["Plan ahead · tweak roster ·<br/>review past games · share team"]
+    midweek --> later(["Back on Saturday"])
+
+    day -->|yes| ready{"Planned this game<br/>in advance?"}
 
     ready -->|yes| applyPlan["Apply saved plan<br/>(line-up + keeper + timings preset)"]
     ready -->|no| squad["Who's here?<br/>DESELECT the no-shows"]
