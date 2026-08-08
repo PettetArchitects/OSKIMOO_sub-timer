@@ -97,7 +97,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 3 | Manual sub | Opens the same prompt on demand |
 | 4 | Undo last sub | Restores on-field, bench, pairs, minutes; removes the log entry; doesn't cross a period break |
 | 5 | Injury sub | Tap player → back-to-bench (re-enters queue) or out-for-game (removed from rotation) |
-| 6 | Score +/- | Goal logged on +; most-recent goal removed on −; never negative |
+| 6 | Score +/- | Goal logged on +; most-recent goal removed on −; never negative. Our goals prompt **"Who scored?"** right away (skippable) — attribution happens at the goal (owner, 2026-08-08: "later will be forgotten"); summary/history editing is the fallback |
 | 7 | Equal-time rotation over the game | Minutes converge to even; nobody benched the interval after they came on ⚠️ |
 
 ✓ A sub changes the on-field set; undo restores it exactly.  [smoke: trigSub changed the on-field set / undoLastSub restores the line-up]
