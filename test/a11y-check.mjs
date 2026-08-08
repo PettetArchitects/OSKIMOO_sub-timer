@@ -109,6 +109,18 @@ const probe = () => {
     console.log(`  · ${name.padEnd(15)} ${String(r.total).padStart(3)} controls · ${r.small.length} under ${MIN}px · ${r.unnamed.length} unnamed`);
   }
 
+  // v2.9.14: iOS input auto-zoom guard. Safari zooms the page when a focused
+  // text field's font-size is under 16px — and with user-scalable=no the zoom
+  // can stick after blur, leaving the app clipped on the right (reported on
+  // iPad). Every focusable text field must be ≥16px. Full-DOM check: fields on
+  // hidden screens still zoom when their screen shows.
+  const smallInputs = await page.evaluate(() => {
+    return [...document.querySelectorAll('input, textarea')]
+      .filter((el) => !['checkbox', 'radio', 'file', 'range', 'hidden'].includes(el.type))
+      .map((el) => ({ sig: `${el.tagName.toLowerCase()}#${el.id || el.className || el.placeholder || '?'}`, px: parseFloat(getComputedStyle(el).fontSize) }))
+      .filter((x) => x.px < 16);
+  });
+
   // Focus styles — §8 admits none are defined. Check rather than assume.
   const focus = await page.evaluate(() => {
     const sheets = [...document.styleSheets].filter((s) => { try { return s.cssRules; } catch (e) { return false; } });
@@ -135,6 +147,13 @@ const probe = () => {
   if (LIST || over) {
     [...small.values()].sort((a, b) => a.w * a.h - b.w * b.h).slice(0, LIST ? 99 : 10)
       .forEach((x) => console.log(`      ${String(x.w + '×' + x.h).padEnd(9)} ${x.sig}   [${[...x.screens].join(', ')}]`));
+  }
+
+  if (!smallInputs.length) console.log('  ✓ every text field is ≥16px (no iOS focus auto-zoom)');
+  else {
+    console.log(`  ✗ ${smallInputs.length} text field(s) under 16px — iOS zooms the page on focus and the zoom can stick (right-side clipping):`);
+    smallInputs.slice(0, 8).forEach((x) => console.log(`      ${x.px}px  ${x.sig}`));
+    failed++;
   }
 
   if (focus > 0) console.log(`  ✓ ${focus} focus style rule(s) defined`);
