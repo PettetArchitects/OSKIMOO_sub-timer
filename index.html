@@ -57,7 +57,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* The per-screen hamburger buttons (homeMenuBtn, gameMenuBtn, planMenuBtn) are superseded by the single brand-bar #globalMenuBtn. Hide them but keep their dropdown menus in the DOM so the global hamburger can still trigger them. */
 #homeMenuBtn,#gameMenuBtn,#planMenuBtn{display:none!important}
 /* v2.7.83: hamburger opens a SIDE DRAWER (not a dropdown). Slides in from the left, full-height, with scrim. Donate sits at the bottom of every drawer. */
-#homeMenu,#gameMenu,#planMenu{position:fixed!important;top:0!important;left:0!important;right:auto!important;bottom:auto!important;width:280px!important;max-width:80vw!important;height:100dvh!important;margin:0!important;border-radius:0!important;border:none!important;border-right:1px solid #2a3550!important;box-shadow:4px 0 24px rgba(0,0,0,.65)!important;background:#0d1828!important;transform:translateX(-100%);transition:transform .25s ease;z-index:9500!important;padding:calc(48px + env(safe-area-inset-top) + 12px) 10px calc(16px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column;gap:2px;overflow-y:auto;min-width:0!important}
+#homeMenu,#gameMenu,#planMenu{position:fixed!important;top:0!important;left:0!important;right:auto!important;bottom:auto!important;width:280px!important;max-width:80vw!important;height:100dvh!important;margin:0!important;border-radius:0!important;border:none!important;border-right:none!important;box-shadow:4px 0 24px rgba(0,0,0,.65)!important;background:#0d1828!important;transform:translateX(-100%);transition:transform .25s ease;z-index:9500!important;padding:calc(48px + env(safe-area-inset-top) + 12px) 10px calc(16px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column;gap:2px;overflow-y:auto;min-width:0!important}
 #homeMenu.drawer-open,#gameMenu.drawer-open,#planMenu.drawer-open{transform:translateX(0)}
 #appDrawerScrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9400;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #appDrawerScrim.on{opacity:1;pointer-events:auto}
@@ -69,7 +69,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
 #appBrandBar .ab-beta{font-size:8px;font-weight:800;letter-spacing:1px;color:#1a1a2e;background:#f0a500;padding:1px 4px;border-radius:2px}
 #appBrandBar .ab-ver{font-size:10px;color:#888;font-weight:600;letter-spacing:.4px;min-width:54px;text-align:right;padding-right:4px}
-#globalMenuBtn{width:36px;height:36px;border-radius:8px;border:1px solid #2a3550;background:none;color:#9fb3c8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+#globalMenuBtn{width:36px;height:36px;border-radius:8px;border:none;background:none;color:#9fb3c8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
 /* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
 .btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
@@ -109,9 +109,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btn-r{background:linear-gradient(180deg,#ef5872,#e0344f);color:#fff}
 .btn-r:disabled{background:#3a3f4c;color:#666;box-shadow:none}
 .btn-g{background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d}
-.btn-o{background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));border:1.5px solid #e94560;color:#e94560}
+.btn-o{background:rgba(233,69,96,.16);border:none;color:#e94560}
 .btn-s{padding:10px 16px;font-size:14px;margin-top:0;display:inline-block;width:auto;border-radius:var(--r-sm)}
-.btn-del{background:#3a1525;color:#e94560;border:1px solid #e94560}
+.btn-del{background:#3a1525;color:#e94560;border:none}
 
 /* ===== v2.9.3: button system =====================================
    Six variants replacing 54 ad-hoc inline treatments across 121 buttons.
@@ -203,17 +203,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .card{background:linear-gradient(180deg,#1a2747,#141f3a);border-radius:var(--r-btn);padding:16px;margin-bottom:10px;box-shadow:var(--sh-raise)}
 .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(min-width:768px){.chip-grid{grid-template-columns:1fr 1fr 1fr}}
-.chip{padding:14px 10px;background:linear-gradient(180deg,#1a2645,#141d36);border:1.5px solid #2c3a55;border-radius:var(--r-chip);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--sh-raise)}
+.chip{padding:14px 10px;background:linear-gradient(180deg,#1a2645,#141d36);border:none;border-radius:var(--r-chip);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--sh-raise)}
 .chip:active{transform:translateY(1px);box-shadow:var(--sh-press)}
-.chip.sel{border-color:#00d4aa;background:linear-gradient(180deg,#0c3330,#0a2622);color:#00d4aa}
+.chip.sel{background:linear-gradient(180deg,#0c3330,#0a2622);color:#00d4aa}
 .chip.sel::after{content:' ✓'}
-.chip.gk-sel{border-color:#e94560;background:linear-gradient(180deg,#33121f,#260d18);color:#e94560}
+.chip.gk-sel{background:linear-gradient(180deg,#33121f,#260d18);color:#e94560}
 
 /* Stepper */
 .set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
 .set-row label{font-size:14px;font-weight:600}
 .stepper{display:flex;align-items:center;gap:8px}
-.st-btn{width:40px;height:40px;border-radius:50%;border:2px solid #e94560;background:transparent;color:#e94560;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.st-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(233,69,96,.16);color:#e94560;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
 
 /* Lineup */
@@ -393,7 +393,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    beaten by the pills and they'd hang over any action popup — fixed in v2.7.1. */
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9000;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .ov.show{display:flex}
-.ab{background:#16213e;border:3px solid #e94560;border-radius:16px;padding:24px;width:100%;max-width:380px;text-align:center}
+.ab{background:#16213e;border:none;border-radius:16px;padding:24px;width:100%;max-width:380px;text-align:center}
 .ab h2{font-size:22px;color:#e94560;margin-bottom:16px}
 .sm{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;background:#0a1628;border-radius:10px;margin-bottom:6px;font-size:15px;font-weight:600}
 
@@ -426,19 +426,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* In-game action dashboard — mode buttons (Swap / Keeper / Injury / Undo).
    Shares the soft-UI language: subtle gradient, soft shadow, top highlight. */
-.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:1.5px solid #2a3550;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise);text-align:center;line-height:1.05}
+.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:none;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise);text-align:center;line-height:1.05}
 .gd-btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
 .gd-btn svg{width:19px;height:19px}
-.gd-btn.active{background:linear-gradient(180deg,rgba(91,192,222,.22),rgba(91,192,222,.1));border-color:#5bc0de;color:#5bc0de;box-shadow:0 0 10px rgba(91,192,222,.3), inset 0 1px 0 rgba(255,255,255,.08)}
+.gd-btn.active{background:linear-gradient(180deg,rgba(91,192,222,.22),rgba(91,192,222,.1));color:#5bc0de;box-shadow:0 0 10px rgba(91,192,222,.3), inset 0 1px 0 rgba(255,255,255,.08)}
 #gdInjury.active{background:linear-gradient(180deg,rgba(233,69,96,.22),rgba(233,69,96,.1));border-color:#e94560;color:#e94560;box-shadow:0 0 10px rgba(233,69,96,.3), inset 0 1px 0 rgba(255,255,255,.08)}
 .gd-btn:disabled{opacity:.4;cursor:default;box-shadow:none}
 /* Bottom-bar primary actions — START / PAUSE / SUB. Coloured to stand out from
    the soft-UI secondary buttons while keeping the same stacked nav-item shape.
    Slightly wider (flex:1.5) since they're the most-used controls. */
-.gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border-color:#0a9d83;color:#06231d;font-size:13px}
-.gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));border-color:#e94560;color:#ff7088;font-size:13px}
-.gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);border-color:#d98c00;color:#1a1a2e;font-size:13px}
-.gd-btn.gd-reset{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));border-color:rgba(233,69,96,.6);color:#ff7088;font-size:13px}
+.gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d;font-size:13px}
+.gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));color:#ff7088;font-size:13px}
+.gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);color:#1a1a2e;font-size:13px}
+.gd-btn.gd-reset{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));color:#ff7088;font-size:13px}
 .gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
@@ -661,12 +661,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="hdrQuote" style="display:none;margin-top:6px;font-size:13px;color:#eee;font-weight:600;font-style:italic;line-height:1.35;text-align:center;padding:0 56px"></div>
   </div>
   <!-- v2.7.84: homeMenu moved OUT of the (hidden) .hdr so the drawer can render — display:none on a parent hides the whole subtree. -->
-  <div id="homeMenu" style="display:none;position:absolute;top:60px;left:12px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
+  <div id="homeMenu" style="display:none;position:absolute;top:60px;left:12px;background:#0d1828;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
     <!-- v2.7.85: Settings item removed — its contents (Sub-alert sound, Help & gestures, Send feedback) inject into every drawer via openDrawer(). -->
     <div id="homeMenuAuthSlot" style="margin-top:2px"></div>
   </div>
   <div class="sec">
-    <div id="resumeBanner" style="display:none;margin-bottom:12px;padding:12px;background:#1a2a14;border:1.5px solid #00d4aa;border-radius:10px">
+    <div id="resumeBanner" style="display:none;margin-bottom:12px;padding:12px;background:#1a2a14;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Game in progress</div>
@@ -684,12 +684,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div id="hdrQuoteTop" style="display:none;font-size:13px;color:#eee;font-weight:600;font-style:italic;line-height:1.35"></div>
     </div>
     <div id="quoteCard" style="display:none"></div>
-    <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+    <div id="tipsCard" style="display:none;background:rgba(91,192,222,.08);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px">
         <span style="font-size:10px;color:#5bc0de;font-weight:700;letter-spacing:1.5px;display:inline-flex;align-items:center;gap:5px"><i data-lucide="lightbulb" width="12" height="12" style="width:12px;height:12px;display:inline-flex"></i>TIP <span id="tipNum">1</span>/<span id="tipTotal">6</span></span>
         <div style="display:flex;gap:6px;align-items:center">
-          <button onclick="prevTip()" aria-label="Previous tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">‹</button>
-          <button onclick="nextTip()" aria-label="Next tip" style="background:none;border:1px solid rgba(91,192,222,.35);color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">›</button>
+          <button onclick="prevTip()" aria-label="Previous tip" style="background:rgba(91,192,222,.14);border:none;color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">‹</button>
+          <button onclick="nextTip()" aria-label="Next tip" style="background:rgba(91,192,222,.14);border:none;color:#5bc0de;cursor:pointer;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1">›</button>
           <button onclick="dismissTip()" aria-label="Dismiss tips" style="background:none;border:none;color:#666;cursor:pointer;font-size:14px;padding:0 4px;line-height:1">✕</button>
         </div>
       </div>
@@ -845,7 +845,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
     <h2 style="margin-top:16px">Players</h2>
     <input type="file" id="rosterPhotoInput" accept="image/*" style="display:none" onchange="handleRosterPhoto(this)">
-    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:1.5px solid #5bc0de;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
+    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:none;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
       <span style="color:#5bc0de;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
       <span style="text-align:left">
         <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
@@ -908,7 +908,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div style="font-size:12px;color:#888;margin-bottom:8px">What kind of coach are you today?</div>
     <div id="subStratGrid" style="display:flex;flex-direction:column;gap:6px"></div>
     <!-- Game Plan panel (visible when Full Control strategy is selected) -->
-    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border:1.5px solid #a78bfa;border-radius:10px">
+    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#a78bfa;font-size:13px;letter-spacing:.5px"><i data-lucide="clipboard-list" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i><span>Game Plan</span></div>
         <button type="button" onclick="document.getElementById('planPhotoInput').click()" style="background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px"><i data-lucide="camera" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>SNAP MY PLAN</button>
@@ -997,7 +997,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="gameMenuBtn" onclick="toggleGameMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div id="gameMenu" style="display:none;position:absolute;top:50px;left:8px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
+    <div id="gameMenu" style="display:none;position:absolute;top:50px;left:8px;background:#0d1828;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
       <button class="ui-btn ui-btn--ghost" onclick="closeGameMenu();editTeamFromGame()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit Team</button>
       <button class="ui-btn ui-btn--ghost" onclick="closeGameMenu();openSubOrder()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Sub Plan</button>
       <!-- v2.7.85: Settings item removed — injected into the drawer dynamically by openDrawer(). -->
@@ -1026,7 +1026,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
         <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
         <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
-        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
+        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
           <span id="clkHmV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">10</span>
           <span style="opacity:.7">min half</span>
@@ -1037,7 +1037,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
         <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
         <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
         <!-- v2.7.23: inline sub-frequency editor under the sub countdown. -->
-        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
+        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
           <span id="clkSfV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">5</span>
           <span style="opacity:.7">min subs</span>
@@ -1051,7 +1051,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <!-- v2.9.7: timing confirm strip — pre-kickoff only. Timing is seasonal (set
        per team, once); matchday just glances. renderG shows it in the setup
        phase and hides it the moment the game is genuinely underway. -->
-  <div id="timingStrip" style="display:none;margin:0 14px 4px;padding:9px 12px;background:#0d1828;border:1px solid #243049;border-radius:12px;font-size:12px;color:#9fb3c8;font-weight:600;text-align:center;flex-shrink:0">
+  <div id="timingStrip" style="display:none;margin:0 14px 4px;padding:9px 12px;background:#0d1828;border-radius:12px;font-size:12px;color:#9fb3c8;font-weight:600;text-align:center;flex-shrink:0">
     <span id="timingStripTxt"></span>
     <button class="strip-link" onclick="openMatchSettings()">Change</button>
   </div>
@@ -1060,7 +1060,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        shout in speaking order: who comes on, for whom, at which position.
        Tap (or 12s) to dismiss. Suppressed during break auto-rotation — the
        announce view owns breaks. -->
-  <div id="relayCard" onclick="hideRelay()" role="status" style="display:none;margin:0 14px 4px;padding:12px 14px;background:#16213e;border:1.5px solid #00d4aa;border-radius:12px;cursor:pointer;flex-shrink:0"></div>
+  <div id="relayCard" onclick="hideRelay()" role="status" style="display:none;margin:0 14px 4px;padding:12px 14px;background:#16213e;border-radius:12px;cursor:pointer;flex-shrink:0"></div>
 
   <!-- Pitch — fills the middle, flexes to whatever space is left. v2.7.9 wraps it in
        a position:relative parent so the View cycle button can sit overlaid bottom-left. -->
@@ -1070,7 +1070,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
     <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
     <!-- v2.7.32: Formation picker is now a VERTICAL popup floating just above the fmtToggle button so it doesn't push the pitch upward when it opens. -->
-    <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border:1px solid #2a3550;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:78px;max-height:60dvh;overflow-y:auto;z-index:31">
+    <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:78px;max-height:60dvh;overflow-y:auto;z-index:31">
       <div id="gameFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
     </div>
   </div>
@@ -1135,7 +1135,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="planMenuBtn" onclick="togglePlanMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div id="planMenu" style="display:none;position:absolute;top:50px;left:8px;background:#0d1828;border:1px solid #2a3550;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
+    <div id="planMenu" style="display:none;position:absolute;top:50px;left:8px;background:#0d1828;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:8px;min-width:220px;z-index:9500">
       <button class="ui-btn ui-btn--ghost" onclick="closePlanMenu();editTeamFromGame&&editTeamFromGame()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Edit Team</button>
       <!-- v2.7.85: Settings item removed — injected into the drawer dynamically by openDrawer(). -->
       <!-- v2.8.4: "Save plan" is ALWAYS available — you can build a custom line-up
@@ -1272,10 +1272,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 id="teamActionTitle" style="text-align:center;color:#5bc0de;font-size:18px;margin-bottom:16px"></h2>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button onclick="teamActionPlayNow()" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:10px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="play" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Play now<span style="display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:2px">Pick who's here · kick off</span></span></button>
-      <button onclick="teamActionPlanAhead()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(167,139,250,.14);border:1.5px solid #a78bfa;border-radius:10px;color:#a78bfa;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="clipboard" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Plan ahead<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Set format, formation + sub plan before kickoff</span></span></button>
-      <button onclick="teamActionPastGames()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(91,192,222,.1);border:1.5px solid #5bc0de;border-radius:10px;color:#5bc0de;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="history" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Past games<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Match history for this team</span></span></button>
-      <button onclick="teamActionEdit()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:none;border:1px solid #2a3550;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left;margin-top:4px"><i data-lucide="pencil" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit team</button>
-      <button onclick="teamActionShare()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:none;border:1px solid #2a3550;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="share-2" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span style="flex:1">Share team<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Send the full setup to a parent or co-coach</span></span></button>
+      <button onclick="teamActionPlanAhead()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(167,139,250,.14);border:none;border-radius:10px;color:#a78bfa;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="clipboard" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Plan ahead<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Set format, formation + sub plan before kickoff</span></span></button>
+      <button onclick="teamActionPastGames()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(91,192,222,.1);border:none;border-radius:10px;color:#5bc0de;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="history" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Past games<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Match history for this team</span></span></button>
+      <button onclick="teamActionEdit()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#13203a;border:none;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left;margin-top:4px"><i data-lucide="pencil" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit team</button>
+      <button onclick="teamActionShare()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#13203a;border:none;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="share-2" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i><span style="flex:1">Share team<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Send the full setup to a parent or co-coach</span></span></button>
     </div>
     <button class="btn btn-o" style="margin-top:12px" onclick="closeTeamActions()">Cancel</button>
   </div>
@@ -2565,7 +2565,7 @@ function openBulkTag(tagName){
     seen.add(name);
     const checked=getPlayerPos(editingTeam,name).includes(tagName);
     const row=document.createElement('label');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0a1628;border:1.5px solid '+(checked?'#00d4aa':'#1e2a45')+';border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:'+(checked?'#00d4aa':'#bbb')+';transition:all .15s';
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:'+(checked?'rgba(0,212,170,.12)':'#0a1628')+';border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:'+(checked?'#00d4aa':'#bbb')+';transition:all .15s';
     row.innerHTML=`<input type="checkbox" data-name="${name.replace(/"/g,'&quot;')}" ${checked?'checked':''} style="width:18px;height:18px;accent-color:#00d4aa;flex-shrink:0;cursor:pointer">
       <span style="flex:1">${fn(name)}</span>
       ${(()=>{const cur=getPlayerPos(editingTeam,name).filter(t=>t!==tagName);return cur.length?`<span style="font-size:10px;color:#666;font-weight:600">also: ${cur.join(', ')}</span>`:'';})()}`;
@@ -3995,12 +3995,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.9-beta';
+const APP_VERSION='v2.9.10-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.10-beta':{
+    title:'Quieter to look at',
+    items:['First visual clean-up: the outlines are gone. Buttons, chips, cards, menus and pop-ups no longer wear a border each \u2014 fills and colour do the work, and the screen stops looking like a page of little boxes.','Selected states are now shown by fill and colour instead of a coloured ring. Nothing moved; nothing changed behaviour.']
+  },
   'v2.9.9-beta':{
     title:'The sub tells you what to shout',
     items:['When a sub fires, a card now spells out the shout: <strong>who comes on, for whom, at which position</strong> — in the order you’d say it to the kids. "You’re on for Riley" doubles as directions: run to where Riley is.','Tap the card (or wait 12 seconds) to dismiss. Undo still works as before; break rotations skip the card — the announce view covers those.']
@@ -6217,7 +6221,7 @@ function renderSquadPlanPicker(){
   const opts=[{id:null,label:'Auto',color:'#00d4aa',icon:'timer'}].concat(plans.map(p=>({id:p.id,label:p.name,color:'#a78bfa',icon:'clipboard'})));
   const chips=opts.map(o=>{
     const sel=(_squadPickedPlanId===o.id);
-    return `<button onclick="pickSquadPlan(${o.id===null?'null':o.id})" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:${sel?o.color+'1f':'transparent'};border:1.5px solid ${sel?o.color:'#2a3550'};color:${sel?o.color:'#9fb3c8'};border-radius:16px;font-size:12px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${ic(o.icon,13,sel?o.color:'#9fb3c8')}${o.label}</button>`;
+    return `<button onclick="pickSquadPlan(${o.id===null?'null':o.id})" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:${sel?o.color+'1f':'#13203a'};border:none;color:${sel?o.color:'#9fb3c8'};border-radius:16px;font-size:12px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${ic(o.icon,13,sel?o.color:'#9fb3c8')}${o.label}</button>`;
   }).join('');
   host.innerHTML=`<div style="font-size:10px;letter-spacing:1.2px;color:#888;font-weight:800;text-transform:uppercase;margin-bottom:6px">Use a plan</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div>`;
@@ -7159,7 +7163,7 @@ function renderSubPlan(){
 
   if(neverPlayed.length>0){
     const warn=document.createElement('div');
-    warn.style.cssText='background:#3a1525;border:2px solid #e94560;border-radius:10px;padding:12px;margin-top:10px;text-align:center';
+    warn.style.cssText='background:#3a1525;border-radius:10px;padding:12px;margin-top:10px;text-align:center';
     warn.innerHTML=`<div style="font-size:13px;font-weight:800;color:#e94560;margin-bottom:6px">⚠ ${neverPlayed.length} player${neverPlayed.length>1?'s':''} won't get on this half</div>
       <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px">${neverPlayed.map(p=>fn(avail[p])).join(', ')}</div>
       <div style="font-size:12px;color:#aaa">Try: sub more often, swap more players per sub, or reduce bench size</div>`;
@@ -7582,7 +7586,7 @@ function renderScore(){
   if(!area||!G) return;
   const teamName=currentTeam?currentTeam.name.split(' ')[0].toUpperCase():'US';
   const isAfl=getSport(currentTeam).key==='afl';
-  const sBtn='width:28px;height:28px;border-radius:50%;border:1.5px solid #555;background:none;color:#888;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+  const sBtn='width:28px;height:28px;border-radius:50%;border:none;background:#13203a;color:#888;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
   if(isAfl){
     const col=(who,colr)=>{
       const gl=G[who==='us'?'glUs':'glThem']||0, bh=G[who==='us'?'bhUs':'bhThem']||0;
@@ -9187,7 +9191,7 @@ function renderSsStratGrid(){
   const live=stratToToggle(G.subStrategy);
   grid.innerHTML=opts.map(o=>{
     const sel=(live===o.k);
-    return `<button onclick="ssSetStrat('${o.k}')" style="padding:10px;border-radius:8px;border:1.5px solid ${sel?o.color:'#2a3550'};background:${sel?o.color+'1a':'transparent'};color:${sel?o.color:'#9fb3c8'};font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit">${ic(o.icon,15,sel?o.color:'#9fb3c8')}${o.label}</button>`;
+    return `<button onclick="ssSetStrat('${o.k}')" style="padding:10px;border-radius:8px;border:none;background:${sel?o.color+'1a':'#13203a'};color:${sel?o.color:'#9fb3c8'};font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit">${ic(o.icon,15,sel?o.color:'#9fb3c8')}${o.label}</button>`;
   }).join('');
   _li();
 }
@@ -9696,7 +9700,7 @@ function renderPlanFormationChips(){
   host.style.display='flex';
   host.innerHTML=keys.map(k=>{
     const sel=(curFormation===k);
-    return `<button onclick="setPlanFormation('${k}')" style="padding:4px 9px;background:${sel?'rgba(0,212,170,.16)':'transparent'};border:1.5px solid ${sel?'#00d4aa':'#2a3550'};color:${sel?'#00d4aa':'#9fb3c8'};border-radius:14px;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${k}</button>`;
+    return `<button onclick="setPlanFormation('${k}')" style="padding:4px 9px;background:${sel?'rgba(0,212,170,.16)':'#13203a'};border:none;color:${sel?'#00d4aa':'#9fb3c8'};border-radius:14px;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${k}</button>`;
   }).join('');
 }
 function renderPlanField3D(){
@@ -9820,7 +9824,7 @@ function renderSubOrderTabs(){
   wrap.innerHTML=opts.map(o=>{
     const active=(_subOrderStrat===o.k);
     const isLive=(liveToggle===o.k);
-    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;padding:9px 4px;background:${active?'#5bc0de1a':'transparent'};color:${active?'#5bc0de':'#9fb3c8'};border:1.5px solid ${active?'#5bc0de':'transparent'};border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
+    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;padding:9px 4px;background:${active?'#5bc0de1a':'transparent'};color:${active?'#5bc0de':'#9fb3c8'};border:none;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
   }).join('');
 }
 function subOrderPick(strat){
@@ -10145,7 +10149,7 @@ function renderPlanClockAnchor(){
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
       <div id="planScrubClock" class="tmr-c" style="margin:0;line-height:1;color:${tColor}">${fmtTime(st.time)}</div>
       <div style="font-size:13px;color:${tColor};font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">${periodLbl(st.period)}</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
         <button onclick="planClkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
         <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${hmV}</span>
         <span style="opacity:.7">min half</span>
@@ -10155,7 +10159,7 @@ function renderPlanClockAnchor(){
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
       <div class="tmr-c" style="margin:0;line-height:1;color:#00d4aa">${fmtTime((cfg.sf||0)*60)}</div>
       <div style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">SUB EVERY</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
         <button onclick="planClkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
         <span style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">${sfV}</span>
         <span style="opacity:.7">min subs</span>

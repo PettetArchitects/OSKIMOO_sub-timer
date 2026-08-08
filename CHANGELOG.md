@@ -4,6 +4,18 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.10-beta — De-outline: the first visual clean-up (owner directive)
+
+Outlines removed from buttons and panels app-wide — chips, dashboard buttons, outline buttons, steppers, modals (the 3px red frame), drawers, pop-up menus, tip cards, banners, and the JS-rendered pickers (squad-plan, strategy, formation, plan tabs). Fills and colour now carry hierarchy and selection; selected states switched from coloured rings to tinted fills. Kept: the two structural shell hairlines (brand bar, tab bar), form inputs, and the position-tag pairs (colour-coded identity). Zero behaviour changes.
+
+## v2.9.9-beta — Play mode 3a: the relay card
+
+At every fired sub the screen scripts the shout in speaking order — who comes on, for whom, at which position (slot mapping computed post-swap so the position is where the kid runs to). Tap or 12 s dismisses; undo withdraws it; break rotations defer to the announce view. Edge-gated ×4.
+
+## v2.9.8-beta — Play mode 2: the announce views
+
+The huddle script: a read-aloud line-up view (starters with position codes, keeper marked, bench grouped) reachable pre-kickoff ("announce the line-up") and at every break ("announce it", titled with the upcoming period). Edge-gated ×5.
+
 ## v2.9.7-beta — Play mode 1: the timing confirm strip (game-day setup simplifies)
 
 First code to land from the owner's Saturday rehearsal (docs/SCREEN-BRIEFS.md): **timing is seasonal, not matchday** — period length, cadence, group size and strategy are per-team config, set once. The pre-kickoff review now carries a one-line **timing confirm strip** ("20′ halves · subs every 5′ · 2 per sub · Equal time — *Change*"); Change opens the settings screen on demand, Apply returns to the review.
