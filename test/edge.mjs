@@ -524,6 +524,37 @@ const SCENARIOS = [
     await shot(page, 'auth-in-drawer');
     await page.evaluate(() => closeAnyDrawer());
   }],
+
+  // v2.9.7 — the timing confirm strip. Timing is seasonal (per-team prefs);
+  // matchday glances a one-line summary pre-kickoff instead of walking a
+  // settings screen. The strip must vanish once the game is genuinely
+  // underway — it is setup chrome, not game chrome.
+  ['timing confirm strip — pre-kickoff glance, gone once underway', async (page, { chk }) => {
+    await bootstrap(page);
+    const strip = () => page.evaluate(() => {
+      const el = document.getElementById('timingStrip');
+      return { shown: !!el && el.style.display !== 'none', text: document.getElementById('timingStripTxt').textContent, hm: cfg.hm, sf: cfg.sf, sc: cfg.sc };
+    });
+    const pre = await strip();
+    chk('timing strip shown pre-kickoff', pre.shown, pre.text);
+    chk('strip carries the seasonal values', pre.text.includes(`${pre.hm}′`) && pre.text.includes(`${pre.sf}′`) && pre.text.includes(`${pre.sc} per sub`), pre.text);
+
+    // Change opens the on-demand settings screen; Apply returns to the game.
+    await page.evaluate(() => openMatchSettings());
+    await page.waitForTimeout(200);
+    const onS2 = await page.evaluate(() => document.getElementById('s2').classList.contains('active'));
+    chk('Change opens settings on demand', onS2);
+    await page.evaluate(() => quickStart());
+    await page.waitForTimeout(200);
+    const back = await strip();
+    const onS4 = await page.evaluate(() => document.getElementById('s4').classList.contains('active'));
+    chk('Apply returns to the pre-kickoff review', onS4 && back.shown, back.text);
+
+    // Underway (time has accrued, paused): the strip must be gone.
+    await page.evaluate(() => { G.elapsedMs = 5000; G.secs = 5; renderG(); });
+    const mid = await strip();
+    chk('timing strip hidden once underway', !mid.shown);
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })

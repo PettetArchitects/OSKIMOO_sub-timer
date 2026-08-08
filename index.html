@@ -166,6 +166,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    destructive rows (End game). Zero new colours. */
 .ui-btn--ghost.is-plan{color:#a78bfa}
 .ui-btn--ghost.is-danger{color:#ff7088}
+/* v2.9.7: the timing strip's Change link. 44px hit target via padding +
+   negative margin; classed so it doesn't add an inline-button signature. */
+.strip-link{margin:-16px 0 -16px 2px;background:none;border:none;color:#5bc0de;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:underline;padding:16px 10px}
 
 .ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
 .ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
@@ -957,7 +960,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
-    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Start Game <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply settings <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
   </div>
 </div>
 
@@ -1040,6 +1043,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="nsi" style="margin-top:6px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
+  </div>
+
+  <!-- v2.9.7: timing confirm strip — pre-kickoff only. Timing is seasonal (set
+       per team, once); matchday just glances. renderG shows it in the setup
+       phase and hides it the moment the game is genuinely underway. -->
+  <div id="timingStrip" style="display:none;margin:0 14px 4px;padding:9px 12px;background:#0d1828;border:1px solid #243049;border-radius:12px;font-size:12px;color:#9fb3c8;font-weight:600;text-align:center;flex-shrink:0">
+    <span id="timingStripTxt"></span>
+    <button class="strip-link" onclick="openMatchSettings()">Change</button>
   </div>
 
   <!-- Pitch — fills the middle, flexes to whatever space is left. v2.7.9 wraps it in
@@ -3964,12 +3975,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.6-beta';
+const APP_VERSION='v2.9.7-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.7-beta':{
+    title:'Game-day setup got simpler',
+    items:['Your timing setup (period length, sub cadence, group size, strategy) now shows as a one-line summary above the pitch before kick-off — glance it, and tap Change only when something’s unusual. Timing is a set-once-per-season thing; match day just confirms it.','Nothing moved for the game itself — once the clock starts, the strip gets out of the way.']
+  },
   'v2.9.6-beta':{
     title:'A friendlier menu',
     items:['The menu (☰) rows have a warmer, more tactile look — rounder type, softer corners, bigger tap targets. First screen to move onto the app’s new button system; the rest follow screen by screen.','Nothing moved and nothing changed behaviour — same items, same order, same actions.']
@@ -6382,6 +6397,11 @@ function removeAvailIndex(idx){
   if(gk2===idx){ gk2=null; gk2Explicit=false; } else if(gk2!=null) gk2=dec(gk2);
   avail.splice(idx,1);
 }
+// v2.9.7: the timing strip's Change button — the ONLY production door into
+// the settings screen (goSettings lost its last in-app caller back when
+// squad-select started routing straight to the game). Settings are seasonal;
+// this is the on-demand path for the unusual Saturday.
+function openMatchSettings(){ goSettings(); }
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
   setDisplayNameList(avail);
@@ -7380,6 +7400,22 @@ function renderG(){
     }
     pb.innerHTML=G.running?(ic('pause',21)+'<span>PAUSE</span>'):(ic('play',21)+'<span>START</span>');
     pb.className=G.running?'gd-btn gd-pause':'gd-btn gd-go';
+  }
+
+  // v2.9.7: timing confirm strip — the seasonal settings, glanceable before
+  // kick-off. Timing is per-team config; matchday confirms rather than
+  // configures. Gone the moment anything has actually happened.
+  const strip=document.getElementById('timingStrip');
+  if(strip){
+    const preKick=!G.running&&!G.atBreak&&!gameInProgress();
+    if(preKick){
+      const strat=SUB_STRATEGIES.find(s=>s.key===G.subStrategy);
+      const per=_sport.periodCount===2?'halves':`periods of ${_sport.periodCount}`;
+      const cadence=cfg.breaksOnly?'subs at breaks':`subs every ${cfg.sf}′`;
+      document.getElementById('timingStripTxt').textContent=
+        `${cfg.hm}′ ${per} · ${cadence} · ${cfg.sc} per sub · ${strat?strat.label:G.subStrategy}`;
+      strip.style.display='block';
+    } else strip.style.display='none';
   }
 
   // Score
