@@ -505,6 +505,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-just-on{animation:pillEnterGlow 1.6s ease-out}
 .afl3d-overlay .fc-bench3d.fc-just-off{animation:pillExitGlow 1.6s ease-out;opacity:1!important;filter:saturate(1)!important}
 .afl3d-overlay .fc-just-swap{animation:pillSwapGlow 1.1s ease-out}
+/* v2.9.16: the keeper door — GK pill overlaying the pitch top-right, visible only
+   in the ritual window (pre-kickoff + breaks; renderGameDash manages display).
+   Styled here, not inline, so it doesn't add an inline-button signature. 44px. */
+#gkToggle{display:none;position:absolute;top:8px;right:14px;background:rgba(13,18,30,.85);
+  border:1px solid #2a3550;color:#ff7bac;border-radius:10px;padding:12px 14px;min-height:44px;
+  font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);
+  align-items:center;gap:6px;z-index:30;font-family:inherit}
+
 /* In-pitch Behind/Side/Top/lock pills hidden in v2.6.0 — replaced by a single
    View cycle button on the bottom dashboard (#gdView). Kept the DOM nodes so
    afl3d.setView can still toggle their .active class without null checks. */
@@ -1072,6 +1080,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="viewToggle" onclick="cycleView()" aria-label="Cycle camera view" style="display:none;position:absolute;bottom:8px;left:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
     <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
     <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
+    <!-- v2.9.16: the keeper door — first step of the setup/break ritual (keeper →
+         shape → positions → announce), ON the game screen. Shows pre-kickoff and
+         at breaks (planSetupPhase); the Plan page's picker no longer has a door
+         from the live game (v2.9.11). 44px target. -->
+    <button id="gkToggle" onclick="openGkPick()" aria-label="Choose keeper" title="Choose keeper"></button>
     <!-- v2.7.32: Formation picker is now a VERTICAL popup floating just above the fmtToggle button so it doesn't push the pitch upward when it opens. -->
     <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:78px;max-height:60dvh;overflow-y:auto;z-index:31">
       <div id="gameFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -1375,6 +1388,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 id="announceTitle" style="text-align:center;margin-bottom:4px">Starting line-up</h2>
     <div id="announceBody"></div>
     <div style="text-align:center;font-size:11px;color:#888;margin-top:10px">tap anywhere to close</div>
+  </div>
+</div>
+
+<!-- v2.9.16: keeper picker — the game screen's own gloves control (setup + breaks).
+     Mirrors the scorer picker's grid; taps route through setPlanKeeper, so a benched
+     pick swaps onto the field and the old keeper steps off, same as always. -->
+<div class="ov" id="gkPickOv" onclick="if(event.target===this)closeGkPick()">
+  <div class="ab" style="max-width:340px;border-color:#ff7bac">
+    <h2 style="display:flex;align-items:center;justify-content:center;gap:8px;color:#ff7bac"><i data-lucide="hand" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i><span id="gkPickTitle">Who's in goal?</span></h2>
+    <div id="gkPickSub" style="font-size:12px;color:#888;margin-bottom:10px;text-align:center"></div>
+    <div id="gkPickGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;max-height:50vh;overflow-y:auto"></div>
+    <button class="btn btn-o" onclick="closeGkPick()">Cancel</button>
   </div>
 </div>
 
@@ -4008,12 +4033,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.15-beta';
+const APP_VERSION='v2.9.16-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.16-beta':{
+    title:'The keeper button',
+    items:['Before kick-off and at every break, the pitch now carries a <strong>GK button</strong> (top-right) showing who has the gloves. Tap it, tap a name, done — pick anyone: a benched keeper comes onto the field and the old keeper steps off.','This is the first step of the setup ritual — keeper, then shape, then positions, then announce — all on the game screen. (Choosing the keeper used to live on the Plan page, which left the game view recently; now the game screen has its own gloves control.)']
+  },
   'v2.9.15-beta':{
     title:'Fill in the details later',
     items:['Full time is for the huddle; details are for the car park. Any saved game now has <strong>Edit details</strong> in history: add the opponent and ground, name who scored each goal, pick or change the player of the match — whenever you get a minute.','The match facts stay locked: score, minutes and event times are the record. You’re only ever filling in the story around them. Edits sync to your other devices.']
@@ -8234,6 +8263,17 @@ function renderGameDash(){
       fmt.innerHTML=`${ic('layout-grid',13)}<span>${curFormation||'Formation'}</span>`;
     }
   }
+  // v2.9.16: the keeper door — visible exactly in the ritual window (pre-kickoff
+  // + breaks, planSetupPhase). Label carries the current keeper's name so the
+  // review step reads at a glance; "Pick keeper" when nobody has the gloves.
+  const gkBtn=document.getElementById('gkToggle');
+  if(gkBtn){
+    const _fmtDef=FORMATS[curFmt];
+    if(_fmtDef&&_fmtDef.hasGk&&G&&planSetupPhase()){
+      gkBtn.style.display='inline-flex';
+      gkBtn.innerHTML=`${ic('hand',13)}<span>${G.gk!=null&&avail[G.gk]?'GK · '+fn(avail[G.gk]):'Pick keeper'}</span>`;
+    } else gkBtn.style.display='none';
+  }
   // Swap + Injury are no longer permanent buttons — tap a player on the field
   // and an action popup offers both. The gameMode variable still drives the
   // injury follow-up (bench tap picks the replacement); we just no longer
@@ -9739,6 +9779,49 @@ function planSetupPhase(){
   // Editable starters: before kickoff, or paused at a period break — never mid-play.
   return !!(G && !G.running && (!gameInProgress() || G.atBreak));
 }
+// v2.9.16: the keeper door on the game screen (setup + breaks). The grid shows
+// on-field players first, bench under a separator — a benched pick swaps onto
+// the field via setPlanKeeper, displacing the old keeper. One tap, done.
+function openGkPick(){
+  if(!G||!planSetupPhase())return;
+  const fmt=FORMATS[curFmt];
+  if(!fmt||!fmt.hasGk)return;
+  const upcoming=G.atBreak?G.half+1:G.half;
+  document.getElementById('gkPickSub').textContent=G.atBreak
+    ?`Keeper for ${getSport(currentTeam).periodShort(upcoming)} — a benched pick comes on, the old keeper steps off.`
+    :'Tap the starting keeper — a benched pick comes onto the field.';
+  const g=document.getElementById('gkPickGrid');
+  g.innerHTML='';
+  const onField=G.on||[], bench=G.bench||[];
+  [...onField,null,...bench].forEach(pIdx=>{
+    if(pIdx===null){
+      if(bench.length){
+        const sep=document.createElement('div');
+        sep.style.cssText='grid-column:1/-1;text-align:center;font-size:10px;color:#666;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin:6px 0 2px';
+        sep.textContent='Bench';
+        g.appendChild(sep);
+      }
+      return;
+    }
+    const name=avail[pIdx];
+    const cur=G.gk===pIdx;
+    const c=document.createElement('div');
+    c.className='chip'+(cur?' sel':'');
+    c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer'+(cur?';background:rgba(255,123,172,.16)':'');
+    c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.onclick=()=>pickGk(pIdx);
+    g.appendChild(c);
+  });
+  document.getElementById('gkPickOv').classList.add('show');
+  _li();
+}
+function pickGk(idx){
+  setPlanKeeper(idx);
+  closeGkPick();
+  if(typeof renderGameDash==='function')renderGameDash();
+}
+function closeGkPick(){ document.getElementById('gkPickOv').classList.remove('show'); }
+
 function setPlanKeeper(idx){
   if(!G||isNaN(idx)||idx<0) return;
   const fmt=FORMATS[curFmt];

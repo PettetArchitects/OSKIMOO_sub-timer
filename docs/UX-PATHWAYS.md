@@ -73,7 +73,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 1 | Tap the team card (v2.9.12: the card IS the Play door — no action menu in between) | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
 | 2 | **Deselect the no-shows** — tap any player who isn't here to take them out | Tapped players are removed (greyed/struck-through); footer shows playing / out / subs count; can't proceed below the format's onField |
 | 3 | Glance the **timing confirm strip** on the pre-kickoff screen (timing is seasonal, set per team); tap **Change** only when something's unusual | Strip shows period length · sub cadence · group size · strategy; Change opens Settings on demand; values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
-| 4 | Pick starting line-up + keeper (or auto-fill) | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
+| 4 | Pick starting line-up + keeper (or auto-fill). **The keeper door (v2.9.16): the GK pill on the pitch**, pre-kickoff and at breaks — tap it, tap a name; a benched pick comes onto the field and the old keeper steps off | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
 | 5 | Kick off | Live game screen; clock at 0; correct XI on the pitch |
 
 ✓ Field fills to onField; keeper is on the field.  [smoke: pick-starters fills field to onField / keeper is on the field]
@@ -118,7 +118,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | # | Action | Expected result |
 | --- | --- | --- |
 | 1 | Reach a period break (HT, or **Q1/Q3 in quarter sports**) | Break state shown; clock stopped ⚠️ quarter breaks under-tested |
-| 2 | Change the keeper for the next period | **Keeper picker is available throughout the break**, regardless of sub-preview position ⚠️ |
+| 2 | Change the keeper for the next period — **the GK pill on the pitch** (v2.9.16, the game screen's own gloves control; the Plan page's picker no longer has a live-game door) | **Keeper picker is available throughout the break**, regardless of sub-preview position ⚠️ |
 | 2b | Nominate a **2nd-half keeper before kickoff** (Settings → 2nd Half GK) | That player is in goal when the second half starts, coming on from the bench if needed. Leaving the setting untouched changes nothing — the first-half keeper plays on |
 | 3 | Adjust / confirm the next-period line-up **on the field** (v2.9.11: the break edits on the game screen — tap-swap, keeper, formation — then announce; the "set next line-up" detour to the Plan page is gone) | Edits apply to the upcoming period; 1st-period keeper stays on field next period (youth rule) |
 | 4 | Start the next period | Clock resets to 0; chosen keeper + line-up carry in |
