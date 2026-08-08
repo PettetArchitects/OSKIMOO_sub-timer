@@ -82,6 +82,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ Projected minutes reflect the chosen keeper + line-up (keeper = full game).  [smoke: keeper is the top projected-minutes player / keeper is credited the full game]
 ✓ Squad-select can't proceed below onField; exactly-onField = no bench.  [edit: squad equals onField (no bench)]
 ✓ Pre-kickoff shows the timing confirm strip with the seasonal settings; it disappears once the game is genuinely underway.  [edge: timing strip shown pre-kickoff / timing strip hidden once underway]
+✓ Pre-kickoff offers the announce view — the line-up as read to the huddle: every starter with a position, keeper marked, bench listed.  [edge: announce lists every starter with a position / announce marks the keeper / announce lists the bench]
 
 ---
 
@@ -137,6 +138,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ The keeper choice survives a refresh at the break.  [secondhalf: the 2nd-half keeper choice survives the reload · and still takes the gloves after resuming]
 ✓ At a break the Plan page describes the upcoming period — no already-played sub times shown as upcoming.  [secondhalf: no phantom upcoming subs in the finished period · LIVE is labelled with the upcoming period]
 ✓ The XI at the next kickoff is exactly what the coach set at the break.  [secondhalf: the XI at kickoff is the coach's pick]
+✓ At a break the announce view describes the upcoming period's line-up (title names the period about to be played).  [edge: break announce titles the upcoming period]
 ✓ Time in goal does not count as game time for equal play — the H1 keeper is not rotation-targeted after handing over the gloves, and is never benched right after coming on.  [secondhalf: she is NOT subbed off more than anyone else in H2 · nobody is benched at the rotation right after coming on]
 ✓ Quarter-sport breaks carry the same Plan-page guarantee as half-time (netball verified).  [secondhalf: first scrub step is not in the finished period]
 ⚠️ Quarter-sport **keeper** handling at Q1/Q3 is still untested — the 2nd-half keeper rule is scoped to two-period sports.  [🔴 unguarded]
