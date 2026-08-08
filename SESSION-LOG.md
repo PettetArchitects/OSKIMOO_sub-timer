@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-08-08 (Session 5, continued) — The whistle ritual completes; the iPad mystery solved
+
+**State:** `main` = **v2.9.15-beta**, all green, three more merges (PRs #38–#40), production current.
+
+### Shipped
+| Ver | PR | What |
+|---|---|---|
+| v2.9.13 | #38 | **Player of the match** (s5 gap ①) — huddle-fast chip row on the summary (playing-time order, one tap, 44px targets). `match.potm` + a `{type:'potm'}` log event for cloud transport (no schema change; `_matchPotm()` reads either shape); star line in history detail. First automated coverage on the save-match path. |
+| v2.9.14 | #39 | **iPad "right side clipped" fix** (owner report, mid-session) — not a layout bug: iOS Safari's input focus auto-zoom (15px `.input`) + `user-scalable=no` left the page stuck zoomed. All text fields → 16px; new a11y gate check (every focusable text field ≥16px, full-DOM). A stuck iPad clears with one pinch-out or reload. |
+| v2.9.15 | #40 | **Edit-from-history** (s5 gap ②) — history detail's Edit details door: opponent, location, per-goal scorer (inline chip strip), potm. FACTS stay read-only (P5.4 tension resolved in the s6 brief). `updateCloudMatch()` UPDATE path; edits on a deep copy, land on Save. |
+
+### Diagnosis worth remembering
+The iPad clipping reproduced at NO emulated geometry (768/1024/1366, viewport + `.app`-edge overflow
+scans all clean) — the tell that it was a real-Safari behaviour, not layout. Sub-16px inputs are now
+gate-guarded so the class of bug is closed.
+
+### Next session — pick up here
+1. Rest of the rehearsal backlog: **opposition log** (s6 gap — opponents as entities: shape, notes,
+   record, surfaced as pre-game intel), scenario smart-offer (subOrderOv), ranked player strengths
+   (editTeam gap), cognitive-check ratchets (budgets + dominance + taps-to-kickoff), flow-walker.
+2. Owner's open calls: borderless look OK on iPad (now that the zoom fix landed, worth a fresh look) ·
+   real-iPad screenshot into the atlas slot · ui-rounded check.
+3. Atlas: frames are at v2.9.12 — re-shoot when the current run of small versions settles (summary +
+   history changed in v2.9.13/15; procedure in Claude's project memory `figma-atlas-reshoot`).
+
+---
+
 ## 2026-08-08 (Session 5) — Play modes 4+5 land; the atlas current twice over
 
 **State:** `main` = **v2.9.12-beta**, all green, two merges (PRs #35, #36), production current.
