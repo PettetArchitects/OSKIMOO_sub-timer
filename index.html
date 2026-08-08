@@ -169,6 +169,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v2.9.7: the timing strip's Change link. 44px hit target via padding +
    negative margin; classed so it doesn't add an inline-button signature. */
 .strip-link{margin:-16px 0 -16px 2px;background:none;border:none;color:#5bc0de;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:underline;padding:16px 10px}
+/* v2.9.8: inline text links in the #nsi status line (announce / set line-up).
+   44px hit target via padding + negative margin, visual stays a text link. */
+.nsi-link{display:inline-block;cursor:pointer;text-decoration:underline;font-weight:700;padding:16px 8px;margin:-14px -4px}
 
 .ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
 .ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
@@ -1354,6 +1357,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 <!-- Goal picker: two steps — who scored, then who assisted. -->
+<!-- v2.9.8: the ANNOUNCE view — the line-up as the coach reads it to the huddle
+     (SCREEN-BRIEFS s3/s4, owner rehearsal: big names, two unmistakable groups).
+     Opened pre-kickoff and at breaks; tap anywhere to close. -->
+<div class="ov" id="announceOv" onclick="closeAnnounce()">
+  <div class="ab" style="max-width:420px;text-align:left;max-height:88vh;overflow-y:auto">
+    <h2 id="announceTitle" style="text-align:center;margin-bottom:4px">Starting line-up</h2>
+    <div id="announceBody"></div>
+    <div style="text-align:center;font-size:11px;color:#888;margin-top:10px">tap anywhere to close</div>
+  </div>
+</div>
+
 <div class="ov" id="scorerOv">
   <div class="ab" style="max-width:340px">
     <h2 style="display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="goal" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i><span id="scorerTitleTxt">Who scored?</span></h2>
@@ -3975,12 +3989,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.7-beta';
+const APP_VERSION='v2.9.8-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.8-beta':{
+    title:'Announce the line-up',
+    items:['New before kick-off and at every break: <strong>announce the line-up</strong> — a big, read-aloud view of who starts where (keeper marked) and who begins on the bench. Built for the huddle: you read, they run.','Find it under the clock before kick-off, and next to the break options at half/quarter time.']
+  },
   'v2.9.7-beta':{
     title:'Game-day setup got simpler',
     items:['Your timing setup (period length, sub cadence, group size, strategy) now shows as a one-line summary above the pitch before kick-off — glance it, and tap Change only when something’s unusual. Timing is a set-once-per-season thing; match day just confirms it.','Nothing moved for the game itself — once the clock starts, the strip gets out of the way.']
@@ -6402,6 +6420,34 @@ function removeAvailIndex(idx){
 // squad-select started routing straight to the game). Settings are seasonal;
 // this is the on-demand path for the unusual Saturday.
 function openMatchSettings(){ goSettings(); }
+
+// v2.9.8: the ANNOUNCE view. The screen scripts what the coach says to the
+// huddle — every starter with a position (keeper marked), then the bench.
+// Uses the same slot mapping as renderRoster so positions match the pitch.
+function openAnnounce(){
+  if(!G) return;
+  const fmtDef=FORMATS[curFmt];
+  const positions=getPositions();
+  const upcoming=G.atBreak?G.half+1:G.half;
+  const two=getSport(currentTeam).periodCount===2;
+  const word=G.atBreak?(two?'2nd-half':`Period ${upcoming}`):'Starting';
+  document.getElementById('announceTitle').textContent=`${word} line-up`;
+  const rows=[];
+  if(fmtDef.hasGk&&G.gk!==null){
+    rows.push({name:avail[G.gk],pos:positions[0].label,gk:true});
+    G.on.filter(p=>p!==G.gk).forEach((p,i)=>{const ps=positions[i+1];rows.push({name:avail[p],pos:ps?ps.label:''});});
+  } else {
+    G.on.forEach((p,i)=>{const ps=positions[i];rows.push({name:avail[p],pos:ps?ps.label:''});});
+  }
+  const bench=G.bench.map(p=>avail[p]);
+  document.getElementById('announceBody').innerHTML=
+    `<div style="font-size:11px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;margin:8px 0 6px">ON THE FIELD</div>`+
+    rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #1e2a45"><span style="min-width:44px;text-align:center;font-size:12px;font-weight:800;letter-spacing:.5px;color:${r.gk?'#e94560':'#5bc0de'}">${r.pos||'—'}</span><span style="font-size:20px;font-weight:800;color:#eee">${r.name}${r.gk?' <span style="font-size:11px;color:#e94560">(keeper)</span>':''}</span></div>`).join('')+
+    `<div style="font-size:11px;color:#f0a500;font-weight:800;letter-spacing:1.5px;margin:14px 0 6px">STARTING ON THE BENCH</div>`+
+    (bench.length?bench.map(n=>`<div style="padding:6px 0;border-bottom:1px solid #1e2a45;font-size:20px;font-weight:800;color:#eee">${n}</div>`).join(''):'<div style="font-size:13px;color:#888">No bench — everyone plays</div>');
+  document.getElementById('announceOv').classList.add('show');
+}
+function closeAnnounce(){ document.getElementById('announceOv').classList.remove('show'); }
 function goSettings(){
   avail=[...sel].map(i=>currentTeam.players[i]);
   setDisplayNameList(avail);
@@ -7377,7 +7423,7 @@ function renderG(){
     ce.className='tmr-c warn';
     const nextPeriod=G.half+1;
     const startLbl=_sport.key==='netball'?`Start Q${nextPeriod}`:(nextPeriod===2?'Start 2nd Half':`Start Period ${nextPeriod}`);
-    ni.innerHTML=`swap or sub now if needed, then tap ${startLbl} · <span onclick="openSubOrder()" style="color:#5bc0de;font-weight:700;cursor:pointer;text-decoration:underline">set ${nextPeriod===2?'2nd-half':'next'} line-up</span>`;
+    ni.innerHTML=`swap or sub now if needed, then tap ${startLbl} · <span class="nsi-link" onclick="openSubOrder()" style="color:#5bc0de">set ${nextPeriod===2?'2nd-half':'next'} line-up</span> · <span class="nsi-link" onclick="openAnnounce()" style="color:#00d4aa">announce it</span>`;
     pb.innerHTML=ic('play',21)+`<span>${startLbl}</span>`;
     pb.className='gd-btn gd-go';
   } else {
@@ -7415,6 +7461,9 @@ function renderG(){
       document.getElementById('timingStripTxt').textContent=
         `${cfg.hm}′ ${per} · ${cadence} · ${cfg.sc} per sub · ${strat?strat.label:G.subStrategy}`;
       strip.style.display='block';
+      // v2.9.8: pre-kickoff, nsi becomes the announce door — the last step of
+      // the setup ritual (keeper → shape → positions → timing glance → ANNOUNCE).
+      ni.innerHTML=`<span class="nsi-link" onclick="openAnnounce()" style="color:#00d4aa">announce the line-up</span>`;
     } else strip.style.display='none';
   }
 

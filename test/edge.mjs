@@ -555,6 +555,33 @@ const SCENARIOS = [
     const mid = await strip();
     chk('timing strip hidden once underway', !mid.shown);
   }],
+
+  // v2.9.8 — the announce view: the line-up as read to the huddle. Every
+  // starter carries a position, the keeper is marked, the bench is listed;
+  // at a break the title names the period about to be played.
+  ['announce view — the huddle script, pre-kickoff and at the break', async (page, { chk }) => {
+    await bootstrap(page);
+    const open = () => page.evaluate(() => {
+      openAnnounce();
+      const body = document.getElementById('announceBody').innerText;
+      const title = document.getElementById('announceTitle').textContent;
+      const shown = document.getElementById('announceOv').classList.contains('show');
+      closeAnnounce();
+      return { title, body, shown, starters: G.on.map((p) => avail[p]), benchNames: G.bench.map((p) => avail[p]), gkName: G.gk !== null ? avail[G.gk] : null };
+    });
+    const pre = await open();
+    chk('announce view opens pre-kickoff', pre.shown, pre.title);
+    const fieldLines = pre.body.split('STARTING ON THE BENCH')[0];
+    chk('announce lists every starter with a position', pre.starters.every((n) => fieldLines.includes(n)), `${pre.starters.length} starters`);
+    chk('announce marks the keeper', pre.gkName === null || fieldLines.includes('(keeper)'), pre.gkName || 'no-GK format');
+    chk('announce lists the bench', pre.benchNames.every((n) => pre.body.includes(n)), pre.benchNames.join(', '));
+
+    // Reach the break and announce again — the title must name the NEXT period.
+    await page.evaluate(() => { G.secs = cfg.hm * 60; advH(); });
+    await page.waitForTimeout(300);
+    const brk = await open();
+    chk('break announce titles the upcoming period', /2nd-half|Period 2/i.test(brk.title), brk.title);
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })
