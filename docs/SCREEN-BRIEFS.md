@@ -62,8 +62,8 @@
 
 ## Squad select · `s1`
 
-**Purpose:** Mark who turned up. Everyone starts selected; the coach *deselects* the no-shows.
-**Serves:** P2.1, P2.2
+**Purpose:** Mark who turned up. Everyone starts selected; the coach *deselects* the no-shows. **For a planning coach this is where the preset plan meets reality** (owner, 2026-08-08: the sub plan is decided midweek or preset — matchday reconciles it with attendance): applying the saved plan is the expected path, not the detour, and the plan must adapt gracefully when attendance differs from what it assumed.
+**Serves:** P2.1, P2.2, P6.4
 **Primary action:** `startFromSquad()` (Next → line-up).
 **Secondary:** tap players to toggle presence, `planAheadFromSquad()`, `pickSquadPlan()` (apply a saved plan), `showScr()` (back)
 **Must show:** playing / out / subs counts; per-player selected state; can't-proceed state below onField.
@@ -110,7 +110,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Plan page · `subOrderOv`
 
-**Purpose:** See and shape the whole game's sub schedule before or during play — preview never lies about the live game.
+**Purpose:** See and shape the whole game's sub schedule — **primarily a midweek planning tool** (owner, 2026-08-08: substitution planning happens during the week or is preset), secondarily the in-game "peek at the whole schedule" view. Preview never lies about the live game.
 **Serves:** P6 (all), P4.4b
 **Primary action:** `subOrderApply()` — apply the plan to the game.
 **Secondary:** `planScrubStep()` / `planScrubLive()` preview, `setPlanFormation()`, `planClearField()` / pick starters, `soAdj()` steppers, `saveCurrentPlanPrompt()` (menu), `applyPlanProfile()` / `pickSquadPlan()`, plan drawer
