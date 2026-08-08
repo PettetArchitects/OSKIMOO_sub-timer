@@ -699,7 +699,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2 id="teamsHeading">My Teams</h2>
     <div id="teamList"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-r" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
+      <!-- v2.9.12: New Team is a PLAN-mode action — quiet plan tone, not matchday red.
+           (First run keeps its own primary CTA in the landing block.) -->
+      <button class="ui-btn ui-btn--secondary is-plan" id="newTeamBtn" onclick="newTeam()" style="flex:1;margin-top:0">+ New Team</button>
     </div>
     <!-- v2.7.81: global Match History removed from home — match history is per-team now (Past Games in the team-action menu). The button + handler are kept hidden for any code path that still references them. -->
     <!-- v2.9.1: the standalone Match History button is gone — the route is
@@ -1263,12 +1265,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
-<!-- v2.7.36: Team action menu — opens when a team card on the home screen is tapped. -->
+<!-- v2.7.36: Team action menu. v2.9.12: now the home screen's quiet PLAN door —
+     opened by the team card's clipboard button. "Play now" left: the card tap IS
+     the Play door (straight to squad select), so the sheet is midweek-only. -->
 <div class="ov" id="teamActionOv" onclick="if(event.target===this)closeTeamActions()">
-  <div class="ab" style="border-color:#5bc0de;max-width:360px;text-align:left">
-    <h2 id="teamActionTitle" style="text-align:center;color:#5bc0de;font-size:18px;margin-bottom:16px"></h2>
+  <div class="ab" style="border-color:#a78bfa;max-width:360px;text-align:left">
+    <h2 id="teamActionTitle" style="text-align:center;color:#a78bfa;font-size:18px;margin-bottom:16px"></h2>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button onclick="teamActionPlayNow()" style="display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:10px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="play" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Play now<span style="display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:2px">Pick who's here · kick off</span></span></button>
       <button onclick="teamActionPlanAhead()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(167,139,250,.14);border:none;border-radius:10px;color:#a78bfa;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="clipboard" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Plan ahead<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Set format, formation + sub plan before kickoff</span></span></button>
       <button onclick="teamActionPastGames()" style="display:flex;align-items:center;gap:14px;padding:16px;background:rgba(91,192,222,.1);border:none;border-radius:10px;color:#5bc0de;font-size:15px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left"><i data-lucide="history" width="22" height="22" style="width:22px;height:22px;display:inline-flex"></i><span style="flex:1">Past games<span style="display:block;font-size:11px;font-weight:600;opacity:.7;margin-top:2px">Match history for this team</span></span></button>
       <button onclick="teamActionEdit()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#13203a;border:none;border-radius:10px;color:#9fb3c8;font-size:14px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;text-align:left;margin-top:4px"><i data-lucide="pencil" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i>Edit team</button>
@@ -1284,7 +1287,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div class="ov" id="shareTeamOv" onclick="if(event.target===this)closeShareTeam()">
   <div class="ab" style="border-color:#00d4aa;max-width:380px;text-align:left">
     <h2 style="text-align:center;color:#00d4aa;font-size:18px;margin-bottom:4px">SHARE <span id="shareTeamName"></span></h2>
-    <div style="font-size:12.5px;color:#9fb3c8;line-height:1.5;text-align:center;margin-bottom:14px">Send this link to a parent or co-coach. It opens Sub Timer with the whole team already set up — roster, format and game settings. No account needed: they just tap <strong style="color:#eee">Play now</strong>.</div>
+    <div style="font-size:12.5px;color:#9fb3c8;line-height:1.5;text-align:center;margin-bottom:14px">Send this link to a parent or co-coach. It opens Sub Timer with the whole team already set up — roster, format and game settings. No account needed: they just tap <strong style="color:#eee">the team</strong> to play.</div>
     <input id="shareTeamLink" readonly onclick="this.select()" style="width:100%;box-sizing:border-box;padding:10px;background:#0a1628;border:1px solid #2a3550;border-radius:8px;color:#5bc0de;font-size:11px;font-family:monospace;margin-bottom:10px">
     <div style="display:flex;gap:8px">
       <button onclick="copyTeamShareLink()" class="btn btn-g" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="copy" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i>Copy link</button>
@@ -3998,12 +4001,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.11-beta';
+const APP_VERSION='v2.9.12-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.12-beta':{
+    title:'Your team is the play button',
+    items:['Tap your team and you’re picking today’s squad — that’s the whole Saturday path. If a game is live, the card resumes it. No menu in between any more.','Midweek things moved behind the little purple clipboard on the card: plan ahead, past games, edit, share. And <strong>+ New Team</strong> stopped dressing like a matchday button — it’s a planning job, so it went quiet and purple too.']
+  },
   'v2.9.11-beta':{
     title:'Match day and midweek stop sharing a cockpit',
     items:['The Plan tab has left the game screen. Planning is midweek work — build sub plans from your team’s <strong>Plan ahead</strong> — and match day keeps just Game, Team and Roster. During the game the screen itself answers your questions: the countdown, the coming swaps, the bench.','At a break, everything happens right on the field: swap positions, change the keeper, adjust the shape — then <strong>announce it</strong>. The old "set next line-up" detour into the planner is gone.']
@@ -5231,7 +5238,7 @@ function renderHome(){
       c.innerHTML=`<div style="text-align:center;padding:24px 12px;color:#888;font-size:14px;line-height:1.5">
         <div style="margin-bottom:8px;color:#5bc0de;display:flex;justify-content:center"><i data-lucide="goal" width="36" height="36" style="width:36px;height:36px;display:inline-flex"></i></div>
         <div style="font-weight:700;color:#eee;margin-bottom:6px">You're signed in. Let's set up your team.</div>
-        <div>Tap <span style="color:#e94560;font-weight:700">+ New Team</span> below to add players and pick a format.</div>
+        <div>Tap <span style="color:#a78bfa;font-weight:700">+ New Team</span> below to add players and pick a format.</div>
       </div>`;
     }
     return;
@@ -5264,15 +5271,18 @@ function renderHome(){
       const score=active.G?`${active.G.scoreUs}-${active.G.scoreThem}`:'';
       inProgressLine=`<div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-top:4px">Game in progress · ${periodLbl} · ${mins}:${String(secs).padStart(2,'0')} · ${score}</div>`;
     }
-    // v2.7.38: replaced the inline Start button with a chevron — the whole card
-    // taps into the action menu (Play now / Plan ahead / Past games / Edit).
+    // v2.7.38: the whole card became one tap target. v2.9.12: the card tap is
+    // the PLAY door (squad select); the clipboard button is the PLAN door
+    // (Plan ahead / Past games / Edit / Share).
     let actionBtns;
     if(hasActive){
       actionBtns=`<button onclick="event.stopPropagation();discardActiveGame()" style="background:none;color:#7d8a9c;border:1px solid #2a3550;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0" title="Discard the in-progress game">Discard</button>
                   <button onclick="event.stopPropagation();resumeActiveGame()" style="background:#00d4aa;color:#06231d;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0" title="Resume the in-progress game">Resume ${ic('play',13,'#06231d')}</button>`;
     } else {
+      // v2.9.12: the card is the PLAY door (tap → squad select); this button is the
+      // quiet PLAN door — clipboard, plan tone, opens the midweek sheet.
       actionBtns=canPlay
-        ? `<button onclick="event.stopPropagation();openTeamActions('${t.id}')" style="background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;flex-shrink:0" title="Team actions">${ic('chevron-right',16)}</button>`
+        ? `<button onclick="event.stopPropagation();openTeamActions('${t.id}')" style="background:rgba(167,139,250,.1);border:none;color:#a78bfa;border-radius:10px;width:44px;height:44px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0" title="Plan — sub plans, past games, edit, share" aria-label="Plan for ${t.name}">${ic('clipboard',18)}</button>`
         : `<button onclick="event.stopPropagation();editTeamScreen('${t.id}')" style="background:rgba(240,165,0,.15);color:#f0a500;border:1px solid #f0a500;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0" title="Finish team setup">Set up</button>`;
     }
     // Favourite star — always visible (whether the team has an active game, is set up, or still needs setup). Tap pins to top.
@@ -5282,7 +5292,10 @@ function renderHome(){
       <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1"><span style="color:#5bc0de;flex-shrink:0;display:flex">${ic(_spt.icon,22)}</span><div style="min-width:0;flex:1"><h3 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</h3><p>${t.players.length} players${fmtLabel?' · '+fmtLabel:''}</p>${inProgressLine}</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0">${actionBtns}</div>
     </div>`;
-    d.onclick=()=>{ if(hasActive){ resumeActiveGame(); return; } canPlay?openTeamActions(t.id):editTeamScreen(t.id); };
+    // v2.9.12: Home is the Plan/Play fork — the card tap IS the Play door:
+    // resume when live, else straight into squad select. The action sheet
+    // (midweek planning) moved behind the card's quiet clipboard button.
+    d.onclick=()=>{ if(hasActive){ resumeActiveGame(); return; } canPlay?selectTeam(t.id):editTeamScreen(t.id); };
     c.appendChild(d);
   });
   _li();
@@ -5312,10 +5325,8 @@ function openTeamActions(id){
   _li();
 }
 function closeTeamActions(){ document.getElementById('teamActionOv').classList.remove('show'); _teamActionId=null; }
-function teamActionPlayNow(){
-  const id=_teamActionId; closeTeamActions();
-  if(id!=null) selectTeam(id);              // existing flow → s1 squad picker
-}
+// v2.9.12: teamActionPlayNow removed — the team card tap is the Play door now
+// (renderHome card onclick → selectTeam). The sheet is midweek-only.
 function teamActionPlanAhead(){
   const id=_teamActionId; closeTeamActions();
   if(id==null) return;
@@ -5357,7 +5368,7 @@ function teamActionShare(){
 // numbers, sides/feet, format AND saved game-settings prefs — to a parent or
 // co-coach as a single link. The payload is fully self-contained (base64url
 // JSON in the URL hash), so the receiving phone needs no account and no
-// network beyond loading the app: open the link, tap Play now. Codes are
+// network beyond loading the app: open the link, tap the team to play. Codes are
 // prefixed "ST1." (Sub Timer payload v1) so future formats can coexist.
 function buildTeamShareCode(team){
   const payload={
@@ -5471,7 +5482,7 @@ async function shareTeamNative(){
   try{
     await navigator.share({
       title:'Sub Timer — '+(t?t.name:'team'),
-      text:(t?t.name:'Our team')+' is set up in Sub Timer. Open this link and tap Play now:',
+      text:(t?t.name:'Our team')+' is set up in Sub Timer. Open this link and tap the team to play:',
       url:link
     });
   }catch(e){/* user dismissed the share sheet — not an error */}

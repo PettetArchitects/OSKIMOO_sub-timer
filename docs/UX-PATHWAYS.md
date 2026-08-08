@@ -70,7 +70,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 | # | Action | Expected result |
 | --- | --- | --- |
-| 1 | Team card → Play now | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
+| 1 | Tap the team card (v2.9.12: the card IS the Play door — no action menu in between) | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
 | 2 | **Deselect the no-shows** — tap any player who isn't here to take them out | Tapped players are removed (greyed/struck-through); footer shows playing / out / subs count; can't proceed below the format's onField |
 | 3 | Glance the **timing confirm strip** on the pre-kickoff screen (timing is seasonal, set per team); tap **Change** only when something's unusual | Strip shows period length · sub cadence · group size · strategy; Change opens Settings on demand; values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
 | 4 | Pick starting line-up + keeper (or auto-fill) | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |

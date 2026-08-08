@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.12-beta — Play mode 5: Home is the Plan/Play fork
+
+The start screen now IS the mode split (owner-stamped brief). PLAY: the team card tap goes straight into squad select — no action menu in between — and when a game is live the card resumes it (resume outranks everything). PLAN: the card's quiet purple clipboard button opens the midweek sheet (Plan ahead / Past games / Edit / Share — "Play now" left the sheet since the card does it), and **+ New Team** loses its matchday red for the quiet plan tone (`ui-btn--secondary is-plan`). First-run landing keeps its own primary CTA. Share copy updated ("tap the team to play"). `teamActionPlayNow()` removed.
+
 ## v2.9.11-beta — Play mode 4: the Plan tab leaves the live game
 
 The constitution's split lands in the tab bar: the Plan page is midweek-only. The Plan tab, the game drawer's Sub Plan row, the break-hint's "set next line-up" link, and the dead `subOrderBtn` are removed from the live game — its only door is now the team card's **Plan ahead**. Mid-game doubt is answered by the game screen's ambient info (countdown, coming swaps, bench rest), never by dropping the coach into build mode.
