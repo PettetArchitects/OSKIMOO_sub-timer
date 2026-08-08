@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.18-beta — The summary scorer picker (owner report)
+
+"The note who scored the goal didn't work after logging it." The at-goal picker works (verified live) — the hole was the gap between the moments: a skipped "Who scored?" had NO affordance on the full-time summary; scorer editing only existed after saving (edit-from-history, v2.9.15). The summary's game log now gives our goals the same "name the scorer / change scorer" button, routed through the existing live picker (`promptScorer` — scorer + assist, writes `G.log`). `showSum`'s log block factored into `renderSumLog()`; `closeGoalPicker` repaints just that card so typed opponent/location text survives. The scorer is now nameable at all three moments: at the goal, at full time, and from history.
+
 ## v2.9.17-beta — The setup step pages (owner directive)
 
 Keeper and shape become explicit pages BEFORE the game screen: squad → **keeper page** (`gkStep`) → **shape page** (`shapeStep`) → line-up review (s4) → announce → kick off. The game is built first (`quickStart` — engine proposes), so each page is a one-tap review with the proposal marked; picks route through the existing `setPlanKeeper()` / `selectGameFormation()`. Keeperless sports skip the keeper page, fixed-formation sports skip the shape page (`routeSetupSteps()`); the v2.9.16 GK/formation pills stay as re-entry + break doors. `finishSetupSteps()` is the programmatic walk-through used by the test harness and every direct `startFromSquad()` caller (13 sites). New briefs for both screens; screen-audit + a11y audit them; FLOW.md map updated.
