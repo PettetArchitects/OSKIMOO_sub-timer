@@ -607,13 +607,17 @@ const SCENARIOS = [
       selectTeam(teams[teams.length - 1].id);
       startFromSquad(); if (typeof finishSetupSteps === 'function') finishSetupSteps();
       window.confirm = () => true;                     // the coach confirms
-      // wiring: the period label IS the override button
-      const lbl = document.getElementById('hLbl');
-      const wired = lbl.tagName === 'BUTTON' && /endPeriodNow/.test(lbl.getAttribute('onclick') || '');
+      // wiring: the END HALF button sits in the dashboard next to PAUSE (owner
+      // placement); hidden pre-kick, shown while a period is underway
+      const btn = document.getElementById('gdEndHalf');
+      const wired = !!btn && /endPeriodNow/.test(btn.getAttribute('onclick') || '');
+      const hiddenPreKick = btn.style.display === 'none';
       const preKick = (() => { endPeriodNow(); return !G.atBreak; })(); // guard: pre-kick tap does nothing
-      tog();
+      tog(); renderGameDash();
+      const shownMidPlay = btn.style.display !== 'none' && /END HALF/i.test(btn.textContent);
       G.elapsedMs = 7 * 60 * 1000; G.secs = 7 * 60;    // 7' into a 20' half
       endPeriodNow();                                   // the tap
+      const hiddenAtBreak = (renderGameDash(), btn.style.display === 'none');
       const pe = G.log.find((e) => e.type === 'period_end');
       const atBreak = !!G.atBreak, paused = !G.running;
       const again = (() => { endPeriodNow(); return G.half === 1 && !!G.atBreak; })(); // no-op at the break
@@ -624,10 +628,11 @@ const SCENARIOS = [
       endPeriodNow();
       const onSummary = document.getElementById('s5').classList.contains('active');
       G.running = false;                                // leave nothing ticking for later scenarios
-      return { wired, preKick, atBreak, paused, peTime: pe && pe.time, again, onSummary };
+      return { wired, hiddenPreKick, shownMidPlay, hiddenAtBreak, preKick, atBreak, paused, peTime: pe && pe.time, again, onSummary };
     });
-    chk('the period label is wired as the override button', r.wired);
-    chk('pre-kickoff tap is a no-op (guard)', r.preKick);
+    chk('END HALF button wired next to PAUSE', r.wired);
+    chk('END HALF hidden pre-kick, shown mid-play, hidden at the break', r.hiddenPreKick && r.shownMidPlay && r.hiddenAtBreak);
+    chk('pre-kickoff call is a no-op (guard)', r.preKick);
     chk('label tap ends the half at the current clock', r.atBreak && r.paused && r.peTime === 7 * 60);
     chk('tapping again at the break is a no-op', r.again);
     chk('override on the final period goes to full time (summary)', r.onSummary);

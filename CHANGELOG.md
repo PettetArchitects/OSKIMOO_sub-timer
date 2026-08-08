@@ -6,7 +6,7 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ## v2.9.19-beta — The half-time override (owner request)
 
-"We need something to override it and say it's already half time." The period label under the clock (1ST HALF / Q2 / …) is now a tappable override: confirm, and the period ends at the current clock through the exact same `advH()` path as the natural expiry — break state, true-order period_end log (with the clock where it actually stopped), auto break-rotation, summary on the final period. Guards: no-op at a break or before anything has happened (a pre-kickoff mistap can't eat the first half). The label keeps its exact look — the 44px hit target comes from padding + negative margins (`.hlbl-btn`, classed not inline). Sport-aware confirm copy (half time / quarter break / full time).
+"We need something to override it and say it's already half time." An **END HALF** button (amber, flag icon — FULL TIME on the last period, END Q2 on quarter sports) sits in the game dashboard **next to PAUSE** — the owner's placement call after a first pass on the period label proved too subtle. Shown only while a period is genuinely underway (never pre-kick, never at a break — the same window `endPeriodNow()` accepts); tap → sport-aware confirm → the period ends at the current clock through the exact same `advH()` path as the natural expiry: break state, true-order period_end log with the clock where it actually stopped, auto break-rotation, summary on the final period.
 
 ## v2.9.18-beta — The summary scorer picker (owner report)
 
