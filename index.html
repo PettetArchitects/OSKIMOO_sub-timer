@@ -507,6 +507,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .afl3d-overlay .fc-just-on{animation:pillEnterGlow 1.6s ease-out}
 .afl3d-overlay .fc-bench3d.fc-just-off{animation:pillExitGlow 1.6s ease-out;opacity:1!important;filter:saturate(1)!important}
 .afl3d-overlay .fc-just-swap{animation:pillSwapGlow 1.1s ease-out}
+/* v2.9.19: the period label doubles as the half-time override. Styled to keep the
+   label's exact look and position (no layout shift): padding grows the hit target
+   to 44px, negative margins give the space back. Classed, not inline (§4.1). */
+.hlbl-btn{background:none;border:none;font-size:13px;color:#e94560;font-weight:800;
+  letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap;
+  font-family:inherit;cursor:pointer;padding:15px 10px;margin:-15px -10px;
+  -webkit-tap-highlight-color:transparent}
+
 /* v2.9.16: the keeper door — GK pill overlaying the pitch top-right, visible only
    in the ritual window (pre-kickoff + breaks; renderGameDash manages display).
    Styled here, not inline, so it doesn't add an inline-button signature. 44px. */
@@ -1074,7 +1082,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div style="display:flex;align-items:flex-start;justify-content:center;gap:min(5vw,32px);flex-wrap:nowrap">
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
-        <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
+        <!-- v2.9.19: the period label is the half-time override — the ref's whistle
+             doesn't wait for the app's clock. Tap → confirm → the period ends HERE
+             (same advH path as the natural expiry, clock recorded where it stopped). -->
+        <button id="hLbl" class="hlbl-btn" onclick="endPeriodNow()" aria-label="It’s already half time? End the period now">1ST HALF</button>
         <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
         <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
           <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
@@ -4072,12 +4083,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.18-beta';
+const APP_VERSION='v2.9.19-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.19-beta':{
+    title:'When the whistle beats the clock',
+    items:['Ref called half time but the app’s clock disagrees? Tap the period label under the clock (<strong>1ST HALF</strong>, <strong>Q2</strong>…) and confirm — the period ends right there, with the clock recorded where it actually stopped. Same for full time at the end of the last period.','Everything that normally happens at the break still happens: the half-time rotation is proposed, the keeper and shape are one tap away, and the announce view reads the new line-up. A tap while already at a break does nothing.']
+  },
   'v2.9.18-beta':{
     title:'Name the scorer any time',
     items:['Missed the "Who scored?" moment mid-game? At full time, every goal in the summary’s game log now carries a <strong>name the scorer</strong> button (or <strong>change scorer</strong> if you picked the wrong kid) — same picker, same one tap.','So the scorer can be named at the goal, at full time, or later from history — it’s never locked out.']
@@ -7655,6 +7670,7 @@ function renderG(){
     const breakName=(_sport.breakLabels&&_sport.breakLabels[G.half])||'BREAK';
     document.getElementById('hLbl').textContent=breakName;
     document.getElementById('hLbl').style.color='#f0a500';
+    document.getElementById('hLbl').setAttribute('aria-label',breakName); // at a break the label is just a label (endPeriodNow no-ops)
     ce.className='tmr-c warn';
     const nextPeriod=G.half+1;
     const startLbl=_sport.key==='netball'?`Start Q${nextPeriod}`:(nextPeriod===2?'Start 2nd Half':`Start Period ${nextPeriod}`);
@@ -7665,8 +7681,11 @@ function renderG(){
     pb.innerHTML=ic('play',21)+`<span>${startLbl}</span>`;
     pb.className='gd-btn gd-go';
   } else {
-    document.getElementById('hLbl').textContent=_sport.periodShort(G.half);
+    // v2.9.19: the small flag says "tappable — this ends the period" (owner
+    // couldn't find the override as a bare label; the flag is the affordance).
+    document.getElementById('hLbl').innerHTML=_sport.periodShort(G.half)+' '+ic('flag',10,'#ff7088');
     document.getElementById('hLbl').style.color='#e94560';
+    document.getElementById('hLbl').setAttribute('aria-label','It’s already half time? End the period now');
     if(!cfg.breaksOnly&&ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
     if(cfg.breaksOnly){
       // Breaks-only mode (e.g. netball): rotate at the quarter/half break, no rolling subs.
@@ -8575,6 +8594,22 @@ function confInjury(outForGame){
 // button) and the coach can swap / sub on the pitch before starting the next
 // period. Keeper change at the break is just a normal Swap (tap the GK), so the
 // old halftime GK picker is gone.
+// v2.9.19 (owner request): "we need something to override it and say it's
+// already half time." The ref's whistle doesn't wait for the app's clock —
+// tapping the period label ends the period AT the current clock, through the
+// exact same path as the natural expiry (advH: break state, true-order log,
+// auto rotation; final period → summary). Guarded: no-op at a break or before
+// anything has happened (a pre-kickoff mistap must not eat the first half).
+function endPeriodNow(){
+  if(!G||G.atBreak||!gameInProgress())return;
+  const sport=getSport(currentTeam);
+  const isFinal=G.half>=sport.periodCount;
+  const breakName=isFinal?'full time':((sport.breakLabels&&sport.breakLabels[G.half])||'the break').toLowerCase();
+  const lbl=sport.periodShort(G.half);
+  if(!confirm(`It’s already ${breakName}? End the ${lbl.toLowerCase()} now — the clock stops at ${fmt(G.secs)}.`))return;
+  advH();
+}
+
 function advH(){
   if(G.running){G.elapsedMs+=performance.now()-G.lastTs;G.lastTs=null;cancelAnimationFrame(G.raf);G.raf=null;G.running=false;}
   const sport=getSport(currentTeam);

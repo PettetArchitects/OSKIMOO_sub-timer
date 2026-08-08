@@ -117,7 +117,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 | # | Action | Expected result |
 | --- | --- | --- |
-| 1 | Reach a period break (HT, or **Q1/Q3 in quarter sports**) | Break state shown; clock stopped ⚠️ quarter breaks under-tested |
+| 1 | Reach a period break (HT, or **Q1/Q3 in quarter sports**) — naturally, or **tap the period label** when the ref's whistle beats the clock (v2.9.19: confirm → the period ends at the current clock; same break path; no-op at a break or pre-kick) | Break state shown; clock stopped ⚠️ quarter breaks under-tested |
 | 2 | Change the keeper for the next period — **the GK pill on the pitch** (v2.9.16, the game screen's own gloves control; the Plan page's picker no longer has a live-game door) | **Keeper picker is available throughout the break**, regardless of sub-preview position ⚠️ |
 | 2b | Nominate a **2nd-half keeper before kickoff** (Settings → 2nd Half GK) | That player is in goal when the second half starts, coming on from the bench if needed. Leaving the setting untouched changes nothing — the first-half keeper plays on |
 | 3 | Adjust / confirm the next-period line-up **on the field** (v2.9.11: the break edits on the game screen — tap-swap, keeper, formation — then announce; the "set next line-up" detour to the Plan page is gone) | Edits apply to the upcoming period; 1st-period keeper stays on field next period (youth rule) |
