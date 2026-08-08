@@ -94,7 +94,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Serves:** P2.4, P2.5
 **Primary action:** `startGame()` — kick off.
 **Secondary:** tap players to place/swap, keeper pick, auto-fill, `showScr()` (back)
-**Must show:** the pitch with placed players; who is keeper; bench remainder; projected minutes; **an announceable starters/bench split** — the coach reads this screen ALOUD to the team (owner rehearsal, 2026-08-08): big names, two unmistakable groups. The pitch graphic serves the coach; the announcement serves the huddle.
+**Must show:** the pitch with placed players; **the formation, confirmable at a glance** (owner, 2026-08-08: the shape is confirmed at the start of every game, same as at breaks); who is keeper; bench remainder; projected minutes; **an announceable starters/bench split** — the coach reads this screen ALOUD to the team (owner rehearsal, 2026-08-08): big names, two unmistakable groups. The pitch graphic serves the coach; the announcement serves the huddle. The full setup review: keeper → shape → positions → timing glance → announce.
 **Boundaries:** field fills to onField, keeper on field, a pure-GK never auto-placed outfield (P2 ✓); keeper is always the coach's manual pick (owner decision on record).
 **Choice budget:** 6
 
