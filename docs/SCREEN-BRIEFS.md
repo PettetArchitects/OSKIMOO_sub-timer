@@ -43,9 +43,9 @@ one question: *which mode does this belong to?*
 
 ## Home · `home`
 
-**Purpose:** Choose a team and start — or resume — a game with the fewest taps in the app.
+**Purpose:** The mode fork (owner, 2026-08-08: the Plan/Play split IS the start screen). **PLAY** — get to today's game: resume banner when live (primary-when-present), then team card → squad select. **PLAN** — the midweek door: new/edit team, sub plans, history + opposition notes, share; clearly there, never shouting on a Saturday.
 **Serves:** P1.1, P2.1, P7.1
-**Primary action:** tap a team card `selectTeam()` — straight into squad select. (First run: `newTeam()` is primary until a team exists.)
+**Primary action:** tap a team card `selectTeam()` — straight into squad select. (First run: `newTeam()` is primary until a team exists; game live: Resume outranks everything.)
 **Secondary:** `newTeam()`, `openTeamCodeEntry()` (shared-team code), `resumeActiveGame()` / `discardActiveGame()` (only when a game is in progress), `toggleGlobalMenu()`
 **Must show:** each team's readiness (ready vs "Set up"), the resume banner when a live game exists, sign-in state (drawer).
 **Boundaries:** resume banner restores the exact in-progress state (P4); teams list never blocks the resume path.
