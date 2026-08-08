@@ -416,6 +416,35 @@ const SCENARIOS = [
     await shot(page, 'summary');
   }],
 
+  // v2.9.13: player of the match (s5 gap ①) — huddle-fast chip pick on the
+  // summary, persisted into the match record (and into the log for cloud sync),
+  // shown in the history detail.
+  ['player of the match: pick, save, reread from history', async (page) => {
+    const picked = await page.evaluate(() => {
+      const chips = [...document.querySelectorAll('#potmChips .ui-chip')];
+      if (!chips.length) return { ok: false };
+      chips[0].click();
+      const name = G.potm;
+      const sel = document.querySelector('#potmChips .ui-chip[aria-pressed="true"]');
+      return { ok: true, name, chipCount: chips.length, selShown: !!sel };
+    });
+    chk('potm chips render on the summary (one per player)', picked.ok && picked.chipCount > 0);
+    chk('tapping a chip selects the player of the match', !!picked.name && picked.selShown);
+    const saved = await page.evaluate(() => {
+      saveMatch();
+      const m = loadMatches()[0];
+      return { potm: m.potm, logHasPotm: (m.log || []).some(e => e && e.type === 'potm'), reader: _matchPotm(m) };
+    });
+    chk('player of the match persists into the saved match', saved.potm === picked.name);
+    chk('potm rides in the log for cloud sync', saved.logHasPotm && saved.reader === picked.name);
+    const detail = await page.evaluate(() => {
+      showMatchDetail(loadMatches()[0]);
+      return document.getElementById('sumMatch').innerText;
+    });
+    chk('history detail shows the player of the match', /Player of the match/i.test(detail));
+    await shot(page, 'potm');
+  }],
+
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
     await page.reload({ waitUntil: 'load' });

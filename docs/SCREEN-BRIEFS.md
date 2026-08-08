@@ -160,10 +160,10 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Purpose:** The whistle ritual: **confirm the score, name player of the match** — then pocket the phone. Enrichment (opponent, location, scorers) is car-park work, not huddle work (owner rehearsal, 2026-08-08).
 **Serves:** P5.1, P5.2, P5.3
 **Primary action:** `saveMatch()`
-**Secondary:** score confirm, player-of-the-match pick, opponent/location fields (deferred-friendly), scorer picker (deferred-friendly), `showScr()` (skip/home)
-**Must show:** final score front and centre for confirmation; per-player minutes (true totals, including keeper time); the game log.
-**Boundaries:** displayed minutes are true totals even though rotation used outfield-only seconds (v2.9.5 rule); saving clears the active game (P5.3).
-**Feature gaps this brief creates (owner-requested, not yet built):** ① player of the match — no concept in the data model or UI; announced to the huddle, so the picker must be huddle-fast. ② enrich-later — history detail is read-only (P5.4), so deferred fields currently have nowhere to be filled in afterwards; deciding scorers in the car park needs edit-from-history.
+**Secondary:** score confirm, `pickPotm()` (player-of-the-match chips — huddle-fast, one tap, no overlay; v2.9.13), opponent/location fields (deferred-friendly), scorer picker (deferred-friendly), `showScr()` (skip/home)
+**Must show:** final score front and centre for confirmation; the player-of-the-match chips (playing-time order — likely candidates float up); per-player minutes (true totals, including keeper time); the game log.
+**Boundaries:** displayed minutes are true totals even though rotation used outfield-only seconds (v2.9.5 rule); saving clears the active game (P5.3); the potm chips are one semantic decision, not N choices — they don't count against the budget individually.
+**Feature gaps:** ① player of the match — **shipped v2.9.13** (`G.potm` → `match.potm` + a `{type:'potm'}` log event for cloud transport; `_matchPotm()` reads either shape; star line in history detail). ② enrich-later — history detail is read-only (P5.4), so deferred fields (opponent, location, scorers, potm) still have nowhere to be filled in afterwards; deciding scorers in the car park needs edit-from-history — **next build**.
 **Choice budget:** 5
 
 ## Match history · `s6`

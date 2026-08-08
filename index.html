@@ -2452,7 +2452,10 @@ function _logBreakName(e){
 // v2.8.9: bookkeeping entries the match log has no row for. Left unfiltered they
 // still drew a row — the sub_strategy entry recorded at kickoff put a blank line
 // with a "1H 00:00" timestamp at the top of every game log.
-const LOG_SILENT_TYPES={sub_strategy:1};
+// v2.9.13: potm rides inside the log so it survives the cloud round-trip (the
+// matches table has no potm column; log is jsonb) — but the star line above the
+// score is its display, not a log row.
+const LOG_SILENT_TYPES={sub_strategy:1,potm:1};
 function _logRenders(e){ return !!e && !LOG_SILENT_TYPES[e.type]; }
 // The time column. A break, and the rotation applied AT that break, read "HT" /
 // "Q3" rather than a clock time inside the period that just finished.
@@ -4001,12 +4004,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.12-beta';
+const APP_VERSION='v2.9.13-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.13-beta':{
+    title:'Player of the match',
+    items:['At full time the summary now asks the huddle question: <strong>who’s your player of the match?</strong> One tap on a name — the likely candidates float to the top — announce it, save, pocket the phone. Tap again to clear if you change your mind.','The star is saved with the match and shows when you reread the game in history. It syncs to your other devices too.']
+  },
   'v2.9.12-beta':{
     title:'Your team is the play button',
     items:['Tap your team and you’re picking today’s squad — that’s the whole Saturday path. If a game is live, the card resumes it. No menu in between any more.','Midweek things moved behind the little purple clipboard on the card: plan ahead, past games, edit, share. And <strong>+ New Team</strong> stopped dressing like a matchday button — it’s a planning job, so it went quiet and purple too.']
@@ -8491,10 +8498,15 @@ function showSum(){
       <div style="font-size:36px;font-weight:800;margin:4px 0"><span style="color:#00d4aa">${usScore}</span> <span style="color:#444">—</span> <span style="color:#e94560">${themScore}</span></div>
       <div style="font-size:13px;color:#666">${teamName} vs Opposition</div>
     </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:#f0a500;text-transform:uppercase;letter-spacing:1px;font-weight:800;text-align:center;margin-bottom:8px">${ic('star',12,'#f0a500')} Player of the match</div>
+      <div id="potmChips" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"></div>
+    </div>
     <div style="display:flex;gap:8px">
       <input class="input" id="sumOpponent" placeholder="Opponent name" style="flex:1;margin-bottom:0">
       <input class="input" id="sumLocation" placeholder="Location / ground" style="flex:1;margin-bottom:0">
     </div>`;
+  renderPotmChips();
 
   // Playing time card
   const c=document.getElementById('sumCard');c.innerHTML='';
@@ -8571,14 +8583,52 @@ function loadMatches(){
 }
 function saveMatches(m){localStorage.setItem('subTimerMatches',JSON.stringify(m));}
 
+// v2.9.13: player of the match (s5 gap ① — owner rehearsal 2026-08-08).
+// Huddle-fast: one tap on a name chip right on the summary, no overlay. Chips
+// in playing-time order (the likely candidates float up). Tap again clears.
+function renderPotmChips(){
+  const host=document.getElementById('potmChips');
+  if(!host||!G)return;
+  host.innerHTML='';
+  const sorted=avail.map(n=>({n,t:G.pt[n]||0})).sort((a,b)=>b.t-a.t);
+  sorted.forEach(({n})=>{
+    const b=document.createElement('button');
+    b.className='ui-chip'+(G.potm===n?' sel':'');
+    // 44px minimum: full-time, gloves on — every chip is a real hit target.
+    b.style.cssText='min-height:44px;padding:10px 16px'+(G.potm===n?';background:rgba(240,165,0,.18);color:#f0a500':'');
+    b.textContent=fn(n);
+    b.setAttribute('aria-label',`Player of the match: ${fn(n)}`);
+    b.setAttribute('aria-pressed',G.potm===n?'true':'false');
+    b.onclick=()=>pickPotm(n);
+    host.appendChild(b);
+  });
+}
+function pickPotm(name){
+  if(!G)return;
+  G.potm=(G.potm===name)?null:name;
+  saveActiveGame();
+  renderPotmChips();
+}
+// One reader for both storage shapes: local matches carry `potm` directly;
+// matches pulled from the cloud rebuild from the row's log jsonb, where potm
+// rides as a {type:'potm'} event (the matches table has no potm column).
+function _matchPotm(m){
+  if(!m)return null;
+  if(m.potm)return m.potm;
+  const e=(m.log||[]).find(x=>x&&x.type==='potm');
+  return e?e.name:null;
+}
+
 function saveMatch(){
   const opponent=(document.getElementById('sumOpponent').value||'').trim()||'Unknown';
   const location=(document.getElementById('sumLocation').value||'').trim()||'';
+  const potm=G.potm||null;
+  if(potm&&!G.log.some(e=>e&&e.type==='potm'))G.log.push({type:'potm',time:G.secs,half:G.half,name:potm});
   const match={
     id:Date.now(),
     date:new Date().toISOString(),
     team:currentTeam?currentTeam.name:'',
-    opponent,location,
+    opponent,location,potm,
     format:curFmt,formation:curFormation,
     scoreUs:G.scoreUs,scoreThem:G.scoreThem,
     playingTime:avail.map(n=>({name:n,secs:G.pt[n]||0})),
@@ -8641,10 +8691,12 @@ function showMatchDetail(m){
   const mc=document.getElementById('sumMatch');
   const d=new Date(m.date);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  const _potm=_matchPotm(m);
   mc.innerHTML=`<div style="text-align:center">
     <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px">${dateStr}${m.location?' · '+m.location:''}</div>
     <div style="font-size:36px;font-weight:800;margin:4px 0"><span style="color:#00d4aa">${m.scoreUs}</span> <span style="color:#444">—</span> <span style="color:#e94560">${m.scoreThem}</span></div>
     <div style="font-size:13px;color:#666">${m.team||'Team'} vs ${m.opponent||'?'} · ${m.format}</div>
+    ${_potm?`<div style="font-size:13px;color:#f0a500;font-weight:800;margin-top:6px">${ic('star',13,'#f0a500')} Player of the match: ${fn(_potm)}</div>`:''}
   </div>`;
 
   const c=document.getElementById('sumCard');c.innerHTML='';
