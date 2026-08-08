@@ -340,7 +340,10 @@ const SCENARIOS = [
     await page.waitForTimeout(1800);
     const brk = await page.evaluate(() => ({ atBreak: !!G.atBreak, nsi: document.getElementById('nsi').innerText }));
     chk('reached half-time break', brk.atBreak);
-    chk('break screen exposes 2nd-half line-up touch point', /2nd-half line-up/i.test(brk.nsi));
+    // v2.9.11: the break edits ON the field and ends in the announce view — the
+    // "set 2nd-half line-up" detour to the Plan page is gone (owner-stamped ritual).
+    chk('break screen exposes the announce touch point', /announce/i.test(brk.nsi));
+    chk('break hint no longer detours to the Plan page', !/set .*line-up/i.test(brk.nsi));
     await shot(page, 'halftime');
     // set a distinct 2nd-half keeper + custom XI on the Plan, then start the period
     await page.evaluate(() => openSubOrder()); await page.waitForTimeout(400);
