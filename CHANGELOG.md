@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.14-beta — iPad fix: input focus auto-zoom (right side clipped)
+
+Owner report: the right side of the app was clipped on the iPad. Cause: iOS Safari zooms the page when a focused text field is under 16px, and with `user-scalable=no` the zoom can stick after blur — the app then sits zoomed with its right edge off-screen. Every text field (`.input` was 15px; share-link 11px; team-code 12px; dev flow-JSON 11px) is now 16px — the documented iOS fix; pinch zoom untouched, no layout change otherwise. New a11y gate check: every focusable text field must be ≥16px, full-DOM, so the trap can't be reintroduced. (A stuck iPad clears with one pinch-out or a reload.)
+
 ## v2.9.13-beta — Player of the match (s5 gap ①)
 
 First feature from the rehearsal backlog. The summary grows a huddle-fast picker: one row of name chips under a star heading, playing-time order (likely candidates float up), one tap picks, tap again clears — no overlay, no extra screen. `G.potm` persists through backgrounding via the active-game save; `saveMatch()` writes `match.potm` **and** a `{type:'potm'}` log event so the pick survives the cloud round-trip without a schema change (the `matches` table has no potm column; `log` is jsonb — `_matchPotm()` reads either shape). History detail shows the star line. The log renderer silences the potm event (the star line is its display). Smoke: new scenario covers pick → save → reread from history — the first automated coverage on the save-match path.

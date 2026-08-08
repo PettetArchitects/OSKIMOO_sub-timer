@@ -409,7 +409,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .team-card:hover,.team-card:active{border-color:#00d4aa}
 .team-card h3{font-size:16px;font-weight:700;margin-bottom:4px}
 .team-card p{font-size:13px;color:#888}
-.input{width:100%;padding:12px;background:#0a1628;border:2px solid #333;border-radius:10px;color:#eee;font-size:15px;font-family:inherit;margin-bottom:8px}
+/* v2.9.14: 16px, not 15 — iOS Safari auto-zooms the page when a focused text
+   field is under 16px, and with user-scalable=no the zoom can stick after blur:
+   the app then sits zoomed with its right side clipped (reported on iPad).
+   16px on every focusable field is the documented fix; pinch zoom is untouched. */
+.input{width:100%;padding:12px;background:#0a1628;border:2px solid #333;border-radius:10px;color:#eee;font-size:16px;font-family:inherit;margin-bottom:8px}
 .input:focus{outline:none;border-color:#00d4aa}
 .player-edit-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .player-edit-row .input{margin-bottom:0;flex:1}
@@ -761,7 +765,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div style="font-size:10px;color:#666;margin-bottom:8px">Runs the real per-second logic, so subs fire and minutes accrue exactly as in a live game. Rewinding works within the current period only.</div>
 
     <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin:10px 0 5px">Replay a game flow</div>
-    <textarea id="devFlowJson" placeholder="Paste an exported game flow JSON here…" rows="3" class="input" style="resize:vertical;margin-bottom:6px;font-family:monospace;font-size:11px"></textarea>
+    <textarea id="devFlowJson" placeholder="Paste an exported game flow JSON here…" rows="3" class="input" style="resize:vertical;margin-bottom:6px;font-family:monospace;font-size:16px"></textarea>
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <button onclick="devFlowLoad()" style="flex:1;padding:7px;background:rgba(167,139,250,.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Load</button>
       <button onclick="devFlowStep()" style="flex:1;padding:7px;background:none;border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Step ▸</button>
@@ -1288,7 +1292,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="border-color:#00d4aa;max-width:380px;text-align:left">
     <h2 style="text-align:center;color:#00d4aa;font-size:18px;margin-bottom:4px">SHARE <span id="shareTeamName"></span></h2>
     <div style="font-size:12.5px;color:#9fb3c8;line-height:1.5;text-align:center;margin-bottom:14px">Send this link to a parent or co-coach. It opens Sub Timer with the whole team already set up — roster, format and game settings. No account needed: they just tap <strong style="color:#eee">the team</strong> to play.</div>
-    <input id="shareTeamLink" readonly onclick="this.select()" style="width:100%;box-sizing:border-box;padding:10px;background:#0a1628;border:1px solid #2a3550;border-radius:8px;color:#5bc0de;font-size:11px;font-family:monospace;margin-bottom:10px">
+    <input id="shareTeamLink" readonly onclick="this.select()" style="width:100%;box-sizing:border-box;padding:10px;background:#0a1628;border:1px solid #2a3550;border-radius:8px;color:#5bc0de;font-size:16px;font-family:monospace;margin-bottom:10px">
     <div style="display:flex;gap:8px">
       <button onclick="copyTeamShareLink()" class="btn btn-g" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="copy" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i>Copy link</button>
       <button id="shareTeamNativeBtn" onclick="shareTeamNative()" style="flex:1;background:#5bc0de;color:#0a1628;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="share-2" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i>Share…</button>
@@ -1303,7 +1307,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="border-color:#5bc0de;max-width:380px;text-align:left">
     <h2 style="text-align:center;margin-bottom:6px">Add a Shared Team</h2>
     <div style="font-size:12.5px;color:#9fb3c8;line-height:1.5;text-align:center;margin-bottom:12px">Paste the team link (or the code starting with <span style="font-family:monospace;color:#5bc0de">ST1.</span>) that your coach sent you.</div>
-    <textarea id="teamCodeInput" rows="3" placeholder="https://sub-timer.vercel.app/#team=ST1.…" style="width:100%;box-sizing:border-box;padding:10px;background:#0a1628;border:1px solid #2a3550;border-radius:8px;color:#eee;font-size:12px;font-family:monospace;resize:none"></textarea>
+    <textarea id="teamCodeInput" rows="3" placeholder="https://sub-timer.vercel.app/#team=ST1.…" style="width:100%;box-sizing:border-box;padding:10px;background:#0a1628;border:1px solid #2a3550;border-radius:8px;color:#eee;font-size:16px;font-family:monospace;resize:none"></textarea>
     <div id="teamCodeStatus" style="font-size:12px;text-align:center;margin-top:8px;min-height:15px"></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-o" onclick="closeTeamCodeEntry()" style="flex:1;margin-top:0">Cancel</button>
@@ -4004,12 +4008,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.13-beta';
+const APP_VERSION='v2.9.14-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.14-beta':{
+    title:'iPad fix: no more stuck zoom',
+    items:['On iPad (and iPhone), tapping into a text box — team name, player names, opponent — could make Safari zoom the whole page in and stay zoomed, cutting off the right side of the app. Text boxes are now sized so that zoom never fires.','If your iPad is currently stuck zoomed: pinch out once (or reload the page) and it won’t happen again.']
+  },
   'v2.9.13-beta':{
     title:'Player of the match',
     items:['At full time the summary now asks the huddle question: <strong>who’s your player of the match?</strong> One tap on a name — the likely candidates float to the top — announce it, save, pocket the phone. Tap again to clear if you change your mind.','The star is saved with the match and shows when you reread the game in history. It syncs to your other devices too.']
