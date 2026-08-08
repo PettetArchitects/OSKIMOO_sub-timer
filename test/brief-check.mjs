@@ -66,6 +66,7 @@ for (const s of sections) {
 
   // 5. required fields
   if (!/\*\*Purpose:\*\*/.test(s.body)) bad(`${where} missing **Purpose:**`);
+  if (!/\*\*Mode:\*\*\s*(PLAN|PLAY|BOTH)\b/.test(s.body)) bad(`${where} missing **Mode:** (PLAN | PLAY | BOTH — the governing split)`);
   const primary = s.body.match(/\*\*Primary action:\*\*/g) || [];
   if (primary.length !== 1) bad(`${where} needs exactly one **Primary action:** (found ${primary.length})`);
   const budget = s.body.match(/\*\*Choice budget:\*\*\s*(\d+)/);
