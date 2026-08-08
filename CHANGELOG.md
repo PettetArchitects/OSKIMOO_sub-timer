@@ -4,6 +4,17 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.6-beta — Drawer rows move onto the `ui-` button system (migration step 02)
+
+First step of the button-system migration that changes pixels (step 01 defined the classes and touched nothing). The 12 drawer/menu rows — game menu (Edit Team, Sub Plan, End game), plan menu (Edit Team, Save plan profile, Edit Lineup, End game) and the rows `openDrawer()` injects into every drawer (Sub-alert sound, Help & gestures, Sign in, Send feedback, Send game flow) — are now `.ui-btn--ghost` instead of twelve near-identical inline style strings.
+
+- 🎨 Two colour-only ghost tones added: `.is-plan` (purple rows on the plan menu) and `.is-danger` (End game), following the `.ui-step.is-danger` precedent. Zero new colours.
+- 📏 Rows get the system's 50px min-height (was ~46px), 14px radius, `ui-rounded` type at 700 — the "fun familiar approachable" treatment from design.md §4.1.0.
+- 🧹 The amber Donate row keeps its deliberate one-off treatment.
+- 🔒 `UI_BUTTONS` ratchet lowered 54 → the post-migration count; the budget can keep falling, never rise.
+
+Behaviour untouched: same items, same order, same handlers.
+
 ## v2.9.5-beta — Time in goal doesn't count as game time for equal play
 
 From a real game, better described the second time: **Molly kept the whole first half, handed over the gloves at the break, and was then subbed off "way too many times" in the second half.**
