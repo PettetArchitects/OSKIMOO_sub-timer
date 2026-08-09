@@ -3995,7 +3995,7 @@ function renderViewSwitcher(){
     {k:'game', label:'Game', svg:gameSvg},
     // v2.9.11: Plan tab removed — the Plan page is a midweek planning tool (owner:
     // it does NOT live on the game view). Door: team card → Plan ahead.
-    {k:'team', label:'Team', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
+    {k:'team', label:'Positions', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
     // v2.9.23: Settings tab — the team's game defaults (formation / strategy /
     // timing) on their own PLAN-mode screen, out of the roster editor. Sits
     // next to Team (both midweek surfaces); Game stays first, Roster stays last.
@@ -4116,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.24-beta';
+const APP_VERSION='v2.9.25-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.25-beta':{
+    title:'The next subs, readable from standing height',
+    items:['The <strong>next on</strong> bench rows are bigger — name, position badge and the "for Riley at LB" line all grew, because that row is exactly what the sub manager is watching between rotations.','Later waves stay small on purpose: the size difference IS the hierarchy — what’s next is loud, what’s after is quiet. And the Team tab is now called <strong>Positions</strong> — it’s your players and where they play; game defaults live in Settings next door.']
+  },
   'v2.9.24-beta':{
     title:'Position records, properly aligned',
     items:['A fix to yesterday’s new position tracking: minutes-per-position now always match what the pitch shows, even after you hand the gloves to a different keeper. If your keeper page or shape page choices changed the line-up, the seating check now runs again after them.','Reset Half now restores the properly-seated kickoff line-up.']
@@ -9638,7 +9642,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const bgC=isInjuryPick?'#1a0a0e':(isNext?'#0a1a16':'#0a1628');
       const borderC=isInjuryPick?'#e94560':(isNext?'#00d4aa':'#1e2a45');
       const glow=isInjuryPick?'box-shadow:0 0 8px rgba(233,69,96,.3);':(isNext?'box-shadow:0 0 8px rgba(0,212,170,.3);':'');
-      row.style.cssText=`display:flex;align-items:center;padding:5px 8px;background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
+      // v2.9.25 (owner): the NEXT-ON wave is what the sub manager watches —
+      // bigger name, bigger instruction line, bigger badge. Later waves stay
+      // small so the hierarchy reads at a glance.
+      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'5px 8px'};background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
@@ -9655,10 +9662,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
-        <div style="width:24px;height:24px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?'8':'10'}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
+        <div style="width:${isNext?'30':'24'}px;height:${isNext?'30':'24'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',11,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:10px;color:#f0a500;font-weight:600;margin-top:1px;line-height:1.1">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:${isNext?'16':'13'}px;font-weight:${isNext?'800':'600'};color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:13px;color:#f0a500;font-weight:700;margin-top:2px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
         <div style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
