@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .drawer-donate{margin-top:auto!important;border-top:1px solid #1e2a45;padding-top:10px!important}
 /* v2.7.82: persistent app header — hamburger LEFT, logo CENTRE, version RIGHT. Single bar across every page. */
 #appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:44px;padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
-#appBrandBar .ab-center{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;min-width:0}
+#appBrandBar .ab-center{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;min-width:0;cursor:pointer;align-self:stretch;min-height:44px}
 #appBrandBar .ab-logo{width:14px;height:21px}
 #appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
 #appBrandBar .ab-beta{font-size:8px;font-weight:800;letter-spacing:1px;color:#1a1a2e;background:#f0a500;padding:1px 4px;border-radius:2px}
@@ -854,7 +854,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div id="editTeam" class="scr">
   <div class="hdr" style="position:relative">
     <div class="hdr-row">
-      <button class="back-btn" onclick="saveAndBack()">← Back</button>
+      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates; Save Team commits -->
       <h1 id="editTitle">New Team</h1>
       <button class="back-btn" onclick="deleteTeam()" id="delTeamBtn" style="color:#e94560">Delete</button>
     </div>
@@ -879,11 +879,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="playerEditList"></div>
     <button class="btn btn-o btn-s" onclick="addPlayerField()" style="margin-top:8px;width:100%">+ Add Player</button>
 
-    <h2 style="margin-top:20px">Game Settings</h2>
-    <div style="font-size:12px;color:#888;margin-bottom:10px">Defaults for this team — applied every game, so you go straight to the pitch. Change these only when you need to.</div>
-    <div id="teamPrefsSection"></div>
-
     <button class="btn btn-g" onclick="saveAndBack()" style="margin-top:16px">Save Team</button>
+  </div>
+</div>
+
+<!-- ===== v2.9.23: TEAM SETTINGS — the team's game defaults, own tab =====
+     Owner directive: the Game Settings block (formation / sub strategy / timing)
+     moves out of the team editor onto its own bottom-bar tab. PLAN-mode surface;
+     controls live-save to the team (quiet Saved tick) — no Save button to forget. -->
+<div id="teamSettings" class="scr">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates -->
+      <h1>GAME SETTINGS</h1>
+      <div id="teamSettingsSaved" style="width:60px;text-align:right;font-size:11px;font-weight:800;letter-spacing:.5px;color:#00d4aa;opacity:0;transition:opacity .3s">✓ Saved</div>
+    </div>
+  </div>
+  <div class="info">Defaults for this team — applied every game, so you go straight to the pitch. Changes save automatically.</div>
+  <div class="sec">
+    <div id="teamPrefsSection"></div>
   </div>
 </div>
 
@@ -891,7 +905,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div id="s1" class="scr">
   <div class="hdr">
     <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('home')">← Teams</button>
+      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates; the brand-bar logo goes Home -->
       <h1 id="s1Title">SQUAD</h1>
       <div style="width:60px"></div>
     </div>
@@ -906,7 +920,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <!-- v2.7.47: choose AUTO or a saved Custom-plan profile right here on the squad page. Populated by renderS1 from currentTeam.plans. Empty state nudges the coach into the Plan Ahead builder. -->
     <div id="squadPlanPicker" style="margin-top:14px"></div>
     <button class="btn btn-g" id="nextBtn1" disabled onclick="startFromSquad()" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
-    <!-- v2.7.45: "Game options for today" + footer hint removed. The squad page is for marking who's here, not a fork to settings. Sub frequency / group size / strategy all live on the Plan page (next screen); team-level prefs live in Edit Team. -->
+    <!-- v2.7.45: "Game options for today" + footer hint removed. The squad page is for marking who's here, not a fork to settings. Sub frequency / group size / strategy all live on the Plan page (next screen); team-level prefs live on the Settings tab (v2.9.23 — formerly inside Edit Team). -->
   </div>
 </div>
 
@@ -1501,7 +1515,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <button id="globalMenuBtn" onclick="toggleGlobalMenu(event)" aria-label="Menu" title="Menu">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
-  <div class="ab-center">
+  <div class="ab-center" onclick="if(typeof home==='function'){home();}else{renderHome();showScr('home');}" role="button" tabindex="0" aria-label="Home">
     <svg class="ab-logo logo-anim" viewBox="0 0 40 60" aria-hidden="true">
       <circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot"/><circle cx="20" cy="10" r="3.4" fill="#00d4aa" class="sub-dot sub-dot-2"/>
       <circle cx="8"  cy="28" r="3.4" fill="#e94560"/>
@@ -3920,8 +3934,9 @@ function showScr(id, keepClock){
   _li(); // materialise any <i data-lucide> placeholders revealed by the screen swap
 }
 
-// v2.7.66/71 — App-wide bottom tab bar (Game / Team / Roster; the Plan tab left
-// in v2.9.11 — the Plan page is midweek-only, reached from the team card). Single body-level
+// v2.7.66/71 — App-wide bottom tab bar (Game / Team / Settings / Roster; the
+// Plan tab left in v2.9.11 — the Plan page is midweek-only, reached from the
+// team card; the Settings tab arrived in v2.9.23). Single body-level
 // #bottomTabBar element, position:fixed at the bottom of the viewport — a true
 // nav anchor visible on every screen (like iOS native apps).
 function renderViewSwitcher(){
@@ -3946,12 +3961,17 @@ function renderViewSwitcher(){
     const et=document.getElementById('editTeam');
     if(et&&et.classList.contains('active')) active='team';
     else {
-      // v2.7.88: s1 is the squad availability page — owns the Roster tab highlight.
-      const s1=document.getElementById('s1');
-      if(s1&&s1.classList.contains('active')) active='roster';
+      // v2.9.23: the team-settings screen owns the Settings tab highlight.
+      const ts=document.getElementById('teamSettings');
+      if(ts&&ts.classList.contains('active')) active='settings';
       else {
-        const home=document.getElementById('home');
-        if(home&&home.classList.contains('active')) active='home';
+        // v2.7.88: s1 is the squad availability page — owns the Roster tab highlight.
+        const s1=document.getElementById('s1');
+        if(s1&&s1.classList.contains('active')) active='roster';
+        else {
+          const home=document.getElementById('home');
+          if(home&&home.classList.contains('active')) active='home';
+        }
       }
     }
   }
@@ -3976,6 +3996,10 @@ function renderViewSwitcher(){
     // v2.9.11: Plan tab removed — the Plan page is a midweek planning tool (owner:
     // it does NOT live on the game view). Door: team card → Plan ahead.
     {k:'team', label:'Team', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
+    // v2.9.23: Settings tab — the team's game defaults (formation / strategy /
+    // timing) on their own PLAN-mode screen, out of the roster editor. Sits
+    // next to Team (both midweek surfaces); Game stays first, Roster stays last.
+    {k:'settings', label:'Settings', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>'},
     // v2.7.88: Roster tab — jumps to the squad page (who's here / who's not today),
     // so a coach can wave in late arrivals or strike no-shows without leaving the game.
     {k:'roster', label:'Roster', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'}
@@ -4001,6 +4025,11 @@ function switchToView(v){
     else if(typeof home==='function') home();
   } else if(v==='team'){
     if(currentTeam){ if(typeof editTeamFromGame==='function') editTeamFromGame(); }
+    else if(typeof home==='function') home();
+  } else if(v==='settings'){
+    // v2.9.23: the team's game defaults (formation / strategy / timing) on
+    // their own screen. Needs a team in context, like Team and Roster.
+    if(currentTeam){ renderTeamSettings(); showScr('teamSettings'); }
     else if(typeof home==='function') home();
   } else if(v==='roster'){
     // v2.7.88: open the squad availability page. Don't re-select the team — that
@@ -4087,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.22-beta';
+const APP_VERSION='v2.9.23-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.23-beta':{
+    title:'Game settings get their own tab',
+    items:['Formation, sub strategy and timing now live on a new <strong>Settings</strong> tab in the bottom bar — no more digging through Edit Team to change your defaults. The team editor is just your players now.','Changes save the moment you tap (watch for the quiet <strong>Saved</strong> tick) and apply from your next game — matchday still goes straight to the pitch.']
+  },
   'v2.9.22-beta':{
     title:'Where did she play?',
     items:['The summary and match history now show <strong>where each kid played and for how long</strong> — "Riley 30′ · LB 20′ · FW 10′". Tracked automatically from the pitch, saved with every game.','The engine now respects position strengths properly: at kickoff and after every automatic sub, players are seated in positions they’re actually tagged for (kids without tags fit anywhere; your own mid-game swaps are left alone). And the little timing steppers under the clocks are gone — timing lives in your team settings, with the Change link before kick-off for the odd exception.']
@@ -5654,6 +5687,19 @@ function importWelcomeClose(){
   showScr('home');
 }
 
+// Copy a team's saved game-defaults into the working cfg. Extracted from
+// selectTeam (v2.9.23) so the Settings tab's live-save can refresh cfg too —
+// the tab route can reach kick-off without passing through selectTeam again.
+function applyTeamPrefsToCfg(team){
+  const p=getTeamPrefs(team);
+  if(p.formation && FORMATIONS[curFmt] && FORMATIONS[curFmt][p.formation]) curFormation=p.formation;
+  if(p.subStrategy) cfg.subStrategy=p.subStrategy;
+  if(p.hm) cfg.hm=p.hm;
+  if(p.sf) cfg.sf=p.sf;
+  if(p.sc) cfg.sc=p.sc;
+  cfg.breaksOnly=!!p.breaksOnly;
+  cfg.subPlanStale=true;
+}
 function selectTeam(id){
   currentTeam=teams.find(t=>t.id==id);
   // v2.8.7: a 2nd-half keeper choice belongs to the squad it was made for —
@@ -5672,16 +5718,9 @@ function selectTeam(id){
     cfg.sf=f.defaultSub;
     cfg.sc=f.defaultSc;
     cfg.subStrategy=cfg.subStrategy||'fair';
-    // Override with this team's saved game-settings prefs (set in the team
-    // editor). Lets us skip the settings screen and go straight to the pitch.
-    const p=getTeamPrefs(currentTeam);
-    if(p.formation && FORMATIONS[curFmt] && FORMATIONS[curFmt][p.formation]) curFormation=p.formation;
-    if(p.subStrategy) cfg.subStrategy=p.subStrategy;
-    if(p.hm) cfg.hm=p.hm;
-    if(p.sf) cfg.sf=p.sf;
-    if(p.sc) cfg.sc=p.sc;
-    cfg.breaksOnly=!!p.breaksOnly;
-    cfg.subPlanStale=true;
+    // Override with this team's saved game-settings prefs (set on the
+    // Settings tab). Lets us skip the settings screen and go straight to the pitch.
+    applyTeamPrefsToCfg(currentTeam);
   }
   document.getElementById('s1Title').textContent=currentTeam.name.toUpperCase();
   renderS1();
@@ -5859,7 +5898,8 @@ function renderEditTeam(){
     }
     c.appendChild(wrap);
   });
-  renderEditTeamPrefs();
+  // v2.9.23: the Game Settings block left the editor for its own Settings tab
+  // (renderTeamSettings) — the editor is roster-only now.
 }
 
 // ===== Team-level game preferences (defaults applied every game) =====
@@ -5880,20 +5920,26 @@ function getTeamPrefs(team){
   if(p.breaksOnly==null) p.breaksOnly=(fmt.sport==='netball'||['afl-auskick','afl-9','afl-10'].includes(team.format));
   return p;
 }
-function renderEditTeamPrefs(){
+// v2.9.23: the Settings tab (teamSettings screen). Formerly renderEditTeamPrefs
+// inside the team editor — same controls, but they now operate directly on
+// currentTeam and LIVE-SAVE on every change (saveTeamSettings): there is no
+// Save button on this screen, so nothing can be forgotten or lost.
+function renderTeamSettings(){
   const host=document.getElementById('teamPrefsSection');
-  if(!host||!editingTeam) return;
-  const fmt=FORMATS[editingTeam.format]||FORMATS['7v7'];
-  const p=getTeamPrefs(editingTeam);
-  const sport=getSport(editingTeam);
+  if(!host||!currentTeam) return;
+  const fmt=FORMATS[currentTeam.format]||FORMATS['7v7'];
+  const p=getTeamPrefs(currentTeam);
+  const sport=getSport(currentTeam);
   // v2.7.33: netball + basketball + AFL all play quarters; soccer/futsal halves.
   const isQ=sport.key==='netball'||sport.key==='basketball'||sport.key==='afl';
   const isNb=sport.key==='netball';   // v2.7.37: kept as a separate flag — formation block hides for netball only
   const periodWord=isQ?'Quarter length':'Half length';
   const periodUnit=isQ?'min / quarter':'min / half';
   host.innerHTML='';
+  // Every control routes its change through here: mutate p, persist, repaint.
+  const change=()=>{ saveTeamSettings(); renderTeamSettings(); };
   // --- Formation (skip for netball — fixed positions) ---
-  if(!isNb && FORMATIONS[editingTeam.format]){
+  if(!isNb && FORMATIONS[currentTeam.format]){
     const fLbl=document.createElement('div');
     fLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
     fLbl.textContent='Formation';
@@ -5901,12 +5947,12 @@ function renderEditTeamPrefs(){
     const fg=document.createElement('div');
     fg.className='chip-grid';
     fg.style.cssText='grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px';
-    Object.keys(FORMATIONS[editingTeam.format]).forEach(name=>{
+    Object.keys(FORMATIONS[currentTeam.format]).forEach(name=>{
       const c=document.createElement('div');
       c.className='chip'+(p.formation===name?' sel':'');
       c.style.cssText='padding:9px 4px;font-size:13px;font-weight:700';
       c.textContent=name;
-      c.onclick=()=>{ p.formation=name; renderEditTeamPrefs(); };
+      c.onclick=()=>{ p.formation=name; change(); };
       fg.appendChild(c);
     });
     host.appendChild(fg);
@@ -5925,7 +5971,7 @@ function renderEditTeamPrefs(){
     c.style.cssText='padding:10px 12px;text-align:left;cursor:pointer';
     c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?s.color:'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?s.color:'#bbb')}${s.label}</div>
       <div style="font-size:11px;color:#888;line-height:1.35;font-weight:500">${s.stance}</div>`;
-    c.onclick=()=>{ p.subStrategy=s.key; renderEditTeamPrefs(); };
+    c.onclick=()=>{ p.subStrategy=s.key; change(); };
     sg.appendChild(c);
   });
   host.appendChild(sg);
@@ -5939,8 +5985,8 @@ function renderEditTeamPrefs(){
     const dec=document.createElement('button'); dec.className='st-btn'; dec.textContent='−';
     const val=document.createElement('div'); val.className='st-val'; val.textContent=p[key];
     const inc=document.createElement('button'); inc.className='st-btn'; inc.textContent='+';
-    dec.onclick=()=>{ p[key]=Math.max(min,p[key]-1); renderEditTeamPrefs(); };
-    inc.onclick=()=>{ p[key]=Math.min(max,p[key]+1); renderEditTeamPrefs(); };
+    dec.onclick=()=>{ p[key]=Math.max(min,p[key]-1); change(); };
+    inc.onclick=()=>{ p[key]=Math.min(max,p[key]+1); change(); };
     st.appendChild(dec); st.appendChild(val); st.appendChild(inc);
     row.appendChild(st);
     return row;
@@ -5964,9 +6010,27 @@ function renderEditTeamPrefs(){
   const on=!!p.breaksOnly;
   tog.style.cssText=`flex-shrink:0;width:52px;height:30px;border-radius:15px;border:1.5px solid ${on?'#00d4aa':'#2a3550'};background:${on?'#00d4aa':'#0a1628'};position:relative;cursor:pointer;transition:all .15s;margin-top:2px`;
   tog.innerHTML=`<span style="position:absolute;top:2px;${on?'right:2px':'left:2px'};width:22px;height:22px;border-radius:50%;background:${on?'#0a1628':'#666'};transition:all .15s"></span>`;
-  tog.onclick=()=>{ p.breaksOnly=!p.breaksOnly; renderEditTeamPrefs(); };
+  tog.onclick=()=>{ p.breaksOnly=!p.breaksOnly; change(); };
   boRow.appendChild(tog);
   host.appendChild(boRow);
+}
+// Live-save for the Settings tab: currentTeam is a reference into `teams`, so
+// persisting is just writing the array back. Cloud push is debounced (stepper
+// taps come in bursts); a quiet tick confirms without interrupting.
+let _tsCloudTimer=null,_tsTickTimer=null;
+function saveTeamSettings(){
+  if(!currentTeam) return;
+  saveTeams(teams);
+  if(cloudUser){ clearTimeout(_tsCloudTimer); _tsCloudTimer=setTimeout(()=>{ if(currentTeam) pushCloudTeam(currentTeam); },800); }
+  // No game underway → refresh the working cfg now, same as selectTeam does,
+  // so Settings → Roster → kick off uses the new defaults without a re-select.
+  // "Underway" is the active-game SNAPSHOT, not G: after a completed match is
+  // saved, G lingers in memory with no snapshot — settings changed from the
+  // summary must still reach the next game. A live/pre-kick game (snapshot
+  // present) keeps its cfg; the next game picks the changes up.
+  if((!G || loadActiveGame()===null) && curFmt===currentTeam.format) applyTeamPrefsToCfg(currentTeam);
+  const tick=document.getElementById('teamSettingsSaved');
+  if(tick){ tick.style.opacity='1'; clearTimeout(_tsTickTimer); _tsTickTimer=setTimeout(()=>{ tick.style.opacity='0'; },1200); }
 }
 
 // One-tap sample roster so a new team can start a game immediately to try the
@@ -6220,7 +6284,10 @@ async function handleRosterPhoto(inputEl){
 let _editingFromGame=false;
 function editTeamFromGame(){
   if(!currentTeam)return;
-  _editingFromGame=true;
+  // Only a REAL game should route Save Team back to the pitch — the Team tab
+  // is also plain navigation (e.g. Settings → back → Team with no game yet),
+  // and a stale flag would land Save Team on an empty game screen.
+  _editingFromGame=!!G;
   editTeamScreen(currentTeam.id);
 }
 function saveAndBack(){

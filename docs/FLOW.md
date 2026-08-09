@@ -11,7 +11,8 @@ flowchart TD
     subgraph setup ["P1 — Team setup (once per team)"]
         sportPicker["Sport picker · sportPicker"]
         gradePicker["Format picker · gradePicker"]
-        editTeam["Team editor · editTeam"]
+        editTeam["Team editor · editTeam<br/>(roster only, v2.9.23)"]
+        teamSettings["Team settings · teamSettings<br/>(game defaults · live-save)"]
     end
 
     subgraph pregame ["P2 — Pre-game (every game day)"]
@@ -34,6 +35,8 @@ flowchart TD
     sportPicker -->|"pick sport"| gradePicker
     gradePicker -->|"pick format"| editTeam
     editTeam -->|"save"| home
+    s1 -.->|"Settings tab"| teamSettings
+    teamSettings -->|"back"| editTeam
 
     home ==>|"tap team card (Play)"| s1
     home -.->|"clipboard → Past games"| s6

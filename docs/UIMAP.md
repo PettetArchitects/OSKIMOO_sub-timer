@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.22-beta** · 0 static + 119 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.23-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -18,6 +18,7 @@
 - `s3` — Lineup + GK (2 routes in)
 - `s5` — Summary (2 routes in)
 - `s6` — Match history (2 routes in)
+- `teamSettings` — Team settings (1 route in)
 - `gradePicker` — Format / grade picker (1 route in)
 - `s2` — Settings (1 route in)
 - `subOrderOv` (1 route in)
@@ -59,26 +60,29 @@ screen shows them. See §C for the runtime-verified placement.
 Booted the app, navigated to each screen, recorded the controls actually
 visible/clickable. This corrects §A/§B guesses.
 
-### Home `home` — 5 visible
+### Home `home` — 6 visible
 
 - `add()`
 - `closeAnyDrawer()`
+- `home()`
 - `newTeam()`
 - `openTeamCodeEntry()`
 - `toggleGlobalMenu()`
 
-### Sport picker `sportPicker` — 3 visible
+### Sport picker `sportPicker` — 4 visible
 
 - `closeAnyDrawer()`
+- `home()`
 - `showScr()`
 - `toggleGlobalMenu()`
 
-### Team editor `editTeam` — 9 visible
+### Team editor `editTeam` — 10 visible
 
 - `addPlayerField()`
 - `click()`
 - `closeAnyDrawer()`
 - `fillSampleSquad()`
+- `home()`
 - `openBulkTag()`
 - `removePlayerField()`
 - `saveAndBack()`
@@ -88,24 +92,33 @@ visible/clickable. This corrects §A/§B guesses.
 ### Squad select `s1` — 6 visible
 
 - `closeAnyDrawer()`
+- `home()`
 - `planAheadFromSquad()`
-- `showScr()`
 - `startFromSquad()`
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Live game `s4` — 5 visible
+### Team settings `teamSettings` — 4 visible
+
+- `closeAnyDrawer()`
+- `home()`
+- `switchToView()`
+- `toggleGlobalMenu()`
+
+### Live game `s4` — 6 visible
 
 - `closeAnyDrawer()`
 - `gkStepNext()`
+- `home()`
 - `showScr()`
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Plan page `subOrderOv` — 12 visible
+### Plan page `subOrderOv` — 13 visible
 
 - `closeAnyDrawer()`
 - `closePlanMenu()`
+- `home()`
 - `planClearField()`
 - `planClkAdj()`
 - `planScrubJump()`
@@ -117,17 +130,19 @@ visible/clickable. This corrects §A/§B guesses.
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Summary `s5` — 5 visible
+### Summary `s5` — 6 visible
 
 - `closeAnyDrawer()`
+- `home()`
 - `saveMatch()`
 - `showScr()`
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Match history `s6` — 4 visible
+### Match history `s6` — 5 visible
 
 - `closeAnyDrawer()`
+- `home()`
 - `showScr()`
 - `switchToView()`
 - `toggleGlobalMenu()`
