@@ -1,0 +1,9 @@
+# Dev-only surfaces stay off the public deploy. The live gallery runs
+# locally (dev server → /dev-gallery.html); it is not a product page.
+dev-gallery.html
+test
+docs
+flows
+*.md
+deploy-guard.sh
+screen-audit.json
