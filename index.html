@@ -271,8 +271,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   #s4 #clkArea > div:first-child > div{flex-direction:row!important;gap:6px!important;align-items:baseline!important}
   #s4 .tmr-c{font-size:24px!important;letter-spacing:1px!important}
   #s4 #hLbl,#s4 #clkSubLbl{font-size:9px!important;letter-spacing:.8px!important;margin-top:0!important}
-  /* v2.7.23: inline clock steppers hidden in landscape — the modal (hamburger ▸ Sub Settings) is the right place to tweak when vertical pixels are scarce. */
-  #s4 .clk-stepper{display:none!important}
+  /* v2.9.22: clock steppers removed app-wide. */
   /* nsi (mini status line) hidden in this compact header. */
   #s4 #nsi{display:none!important}
   /* Mode-hint pill row tightened. */
@@ -1080,24 +1079,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c" id="clk" style="margin:0;line-height:1">00:00</div>
         <div id="hLbl" style="font-size:13px;color:#e94560;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">1ST HALF</div>
-        <!-- v2.7.23: inline half-length editor under the game clock. Buttons call clkAdj('hm', ±1). -->
-        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(233,69,96,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#ff7088;font-weight:700;letter-spacing:.3px">
-          <button onclick="clkAdj('hm',-1)" aria-label="Shorter half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-          <span id="clkHmV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">10</span>
-          <span style="opacity:.7">min half</span>
-          <button onclick="clkAdj('hm',1)" aria-label="Longer half" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(233,69,96,.2);color:#ff7088;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
-        </div>
+        <!-- v2.9.22: the inline half-length / sub-frequency steppers are gone (owner:
+             timing lives in the team settings; the strip's Change link covers the
+             odd matchday exception — the steppers were noise, and 4 of the worst
+             a11y hit-target offenders). -->
       </div>
       <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:4px">
         <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
         <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
-        <!-- v2.7.23: inline sub-frequency editor under the sub countdown. -->
-        <div class="clk-stepper" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,170,.08);border-radius:14px;padding:2px 6px;font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">
-          <button onclick="clkAdj('sf',-1)" aria-label="Sub more often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-          <span id="clkSfV" style="min-width:22px;text-align:center;font-variant-numeric:tabular-nums">5</span>
-          <span style="opacity:.7">min subs</span>
-          <button onclick="clkAdj('sf',1)" aria-label="Sub less often" style="width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
-        </div>
       </div>
     </div>
     <div id="nsi" style="margin-top:6px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
@@ -1911,6 +1900,7 @@ function resumeActiveGame(){
   // outfield (no way to know), start tracking from here.
   if(G && !G.gkt) G.gkt={};
   if(G && !G.rotCredit) G.rotCredit={};
+  if(G && !G.ppt) G.ppt={};
   // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
   if(G && G.subStrategy==='manual') G.subStrategy='planned';
   if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
@@ -4097,12 +4087,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.21-beta';
+const APP_VERSION='v2.9.22-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.22-beta':{
+    title:'Where did she play?',
+    items:['The summary and match history now show <strong>where each kid played and for how long</strong> — "Riley 30′ · LB 20′ · FW 10′". Tracked automatically from the pitch, saved with every game.','The engine now respects position strengths properly: at kickoff and after every automatic sub, players are seated in positions they’re actually tagged for (kids without tags fit anywhere; your own mid-game swaps are left alone). And the little timing steppers under the clocks are gone — timing lives in your team settings, with the Change link before kick-off for the odd exception.']
+  },
   'v2.9.21-beta':{
     title:'Fairer after a keeper change',
     items:['When the gloves change hands mid-game, the outgoing keeper now rejoins the rotation as if they’d played their fair share while in goal — instead of being treated as fresh legs who never come off. No more one kid playing the whole second half while another sits.','This came straight from a real game sent in for review (thank you!). Minutes on the summary are unchanged — they were always the true totals; it’s the rotation choices that are now fair after a handover.']
@@ -6454,6 +6448,9 @@ function startFromSquad(){
     const p=currentTeam.plans.find(x=>x.id===_pickedPlanId);
     if(p && typeof applyPlanProfile==='function') applyPlanProfile(p);
   }
+  // v2.9.22: seat the built XI by position strengths before the coach reviews it
+  // (covers stale saved orders — the Dragonflies kickoff had an untagged kid at RB).
+  repairSeating();
   // v2.9.17 (owner directive): the setup ritual's first steps are explicit pages
   // BEFORE the game screen — squad → keeper → shape → line-up review (s4).
   // The game is already built (quickStart: engine proposes); the pages review it.
@@ -7212,6 +7209,52 @@ function labelToTag(lbl){
   return null;
 }
 
+// v2.9.22 (owner report, verified in the Dragonflies flow): players were seated
+// in positions they aren't tagged for — a stale saved order at kickoff, and
+// rotations inheriting the outgoing player's slot with no tag check. This pass
+// re-seats the CURRENT on-field players (it never changes who plays) by
+// swapping slots while the total mismatch count strictly decreases. A player
+// with no outfield tags fits anywhere; the keeper is untouched. Runs at
+// kickoff (after any saved plan applies) and after each engine sub — never on
+// the coach's own tap-swaps between subs, and not in Plan-ahead build mode.
+function repairSeating(){
+  if(!G||!currentTeam)return;
+  const fmt=FORMATS[curFmt];
+  if(!fmt||!fmt.hasGk)return;   // labelled-slot sports with a keeper (soccer-style)
+  const pp=getPositions();
+  const fits=(pIdx,slot)=>{
+    const lbl=(pp[slot]&&pp[slot].label)||'';
+    const tag=labelToTag(lbl);
+    if(!tag||tag==='GK')return true;
+    const ptags=(getPlayerPos(currentTeam,avail[pIdx])||[]).filter(t=>t!=='GK');
+    if(!ptags.length)return true;   // untagged = plays anywhere
+    if(ptags.includes(tag))return true;
+    // Wide-mid slots (LM/RM) are a winger's natural home in junior formations —
+    // labelToTag buckets them MID, but a WNG tag fits there too.
+    if(/^(LM|RM)$/.test(lbl)&&ptags.includes('WNG'))return true;
+    return false;
+  };
+  const idxs=[];
+  for(let i=1;i<G.on.length;i++){ if(G.on[i]!==G.gk) idxs.push(i); }
+  let guard=0,improved=true;
+  while(improved&&guard++<24){
+    improved=false;
+    outer:
+    for(const i of idxs){
+      if(fits(G.on[i],i))continue;
+      for(const j of idxs){
+        if(i===j)continue;
+        const before=1+(fits(G.on[j],j)?0:1);
+        const after=(fits(G.on[j],i)?0:1)+(fits(G.on[i],j)?0:1);
+        if(after<before){
+          const t=G.on[i];G.on[i]=G.on[j];G.on[j]=t;
+          improved=true;break outer;
+        }
+      }
+    }
+  }
+}
+
 function smartAssign(){
   const fmt=FORMATS[curFmt];
   const positions=getPositions();
@@ -7618,6 +7661,7 @@ function startGame(){
   avail.forEach(n=>G.pt[n]=0);
   G.gkt={};   // seconds spent IN GOAL, per player — see _rotSecs()
   G.rotCredit={};   // v2.9.21: handover credit — ex-keepers rejoin the cycle at the average
+  G.ppt={};   // v2.9.22: per-position seconds, {name:{LB:secs,...}} — see tickSecond
   snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
   flowBegin();           // start recording this game as a replayable flow
   renderG();showScr('s4');
@@ -7637,6 +7681,7 @@ function snapshotHalfStart(){
     pt:{...G.pt},
     gkt:{...(G.gkt||{})},
     rotCredit:{...(G.rotCredit||{})},
+    ppt:JSON.parse(JSON.stringify(G.ppt||{})),
     pairs:(G.pairs||[]).map(p=>({on:[...p.on]})),
     pairIdx:G.pairIdx||0
   };
@@ -7684,8 +7729,8 @@ function renderG(){
   const ce=document.getElementById('clk');ce.textContent=fmt(Math.floor(curMs/1000));
   ce.className='tmr-c';
   // v2.7.23: keep the inline clk-area steppers in sync with cfg on every render.
-  const _hmV=document.getElementById('clkHmV'); if(_hmV&&cfg) _hmV.textContent=cfg.hm;
-  const _sfV=document.getElementById('clkSfV'); if(_sfV&&cfg) _sfV.textContent=cfg.sf;
+  // v2.9.22: clock-area steppers removed — timing is seasonal (settings) with
+  // the strip's Change link for matchday exceptions.
   const ni=document.getElementById('nsi');
   const pb=document.getElementById('ppB');
   const ns=nxtST();
@@ -8022,6 +8067,7 @@ function resetHalf(){
   G.pt={...s.pt};
   G.gkt={...(s.gkt||{})};
   G.rotCredit={...(s.rotCredit||{})};
+  G.ppt=JSON.parse(JSON.stringify(s.ppt||{}));
   G.pairs=s.pairs.map(p=>({on:[...p.on]}));
   G.pairIdx=s.pairIdx;
   G.secs=0; G.elapsedMs=0; G.lastTs=null; G.sd=[];
@@ -8066,6 +8112,25 @@ function _tickSecondBody(){
   // parent sees the real time their kid was on), but equal-play decisions use
   // outfield time only — see _rotSecs() and the v2.9.5 note there.
   if(G.gk!=null&&G.on.includes(G.gk)){if(!G.gkt)G.gkt={};G.gkt[avail[G.gk]]=(G.gkt[avail[G.gk]]||0)+1;}
+  // v2.9.22: per-POSITION seconds — slot i wears positions[i]'s label (slot
+  // order IS the formation). The keeper always accrues GK whatever slot index
+  // she occupies; if she sits away from slot 0, the outfielder holding slot 0
+  // inherits the slot she vacated. Saved with the match; shown in the summary.
+  {
+    if(!G.ppt)G.ppt={};
+    const _pp=getPositions();
+    const _gkSlot=G.gk!=null?G.on.indexOf(G.gk):-1;
+    G.on.forEach((p,i)=>{
+      let lbl;
+      if(p===G.gk)lbl='GK';
+      else{
+        lbl=(_pp[i]&&_pp[i].label)||'—';
+        if(lbl==='GK')lbl=(_gkSlot>=0&&_pp[_gkSlot]&&_pp[_gkSlot].label)||'—';
+      }
+      const nm=avail[p];
+      (G.ppt[nm]||(G.ppt[nm]={}))[lbl]=(G.ppt[nm][lbl]||0)+1;
+    });
+  }
   const ns=nxtST();
   if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
     G.sd.push(ns);
@@ -8586,6 +8651,10 @@ function confSub(){
   document.getElementById('subBanner').style.display='none';
   document.getElementById('subOv').classList.remove('show');
   // v2.9.9: script the shout. After the swap, positions are final — show the
+  // v2.9.22: engine subs inherit the outgoing player's slot — re-seat by
+  // position strengths BEFORE the relay card reads the slots (never changes
+  // who plays; coach tap-swaps between subs are untouched).
+  repairSeating();
   // relay card. Break auto-rotation is excluded: the announce view owns breaks.
   if(!_breakRotation) showRelay(off,on);
   saveActiveGame();
@@ -8793,7 +8862,7 @@ function showSum(){
   sorted.forEach(({n,t})=>{
     const pct=Math.min(100,(t/mx)*100);
     const r=document.createElement('div');r.className='sr';
-    r.innerHTML=`<span>${fn(n)}</span><span class="mn">${Math.floor(t/60)}′${String(t%60).padStart(2,'0')}″</span>`;
+    r.innerHTML=`<span>${fn(n)}${_posBreakdownHtml(G.ppt&&G.ppt[n])}</span><span class="mn">${Math.floor(t/60)}′${String(t%60).padStart(2,'0')}″</span>`;
     c.appendChild(r);
     const b=document.createElement('div');b.className='tb';
     b.innerHTML=`<div class="tbf" style="width:${pct}%"></div>`;
@@ -8865,6 +8934,19 @@ function renderSumLog(){
   });
 }
 
+// v2.9.22: "where did she play" — compact per-position minutes under a
+// playing-time row. Positions under a minute are folded away (noise from a
+// single rotation tick); order is most-played first.
+function _posBreakdownHtml(pos){
+  if(!pos)return'';
+  const parts=Object.entries(pos)
+    .filter(([l,s])=>s>=60&&l!=='—')
+    .sort((a,b)=>b[1]-a[1])
+    .map(([l,s])=>`${l} ${Math.round(s/60)}′`);
+  if(!parts.length)return'';
+  return`<span style="display:block;font-size:10px;color:#7d8a9c;font-weight:600;letter-spacing:.3px;margin-top:1px">${parts.join(' · ')}</span>`;
+}
+
 // ===== MATCH HISTORY =====
 function loadMatches(){
   try{const d=localStorage.getItem('subTimerMatches');return d?JSON.parse(d):[];}catch(e){return[];}
@@ -8919,7 +9001,8 @@ function saveMatch(){
     opponent,location,potm,
     format:curFmt,formation:curFormation,
     scoreUs:G.scoreUs,scoreThem:G.scoreThem,
-    playingTime:avail.map(n=>({name:n,secs:G.pt[n]||0})),
+    // v2.9.22: pos = seconds per position label (LB/CM/GK…), from G.ppt.
+    playingTime:avail.map(n=>({name:n,secs:G.pt[n]||0,pos:(G.ppt&&G.ppt[n])?{...G.ppt[n]}:undefined})),
     log:[...G.log]
   };
   const matches=loadMatches();
@@ -9034,10 +9117,10 @@ function renderMatchDetail(){
     const fmtDef=FORMATS[m.format];
     const periodMin=fmtDef?fmtDef.defaultHalf:15;
     const mx=periodMin*_logCtxSport.periodCount*60;
-    m.playingTime.sort((a,b)=>b.secs-a.secs).forEach(({name,secs})=>{
+    m.playingTime.sort((a,b)=>b.secs-a.secs).forEach(({name,secs,pos})=>{
       const pct=Math.min(100,(secs/mx)*100);
       const r=document.createElement('div');r.className='sr';
-      r.innerHTML=`<span>${fn(name)}</span><span class="mn">${Math.floor(secs/60)}′${String(secs%60).padStart(2,'0')}″</span>`;
+      r.innerHTML=`<span>${fn(name)}${_posBreakdownHtml(pos)}</span><span class="mn">${Math.floor(secs/60)}′${String(secs%60).padStart(2,'0')}″</span>`;
       c.appendChild(r);
       const b=document.createElement('div');b.className='tb';
       b.innerHTML=`<div class="tbf" style="width:${pct}%"></div>`;
@@ -9676,12 +9759,9 @@ function ssAdj(k,d){
   if(ce) ce.textContent=cfg[k];
 }
 
-// v2.7.23: tweak cfg from the steppers directly under each clock. Same clamp ranges as ssAdj; saves + re-renders so the next-sub countdown / period clock pick up the change live.
-function clkAdj(k,d){
-  ssAdj(k,d);
-  if(typeof saveActiveGame==='function') saveActiveGame();
-  if(typeof renderG==='function') renderG();
-}
+// v2.9.22: clkAdj removed with the clock-area steppers (owner: timing lives in
+// settings; the strip's Change link covers matchday exceptions). planClkAdj
+// (the Plan page's variant) is unaffected.
 // v2.7.16: sub-strategy 2x2 grid inside the Sub Settings modal. Tapping a
 // chip swaps G.subStrategy and re-paints; the modal stays open so the coach
 // can adjust other settings before tapping Done.
