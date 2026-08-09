@@ -4,7 +4,9 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
-## v2.9.27-beta — Even-time split in Settings (owner request)
+## v2.9.28-beta — Heading bands removed; back joins the bottom action row (owner directive)
+
+"I thought we were going to remove the headings" + "I want that whole band removed and the page navigation back can sit in line with the next" (atlas review, section D circled). v2.9.23 dropped header *back-links*; the h1 bands survived — no recorded decision either way, so this stamps one: **the brand bar is the only header, and per-screen navigation lives in the bottom action zone.** All ten h1s AND all content `.hdr` bands go (only home's long-hidden band markup remains). Each page's question folds into its info line ("Who's in goal? …", "Full time — match summary"); the squad page's team-name identity moves into the info line via `renderS1`. Back controls relocate: ← Squad / ← Keeper sit beside **Next** (keeper/shape pages), ← Squad beside **Apply settings** (s2), **Delete** beside **Save Team** (editor), ← Cancel / ← Back as bottom buttons (sport/format pickers, history). `s1Title`/`editTitle`, the h1/.sub/.hdr-row CSS removed. Also closes a latent bug found on the way: the sticky band was displacing 44px over the element beneath it (the info lines were never visible under it).
 
 "The sub timing should also have even time split by players." The Settings tab's TIMING section gains the equal-time suggestion (same math as the squad-page hint — `round(hm × periods × sc / roster)`), computed from the FULL roster midweek, with a one-tap 44px USE button that live-saves; a quiet ✓ line when the interval already matches. Updates live as hm/sc/roster change (the section re-renders on every change).
 

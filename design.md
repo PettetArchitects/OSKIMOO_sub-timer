@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.27
+> Last updated: v2.9.28
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -129,7 +129,6 @@ adding positions must map onto this palette rather than introduce new hues.
 | Role | Size | Weight | Letter-spacing | Notes |
 |---|---|---|---|---|
 | `.tmr-c` (DSEG clock) | `min(13vw, 56px)` | bold | 2px | DSEG-7 Classic Bold font, tabular-nums |
-| Page title (`h1` in `.hdr`) | 16px | 700 | — | |
 | Card title eyebrow | 10px | 800 | 1.2px | `text-transform:uppercase` |
 | Section heading | 13px | 800 | 1.5px | |
 | Body | 13-14px | 600-700 | — | |
@@ -225,15 +224,20 @@ The app has two **persistent anchors** that frame every screen.
 - Inactive: text `var(--text-muted)`, no background
 - **Visibility rule (v2.7.80)**: hidden on landing-style screens (home, sport picker, grade picker). The tabs only show once a team context is active.
 
-### 3.3 Page header (`.hdr`)
+### 3.3 Page header (`.hdr`) — REMOVED from content screens (v2.9.28)
 
-- 84px min-height, vertically centred content (`min-height:84px;display:flex;flex-direction:column;justify-content:center`)
-- Padding `10px 16px`
-- Background: linear gradient `#16213e → #0f3460`
-- 3px bottom border `var(--accent-red)`
-- `position:sticky; top: calc(44px + env(safe-area-inset-top))` — sticks below the brand bar
-- Contents per-page (title / score / actions)
-- **Home exception (v2.7.82)**: `#home > .hdr { display:none }` — the brand bar IS the only header on home; the body content starts immediately below it.
+- **v2.9.28 (owner): the heading bands are gone — the brand bar is the only
+  header, and per-screen navigation lives in the bottom action zone.**
+  Back sits beside the primary action as a `.btn-o` in a flex row: ← Squad /
+  ← Keeper beside Next (setup pages), ← Squad beside Apply settings (s2),
+  Delete beside Save Team (team editor); pickers and history get a plain
+  bottom `.btn-o`. Each page's question lives in its `.info` line
+  ("Who's in goal? …", "Full time — match summary").
+- The only `.hdr` markup left is home's, hidden since v2.7.82
+  (`#home > .hdr { display:none }`); the sticky-band CSS remains solely for it.
+- Historical note: the sticky band displaced itself 44px down over the element
+  that followed it (the `.info` lines were never actually visible beneath it) —
+  removing the bands closed that class of bug.
 
 ### 3.4 Side drawer (v2.7.83)
 

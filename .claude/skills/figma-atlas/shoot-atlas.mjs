@@ -73,9 +73,12 @@ try {
       if (!capture) continue;
       const file = `${vp.key}-${st.n}.png`;
       let ok = false;
-      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-        try { await page.screenshot({ path: join(OUT, file) }); ok = true; }
-        catch (e) { if (attempt === 2) throw e; await page.waitForTimeout(500); }
+      // Headless capture flakes under load ("Unable to capture screenshot") —
+      // bringToFront + generous backoff clears it; seen clustering on the
+      // first shots of a fresh context.
+      for (let attempt = 0; attempt < 5 && !ok; attempt++) {
+        try { await page.bringToFront(); await page.screenshot({ path: join(OUT, file), timeout: 15000 }); ok = true; }
+        catch (e) { if (attempt === 4) throw e; await page.waitForTimeout(1000 * (attempt + 1)); }
       }
       manifest.push({ file, viewport: vp.key, state: st.n, label: st.label });
       console.log(`  ✓ ${file}  ${st.label}`);
