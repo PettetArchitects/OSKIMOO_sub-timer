@@ -162,6 +162,8 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 4c | **Send this game for review** from history detail (v2.9.20) | One tap posts the match + its replay flow + a note to the bug-reports table (insert-only); works signed out; email optional |
 
 ✓ Player of the match: pick → save → reread from history, including the log-borne cloud shape.  [smoke: player of the match persists into the saved match · potm rides in the log for cloud sync · history detail shows the player of the match]
+✓ Position time (v2.9.22): every on-field second accrues to the player's current slot label (keeper always GK); saved into the match's playingTime; summary + history show the per-position breakdown.  [smoke: position seconds accrue per slot label · position breakdown saved with the match · summary shows where each player played]
+✓ Strengths adherence (v2.9.22, owner report): at kickoff and after every engine sub the XI is re-seated so tagged players hold positions they're tagged for where a swap can achieve it — never changing who plays; untagged players fit anywhere; the coach's own tap-swaps are left alone.  [smoke: kickoff seating honours position tags · engine subs re-seat by tags]
 🔴 Scorer/assist picker and the history list view are not yet covered by automated tests (Save Match now is — via the potm scenario).
 
 ---

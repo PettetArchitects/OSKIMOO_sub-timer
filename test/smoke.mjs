@@ -670,6 +670,70 @@ const SCENARIOS = [
     chk('override on the final period goes to full time (summary)', r.onSummary);
   }],
 
+  // v2.9.22: position-time tracking + strengths adherence (owner asks, from
+  // the Dragonflies review). Single evaluate per the LESSONS.md rule.
+  ['position time + seating: tracked, saved, honoured', async (page) => {
+    const r = await page.evaluate(() => {
+      if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch {} G.raf = null; } }
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Pos FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id);
+      startFromSquad(); if (typeof finishSetupSteps === 'function') finishSetupSteps();
+      window.confirm = () => true;
+      // kickoff seating: every tagged outfielder sits in a slot they're tagged
+      // for, wherever a swap could achieve it (repairSeating ran in startFromSquad)
+      const pp = getPositions();
+      const fits = (pIdx, slot) => {
+        const lbl = (pp[slot] && pp[slot].label) || '';
+        const tag = labelToTag(lbl);
+        if (!tag || tag === 'GK') return true;
+        const ptags = (getPlayerPos(currentTeam, avail[pIdx]) || []).filter((t) => t !== 'GK');
+        if (!ptags.length || ptags.includes(tag)) return true;
+        return /^(LM|RM)$/.test(lbl) && ptags.includes('WNG');   // wide-mid accepts wingers
+      };
+      // "honoured" = repair reached a local optimum: no swap of two on-field
+      // players would strictly reduce mismatches (some states are genuinely
+      // unsatisfiable mid-rotation — e.g. both DEF-tagged kids benched together).
+      const noFixableMismatch = () => {
+        const idxs = []; for (let i = 1; i < G.on.length; i++) if (G.on[i] !== G.gk) idxs.push(i);
+        for (const i of idxs) {
+          if (fits(G.on[i], i)) continue;
+          for (const j of idxs) {
+            if (i === j) continue;
+            const before = 1 + (fits(G.on[j], j) ? 0 : 1);
+            const after = (fits(G.on[j], i) ? 0 : 1) + (fits(G.on[i], j) ? 0 : 1);
+            if (after < before) return false;
+          }
+        }
+        return true;
+      };
+      const kickoffMismatches = G.on.filter((p, i) => p !== G.gk && i > 0 && !fits(p, i)).length;
+      // run half the game with auto subs; accrue position seconds
+      tog();
+      let guard = 0; let everFixable = false;
+      while (guard++ < 800 && !G.atBreak) {
+        G.elapsedMs += 5000; tickSecond();
+        if (G.ps) { confSub(); if (!noFixableMismatch()) everFixable = true; }
+      }
+      const postSubOptimal = !everFixable;
+      const gkName = avail[G.gk];
+      const gkAccruesGK = (G.ppt[gkName] && G.ppt[gkName].GK > 0) || false;
+      const someoneHasPos = Object.values(G.ppt).some((m) => Object.keys(m).some((k) => k !== 'GK' && m[k] > 60));
+      // finish and save; breakdown must reach the record and the summary DOM
+      G.half = getSport(currentTeam).periodCount; advH();
+      const sumHasBreakdown = /[A-Z]{2,3} \d+′/.test(document.getElementById('sumCard').innerText);
+      saveMatch();
+      const saved = loadMatches()[0].playingTime.some((p) => p.pos && Object.keys(p.pos).length);
+      return { kickoffMismatches, postSubOptimal, gkAccruesGK, someoneHasPos, sumHasBreakdown, saved };
+    });
+    chk('kickoff seating honours position tags', r.kickoffMismatches === 0);
+    chk('engine subs re-seat by tags', r.postSubOptimal);
+    chk('position seconds accrue per slot label', r.gkAccruesGK && r.someoneHasPos);
+    chk('summary shows where each player played', r.sumHasBreakdown);
+    chk('position breakdown saved with the match', r.saved);
+  }],
+
   // v2.9.21: keeper handover credit (owner rule, from the Dragonflies review).
   // Broken behaviour: after a HT gloves swap the ex-keeper had zero outfield
   // seconds, was never the longest-on, and played ALL of H2 while others churned.
