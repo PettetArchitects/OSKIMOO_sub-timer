@@ -65,7 +65,15 @@ export function startServer() {
 }
 
 // --- known-noise filter (offline CDNs, fonts, icons, service worker) -------
-export const NOISE = /ERR_CERT|Failed to load resource|ERR_NAME|ERR_CONNECTION|ERR_INTERNET|ERR_ABORTED|net::|supabase|lucide|gstatic|googleapis|unpkg|jsdelivr|cdn|three|favicon|manifest|ServiceWorker|sw\.js|the server responded with a status/i;
+// page.reload({waitUntil:'load'}) intermittently hangs in CI (three strikes:
+// the netball smoke flake). Reload with a short budget, fall back to a fresh
+// goto of the same URL — identical semantics for a single-file app.
+export async function safeReload(page) {
+  try { await page.reload({ waitUntil: 'load', timeout: 15000 }); }
+  catch { await page.goto(page.url(), { waitUntil: 'load', timeout: 30000 }); }
+}
+
+export const NOISE =/ERR_CERT|Failed to load resource|ERR_NAME|ERR_CONNECTION|ERR_INTERNET|ERR_ABORTED|net::|supabase|lucide|gstatic|googleapis|unpkg|jsdelivr|cdn|three|favicon|manifest|ServiceWorker|sw\.js|the server responded with a status/i;
 
 // --- shared app-driving helpers (run in the browser via page.evaluate) -----
 
