@@ -51,7 +51,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ic-lg{width:1.4em;height:1.4em}
 .ic-xl{width:1.8em;height:1.8em}
 
-.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:10px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:calc(44px + env(safe-area-inset-top));z-index:10;min-height:84px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+/* v2.9.28: heading bands removed (owner) — the brand bar is the only header;
+   back/actions live in each screen's bottom action row. Only home's hidden
+   .hdr markup remains (display:none since v2.7.82). */
+.hdr{background:linear-gradient(135deg,#16213e,#0f3460);padding:8px 16px;text-align:center;border-bottom:3px solid #e94560;position:sticky;top:calc(44px + env(safe-area-inset-top));z-index:10;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
 /* v2.7.82: home's .hdr removed entirely — brand bar IS the only header. Tagline + quote moved into the brand bar area below. */
 #home > .hdr{display:none}
 /* The per-screen hamburger buttons (homeMenuBtn, gameMenuBtn, planMenuBtn) are superseded by the single brand-bar #globalMenuBtn. Hide them but keep their dropdown menus in the DOM so the global hamburger can still trigger them. */
@@ -82,10 +85,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #s4.active,#subOrderOv.active{padding-bottom:0}
 /* v2.7.80: landing pages don't show the tab bar, so they don't need the bottom reservation either. */
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
-.hdr h1{font-size:18px;font-weight:700;letter-spacing:1px}
-.hdr .sub{font-size:11px;color:#aaa;margin-top:1px}
-.hdr-row{display:flex;align-items:center;justify-content:space-between}
-.hdr-row h1{font-size:16px}
 /* v2.9.17: 44px minimum — back buttons were 24px tall (a11y §8); the header
    row centres them so the extra height costs no layout. */
 .back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px}
@@ -820,45 +819,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== SPORT PICKER (NEW TEAM SETUP, STEP 1) ===== -->
 <div id="sportPicker" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('home')">← Cancel</button>
-      <h1>NEW TEAM</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — navigation lives in the bottom action zone. -->
   <div class="sec">
     <h2>What sport do you coach?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">More sports on the way — tell me what you'd like next.</p>
     <div id="sportGrid" class="chip-grid"></div>
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Cancel</button>
   </div>
 </div>
 
 <!-- ===== FORMAT PICKER (NEW TEAM SETUP, STEP 2) ===== -->
 <div id="gradePicker" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('sportPicker')">← Back</button>
-      <h1>NEW TEAM</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — navigation lives in the bottom action zone. -->
   <div class="sec">
     <h2>What format do you play?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">Pick the on-field size for your team.</p>
     <div id="gradeGrid" class="chip-grid"></div>
+    <button class="btn btn-o" onclick="showScr('sportPicker')" style="margin-top:16px">← Back</button>
   </div>
 </div>
 
 <!-- ===== TEAM EDITOR ===== -->
 <div id="editTeam" class="scr">
-  <div class="hdr" style="position:relative">
-    <div class="hdr-row">
-      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates; Save Team commits -->
-      <h1 id="editTitle">New Team</h1>
-      <button class="back-btn" onclick="deleteTeam()" id="delTeamBtn" style="color:#e94560">Delete</button>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — Delete rides the bottom row beside Save Team. -->
   <div class="sec">
     <h2>Team Name</h2>
     <input class="input" id="teamNameInput" placeholder="e.g. Dragonflies U8">
@@ -879,7 +862,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="playerEditList"></div>
     <button class="btn btn-o btn-s" onclick="addPlayerField()" style="margin-top:8px;width:100%">+ Add Player</button>
 
-    <button class="btn btn-g" onclick="saveAndBack()" style="margin-top:16px">Save Team</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-o" onclick="deleteTeam()" id="delTeamBtn" style="flex:0 0 auto;width:auto;margin-top:0">Delete</button>
+      <button class="btn btn-g" onclick="saveAndBack()" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px">Save Team</button>
+    </div>
   </div>
 </div>
 
@@ -888,14 +874,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      moves out of the team editor onto its own bottom-bar tab. PLAN-mode surface;
      controls live-save to the team (quiet Saved tick) — no Save button to forget. -->
 <div id="teamSettings" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates -->
-      <h1>GAME SETTINGS</h1>
-      <div id="teamSettingsSaved" style="width:60px;text-align:right;font-size:11px;font-weight:800;letter-spacing:.5px;color:#00d4aa;opacity:0;transition:opacity .3s">✓ Saved</div>
-    </div>
-  </div>
-  <div class="info">Defaults for this team — applied every game, so you go straight to the pitch. Changes save automatically.</div>
+  <!-- v2.9.28: heading band removed (owner) — the Saved tick rides the info line. -->
+  <div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left"><span>Defaults for this team — applied every game, so you go straight to the pitch. Changes save automatically.</span><span id="teamSettingsSaved" style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#00d4aa;opacity:0;transition:opacity .3s;white-space:nowrap">✓ Saved</span></div>
   <div class="sec">
     <div id="teamPrefsSection"></div>
   </div>
@@ -903,13 +883,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S1: SELECT AVAILABLE ===== -->
 <div id="s1" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <div style="width:60px"></div><!-- v2.9.23: back-link dropped — bottom nav navigates; the brand-bar logo goes Home -->
-      <h1 id="s1Title">SQUAD</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — the team name folds into the info line (renderS1). -->
   <div class="info" id="s1Info">Tap to mark players NOT available today</div>
   <div class="sec">
     <h2>Squad</h2>
@@ -930,46 +904,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      The game is already built (engine proposes); each page is a review with the
      proposal preselected — confirm is one tap. Skipped for keeperless sports. -->
 <div id="gkStep" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('s1')">← Squad</button>
-      <h1>WHO'S IN GOAL?</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
-  <div class="info">The proposed keeper is marked — tap a name to change. A benched pick comes on.</div>
+  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Next. -->
+  <div class="info">Who's in goal? The proposed keeper is marked — tap a name to change.</div>
   <div class="sec" style="display:flex;flex-direction:column;flex:1">
     <div class="chip-grid" id="gkStepGrid"></div>
-    <button class="btn btn-g" id="gkStepNextBtn" onclick="gkStepNext()" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    <div style="display:flex;gap:8px;margin-top:auto">
+      <button class="btn btn-o" onclick="showScr('s1')" style="flex:0 0 auto;width:auto;margin-top:0">← Squad</button>
+      <button class="btn btn-g" id="gkStepNextBtn" onclick="gkStepNext()" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    </div>
   </div>
 </div>
 
 <!-- ===== v2.9.17: SETUP STEP 2 — THE SHAPE PAGE =====
      Skipped for fixed-formation sports (netball / AFL). -->
 <div id="shapeStep" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="shapeStepBack()">← <span id="shapeBackLbl">Keeper</span></button>
-      <h1>SHAPE</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Next. -->
   <div class="info">How do we line up today? The current shape is marked.</div>
   <div class="sec" style="display:flex;flex-direction:column;flex:1">
     <div class="chip-grid" id="shapeStepGrid" style="grid-template-columns:1fr 1fr"></div>
-    <button class="btn btn-g" onclick="shapeStepNext()" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    <div style="display:flex;gap:8px;margin-top:auto">
+      <button class="btn btn-o" onclick="shapeStepBack()" style="flex:0 0 auto;width:auto;margin-top:0">← <span id="shapeBackLbl">Keeper</span></button>
+      <button class="btn btn-g" onclick="shapeStepNext()" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px">Next <i data-lucide="arrow-right" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    </div>
   </div>
 </div>
 
 <!-- ===== S2: SETTINGS ===== -->
 <div id="s2" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('s1')">← Squad</button>
-      <h1>SETTINGS</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Apply. -->
   <div class="sec">
     <h2>Game Format</h2>
     <div class="chip-grid" id="fmtGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
@@ -1034,7 +996,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       </div>
     </div>
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
-    <button class="btn btn-g" onclick="quickStart()" style="font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply settings <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-o" onclick="showScr('s1')" style="flex:0 0 auto;width:auto;margin-top:0">← Squad</button>
+      <button class="btn btn-g" onclick="quickStart()" style="flex:1;margin-top:0;font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply settings <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+    </div>
   </div>
 </div>
 
@@ -1482,10 +1447,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S5: SUMMARY ===== -->
 <div id="s5" class="scr">
-  <div class="hdr">
-    <h1>FULL TIME</h1>
-    <div class="sub">Match Summary</div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — full time reads from the info line. -->
+  <div class="info">Full time — match summary</div>
   <div class="card" id="sumMatch" style="margin:12px 16px"></div>
   <div class="card" id="sumCard" style="margin:0 16px"></div>
   <div class="card" id="sumLog" style="margin:12px 16px"></div>
@@ -1498,14 +1461,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S6: MATCH HISTORY ===== -->
 <div id="s6" class="scr">
-  <div class="hdr">
-    <div class="hdr-row">
-      <button class="back-btn" onclick="showScr('home')">← Back</button>
-      <h1>MATCH HISTORY</h1>
-      <div style="width:60px"></div>
-    </div>
-  </div>
+  <!-- v2.9.28: heading band removed (owner) — navigation lives in the bottom action zone. -->
   <div class="sec" id="historyList"></div>
+  <div class="sec" style="padding-top:0">
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Back</button>
+  </div>
 </div>
 
 </div><!-- /app -->
@@ -4116,12 +4076,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.27-beta';
+const APP_VERSION='v2.9.28-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.28-beta':{
+    title:'Quieter screens',
+    items:['The screen heading bands ("WHO’S IN GOAL?", "GAME SETTINGS", "FULL TIME"…) are gone — the brand bar is the only header now, and each page’s question moved into the small info line. Less shouting, more pitch.','Navigation moved to your thumb: <strong>Back sits beside Next</strong> on the setup pages (and beside Save / Apply on the editor and settings). On squad select your team’s name now leads the info line.']
+  },
   'v2.9.27-beta':{
     title:'Even time, from the settings',
     items:['The Settings tab’s timing section now shows the <strong>even-time split</strong> for your roster — "Even time for 12 players: subs every 7′" — with a one-tap USE button. Set it midweek and every game starts fair.','Once it matches, the row shows a quiet tick. Change your roster or period length and the suggestion updates itself.']
@@ -5738,7 +5702,7 @@ function selectTeam(id){
     // Settings tab). Lets us skip the settings screen and go straight to the pitch.
     applyTeamPrefsToCfg(currentTeam);
   }
-  document.getElementById('s1Title').textContent=currentTeam.name.toUpperCase();
+  // v2.9.28: no heading band — renderS1 folds the team name into the info line.
   renderS1();
   showScr('s1');
 }
@@ -5778,7 +5742,8 @@ function pickSport(sportKey){
 }
 function pickFormat(fmtKey,sportKey){
   editingTeam={id:Date.now(),name:'',sport:sportKey||'soccer',format:fmtKey,players:['']};
-  document.getElementById('editTitle').textContent='New Team';
+  // v2.9.28: editTitle removed with the heading bands — Delete's visibility is
+  // the only new/edit distinction the band still carries.
   document.getElementById('delTeamBtn').style.display='none';
   const sport=SPORTS[sportKey]||SPORTS.soccer;
   const placeholder=sport.key==='netball'?`e.g. Hornets ${FORMATS[fmtKey].age}`:`e.g. Dragonflies ${FORMATS[fmtKey].age}`;
@@ -5789,7 +5754,6 @@ function pickFormat(fmtKey,sportKey){
 
 function editTeamScreen(id){
   editingTeam=JSON.parse(JSON.stringify(teams.find(t=>t.id==id)));
-  document.getElementById('editTitle').textContent='Edit Team';
   document.getElementById('delTeamBtn').style.display='';
   renderEditTeam();
   showScr('editTeam');
@@ -6431,7 +6395,7 @@ function renderS1(){
     const desired=[...sel].map(i=>currentTeam.players[i]);
     const adds=desired.filter(nm=>!avail.includes(nm)).length;
     const rems=avail.filter(nm=>!desired.includes(nm)).length;
-    if(info) info.textContent='Tap to add a player or mark one out for the game — the clock keeps running';
+    if(info) info.textContent=`${currentTeam.name}: tap to add a player or mark one out — the clock keeps running`;
     const diff=[adds?`+${adds} in`:'',rems?`−${rems} out`:''].filter(Boolean).join(' · ');
     countEl.textContent=`${n} in squad${diff?` · ${diff}`:''}`;
     nb.disabled=desired.length<1;
@@ -6442,7 +6406,7 @@ function renderS1(){
     const hint=document.getElementById('equalTimeHint'); if(hint) hint.style.display='none';
     const picker=document.getElementById('squadPlanPicker'); if(picker) picker.innerHTML='';
   } else {
-    if(info) info.textContent='Tap to mark players NOT available today';
+    if(info) info.textContent=`${currentTeam.name}: tap to mark players NOT available today`;
     countEl.textContent=n+' playing'+(out?` · ${out} out`:'')+(n>=minP?` — ${n-minP} subs`:`  (need ${minP}+)`);
     nb.disabled=n<minP;
     nb.innerHTML=`Next ${arrowR}`;
