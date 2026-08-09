@@ -141,6 +141,32 @@ async function bootElements() {
   // inside a 375 phone with 16px margins).
   const S = (html) => `<div class="spec">${html}</div>`;
   const G = (title, inner) => `<div><div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#7d8a9c;text-transform:uppercase;margin-bottom:10px">${title}</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">${inner}</div></div>`;
+  // harvest real controls from live screens before the body is replaced
+  const harvested = w.eval(`(() => {
+    const found = teams.find(t => t.name === 'Gallery');
+    const id = found ? found.id : (newTeam(), pickSport('soccer'), pickFormat('7v7','soccer'), fillSampleSquad(),
+      document.getElementById('teamNameInput').value = 'Gallery', saveAndBack(), teams[teams.length - 1].id);
+    const q = (sel) => document.querySelector(sel)?.outerHTML || '';
+    const out = [];
+    const add = (label, html, w) => html && out.push({ label, html: html.replace(/ on[a-z]+="[^"]*"/g, ''), w });
+    editTeamScreen(id);
+    add('roster import', q('#rosterImportBtn'), 343);
+    add('sample squad', q('#sampleSquadBtn'), 343);
+    add('add player', q('#editTeam .btn.btn-o.btn-s'), 343);
+    add('player row (tags + side/foot + remove)', q('#playerEditList > *'), 343);
+    selectTeam(id);
+    add('squad chip', q('#playerGrid button'));
+    add('plan picker', q('#squadPlanPicker > *'), 343);
+    switchToView('settings');
+    add('formation tile', q('#teamPrefsSection .chip-grid button, #teamPrefsSection button'));
+    const strat = [...document.querySelectorAll('#teamPrefsSection *')].find(e => /Equal time/.test(e.textContent) && e.children.length && e.getBoundingClientRect().height < 120);
+    add('sub-strategy card', strat ? strat.outerHTML : '', 343);
+    showScr('home');
+    add('team card', q('#teamList > *') || q('#home .sec [onclick*="selectTeam"]'), 343);
+    return out;
+  })()`);
+  const HARVEST = harvested.map(h =>
+    `<div class="spec" data-label="${h.label}"><div style="${h.w ? 'width:' + h.w + 'px' : ''}">${h.html}</div></div>`).join('');
   const BODY =
     '<style>.spec{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.spec .cap{font:10px/1.5 ui-monospace,Menlo,monospace;color:#5b8ba6;white-space:pre}</style>'
     + '<div id="elRoot" style="padding:22px;display:flex;flex-direction:column;gap:26px;background:#1a1a2e;min-height:100vh">'
@@ -175,8 +201,12 @@ async function bootElements() {
       + S('<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#00d4aa">Card eyebrow</div>')
       + S('<div style="font-size:13px;font-weight:600;color:#eee;max-width:220px">Body — 13px/600, the workhorse for content and info lines.</div>')
       + S('<div style="font-size:11px;font-weight:600;letter-spacing:.4px;color:#888">Meta / caption 11px</div>'))
-    + G('Icon set — ic() custom + lucide',
-        S('<div id="iconRow" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:600px"></div>'))
+    + G('Icon set — ic() custom + every lucide glyph used in the app',
+        S('<div id="iconRow" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:760px"></div>'))
+    + G('Colour tokens — design.md §2.1 (the governed palette)',
+        S('<div id="swatchRow" style="display:flex;gap:10px;flex-wrap:wrap;max-width:760px"></div>'))
+    + G('Harvested from live screens — the real markup, cloned',
+        HARVEST)
     + G('App icons (PWA set — shown at 64px; actual 180 / 192 / 512)',
         S('<img src="icon-180.png" width="64" height="64" style="border-radius:12px">')
       + S('<img src="icon-192.png" width="64" height="64" style="border-radius:12px">')
@@ -185,10 +215,12 @@ async function bootElements() {
   w.eval(`document.body.innerHTML = ${JSON.stringify(BODY)};
     // annotate each specimen with its actual selector + measured metrics
     document.querySelectorAll('.spec').forEach(sp => {
-      const el = sp.firstElementChild;
+      let el = sp.firstElementChild;
+      if (el && !el.className && el.firstElementChild) el = el.firstElementChild; // harvested wrapper
+      if (!el) return;
       const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
-      const cls = '.' + String(el.className).trim().split(/\\s+/).join('.');
+      const cls = (sp.dataset.label ? sp.dataset.label + ' — ' : '') + '.' + String(el.className).trim().split(/\\s+/).join('.');
       const cap = document.createElement('div');
       cap.className = 'cap';
       cap.textContent = cls + '\\n' + Math.round(r.width) + '×' + Math.round(r.height)
@@ -202,10 +234,24 @@ async function bootElements() {
     // icon set: every ic() name used in the app, custom + lucide
     const row = document.getElementById('iconRow');
     if (row && typeof ic === 'function') {
-      const names = ['swap','arrowUp','arrowDown','bandage','bug','clipboard','cloud','flag','goal','hand','layout-grid','move','pause','play','pencil','refresh','rotate-ccw','sparkles','star','target','triangle-alert','zap','timer','coffee','users','arrow-right','soccer','netball','basketball','waves'];
+      // complete inventory: every ICON_CUSTOM key + every lucide name in markup
+      const lucideUsed = ['arrow-left','arrow-right','bell','bug','camera','check','clipboard-list','clock','coffee','copy','goal','hand','help-circle','history','lightbulb','list','message-square','party-popper','pencil','quote','refresh-cw','settings','sparkles','timer','users'];
+      const names = [...new Set([...Object.keys(ICON_CUSTOM), ...Object.keys(ICON_ALIAS), ...lucideUsed])];
       row.innerHTML = names.map(n => '<span title="' + n + '" style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;color:#7d8a9c"><span style="color:#eee">' + ic(n, 20, '#5bc0de') + '</span><span style="font-size:8px;font-family:ui-monospace,monospace">' + n + '</span></span>').join('');
       if (window.lucide && lucide.createIcons) lucide.createIcons();
     }`);
+  // colour tokens: parse the design.md §2.1 token table, render live swatches
+  try {
+    const md = await (await fetch('design.md')).text();
+    const tokens = [...md.matchAll(/\|\s*`(--[a-z0-9-]+)`\s*\|\s*`(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))`/g)]
+      .map(m => ({ name: m[1], val: m[2] }));
+    w.eval(`(() => { const sw = document.getElementById('swatchRow'); if (!sw) return;
+      sw.innerHTML = ${JSON.stringify(tokens)}.map(t =>
+        '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;width:86px">'
+        + '<span style="width:56px;height:36px;border-radius:8px;border:1px solid #2a3550;background:' + t.val + '"></span>'
+        + '<span style="font-size:8px;font-family:ui-monospace,monospace;color:#7d8a9c;text-align:center">' + t.name + '<br>' + t.val + '</span></span>').join('');
+    })()`);
+  } catch (e) { /* design.md unreachable — swatches skipped */ }
   // grow the strip to fit its content — no inner scroll, no clipping
   await wait(300);
   const h = w.document.getElementById('elRoot')?.scrollHeight;
