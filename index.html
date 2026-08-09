@@ -4116,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.23-beta';
+const APP_VERSION='v2.9.24-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.24-beta':{
+    title:'Position records, properly aligned',
+    items:['A fix to yesterday’s new position tracking: minutes-per-position now always match what the pitch shows, even after you hand the gloves to a different keeper. If your keeper page or shape page choices changed the line-up, the seating check now runs again after them.','Reset Half now restores the properly-seated kickoff line-up.']
+  },
   'v2.9.23-beta':{
     title:'Game settings get their own tab',
     items:['Formation, sub strategy and timing now live on a new <strong>Settings</strong> tab in the bottom bar — no more digging through Edit Team to change your defaults. The team editor is just your players now.','Changes save the moment you tap (watch for the quiet <strong>Saved</strong> tick) and apply from your next game — matchday still goes straight to the pitch.']
@@ -6516,8 +6520,12 @@ function startFromSquad(){
     if(p && typeof applyPlanProfile==='function') applyPlanProfile(p);
   }
   // v2.9.22: seat the built XI by position strengths before the coach reviews it
-  // (covers stale saved orders — the Dragonflies kickoff had an untagged kid at RB).
+  // (covers stale saved orders — the Dragonflies kickoff had an untagged kid at
+  // RB). v2.9.24: re-snapshot so Reset Half restores the repaired order; the
+  // setup pages' final hop (finishSetupToField) repairs + snapshots again after
+  // any keeper/shape change made there.
   repairSeating();
+  snapshotHalfStart();
   // v2.9.17 (owner directive): the setup ritual's first steps are explicit pages
   // BEFORE the game screen — squad → keeper → shape → line-up review (s4).
   // The game is already built (quickStart: engine proposes); the pages review it.
@@ -6563,7 +6571,16 @@ function renderGkStep(){
 }
 function gkStepNext(){
   if(_shapeHasChoices()){ renderShapeStep(); showScr('shapeStep'); }
-  else showScr('s4');
+  else finishSetupToField();
+}
+// v2.9.24 (review finding): the kickoff repair used to run only BEFORE the
+// setup pages — a keeper or shape change on those pages could re-scramble the
+// seating after the only repair. The final hop into the field re-repairs and
+// re-snapshots, so Reset Half restores the REPAIRED kickoff line-up.
+function finishSetupToField(){
+  repairSeating();
+  snapshotHalfStart();
+  showScr('s4');
 }
 function renderShapeStep(){
   const g=document.getElementById('shapeStepGrid');
@@ -6586,7 +6603,7 @@ function shapeStepBack(){
   if(FORMATS[curFmt]&&FORMATS[curFmt].hasGk){ renderGkStep(); showScr('gkStep'); }
   else showScr('s1');
 }
-function shapeStepNext(){ showScr('s4'); }
+function shapeStepNext(){ finishSetupToField(); }
 // Programmatic completion — tests and replay bootstraps walk the same journey a
 // coach does; this taps Next through whichever step pages are showing.
 function finishSetupSteps(){
@@ -7289,8 +7306,8 @@ function repairSeating(){
   const fmt=FORMATS[curFmt];
   if(!fmt||!fmt.hasGk)return;   // labelled-slot sports with a keeper (soccer-style)
   const pp=getPositions();
-  const fits=(pIdx,slot)=>{
-    const lbl=(pp[slot]&&pp[slot].label)||'';
+  const fits=(pIdx,posIdx)=>{
+    const lbl=(pp[posIdx]&&pp[posIdx].label)||'';
     const tag=labelToTag(lbl);
     if(!tag||tag==='GK')return true;
     const ptags=(getPlayerPos(currentTeam,avail[pIdx])||[]).filter(t=>t!=='GK');
@@ -7301,20 +7318,23 @@ function repairSeating(){
     if(/^(LM|RM)$/.test(lbl)&&ptags.includes('WNG'))return true;
     return false;
   };
+  // v2.9.24 (review finding): slots must follow the RENDERED mapping —
+  // outfielders in G.on order, keeper filtered out, onto positions[1..].
+  // Each entry pairs the player's index within G.on with their position index.
   const idxs=[];
-  for(let i=1;i<G.on.length;i++){ if(G.on[i]!==G.gk) idxs.push(i); }
+  {let k=0;for(let i=0;i<G.on.length;i++){ if(G.on[i]===G.gk)continue; k++; idxs.push({onI:i,posI:k}); }}
   let guard=0,improved=true;
   while(improved&&guard++<24){
     improved=false;
     outer:
-    for(const i of idxs){
-      if(fits(G.on[i],i))continue;
-      for(const j of idxs){
-        if(i===j)continue;
-        const before=1+(fits(G.on[j],j)?0:1);
-        const after=(fits(G.on[j],i)?0:1)+(fits(G.on[i],j)?0:1);
+    for(const a of idxs){
+      if(fits(G.on[a.onI],a.posI))continue;
+      for(const b of idxs){
+        if(a===b)continue;
+        const before=1+(fits(G.on[b.onI],b.posI)?0:1);
+        const after=(fits(G.on[b.onI],a.posI)?0:1)+(fits(G.on[a.onI],b.posI)?0:1);
         if(after<before){
-          const t=G.on[i];G.on[i]=G.on[j];G.on[j]=t;
+          const t=G.on[a.onI];G.on[a.onI]=G.on[b.onI];G.on[b.onI]=t;
           improved=true;break outer;
         }
       }
@@ -8179,21 +8199,19 @@ function _tickSecondBody(){
   // parent sees the real time their kid was on), but equal-play decisions use
   // outfield time only — see _rotSecs() and the v2.9.5 note there.
   if(G.gk!=null&&G.on.includes(G.gk)){if(!G.gkt)G.gkt={};G.gkt[avail[G.gk]]=(G.gkt[avail[G.gk]]||0)+1;}
-  // v2.9.22: per-POSITION seconds — slot i wears positions[i]'s label (slot
-  // order IS the formation). The keeper always accrues GK whatever slot index
-  // she occupies; if she sits away from slot 0, the outfielder holding slot 0
-  // inherits the slot she vacated. Saved with the match; shown in the summary.
+  // v2.9.22/24: per-POSITION seconds. The canonical mapping is the one the
+  // announce view and roster render: OUTFIELDERS IN G.on ORDER, KEEPER
+  // FILTERED OUT, mapped sequentially onto positions[1..] — indexing by raw
+  // G.on position accrued wrong labels whenever the keeper sat away from
+  // index 0 (review finding on the v2.9.22 ledger). Keeper always accrues GK.
   {
     if(!G.ppt)G.ppt={};
     const _pp=getPositions();
-    const _gkSlot=G.gk!=null?G.on.indexOf(G.gk):-1;
-    G.on.forEach((p,i)=>{
+    let _k=0;
+    G.on.forEach(p=>{
       let lbl;
       if(p===G.gk)lbl='GK';
-      else{
-        lbl=(_pp[i]&&_pp[i].label)||'—';
-        if(lbl==='GK')lbl=(_gkSlot>=0&&_pp[_gkSlot]&&_pp[_gkSlot].label)||'—';
-      }
+      else{_k++;lbl=(_pp[_k]&&_pp[_k].label)||'—';}
       const nm=avail[p];
       (G.ppt[nm]||(G.ppt[nm]={}))[lbl]=(G.ppt[nm][lbl]||0)+1;
     });
