@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.25-beta — Bench "next on" hierarchy (owner request)
+
+"Bump up the next-on bench sizes in terms of the hierarchy — that's the thing the sub manager is going to be looking at." The next-on wave's rows grow (name 13→16px/800, instruction line 10→13px, position badge 24→30px, roomier padding); later waves keep the small quiet treatment — the size difference is the hierarchy. Existing type sizes only (no new ratchet entries). Also per the owner: the **Team tab is renamed Positions** (key stays `team` for programmatic compat) — it holds the players and their position strengths; game defaults live in the Settings tab beside it.
+
 ## v2.9.24-beta — Position-ledger alignment (review findings on v2.9.22)
 
 Codex review caught two P1s and a P2 in the position build, all confirmed. **①** The per-position ledger (and `repairSeating`) indexed formation slots by raw `G.on` position, but the app's rendered mapping (announce view, roster) is *outfielders in `G.on` order with the keeper filtered out, onto `positions[1..]`* — so whenever the keeper sat away from index 0, every outfielder before her accrued (and was repaired against) the wrong label. Both now use the canonical ordinal mapping; the smoke mirror updated to match. **②** The kickoff repair ran only before the setup pages — a keeper/shape change there could re-scramble seating after the sole repair; the final hop into the field (`finishSetupToField`) now re-repairs. **③** It also re-snapshots (`snapshotHalfStart`), so Reset Half restores the repaired kickoff line-up rather than the pre-repair order. Also fixes the FLOW.md edge left behind by the v2.9.23 back-link removal.
