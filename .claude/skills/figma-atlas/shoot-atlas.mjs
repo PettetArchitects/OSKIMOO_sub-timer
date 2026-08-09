@@ -28,9 +28,10 @@ const VIEWPORTS = [
   { key: 'web', width: 1280, height: 800 },
 ];
 
-// One journey, shot in this order. `shoot: false` states still RUN (the app
-// must pass through them) but only phone captures them. Keep state numbers in
-// sync with SKILL.md's swap map.
+// One journey, shot in this order. A state without `sizes` captures at every
+// viewport; with `sizes` it captures only there but still RUNS elsewhere (the
+// app must pass through it) unless `skipRunElsewhere` marks it a pure detour.
+// Keep state numbers in sync with SKILL.md's swap map.
 const JOURNEY = [
   { n: '01', label: 'Landing (fresh)', go: () => {} },
   { n: '02', label: 'Sport picker', go: () => newTeam() },
@@ -39,16 +40,16 @@ const JOURNEY = [
   { n: '05', label: 'Home — My Teams', go: () => { document.getElementById('teamNameInput').value = 'Atlas'; saveAndBack(); } },
   { n: '13', label: 'Home drawer', go: () => openDrawer('homeMenu') },
   { n: '06', label: 'Squad select', go: () => { closeAnyDrawer(); selectTeam(teams[teams.length - 1].id); } },
-  { n: '15', label: 'Keeper page', go: () => startFromSquad(), phoneOnly: true },
-  { n: '16', label: 'Shape page', go: () => gkStepNext(), phoneOnly: true },
+  { n: '15', label: 'Keeper page', go: () => startFromSquad(), sizes: ['phone', 'ipad'] },
+  { n: '16', label: 'Shape page', go: () => gkStepNext(), sizes: ['phone', 'ipad'] },
   { n: '07', label: 'Live game', go: () => shapeStepNext() },
-  { n: '14', label: 'Announce view', go: () => openAnnounce(), phoneOnly: true, skipRunElsewhere: true },
+  { n: '14', label: 'Announce view', go: () => openAnnounce(), sizes: ['phone', 'ipad'], skipRunElsewhere: true },
   { n: '10', label: 'Game drawer', go: () => { if (typeof closeAnnounce === 'function') closeAnnounce(); openDrawer('gameMenu'); } },
   { n: '08', label: 'Plan page', go: () => { closeAnyDrawer(); switchToView('plan'); } },
   { n: '09', label: 'Plan drawer', go: () => openDrawer('planMenu') },
   { n: '11', label: 'Summary', go: () => { closeAnyDrawer(); switchToView('game'); G.half = getSport(currentTeam).periodCount; advH(); } },
   { n: '12', label: 'Match history', go: () => showHistory() },
-  { n: '17', label: 'Team settings', go: () => switchToView('settings'), phoneOnly: true, skipRunElsewhere: true },
+  { n: '17', label: 'Team settings', go: () => switchToView('settings'), sizes: ['phone', 'ipad'], skipRunElsewhere: true },
 ];
 
 const { srv, port } = await startServer();
@@ -66,8 +67,8 @@ try {
     await page.waitForFunction(() => typeof newTeam === 'function', { timeout: 10000 });
 
     for (const st of JOURNEY) {
-      const capture = vp.key === 'phone' || !st.phoneOnly;
-      if (!capture && st.skipRunElsewhere) continue; // announce/settings: pure detours, skip entirely off-phone
+      const capture = !st.sizes || st.sizes.includes(vp.key);
+      if (!capture && st.skipRunElsewhere) continue; // pure detours: skip entirely where not captured
       await page.evaluate(st.go);
       await page.waitForTimeout(400);
       if (!capture) continue;
