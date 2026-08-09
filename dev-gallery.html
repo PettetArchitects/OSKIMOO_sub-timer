@@ -148,7 +148,7 @@ async function bootElements() {
       document.getElementById('teamNameInput').value = 'Gallery', saveAndBack(), teams[teams.length - 1].id);
     const q = (sel) => document.querySelector(sel)?.outerHTML || '';
     const out = [];
-    const add = (label, html, w) => html && out.push({ label, html: html.replace(/ on[a-z]+="[^"]*"/g, ''), w });
+    const add = (label, html, w, color) => html && out.push({ label, html: html.replace(/ on[a-z]+="[^"]*"/g, ''), w, color });
     editTeamScreen(id);
     add('roster import', q('#rosterImportBtn'), 343);
     add('sample squad', q('#sampleSquadBtn'), 343);
@@ -158,7 +158,8 @@ async function bootElements() {
     add('squad chip', q('#playerGrid button'));
     add('plan picker', q('#squadPlanPicker > *'), 343);
     switchToView('settings');
-    add('formation tile', q('#teamPrefsSection .chip-grid button, #teamPrefsSection button'));
+    const fmt = [...document.querySelectorAll('#teamSettings .chip')].find(e => /^\\d-\\d/.test(e.textContent.trim()));
+    add('formation tile', fmt ? fmt.outerHTML : '', 110, fmt ? getComputedStyle(fmt).color : '');
     const strat = [...document.querySelectorAll('#teamPrefsSection *')].find(e => /Equal time/.test(e.textContent) && e.children.length && e.getBoundingClientRect().height < 120);
     add('sub-strategy card', strat ? strat.outerHTML : '', 343);
     showScr('home');
@@ -168,15 +169,21 @@ async function bootElements() {
     const shirt = document.querySelector('.fc-shirt');
     let card = shirt;
     while (card && !(card.querySelector && card.querySelector('.fc-name'))) card = card.parentElement;
-    add('field player card (.fc-*)', card ? card.outerHTML : '');
+    let cardHtml = '';
+    if (card) { // un-pin from the pitch renderer's absolute placement
+      const clone = card.cloneNode(true);
+      clone.style.cssText = 'position:static;transform:none;display:inline-block';
+      cardHtml = clone.outerHTML;
+    }
+    add('field player card (.fc-*)', cardHtml, 0, card ? getComputedStyle(card).color : '');
     const bench = [...document.querySelectorAll('#s4 *')].find(e => /for .+ at /.test(e.textContent) && e.children.length && e.getBoundingClientRect().height > 30 && e.getBoundingClientRect().height < 120);
-    add('bench next-on row', bench ? bench.outerHTML : '', 343);
+    add('bench next-on row', bench ? bench.outerHTML : '', 343, bench ? getComputedStyle(bench).color : '');
     const gk = [...document.querySelectorAll('#s4 *')].find(e => /GK · /.test(e.textContent.trim()) && e.textContent.trim().length < 20 && e.getBoundingClientRect().height < 60);
-    add('GK pill', gk ? gk.outerHTML : '');
+    add('GK pill', gk ? gk.outerHTML : '', 0, gk ? getComputedStyle(gk).color : '');
     return out;
   })()`);
   const HARVEST = harvested.map(h =>
-    `<div class="spec" data-label="${h.label}"><div style="${h.w ? 'width:' + h.w + 'px' : ''}">${h.html}</div></div>`).join('');
+    `<div class="spec" data-label="${h.label}"><div style="${h.w ? 'width:' + h.w + 'px;' : ''}${h.color ? 'color:' + h.color : ''}">${h.html}</div></div>`).join('');
   const BODY =
     '<style>.spec{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.spec .cap{font:10px/1.5 ui-monospace,Menlo,monospace;color:#5b8ba6;white-space:pre}</style>'
     + '<div id="elRoot" style="padding:22px;display:flex;flex-direction:column;gap:26px;background:#1a1a2e;min-height:100vh">'

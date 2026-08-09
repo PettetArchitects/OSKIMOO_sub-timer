@@ -15,7 +15,7 @@
 //     removal (no-show) with index remap, reset-half restore.
 // Covers keeper and non-keeper sports. Run with `npm run edge`.
 // ===========================================================================
-import { runSuite, bootstrap, gameState, bodyText } from './harness.mjs';
+import { runSuite, bootstrap, gameState, bodyText, safeReload } from './harness.mjs';
 
 const SCENARIOS = [
   // ---- Save / resume -----------------------------------------------------
@@ -32,7 +32,7 @@ const SCENARIOS = [
     });
     chk('active game written to storage', saved.hasSnapshot);
     // Reload the page (simulates closing/reopening the app) and resume.
-    await page.reload({ waitUntil: 'load' });
+    await safeReload(page);
     await page.waitForFunction(() => typeof resumeActiveGame === 'function', { timeout: 10000 });
     const resumed = await page.evaluate(() => {
       const ok = resumeActiveGame();
@@ -386,7 +386,7 @@ const SCENARIOS = [
     chk('code carries the ST1. prefix', /^ST1\./.test(shared.code));
     // Fresh device: wipe storage, then open the app via the share link.
     await page.evaluate((c) => { localStorage.clear(); location.hash = '#team=' + c; }, shared.code);
-    await page.reload({ waitUntil: 'load' });
+    await safeReload(page);
     await page.waitForFunction(() => typeof teams !== 'undefined' && Array.isArray(teams), { timeout: 10000 });
     const r = await page.evaluate(() => ({
       count: teams.length,
