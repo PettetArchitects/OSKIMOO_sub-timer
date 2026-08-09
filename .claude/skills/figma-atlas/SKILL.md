@@ -134,6 +134,12 @@ recreating frames.
 
 - All writes go through the Figma MCP `use_figma` (load the `figma-use` skill
   first). Work in ≤10 mutations per call; read back after each step.
+- **One-off / mock shots** (proposal frames, DOM-tweaked states): bootstrap +
+  act in ONE `page.evaluate` (the LESSONS.md cross-evaluate hazard), and
+  `document.getElementById('launchSplash')?.remove()` before any capture in
+  the first ~2s — the boot splash fades on a 1.6s CSS timer and photobombs
+  early screenshots. Proposal frames live in their own clearly-labeled
+  section (never the swap map) and are deleted once stamped or rejected.
 - The companion project memory `figma-atlas-reshoot` mirrors the nodeId maps —
   keep it pointing at this skill rather than duplicating detail.
 - Atlas updates are logged in `SESSION-LOG.md` session entries, not here.
