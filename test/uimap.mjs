@@ -32,7 +32,8 @@ const RUNTIME = process.argv.includes('--runtime');
 
 const SCREENS = {
   home: 'Home', sportPicker: 'Sport picker', gradePicker: 'Format / grade picker',
-  editTeam: 'Team editor', s1: 'Squad select', s2: 'Settings', s3: 'Lineup + GK',
+  editTeam: 'Team editor', teamSettings: 'Team settings', s1: 'Squad select',
+  s2: 'Settings', s3: 'Lineup + GK',
   s4: 'Live game', s5: 'Summary', s6: 'Match history',
 };
 
@@ -169,6 +170,7 @@ async function runtimeSnapshot() {
       { label: 'Sport picker', via: 'sportPicker', go: () => newTeam() },
       { label: 'Team editor', via: 'editTeam', go: () => { newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad(); } },
       { label: 'Squad select', via: 's1', go: () => { newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad(); document.getElementById('teamNameInput').value = 'Map'; saveAndBack(); selectTeam(teams[teams.length - 1].id); } },
+      { label: 'Team settings', via: 'teamSettings', go: () => { switchToView('settings'); } },
       { label: 'Live game', via: 's4', go: () => { startFromSquad(); } },
       { label: 'Plan page', via: 'subOrderOv', go: () => { switchToView('plan'); } },
       { label: 'Summary', via: 's5', go: () => { G.half = getSport(currentTeam).periodCount; advH(); } },

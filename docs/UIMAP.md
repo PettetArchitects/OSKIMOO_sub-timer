@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.22-beta** · 0 static + 119 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.23-beta** · 0 static + 121 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -18,6 +18,7 @@
 - `s3` — Lineup + GK (2 routes in)
 - `s5` — Summary (2 routes in)
 - `s6` — Match history (2 routes in)
+- `teamSettings` — Team settings (1 route in)
 - `gradePicker` — Format / grade picker (1 route in)
 - `s2` — Settings (1 route in)
 - `subOrderOv` (1 route in)
@@ -29,7 +30,7 @@
 These are emitted by `innerHTML` templates; a static parse can't say which
 screen shows them. See §C for the runtime-verified placement.
 
-- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBugReport`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `endPeriodNow`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendBugReport`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
+- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `clkAdj`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBugReport`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `endPeriodNow`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendBugReport`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `switchToView`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
 - **`renderMatchDetail()`** → `histEditCancel`, `histEditSave`, `histEditStart`, `histToggleScorer`, `openBugReport`, `showHistory`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
@@ -91,6 +92,12 @@ visible/clickable. This corrects §A/§B guesses.
 - `planAheadFromSquad()`
 - `showScr()`
 - `startFromSquad()`
+- `switchToView()`
+- `toggleGlobalMenu()`
+
+### Team settings `teamSettings` — 3 visible
+
+- `closeAnyDrawer()`
 - `switchToView()`
 - `toggleGlobalMenu()`
 

@@ -769,6 +769,53 @@ const SCENARIOS = [
     chk('ex-keeper rotates normally after the handover', r.exKeeperSubbedOffH2, `(${r.gkH1} → gloves to ${r.newGk}; minutes ${r.mins})`);
   }],
 
+  // v2.9.23: the Settings tab — the team's game defaults (formation / strategy /
+  // timing) moved out of the team editor onto their own bottom-bar tab, and
+  // every control live-saves to the team. One synchronous evaluate for the whole
+  // journey (bootstrap + act + assert): cross-evaluate gaps are the flake hazard.
+  ['settings tab: game defaults live-save on their own screen', async (page) => {
+    const r = await page.evaluate(() => {
+      if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch {} G.raf = null; } }
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Settings FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id);
+      // the editor is roster-only now — no Game Settings block, no prefs host
+      const editorClean = !document.querySelector('#editTeam #teamPrefsSection')
+        && !/Game Settings/.test(document.getElementById('editTeam').innerHTML);
+      // the tab appears once a team is in context
+      const hasTab = /switchToView\('settings'\)/.test(document.getElementById('bottomTabBar').innerHTML);
+      switchToView('settings');
+      const onScreen = document.getElementById('teamSettings').classList.contains('active');
+      const tabBtn = [...document.querySelectorAll('#bottomTabBar .btb-btn')].find((b) => /Settings/.test(b.textContent));
+      const highlighted = !!tabBtn && tabBtn.classList.contains('active');
+      // formation tap → persists to the team (live-save, no Save button)
+      const host = document.getElementById('teamPrefsSection');
+      const before = getTeamPrefs(currentTeam).formation;
+      const target = Object.keys(FORMATIONS[currentTeam.format]).find((n) => n !== before);
+      const tile = [...host.querySelectorAll('.chip')].find((c) => c.textContent.trim() === target);
+      if (tile) tile.click();
+      // stepper change → persists too (re-query: each change repaints the screen)
+      const hmBefore = getTeamPrefs(currentTeam).hm;
+      const firstRow = document.querySelector('#teamPrefsSection .set-row');
+      const plus = firstRow && [...firstRow.querySelectorAll('.st-btn')].find((b) => b.textContent === '+');
+      if (plus) plus.click();
+      const saved = (JSON.parse(localStorage.getItem('subTimerTeams') || '[]')).find((t) => t.name === 'Settings FC');
+      return {
+        editorClean, hasTab, onScreen, highlighted, target,
+        savedFormation: saved && saved.prefs && saved.prefs.formation,
+        savedHm: saved && saved.prefs && saved.prefs.hm, hmBefore,
+        cfgHm: cfg.hm,   // no game underway → the working cfg refreshes immediately
+      };
+    });
+    chk('team editor no longer carries the Game Settings block', r.editorClean);
+    chk('Settings tab shows once a team is selected', r.hasTab);
+    chk('switchToView(settings) lands on the teamSettings screen, tab highlighted', r.onScreen && r.highlighted);
+    chk('formation tap live-saves to the team', !!r.target && r.savedFormation === r.target);
+    chk('stepper change live-saves to the team', r.savedHm === r.hmBefore + 1);
+    chk('with no game underway the working cfg picks the change up', r.cfgHm === r.hmBefore + 1);
+  }],
+
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
     await page.reload({ waitUntil: 'load' });
