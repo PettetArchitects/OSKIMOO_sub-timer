@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.27-beta — Even-time split in Settings (owner request)
+
+"The sub timing should also have even time split by players." The Settings tab's TIMING section gains the equal-time suggestion (same math as the squad-page hint — `round(hm × periods × sc / roster)`), computed from the FULL roster midweek, with a one-tap 44px USE button that live-saves; a quiet ✓ line when the interval already matches. Updates live as hm/sc/roster change (the section re-renders on every change).
+
 ## v2.9.26-beta — The whole bench on screen (owner report)
 
 "I can't see the full bench for a team with more than two subs." The bench area was capped at 26dvh with an invisible scroll, and v2.9.25's bigger next-on rows pushed wave-2+ kids below the fold — against the s4 must-show (bench **with rest times**). Cap raised to 36dvh and later-wave rows compacted (3px padding, 18px badge — one quiet line each), so a typical 4–5-kid bench fits entirely; big AFL benches still scroll. The next-on hierarchy is untouched — if anything sharper.

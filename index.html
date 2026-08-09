@@ -4116,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.26-beta';
+const APP_VERSION='v2.9.27-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.27-beta':{
+    title:'Even time, from the settings',
+    items:['The Settings tab’s timing section now shows the <strong>even-time split</strong> for your roster — "Even time for 12 players: subs every 7′" — with a one-tap USE button. Set it midweek and every game starts fair.','Once it matches, the row shows a quiet tick. Change your roster or period length and the suggestion updates itself.']
+  },
   'v2.9.26-beta':{
     title:'The whole bench, on screen',
     items:['With three or more subs, the kids beyond the next wave could slip below the fold. The bench area now gets more room and the later waves are compact one-liners — a typical bench fits entirely on screen, no hidden kids.','The next-on rows keep their big treatment; only the waiting waves tightened.']
@@ -6009,6 +6013,34 @@ function renderTeamSettings(){
   host.appendChild(pLbl);
   host.appendChild(stepRow(periodWord+' ('+periodUnit+')','hm',4,60));
   host.appendChild(stepRow('Sub every (mins)','sf',1,30));
+  // v2.9.27 (owner): the timing section carries the even-time split — the same
+  // suggestion the squad page makes, computed from the FULL roster midweek.
+  // One tap sets the interval so every kid's minutes come out level.
+  {
+    const n=(currentTeam.players||[]).length;
+    const onF=fmt.onField||7;
+    if(n>onF){
+      const periods=sport.periodCount||2;
+      const scv=Math.max(1,p.sc||1);
+      const suggested=Math.max(1,Math.round((p.hm||20)*periods*scv/n));
+      const isSet=p.sf===suggested;
+      const evRow=document.createElement('div');
+      evRow.style.cssText='display:flex;align-items:center;gap:10px;padding:2px 4px 10px;font-size:12px;color:#9fb3c8;font-weight:600';
+      if(isSet){
+        evRow.innerHTML=`<span style="color:#00d4aa">✓ Even time for ${n} players — subs every ${suggested}′</span>`;
+      }else{
+        evRow.innerHTML=`<span style="flex:1;min-width:0">Even time for ${n} players: subs every <strong style="color:#eee">${suggested}′</strong></span>`;
+        const use=document.createElement('button');
+        use.type='button';
+        use.textContent=`USE ${suggested}′`;
+        use.setAttribute('aria-label',`Set sub interval to ${suggested} minutes for even time`);
+        use.style.cssText='flex-shrink:0;min-height:44px;padding:10px 14px;background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:10px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit';
+        use.onclick=()=>{ p.sf=suggested; change(); };
+        evRow.appendChild(use);
+      }
+      host.appendChild(evRow);
+    }
+  }
   host.appendChild(stepRow('Players per sub','sc',1,Math.max(1,fmt.onField-1)));
   // --- Subs at breaks only (no rolling mid-play subs) ---
   const periodName=isNb?'quarter':'period';
