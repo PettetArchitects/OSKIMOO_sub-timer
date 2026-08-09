@@ -1,10 +1,14 @@
-# Local Claude Code state stays private, but the smoke-tester agent + the
-# project SessionStart hook are shared so the automation travels with the repo.
+# Local Claude Code state stays private, but the smoke-tester agent, the
+# project SessionStart hook, and the skills travel with the repo.
 .claude/*
 !.claude/agents/
 !.claude/hooks/
+!.claude/skills/
 !.claude/settings.json
 .claude/settings.local.json
+
+# Figma atlas shoot output (swapped into Figma as fills, never committed)
+atlas-shots/
 
 # Node + smoke-test artifacts
 node_modules/
