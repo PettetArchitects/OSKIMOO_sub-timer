@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.26-beta — The whole bench on screen (owner report)
+
+"I can't see the full bench for a team with more than two subs." The bench area was capped at 26dvh with an invisible scroll, and v2.9.25's bigger next-on rows pushed wave-2+ kids below the fold — against the s4 must-show (bench **with rest times**). Cap raised to 36dvh and later-wave rows compacted (3px padding, 18px badge — one quiet line each), so a typical 4–5-kid bench fits entirely; big AFL benches still scroll. The next-on hierarchy is untouched — if anything sharper.
+
 ## v2.9.25-beta — Bench "next on" hierarchy (owner request)
 
 "Bump up the next-on bench sizes in terms of the hierarchy — that's the thing the sub manager is going to be looking at." The next-on wave's rows grow (name 13→16px/800, instruction line 10→13px, position badge 24→30px, roomier padding); later waves keep the small quiet treatment — the size difference is the hierarchy. Existing type sizes only (no new ratchet entries). Also per the owner: the **Team tab is renamed Positions** (key stays `team` for programmatic compat) — it holds the players and their position strengths; game defaults live in the Settings tab beside it.

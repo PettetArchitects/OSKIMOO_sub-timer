@@ -1158,7 +1158,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Subs coming on — sits just above the bottom control bar (clear of the
        pitch so it never overlaps the forward line / field tokens). -->
-  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:26dvh;overflow-y:auto"></div>
+  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:36dvh;overflow-y:auto"></div>
 
   <!-- Sub confirmation banner (hidden by default) — above the control bar. -->
   <div id="subBanner" style="display:none;flex-shrink:0;margin:6px 12px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
@@ -4116,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.25-beta';
+const APP_VERSION='v2.9.26-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.26-beta':{
+    title:'The whole bench, on screen',
+    items:['With three or more subs, the kids beyond the next wave could slip below the fold. The bench area now gets more room and the later waves are compact one-liners — a typical bench fits entirely on screen, no hidden kids.','The next-on rows keep their big treatment; only the waiting waves tightened.']
+  },
   'v2.9.25-beta':{
     title:'The next subs, readable from standing height',
     items:['The <strong>next on</strong> bench rows are bigger — name, position badge and the "for Riley at LB" line all grew, because that row is exactly what the sub manager is watching between rotations.','Later waves stay small on purpose: the size difference IS the hierarchy — what’s next is loud, what’s after is quiet. And the Team tab is now called <strong>Positions</strong> — it’s your players and where they play; game defaults live in Settings next door.']
@@ -9645,7 +9649,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // v2.9.25 (owner): the NEXT-ON wave is what the sub manager watches —
       // bigger name, bigger instruction line, bigger badge. Later waves stay
       // small so the hierarchy reads at a glance.
-      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'5px 8px'};background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
+      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'3px 8px'};background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
@@ -9662,7 +9666,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
-        <div style="width:${isNext?'30':'24'}px;height:${isNext?'30':'24'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
+        <div style="width:${isNext?'30':'18'}px;height:${isNext?'30':'18'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:${isNext?'16':'13'}px;font-weight:${isNext?'800':'600'};color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
           ${isNext&&replacesP!==undefined?`<div style="font-size:13px;color:#f0a500;font-weight:700;margin-top:2px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
@@ -9680,23 +9684,31 @@ function renderBenchInto(container, swapMap, posForPlayer){
     const grid=document.createElement('div');
     const useGrid=waves.length>1;
     grid.style.cssText=useGrid
-      ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:start'
+      ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:start'
       : 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;align-items:start';
 
     if(useGrid){
-      // One column per wave; label tags show "Next on" / "+5'" / "+10'" / ...
-      // using cfg.sf (sub interval) to project when each wave lands.
-      waves.forEach((waveList,waveIdx)=>{
-        const isNext=waveIdx===0;
-        const labelText=isNext?'Next on':`+${(cfg.sf||5)*waveIdx}'`;
-        const labelColour=isNext?'#00d4aa':(waveIdx===1?'#f0a500':'#888');
+      // v2.9.26: the NEXT-ON wave takes the full width (the loud rows); later
+      // waves sit in narrow columns BESIDE each other (130px min — two fit on a
+      // phone), so the whole bench stays on screen for a typical squad.
+      const nextCol=document.createElement('div');
+      nextCol.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;margin-bottom:6px';
+      const nextTag=document.createElement('div');
+      nextTag.style.cssText='font-size:9px;font-weight:800;letter-spacing:1.2px;color:#00d4aa;text-transform:uppercase;padding:0 4px 2px';
+      nextTag.textContent='Next on';
+      nextCol.appendChild(nextTag);
+      waves[0].forEach(pIdx=>nextCol.appendChild(makeBenchPill(pIdx,0,true)));
+      benchSection.appendChild(nextCol);
+      waves.slice(1).forEach((waveList,wi)=>{
+        const waveIdx=wi+1;
+        const labelColour=waveIdx===1?'#f0a500':'#888';
         const col=document.createElement('div');
         col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0';
         const tag=document.createElement('div');
         tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
-        tag.textContent=labelText;
+        tag.textContent=`+${(cfg.sf||5)*waveIdx}'`;
         col.appendChild(tag);
-        waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,isNext)));
+        waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,false)));
         grid.appendChild(col);
       });
     } else {
