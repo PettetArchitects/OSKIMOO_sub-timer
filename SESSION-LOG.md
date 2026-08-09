@@ -12,6 +12,56 @@
 
 ---
 
+## 2026-08-09 (Session 5, final) — The first real game closes the loop: report → replay → rules → fixes
+
+**State:** `main` = **v2.9.27-beta**, all green, twelve merges this stretch (PRs #43–#54), production current.
+Atlas current to v2.9.27 (incl. new section H). **Pick up at the feature backlog** (below).
+
+### The event of the session: the owner's real game (Dragonflies vs Curl Curl, 11–0)
+Played on v2.9.19, reported "sub allocation was off and not even" through the **new in-app bug report
+button** (v2.9.20 — history detail → one tap posts match + replay flow to `bug_reports`, insert-only RLS).
+Replaying it action-by-action: **no engine error** — every rotation followed the rules — but two design
+gaps: a half-time gloves handover made BOTH keepers unrotatable (ex-keeper zero outfield secs; new keeper
+by role), squeezing rotation onto 5 slots → churn + a kid sitting the last 10 minutes. **Owner rule
+stamped: "back into the normal cycle as if the keeper played their allotted time"** → `G.rotCredit`
+(v2.9.21). Positions audit of the same flow → strengths adherence + position-time tracking (v2.9.22/24).
+
+### Shipped (each gated + CI-green; Codex review threads fixed/replied/resolved on #49–#51)
+| Ver | PR | What |
+|---|---|---|
+| v2.9.16 | #43 | Keeper door (GK pill) — regression from Play mode 4 caught by owner |
+| v2.9.17 | #44 | **Setup step pages** (owner directive): squad → keeper page → shape page → field |
+| v2.9.18 | #45 | Summary scorer picker — name a skipped goal at full time |
+| v2.9.19 | #46 | **END HALF next to PAUSE** (owner placement after label affordance flopped) |
+| v2.9.20 | #47 | Bug report button + `bug_reports` table (migration applied, e2e verified) |
+| v2.9.21 | #48 | **Keeper handover credit** (owner rule, from the real game) |
+| v2.9.22 | #50 | Position-time tracking + strengths seating repair + clock steppers removed |
+| v2.9.23 | #49 | **Settings tab** (worktree agent build): Game·Team·Settings·Roster; header back-links dropped; brand-bar logo = Home |
+| v2.9.24 | #51 | Position-ledger alignment (Codex P1s: rendered outfield-ordinal mapping is canonical) |
+| v2.9.25 | #52 | Bench next-on hierarchy bump + **Team tab renamed Positions** |
+| v2.9.26 | #53 | Whole bench on screen (next-on full-width; later waves side-by-side compact; 36dvh) |
+| v2.9.27 | #54 | Even-time split suggestion in Settings timing (roster-based, one-tap USE) |
+
+### Also this stretch
+iPad "right side clipped" = iOS input focus auto-zoom (16px fix + gate check, v2.9.14, prior entry) held.
+Magic link verified working (localhost redirect explained). LESSONS.md: the cross-evaluate mutation
+hazard (smoke scenarios needing precise game state must bootstrap+act+assert in ONE evaluate).
+Atlas re-shot at v2.9.27: 40 fills swapped + **new section H** (phone frames 15 keeper page ·
+16 shape page · 17 team settings, nodes 58:30–32); legend updated; procedure in Claude's project memory.
+
+### Next session — pick up here
+1. Backlog: **opposition log** (s6 gap) · scenario smart-offer (subOrderOv) · ranked player strengths
+   (editTeam gap) · cognitive-check ratchets · flow-walker + tree-path coverage.
+2. Test infra: the **netball `page.reload` CI flake** (twice today — replace reload with goto+wait or retry).
+3. Owner's open calls: borderless on iPad (fresh look post-zoom-fix) · real-iPad screenshot into the
+   atlas slot · ui-rounded check.
+4. Watch: `swapFieldPositions` remaps pair MEMBERSHIP on a slot swap (suspect — slot swaps shouldn't
+   change who's paired; spotted during seating work, not user-visible yet).
+
+**Standing directive unchanged: flow first on the current UI.**
+
+---
+
 ## 2026-08-08 (Session 5, continued) — The whistle ritual completes; the iPad mystery solved
 
 **State:** `main` = **v2.9.15-beta**, all green, three more merges (PRs #38–#40), production current.
