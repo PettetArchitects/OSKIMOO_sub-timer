@@ -93,7 +93,7 @@ one question: *which mode does this belong to?*
 **Purpose:** The team's **seasonal game defaults** — formation, sub strategy, timing (period length, sub cadence, players per sub) and the breaks-only rule — on their own bottom-bar tab (owner directive, 2026-08-09: game settings leave the roster editor). Set once midweek; every matchday then goes straight to the pitch (owner, 2026-08-08: timing is seasonal, not matchday). Formerly the "Game Settings" block inside `editTeam`.
 **Serves:** P1.6, P2.3
 **Primary action:** tap any control — every change lands instantly via `saveTeamSettings()` (live-save + a quiet Saved tick; there is no Save button to forget).
-**Secondary:** `switchToView()` (back to Team)
+**Secondary:** navigation is the bottom tabs (v2.9.23: header back-links dropped from tab-reachable screens; the brand-bar logo goes Home)
 **Must show:** the current value of every default; what each sub strategy means in one line; the Saved tick after a change.
 **Boundaries:** live-save — leaving the screen can never lose a change; values clamp to valid ranges; changes touch the team's defaults (and the pre-game working config), never a game already underway — the next game picks them up; formation list is scoped to the team's format and hidden for fixed-position sports (netball); quarter sports read "Quarter length".
 **Choice budget:** 13 *(formation tiles + strategy cards are each one semantic decision — shape, stance — plus three steppers, the breaks-only toggle and back)*
@@ -104,7 +104,7 @@ one question: *which mode does this belong to?*
 **Purpose:** Mark who turned up. Everyone starts selected; the coach *deselects* the no-shows. **For a planning coach this is where the preset plan meets reality** (owner, 2026-08-08: the sub plan is decided midweek or preset — matchday reconciles it with attendance): applying the saved plan is the expected path, not the detour, and the plan must adapt gracefully when attendance differs from what it assumed.
 **Serves:** P2.1, P2.2, P6.4
 **Primary action:** `startFromSquad()` (Next → line-up).
-**Secondary:** tap players to toggle presence, `planAheadFromSquad()`, `pickSquadPlan()` (apply a saved plan), `showScr()` (back)
+**Secondary:** tap players to toggle presence, `planAheadFromSquad()`, `pickSquadPlan()` (apply a saved plan); navigation is the bottom tabs + the brand-bar logo for Home (v2.9.23)
 **Must show:** playing / out / subs counts; per-player selected state; can't-proceed state below onField.
 **Boundaries:** deselect-the-no-shows is the decided model — never invert to "pick who's playing" (owner decision on record); cannot proceed below the format's onField (P2 ✓).
 **Choice budget:** 5
