@@ -736,6 +736,29 @@ When introducing or modifying components: update this document **first**, then i
 
 ## 11. Cleanup backlog
 
+### 11.0 STAMPED CONTROL STANDARD (owner, 2026-08-09) — the consolidation target
+
+Stamped from the live-gallery elements audit (`dev-gallery.html` strip +
+`test/grid-check.mjs`), which exposed three button font systems — including
+the legacy `.btn` family silently falling back to **Arial** (no font-family
+declared, so it never inherits the app stack: primary buttons render in a
+different typeface from the rest of the app on-device).
+
+The target every migration step (03–05 below) now aims at:
+
+| Decision | Stamp |
+|---|---|
+| Button typeface | **SF Rounded** (`ui-rounded` first, as the ui- family already does) — controls only; content stays `-apple-system` |
+| Action-button label | **16px / 800** (bottom-zone Next / Save / START tier). Micro-labels keep their small tier (tabs 10/700, tags 10/800, dash tiles 13/800) |
+| Radius scale | **{4, 8, 12, 16}** + pill — tags 4 · chips/inputs 8 or 12 · buttons 12 · sheets/pills 16. Everything else (6, 10, 14, 20…) migrates to the nearest step |
+| Touch targets | ≥44px hit area on every control — visual can stay smaller with padded hit zones (steppers 40, score ± 24, plan Build chip are the offenders) |
+| Immediate bug fix | `font-family:inherit` on the legacy `.btn` / `.back-btn` / stepper / chip controls — kills the Arial fallback ahead of the full migration |
+
+Audit tooling: `node test/grid-check.mjs` (margins 16 · heights %4 · the
+radius scale · ≥44 targets — reporting now, ratchet once numbers settle);
+the gallery's elements strip annotates every specimen with its measured
+font/size/radius so drift is visible at a glance.
+
 ### Done since v2.7.75
 - ✅ Untitled Team auto-naming (v2.7.76)
 - ✅ Resume-banner → inline team-card affordance (v2.7.77)
