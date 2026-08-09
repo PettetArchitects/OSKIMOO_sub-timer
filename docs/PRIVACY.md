@@ -55,6 +55,7 @@ ships, not after. This one holds none, but the rule is about the *place*.
 | Edge fn `extract-roster` | **A photograph**, base64 | See below — the widest egress in the app |
 | Share link (`#team=ST1.…`) | The entire team payload, base64 in a URL | Unauthenticated. Anyone with the link has the roster |
 | Game-flow export | Setup + actions + timings, **names replaced with "Player N"** | Safe to send by design |
+| Supabase `bug_reports` | The saved match (**player names**, minutes, log), its replay flow (anonymised names), note, email (optional), app version, user agent | v2.9.20. **User-initiated only** — one explicit tap per report, disclosed in the dialog ("sends the whole game — line-up names, every sub, the clock, the log"). Anyone may insert; clients cannot read |
 
 ---
 
