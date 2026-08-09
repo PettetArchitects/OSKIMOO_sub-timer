@@ -177,6 +177,10 @@ async function bootElements() {
         + (cs.opacity !== '1' ? ' · op ' + cs.opacity : '');
       sp.appendChild(cap);
     });`);
+  // grow the strip to fit its content — no inner scroll, no clipping
+  await wait(300);
+  const h = w.document.getElementById('elRoot')?.scrollHeight;
+  if (h) f.style.height = (h + 24) + 'px';
 }
 function toggleZoom() {
   document.body.dataset.zoom = document.body.dataset.zoom === 'fit' ? 'full' : 'fit';
