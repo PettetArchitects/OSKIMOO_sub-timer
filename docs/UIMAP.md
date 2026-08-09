@@ -4,12 +4,12 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.23-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
+> App version: **v2.9.24-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
 - `home` — Home (8 routes in)
-- `s4` — Live game (8 routes in)
+- `s4` — Live game (7 routes in)
 - `s1` — Squad select (4 routes in)
 - `sportPicker` — Sport picker (2 routes in)
 - `editTeam` — Team editor (2 routes in)

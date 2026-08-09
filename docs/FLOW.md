@@ -36,7 +36,6 @@ flowchart TD
     gradePicker -->|"pick format"| editTeam
     editTeam -->|"save"| home
     s1 -.->|"Settings tab"| teamSettings
-    teamSettings -->|"back"| editTeam
 
     home ==>|"tap team card (Play)"| s1
     home -.->|"clipboard → Past games"| s6

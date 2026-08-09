@@ -684,31 +684,38 @@ const SCENARIOS = [
       // kickoff seating: every tagged outfielder sits in a slot they're tagged
       // for, wherever a swap could achieve it (repairSeating ran in startFromSquad)
       const pp = getPositions();
-      const fits = (pIdx, slot) => {
-        const lbl = (pp[slot] && pp[slot].label) || '';
+      const fits = (pIdx, posIdx) => {
+        const lbl = (pp[posIdx] && pp[posIdx].label) || '';
         const tag = labelToTag(lbl);
         if (!tag || tag === 'GK') return true;
         const ptags = (getPlayerPos(currentTeam, avail[pIdx]) || []).filter((t) => t !== 'GK');
         if (!ptags.length || ptags.includes(tag)) return true;
         return /^(LM|RM)$/.test(lbl) && ptags.includes('WNG');   // wide-mid accepts wingers
       };
+      // The RENDERED mapping (v2.9.24): outfielders in G.on order, keeper
+      // filtered out, onto positions[1..] — same as the announce view.
+      const seatPairs = () => {
+        const out = []; let k = 0;
+        for (let i = 0; i < G.on.length; i++) { if (G.on[i] === G.gk) continue; k++; out.push({ p: G.on[i], posI: k }); }
+        return out;
+      };
       // "honoured" = repair reached a local optimum: no swap of two on-field
       // players would strictly reduce mismatches (some states are genuinely
       // unsatisfiable mid-rotation — e.g. both DEF-tagged kids benched together).
       const noFixableMismatch = () => {
-        const idxs = []; for (let i = 1; i < G.on.length; i++) if (G.on[i] !== G.gk) idxs.push(i);
-        for (const i of idxs) {
-          if (fits(G.on[i], i)) continue;
-          for (const j of idxs) {
-            if (i === j) continue;
-            const before = 1 + (fits(G.on[j], j) ? 0 : 1);
-            const after = (fits(G.on[j], i) ? 0 : 1) + (fits(G.on[i], j) ? 0 : 1);
+        const pairs = seatPairs();
+        for (const a of pairs) {
+          if (fits(a.p, a.posI)) continue;
+          for (const b of pairs) {
+            if (a === b) continue;
+            const before = 1 + (fits(b.p, b.posI) ? 0 : 1);
+            const after = (fits(b.p, a.posI) ? 0 : 1) + (fits(a.p, b.posI) ? 0 : 1);
             if (after < before) return false;
           }
         }
         return true;
       };
-      const kickoffMismatches = G.on.filter((p, i) => p !== G.gk && i > 0 && !fits(p, i)).length;
+      const kickoffMismatches = seatPairs().filter((a) => !fits(a.p, a.posI)).length;
       // run half the game with auto subs; accrue position seconds
       tog();
       let guard = 0; let everFixable = false;
