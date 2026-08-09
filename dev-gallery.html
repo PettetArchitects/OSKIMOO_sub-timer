@@ -163,6 +163,16 @@ async function bootElements() {
     add('sub-strategy card', strat ? strat.outerHTML : '', 343);
     showScr('home');
     add('team card', q('#teamList > *') || q('#home .sec [onclick*="selectTeam"]'), 343);
+    // field graphics: drive into a live game and clone the match visuals
+    selectTeam(id); startFromSquad(); gkStepNext(); shapeStepNext();
+    const shirt = document.querySelector('.fc-shirt');
+    let card = shirt;
+    while (card && !(card.querySelector && card.querySelector('.fc-name'))) card = card.parentElement;
+    add('field player card (.fc-*)', card ? card.outerHTML : '');
+    const bench = [...document.querySelectorAll('#s4 *')].find(e => /for .+ at /.test(e.textContent) && e.children.length && e.getBoundingClientRect().height > 30 && e.getBoundingClientRect().height < 120);
+    add('bench next-on row', bench ? bench.outerHTML : '', 343);
+    const gk = [...document.querySelectorAll('#s4 *')].find(e => /GK · /.test(e.textContent.trim()) && e.textContent.trim().length < 20 && e.getBoundingClientRect().height < 60);
+    add('GK pill', gk ? gk.outerHTML : '');
     return out;
   })()`);
   const HARVEST = harvested.map(h =>
