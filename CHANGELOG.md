@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.21-beta — Keeper handover credit (owner rule, from the first real bug report)
+
+The Dragonflies vs Curl Curl review (sent via the new v2.9.20 button) found no engine error — every rotation followed "longest-on off, least-played on" exactly — but exposed a design gap in the v2.9.5 keeper rule: after a mid-game gloves handover, the ex-keeper's zero outfield seconds made her unrotatable (she played all of H2), the new keeper was locked on by role, and the remaining kids churned through 5 slots (one sat the entire last 10 minutes; another was benched at the rotation right after coming on, three times). **Owner rule:** the ex-keeper goes *"back into the normal cycle as if the keeper played their allotted time"* — on handover her rotation clock is credited up to the group average, held in a new `G.rotCredit` ledger feeding `_rotSecs()` only (pt untouched — displayed minutes stay true; `gkt` keeps meaning goal-seconds). Credit fires at every mid-game handover path (field tap-swap, break/live keeper pick, explicit 2nd-half keeper); pre-kick picks are no-ops. Plan-page projections read the same ledger so preview and engine agree. Snapshot/reset/resume all carry the ledger. Smoke: reproduces the Dragonflies shape (10 players, 7v7, 5′ subs, HT gloves swap) and asserts the ex-keeper rotates in H2 and the outfield spread tightens.
+
 ## v2.9.20-beta — The bug report button (owner request)
 
 "Can you code a button so I can send game for bug review?" History detail grows **Send this game for review**: one tap posts the saved match record + the matching replay flow (time-matched from the recorder, scores as tie-breaker) + an optional note/email to a new `bug_reports` table — insert-only RLS mirroring the feedback table, readable only via the service role. No files, no share sheets — the existing "Send game flow" share-sheet route stays for manual exports, but the car-park path is now one tap. Reports carry app version + user agent for triage.

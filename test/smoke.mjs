@@ -670,6 +670,41 @@ const SCENARIOS = [
     chk('override on the final period goes to full time (summary)', r.onSummary);
   }],
 
+  // v2.9.21: keeper handover credit (owner rule, from the Dragonflies review).
+  // Broken behaviour: after a HT gloves swap the ex-keeper had zero outfield
+  // seconds, was never the longest-on, and played ALL of H2 while others churned.
+  ['keeper handover: ex-keeper rejoins the normal cycle', async (page) => {
+    const r = await page.evaluate(() => {
+      if (typeof G !== 'undefined' && G) { G.running = false; if (G.raf) { try { cancelAnimationFrame(G.raf); } catch {} G.raf = null; } }
+      G = null; localStorage.clear(); teams = loadTeams();
+      newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+      document.getElementById('teamNameInput').value = 'Handover FC'; saveAndBack();
+      selectTeam(teams[teams.length - 1].id);
+      startFromSquad(); if (typeof finishSetupSteps === 'function') finishSetupSteps();
+      window.confirm = () => true;
+      cfg.hm = 20; cfg.sf = 5; cfg.sc = 2;
+      const gkH1 = G.gk;
+      tog();
+      let guard = 0;
+      const stepGame = () => { G.elapsedMs += 5000; tickSecond(); if (G.ps && typeof confSub === 'function') confSub(); };
+      while (guard++ < 2000 && !G.atBreak) stepGame();
+      // half time: hand the gloves to an on-field outfielder (the real game's path)
+      const newGk = G.on.find((p) => p !== G.gk);
+      swapFieldPositions(G.gk, newGk);
+      const credited = (G.rotCredit && G.rotCredit[avail[gkH1]] > 0) || false;
+      startNextPeriod();
+      while (guard++ < 4000 && G.half === 2 && (G.running || G.atBreak === false)) {
+        stepGame();
+        if (!G.running && !G.atBreak) break;
+      }
+      const exKeeperSubbedOffH2 = G.log.some((e) => e.type === 'sub' && e.half === 2 && e.off === avail[gkH1]);
+      return { gkH1: avail[gkH1], newGk: avail[newGk], credited, exKeeperSubbedOffH2,
+        h2gk: avail[G.gk], mins: avail.map((n) => `${n}:${Math.round((G.pt[n] || 0) / 60)}`).join(' ') };
+    });
+    chk('handover credits the ex-keeper\'s rotation clock', r.credited);
+    chk('ex-keeper rotates normally after the handover', r.exKeeperSubbedOffH2, `(${r.gkH1} → gloves to ${r.newGk}; minutes ${r.mins})`);
+  }],
+
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
     await page.reload({ waitUntil: 'load' });

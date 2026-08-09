@@ -141,6 +141,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ The XI at the next kickoff is exactly what the coach set at the break.  [secondhalf: the XI at kickoff is the coach's pick]
 ✓ At a break the announce view describes the upcoming period's line-up (title names the period about to be played).  [edge: break announce titles the upcoming period]
 ✓ Time in goal does not count as game time for equal play — the H1 keeper is not rotation-targeted after handing over the gloves, and is never benched right after coming on.  [secondhalf: she is NOT subbed off more than anyone else in H2 · nobody is benched at the rotation right after coming on]
+✓ **After a gloves handover the ex-keeper rejoins the normal cycle** as if she'd played her allotted time in goal (owner rule, v2.9.21, from the Dragonflies review) — neither locked on for the rest of the game nor first off.  [smoke: ex-keeper rotates normally after the handover · handover credits the ex-keeper's rotation clock]
 ✓ Quarter-sport breaks carry the same Plan-page guarantee as half-time (netball verified).  [secondhalf: first scrub step is not in the finished period]
 ⚠️ Quarter-sport **keeper** handling at Q1/Q3 is still untested — the 2nd-half keeper rule is scoped to two-period sports.  [🔴 unguarded]
 
