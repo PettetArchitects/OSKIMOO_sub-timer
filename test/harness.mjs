@@ -65,12 +65,18 @@ export function startServer() {
 }
 
 // --- known-noise filter (offline CDNs, fonts, icons, service worker) -------
-// page.reload({waitUntil:'load'}) intermittently hangs in CI (three strikes:
-// the netball smoke flake). Reload with a short budget, fall back to a fresh
-// goto of the same URL — identical semantics for a single-file app.
+// page.reload({waitUntil:'load'}) intermittently hangs in CI (the netball
+// smoke flake) — and a fallback goto can then race the zombie reload
+// ("interrupted by another navigation"). So: no reload at all. Park on
+// about:blank (cleanly kills any pending navigation), then goto the URL
+// fresh, with retries. Identical semantics for a single-file app.
 export async function safeReload(page) {
-  try { await page.reload({ waitUntil: 'load', timeout: 15000 }); }
-  catch { await page.goto(page.url(), { waitUntil: 'load', timeout: 30000 }); }
+  const url = page.url();
+  try { await page.goto('about:blank', { timeout: 10000 }); } catch { /* nothing to kill */ }
+  for (let i = 0; i < 3; i++) {
+    try { await page.goto(url, { waitUntil: 'load', timeout: 20000 }); return; }
+    catch (e) { if (i === 2) throw e; await page.waitForTimeout(500); }
+  }
 }
 
 export const NOISE =/ERR_CERT|Failed to load resource|ERR_NAME|ERR_CONNECTION|ERR_INTERNET|ERR_ABORTED|net::|supabase|lucide|gstatic|googleapis|unpkg|jsdelivr|cdn|three|favicon|manifest|ServiceWorker|sw\.js|the server responded with a status/i;

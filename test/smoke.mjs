@@ -825,10 +825,15 @@ const SCENARIOS = [
 
   ['non-keeper sport (netball)', async (page) => {
     await page.evaluate(() => { localStorage.clear(); });
-    // reload({waitUntil:'load'}) intermittently hangs in CI — short budget,
-    // fall back to a fresh goto of the same URL (identical for a one-file app).
-    try { await page.reload({ waitUntil: 'load', timeout: 15000 }); }
-    catch { await page.goto(page.url(), { waitUntil: 'load', timeout: 30000 }); }
+    // reload({waitUntil:'load'}) intermittently hangs in CI, and a fallback
+    // goto races the zombie reload. Park on about:blank (kills pending nav),
+    // then goto fresh with retries — identical for a one-file app.
+    const url = page.url();
+    try { await page.goto('about:blank', { timeout: 10000 }); } catch {}
+    for (let i = 0; i < 3; i++) {
+      try { await page.goto(url, { waitUntil: 'load', timeout: 20000 }); break; }
+      catch (e) { if (i === 2) throw e; await page.waitForTimeout(500); }
+    }
     await page.waitForFunction(() => typeof newTeam === 'function', { timeout: 8000 });
     await bootstrap(page, { sport: 'netball', onField: 7, name: 'Smoke Net', needGk: false });
     chk('netball game started', await page.evaluate(() => G && G.on && G.on.length > 0));
