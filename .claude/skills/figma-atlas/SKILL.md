@@ -40,6 +40,10 @@ Sections lettered A–J in reading order, grouped by device size, all at x=0:
 | H | PLAY web | `5:16` | 8200 | 940 |
 | I | PLAN web | `5:15` | 9200 | 940 |
 | J | DRAWERS web | `5:17` | 10200 | 940 |
+| L | SETUP STEPS + SETTINGS iPad | `78:3` | 12300 | 1160 |
+
+(K is reserved for temporary proposal sections — currently the nav-strategy
+mocks at y=11250; L sits below it and moves up into the grid when K dies.)
 
 Frames inside a section sit at y=70, x=60 + n·pitch — pitch 435 (phone),
 830 (iPad), 1345 (web) — **in ascending state-number order left to right**.
@@ -47,7 +51,7 @@ Frames inside a section sit at y=70, x=60 + n·pitch — pitch 435 (phone),
 ## State → nodeId swap map
 
 State numbers are the shoot-journey states (see `shoot-atlas.mjs` beside this
-file). Phone shoots all 17; iPad and web shoot 01–13 (no announce, no setup
+file). Phone and iPad shoot all 17; web shoots 01–13 (no announce, no setup
 pages).
 
 | State | Screen | phone | iPad | web |
@@ -65,10 +69,10 @@ pages).
 | 11 | Summary | `1:12` | `3:12` | `5:12` |
 | 12 | Match history | `1:13` | `3:13` | `5:13` |
 | 13 | Home drawer | `1:14` | `3:14` | `5:14` |
-| 14 | Announce view | `39:30` | — | — |
-| 15 | Keeper page | `58:30` | — | — |
-| 16 | Shape page | `58:31` | — | — |
-| 17 | Team settings | `58:32` | — | — |
+| 14 | Announce view | `39:30` | `78:2` | — |
+| 15 | Keeper page | `58:30` | `78:4` | — |
+| 16 | Shape page | `58:31` | `78:5` | — |
+| 17 | Team settings | `58:32` | `78:6` | — |
 
 ## Prototype walkthroughs
 
@@ -78,7 +82,7 @@ ON_CLICK → NAVIGATE reaction (instant transition), chained in board reading
 order (Play row → Plan row → Drawers row → phone-only Setup row):
 
 - phone: `1:6→1:7→1:8→1:12→39:30→1:2→1:3→1:4→1:5→1:9→1:13→1:10→1:11→1:14→58:30→58:31→58:32`
-- iPad: `3:6→3:7→3:8→3:12→3:2→3:3→3:4→3:5→3:9→3:13→3:10→3:11→3:14`
+- iPad: `3:6→3:7→3:8→3:12→78:2→3:2→3:3→3:4→3:5→3:9→3:13→3:10→3:11→3:14→78:4→78:5→78:6`
 - web: `5:6→5:7→5:8→5:12→5:2→5:3→5:4→5:5→5:9→5:13→5:10→5:11→5:14`
 
 Reactions live on the frames, so fill swaps never disturb them.
