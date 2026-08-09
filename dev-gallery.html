@@ -29,9 +29,13 @@
   .port{position:relative}
   .grid{position:absolute;inset:0;pointer-events:none;display:none;z-index:10}
   body[data-grid="on"] .grid{display:block}
-  /* 8px baseline grid */
+  /* 8px baseline + vertical mesh */
   .grid .baseline{position:absolute;inset:0;
-    background-image:repeating-linear-gradient(to bottom,rgba(91,192,222,.14) 0 1px,transparent 1px 8px)}
+    background-image:repeating-linear-gradient(to bottom,rgba(91,192,222,.14) 0 1px,transparent 1px 8px),
+                     repeating-linear-gradient(to right,rgba(91,192,222,.09) 0 1px,transparent 1px 8px)}
+  /* 4-column layout grid: 16px margins, 16px gutters */
+  .grid .cols{position:absolute;inset:0;display:flex;gap:16px;padding:0 16px}
+  .grid .cols div{flex:1;background:rgba(233,69,96,.06)}
   /* 16px side margins */
   .grid .margins{position:absolute;inset:0;
     background-image:linear-gradient(to right,transparent 15px,rgba(233,69,96,.55) 15px 16px,transparent 16px calc(100% - 16px),rgba(233,69,96,.55) calc(100% - 16px) calc(100% - 15px),transparent calc(100% - 15px))}
@@ -87,15 +91,19 @@ const STATES = [
   ['13 · Team settings', SELECT + "switchToView('settings');"],
 ];
 
+let bootGen = 0;
 async function boot() {
+  const gen = ++bootGen; // a device toggle mid-boot invalidates the old loop
   const canvas = document.getElementById('canvas');
   for (const [label, drive] of STATES) {
+    if (gen !== bootGen) return;
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
       <div class="port"><iframe src="index.html"></iframe>
         <div class="grid">
           <div class="baseline"></div>
+          <div class="cols"><div></div><div></div><div></div><div></div></div>
           <div class="margins"></div>
           <div class="line" style="top:44px"><span>brand bar 44</span></div>
           <div class="line amber" style="bottom:58px"><span>zone 58</span></div>
@@ -160,6 +168,19 @@ async function bootElements() {
     + G('Input + info line',
         S('<input class="input" style="width:343px" placeholder="e.g. Dragonflies U8">')
       + S('<div class="info" style="width:343px">Who&#39;s in goal? The proposed keeper is marked.</div>'))
+    + G('Type ramp — every text style in use',
+        S('<div class="tmr-c" style="font-size:56px">04:30</div>')
+      + S('<div style="font-size:15px;font-weight:900;letter-spacing:3px;color:#eee">SUB TIMER</div>')
+      + S('<h2 style="margin:0">Section heading (h2)</h2>')
+      + S('<div style="font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#00d4aa">Card eyebrow</div>')
+      + S('<div style="font-size:13px;font-weight:600;color:#eee;max-width:220px">Body — 13px/600, the workhorse for content and info lines.</div>')
+      + S('<div style="font-size:11px;font-weight:600;letter-spacing:.4px;color:#888">Meta / caption 11px</div>'))
+    + G('Icon set — ic() custom + lucide',
+        S('<div id="iconRow" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:600px"></div>'))
+    + G('App icons (PWA set — shown at 64px; actual 180 / 192 / 512)',
+        S('<img src="icon-180.png" width="64" height="64" style="border-radius:12px">')
+      + S('<img src="icon-192.png" width="64" height="64" style="border-radius:12px">')
+      + S('<img src="icon-512.png" width="64" height="64" style="border-radius:12px">'))
     + '</div>';
   w.eval(`document.body.innerHTML = ${JSON.stringify(BODY)};
     // annotate each specimen with its actual selector + measured metrics
@@ -172,11 +193,19 @@ async function bootElements() {
       cap.className = 'cap';
       cap.textContent = cls + '\\n' + Math.round(r.width) + '×' + Math.round(r.height)
         + ' · r' + parseInt(cs.borderRadius || 0)
-        + ' · ' + parseInt(cs.fontSize) + 'px/' + cs.fontWeight
+        + ' · ' + cs.fontFamily.split(',')[0].replace(/["-]/g, ' ').trim().split(' ')[0]
+        + ' ' + parseInt(cs.fontSize) + 'px/' + cs.fontWeight
         + ' · pad ' + parseInt(cs.paddingTop) + ',' + parseInt(cs.paddingLeft)
         + (cs.opacity !== '1' ? ' · op ' + cs.opacity : '');
       sp.appendChild(cap);
-    });`);
+    });
+    // icon set: every ic() name used in the app, custom + lucide
+    const row = document.getElementById('iconRow');
+    if (row && typeof ic === 'function') {
+      const names = ['swap','arrowUp','arrowDown','bandage','bug','clipboard','cloud','flag','goal','hand','layout-grid','move','pause','play','pencil','refresh','rotate-ccw','sparkles','star','target','triangle-alert','zap','timer','coffee','users','arrow-right','soccer','netball','basketball','waves'];
+      row.innerHTML = names.map(n => '<span title="' + n + '" style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;color:#7d8a9c"><span style="color:#eee">' + ic(n, 20, '#5bc0de') + '</span><span style="font-size:8px;font-family:ui-monospace,monospace">' + n + '</span></span>').join('');
+      if (window.lucide && lucide.createIcons) lucide.createIcons();
+    }`);
   // grow the strip to fit its content — no inner scroll, no clipping
   await wait(300);
   const h = w.document.getElementById('elRoot')?.scrollHeight;
