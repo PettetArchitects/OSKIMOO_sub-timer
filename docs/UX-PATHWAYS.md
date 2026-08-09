@@ -158,6 +158,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 3 | Save Match | Written locally (+ cloud if signed in); active game cleared; potm saved in the record **and** in the log (cloud transport) |
 | 4 | Match History → open a past game | Summary of that match, star line when a player of the match was named. **Facts read-only** (score, minutes, times) |
 | 4b | **Edit details** from history (v2.9.15 — the car-park half of the whistle ritual) | Opponent, location, per-goal scorer (one tap per goal), player of the match — editable any time after save; Cancel discards; edits sync to cloud |
+| 4c | **Send this game for review** from history detail (v2.9.20) | One tap posts the match + its replay flow + a note to the bug-reports table (insert-only); works signed out; email optional |
 
 ✓ Player of the match: pick → save → reread from history, including the log-borne cloud shape.  [smoke: player of the match persists into the saved match · potm rides in the log for cloud sync · history detail shows the player of the match]
 🔴 Scorer/assist picker and the history list view are not yet covered by automated tests (Save Match now is — via the potm scenario).

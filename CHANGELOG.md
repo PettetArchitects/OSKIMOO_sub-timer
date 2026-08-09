@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.20-beta — The bug report button (owner request)
+
+"Can you code a button so I can send game for bug review?" History detail grows **Send this game for review**: one tap posts the saved match record + the matching replay flow (time-matched from the recorder, scores as tie-breaker) + an optional note/email to a new `bug_reports` table — insert-only RLS mirroring the feedback table, readable only via the service role. No files, no share sheets — the existing "Send game flow" share-sheet route stays for manual exports, but the car-park path is now one tap. Reports carry app version + user agent for triage.
+
 ## v2.9.19-beta — The half-time override (owner request)
 
 "We need something to override it and say it's already half time." An **END HALF** button (amber, flag icon — FULL TIME on the last period, END Q2 on quarter sports) sits in the game dashboard **next to PAUSE** — the owner's placement call after a first pass on the period label proved too subtle. Shown only while a period is genuinely underway (never pre-kick, never at a break — the same window `endPeriodNow()` accepts); tap → sport-aware confirm → the period ends at the current clock through the exact same `advH()` path as the natural expiry: break state, true-order period_end log with the clock where it actually stopped, auto break-rotation, summary on the final period.

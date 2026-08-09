@@ -592,6 +592,38 @@ const SCENARIOS = [
     await shot(page, 'edit-history');
   }],
 
+  // v2.9.20: the bug report button — one tap sends the saved match + matched
+  // replay flow to the cloud. Supabase stubbed; asserts the payload shape.
+  ['bug report: send a saved game for review', async (page) => {
+    const r = await page.evaluate(async () => {
+      showMatchDetail(loadMatches()[0]);
+      const btn = [...document.querySelectorAll('#s5 .sec button')].find((b) => /send this game for review/i.test(b.textContent));
+      if (!btn) return { hasBtn: false };
+      btn.click();
+      const ovShown = document.getElementById('bugReportOv').classList.contains('show');
+      document.getElementById('bugNote').value = 'The subs looked wrong in H2';
+      if (!sb) return { hasBtn: true, ovShown, noCloud: true };   // CDN blocked — transport untestable here
+      let captured = null;
+      const realFrom = sb.from.bind(sb);
+      sb.from = (t) => ({ insert: async (row) => { captured = { table: t, row }; return { error: null }; } });
+      await sendBugReport();
+      sb.from = realFrom;
+      return {
+        hasBtn: true, ovShown,
+        table: captured && captured.table,
+        hasMatch: !!(captured && captured.row.match && captured.row.match.log),
+        note: captured && captured.row.note,
+        version: captured && captured.row.app_version,
+        status: document.getElementById('bugStatus').textContent,
+      };
+    });
+    chk('history detail offers "send this game for review"', r.hasBtn && r.ovShown);
+    if (r.noCloud) { chk('bug-report transport (no cloud in this env — skipped)', true); return; }
+    chk('report posts to bug_reports with the full match', r.table === 'bug_reports' && r.hasMatch);
+    chk('note and app version ride along', /subs looked wrong/.test(r.note || '') && /^v\d/.test(r.version || ''));
+    chk('coach sees the sent confirmation', /sent/i.test(r.status));
+  }],
+
   // v2.9.19: the half-time override — the ref's whistle beats the clock. Tap
   // the period label → confirm → the period ends at the current clock via the
   // same advH path as the natural expiry. Fresh bootstrap: no state bleed.

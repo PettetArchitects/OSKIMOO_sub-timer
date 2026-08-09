@@ -194,7 +194,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Purpose:** Find a past game and reread it. A midweek surface — calm, two-handed, density welcome (owner, 2026-08-08: midweek screens may be information-rich; matchday screens may not).
 **Serves:** P5.4
 **Primary action:** `showMatchDetail()` on a match row.
-**Secondary:** `showScr()` (back), `toggleGlobalMenu()`
+**Secondary:** `showScr()` (back), `toggleGlobalMenu()`, `openBugReport()` (detail view, v2.9.20 — one tap sends the saved match + its replay flow to the cloud for bug review; insert-only table)
 **Must show:** matches newest-first with result and date; empty state that says how history gets here.
 **Boundaries:** the record's FACTS are read-only (P5.4 — score, minutes, event times never change after save); the DEFERRED fields (opponent, location, scorers, potm) are editable via the detail view's Edit details door (v2.9.15, resolves the old tension with `s5` gap ②). Edits work on a copy and land only on Save.
 **Feature gap (owner-requested, 2026-08-08): the opposition log.** Opponents become entities that accumulate across matches — formation they played, notes for next time, results record — and surface as pre-game intel during setup when the same opponent is picked again ("last met: their shape, your notes, the result"). History is where the log is browsed; setup is where it pays off.

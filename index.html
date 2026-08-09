@@ -1438,6 +1438,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
 </div>
 
+<!-- v2.9.20: one-tap bug report from a saved game — the match record + the
+     matching replay flow go straight to the cloud (insert-only table). Built
+     because "send game flow" via share sheet was too many steps to actually
+     happen from a car park. -->
+<div class="ov" id="bugReportOv" onclick="if(event.target===this)closeBugReport()">
+  <div class="ab" style="max-width:380px;text-align:left;border-color:#f0a500">
+    <h2 style="text-align:center;color:#f0a500;font-size:18px;margin-bottom:4px">SOMETHING LOOKED WRONG?</h2>
+    <div style="font-size:12.5px;color:#9fb3c8;line-height:1.5;text-align:center;margin-bottom:12px">This sends the whole game — line-up names, every sub, the clock, the log — for review. Nothing else on your phone is included.</div>
+    <textarea id="bugNote" rows="3" class="input" placeholder="What looked wrong? e.g. It subbed Riley twice in a row…" style="resize:vertical;margin-bottom:8px"></textarea>
+    <input id="bugEmail" type="email" placeholder="Your email (optional — for follow-up)" autocomplete="email" inputmode="email" class="input" style="margin-bottom:10px">
+    <button class="btn btn-g" onclick="sendBugReport()">Send game for review</button>
+    <div id="bugStatus" style="font-size:12px;text-align:center;margin-top:8px;min-height:15px"></div>
+    <button class="btn btn-o" style="margin-top:6px" onclick="closeBugReport()">Cancel</button>
+  </div>
+</div>
+
 <!-- v2.9.16: keeper picker — the game screen's own gloves control (setup + breaks).
      Mirrors the scorer picker's grid; taps route through setPlanKeeper, so a benched
      pick swaps onto the field and the old keeper steps off, same as always. -->
@@ -4080,12 +4096,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.19-beta';
+const APP_VERSION='v2.9.20-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.20-beta':{
+    title:'Something looked wrong? Send me the game',
+    items:['Open any saved game in history and tap <strong>Send this game for review</strong> — one tap posts the whole game (every sub, the clock, the log) straight in for a bug review, with a note about what looked off. No files, no share sheets.','Only the game itself is sent — nothing else on your phone. Add your email if you’d like a reply.']
+  },
   'v2.9.19-beta':{
     title:'When the whistle beats the clock',
     items:['Ref called half time but the app’s clock disagrees? A new <strong>END HALF</strong> button sits next to PAUSE while play is on — tap it, confirm, and the period ends right there, with the clock recorded where it actually stopped. On the last period it reads <strong>FULL TIME</strong>.','Everything that normally happens at the break still happens: the half-time rotation is proposed, the keeper and shape are one tap away, and the announce view reads the new line-up.']
@@ -9045,10 +9065,57 @@ function renderMatchDetail(){
   const sec=document.querySelector('#s5 .sec');
   sec.innerHTML=editing
     ?'<button class="btn btn-g" onclick="histEditSave()">Save changes</button><button class="btn btn-o" style="margin-top:8px" onclick="histEditCancel()">Cancel</button>'
-    :'<button class="btn btn-o" onclick="showHistory()">← Back to History</button><button class="ui-btn ui-btn--ghost is-plan" style="margin-top:8px;justify-content:center" onclick="histEditStart()">'+ic('pencil',14)+'Edit details — opponent, scorers, player of the match</button>';
+    :'<button class="btn btn-o" onclick="showHistory()">← Back to History</button><button class="ui-btn ui-btn--ghost is-plan" style="margin-top:8px;justify-content:center" onclick="histEditStart()">'+ic('pencil',14)+'Edit details — opponent, scorers, player of the match</button><button class="ui-btn ui-btn--ghost" style="justify-content:center;color:#f0a500" onclick="openBugReport()">'+ic('bug',14)+'Something looked wrong? Send this game for review</button>';
   showScr('s5');
 }
 function histToggleScorer(li){ _histScorerOpen=(_histScorerOpen===li)?null:li; renderMatchDetail(); }
+// v2.9.20: one-tap bug report — the saved match + its replay flow to the cloud.
+// The flow is matched by time: the recording whose start sits closest before
+// the match's save time (within 6h). Scores are a tie-breaker, not a gate —
+// the coach may have corrected the score after the recording ended.
+function _matchFlowFor(m){
+  try{
+    const flows=loadFlows();
+    if(!flows.length||!m)return null;
+    const t=new Date(m.date).getTime();
+    const scored=flows.map(f=>{
+      const ft=new Date(f.startedAt||f.id).getTime();
+      let s=Math.abs(t-ft);
+      if(f.result&&f.result.scoreUs===m.scoreUs&&f.result.scoreThem===m.scoreThem)s-=60*60*1000;
+      return {f,s,dt:Math.abs(t-ft)};
+    }).sort((a,b)=>a.s-b.s);
+    return scored[0].dt<=6*60*60*1000?scored[0].f:null;
+  }catch(e){return null;}
+}
+function openBugReport(){
+  if(!_histM)return;
+  const emailEl=document.getElementById('bugEmail');
+  if(cloudUser&&cloudUser.email&&!emailEl.value)emailEl.value=cloudUser.email;
+  document.getElementById('bugStatus').textContent='';
+  document.getElementById('bugReportOv').classList.add('show');
+}
+function closeBugReport(){ document.getElementById('bugReportOv').classList.remove('show'); }
+async function sendBugReport(){
+  const status=document.getElementById('bugStatus');
+  if(!_histM){status.textContent='No game open.';status.style.color='#e94560';return;}
+  if(!sb){status.textContent='Cloud unavailable — try again on a signal.';status.style.color='#e94560';return;}
+  status.textContent='Sending the game…';status.style.color='#aaa';
+  try{
+    const{error}=await sb.from('bug_reports').insert({
+      user_id:cloudUser?cloudUser.id:null,
+      email:(document.getElementById('bugEmail').value||'').trim()||null,
+      note:(document.getElementById('bugNote').value||'').trim().slice(0,4000)||null,
+      app_version:APP_VERSION,
+      user_agent:(navigator.userAgent||'').slice(0,500),
+      match:_histM,
+      flow:_matchFlowFor(_histM)
+    });
+    if(error){status.textContent='Couldn\'t send: '+error.message;status.style.color='#e94560';return;}
+    status.textContent='Sent — thank you! The game is in for review.';status.style.color='#00d4aa';
+    document.getElementById('bugNote').value='';
+    setTimeout(closeBugReport,1400);
+  }catch(e){status.textContent='Couldn\'t send. Please try again.';status.style.color='#e94560';}
+}
 function histEditStart(){
   if(!_histM)return;
   _histEdit=JSON.parse(JSON.stringify(_histM));
