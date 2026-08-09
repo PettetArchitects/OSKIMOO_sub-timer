@@ -3,6 +3,8 @@
 > The map of screens and the routes between them. Screens are `showScr`
 > targets (ids match `UIMAP.md` and `SCREEN-BRIEFS.md`); edges are the
 > journeys from `UX-PATHWAYS.md`. The drawer overlays every screen.
+> The rules those routes must obey live in `NAVIGATION.md` (the wayfinding
+> constitution — hub and two rails, door rules, the jump audit).
 
 ```mermaid
 flowchart TD
