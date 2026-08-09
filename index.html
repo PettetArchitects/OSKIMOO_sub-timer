@@ -1910,6 +1910,7 @@ function resumeActiveGame(){
   // v2.9.5: games saved before keeper-time tracking — treat prior minutes as
   // outfield (no way to know), start tracking from here.
   if(G && !G.gkt) G.gkt={};
+  if(G && !G.rotCredit) G.rotCredit={};
   // v2.7.31: Manual strategy merged into Custom. Migrate any in-flight games saved on the old key so the picker reads correctly.
   if(G && G.subStrategy==='manual') G.subStrategy='planned';
   if(cfg && cfg.subStrategy==='manual') cfg.subStrategy='planned';
@@ -4096,12 +4097,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.20-beta';
+const APP_VERSION='v2.9.21-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.21-beta':{
+    title:'Fairer after a keeper change',
+    items:['When the gloves change hands mid-game, the outgoing keeper now rejoins the rotation as if they’d played their fair share while in goal — instead of being treated as fresh legs who never come off. No more one kid playing the whole second half while another sits.','This came straight from a real game sent in for review (thank you!). Minutes on the summary are unchanged — they were always the true totals; it’s the rotation choices that are now fair after a handover.']
+  },
   'v2.9.20-beta':{
     title:'Something looked wrong? Send me the game',
     items:['Open any saved game in history and tap <strong>Send this game for review</strong> — one tap posts the whole game (every sub, the clock, the log) straight in for a bug review, with a note about what looked off. No files, no share sheets.','Only the game itself is sent — nothing else on your phone. Add your email if you’d like a reply.']
@@ -7612,6 +7617,7 @@ function startGame(){
     startTime:new Date().toISOString()};
   avail.forEach(n=>G.pt[n]=0);
   G.gkt={};   // seconds spent IN GOAL, per player — see _rotSecs()
+  G.rotCredit={};   // v2.9.21: handover credit — ex-keepers rejoin the cycle at the average
   snapshotHalfStart();   // baseline so RESET can restore on-field / bench / pt to kickoff
   flowBegin();           // start recording this game as a replayable flow
   renderG();showScr('s4');
@@ -7630,6 +7636,7 @@ function snapshotHalfStart(){
     gk:G.gk,
     pt:{...G.pt},
     gkt:{...(G.gkt||{})},
+    rotCredit:{...(G.rotCredit||{})},
     pairs:(G.pairs||[]).map(p=>({on:[...p.on]})),
     pairIdx:G.pairIdx||0
   };
@@ -8014,6 +8021,7 @@ function resetHalf(){
   G.gk=s.gk;
   G.pt={...s.pt};
   G.gkt={...(s.gkt||{})};
+  G.rotCredit={...(s.rotCredit||{})};
   G.pairs=s.pairs.map(p=>({on:[...p.on]}));
   G.pairIdx=s.pairIdx;
   G.secs=0; G.elapsedMs=0; G.lastTs=null; G.sd=[];
@@ -8106,7 +8114,26 @@ function tickLoop(now){
 // game. Selection therefore sorts on OUTFIELD seconds (pt − gkt). Displayed
 // minutes everywhere remain the true total. When the keeper never changes,
 // gkt cancels out of every comparison and behaviour is identical to before.
-function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0);}
+function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0)+((G.rotCredit&&G.rotCredit[avail[p]])||0);}
+// v2.9.21 (owner rule, from the Dragonflies vs Curl Curl review): when the
+// gloves leave a player mid-game she goes "back into the normal cycle as if
+// the keeper played their allotted time" — her rotation clock is credited up
+// to the average of everyone else's, so she is neither locked on for the rest
+// of the game (the old behaviour: zero outfield seconds → never the longest
+// on) nor first to be yanked. Displayed minutes stay true — pt is untouched;
+// the credit lives in its own ledger and only feeds _rotSecs.
+function creditExKeeper(old){
+  if(!G||old==null||!gameInProgress())return;
+  const others=[...(G.on||[]),...(G.bench||[])].filter(p=>p!==old&&p!==G.gk);
+  if(!others.length)return;
+  const mean=others.reduce((s,p)=>s+_rotSecs(p),0)/others.length;
+  const cur=_rotSecs(old);
+  if(mean>cur){
+    if(!G.rotCredit)G.rotCredit={};
+    G.rotCredit[avail[old]]=(G.rotCredit[avail[old]]||0)+Math.round(mean-cur);
+    saveActiveGame();
+  }
+}
 function trigSub(){
   // DON'T pause the clock — keep running, show banner for coach to confirm
   if(!G.bench.length)return;
@@ -8465,6 +8492,10 @@ function swapFieldPositions(a, b){
   const i=G.on.indexOf(a), j=G.on.indexOf(b);
   if(i>=0&&j>=0){ const t=G.on[i]; G.on[i]=G.on[j]; G.on[j]=t; }
   // Transfer the GK role if one of the swapped players was the keeper.
+  // v2.9.21: a gloves transfer credits the outgoing keeper's rotation clock
+  // (owner rule) — done before the role moves so the ledger sees her as keeper.
+  if(G.gk===a) creditExKeeper(a);
+  else if(G.gk===b) creditExKeeper(b);
   if(G.gk===a) G.gk=b;
   else if(G.gk===b) G.gk=a;
   // Keep paired-rotation groups consistent if they reference these players.
@@ -8689,6 +8720,7 @@ function applySecondHalfKeeper(upcoming){
   if(periodCount!==2||upcoming!==2)return;
   if(gk2===G.gk)return;                       // already in goal — nothing to do
   const old=G.gk;
+  creditExKeeper(old);   // v2.9.21: ex-keeper rejoins the cycle at the average
   if(!G.on.includes(gk2)){
     // Nominated keeper is benched: bring them on in the outgoing keeper's slot.
     G.bench=(G.bench||[]).filter(p=>p!==gk2);
@@ -10095,6 +10127,7 @@ function setPlanKeeper(idx){
       G.on.push(idx);
     }
   }
+  if(G.gk!=null&&G.gk!==idx)creditExKeeper(G.gk);   // v2.9.21: mid-game handover credit (no-op pre-kick)
   G.gk=idx;
   const upcoming=G.atBreak?G.half+1:G.half;
   if(upcoming<=1) gk1=idx; else { gk2=idx; gk2Explicit=true; }   // tapping a keeper IS an explicit pick
@@ -10410,7 +10443,7 @@ function buildPlanTimeline(){
   // the live engine — otherwise the plan would promise different swaps than
   // trigSub fires after a keeper handover. simPt stays TOTAL for the
   // projected-minutes display; simRot is the fairness ledger.
-  const simRot={}; (avail||[]).forEach(n=>{ simRot[n]=(G.pt[n]||0)-((G.gkt&&G.gkt[n])||0); });
+  const simRot={}; (avail||[]).forEach(n=>{ simRot[n]=(G.pt[n]||0)-((G.gkt&&G.gkt[n])||0)+((G.rotCredit&&G.rotCredit[n])||0); });   // v2.9.21: preview agrees with the live engine's handover credit
   const events=[];
   // v2.7.98: fair tiebreakers for the equal-time rotation. Sorting only by
   // minutes ties on array order, which made the engine pull/return the SAME
