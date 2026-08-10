@@ -87,7 +87,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
 /* v2.9.17: 44px minimum — back buttons were 24px tall (a11y §8); the header
    row centres them so the extra height costs no layout. */
-.back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px}
+.back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px;font-family:inherit}
 
 .scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;justify-content:flex-start}.scr.active{display:flex}#s3.active{justify-content:flex-start;overflow:hidden}#s4.active{overflow:hidden;justify-content:flex-start}#home.active,#s1.active,#s2.active,#editTeam.active,#sportPicker.active,#gradePicker.active,#s5.active{justify-content:flex-start}
 .sec{padding:16px}
@@ -105,7 +105,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   --sh-raise-lg:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
   --sh-press:inset 0 2px 5px rgba(0,0,0,.5);
 }
-.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;box-shadow:var(--sh-raise)}
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;box-shadow:var(--sh-raise);font-family:inherit}
 .btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
 .btn-r{background:linear-gradient(180deg,#ef5872,#e0344f);color:#fff}
 .btn-r:disabled{background:#3a3f4c;color:#666;box-shadow:none}
@@ -204,7 +204,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .card{background:linear-gradient(180deg,#1a2747,#141f3a);border-radius:var(--r-btn);padding:16px;margin-bottom:10px;box-shadow:var(--sh-raise)}
 .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(min-width:768px){.chip-grid{grid-template-columns:1fr 1fr 1fr}}
-.chip{padding:14px 10px;background:linear-gradient(180deg,#1a2645,#141d36);border:none;border-radius:var(--r-chip);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--sh-raise)}
+.chip{padding:14px 10px;background:linear-gradient(180deg,#1a2645,#141d36);border:none;border-radius:var(--r-chip);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--sh-raise);font-family:inherit}
 .chip:active{transform:translateY(1px);box-shadow:var(--sh-press)}
 .chip.sel{background:linear-gradient(180deg,#0c3330,#0a2622);color:#00d4aa}
 .chip.sel::after{content:' ✓'}
@@ -214,7 +214,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
 .set-row label{font-size:14px;font-weight:600}
 .stepper{display:flex;align-items:center;gap:8px}
-.st-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(233,69,96,.16);color:#e94560;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.st-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(233,69,96,.16);color:#e94560;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
 
 /* Lineup */
@@ -4076,12 +4076,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.28-beta';
+const APP_VERSION='v2.9.29-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.29-beta':{
+    title:'One typeface everywhere',
+    items:['Buttons, steppers and chips from the app’s early days were silently rendering in the system’s fallback font (Arial) instead of the app’s own typeface — fixed, so every control now matches the rest of the app.','A new gate check keeps it fixed: any control class without an explicit font stack fails CI.']
+  },
   'v2.9.28-beta':{
     title:'Quieter screens',
     items:['The screen heading bands ("WHO’S IN GOAL?", "GAME SETTINGS", "FULL TIME"…) are gone — the brand bar is the only header now, and each page’s question moved into the small info line. Less shouting, more pitch.','Navigation moved to your thumb: <strong>Back sits beside Next</strong> on the setup pages (and beside Save / Apply on the editor and settings). On squad select your team’s name now leads the info line.']

@@ -70,6 +70,15 @@ for (const m of html.matchAll(/<button[^>]*style="([^"]*)"/g)) {
 const totalButtons = (html.match(/<button/g) || []).length;
 const classed = (html.match(/<button[^>]*class="/g) || []).length;
 
+// 5. Legacy control font — buttons don't inherit fonts, so a control class
+//    without an explicit font-family falls back to the UA default (Arial) on
+//    device. design.md §11.0 stamp: font-family:inherit until the ui- migration.
+const LEGACY_CONTROLS = ['.btn', '.back-btn', '.st-btn', '.chip'];
+const missingFont = LEGACY_CONTROLS.filter((sel) => {
+  const rule = new RegExp(`(?:^|\\n)\\${sel}\\{([^}]*)\\}`).exec(html);
+  return !rule || !/font-family/.test(rule[1]);
+});
+
 let failed = 0;
 const line = (ok, over, msg) => { console.log(`  ${over ? '✗' : ok ? '✓' : '·'} ${msg}`); if (over) failed++; };
 
@@ -89,6 +98,9 @@ if (LIST) [...radii].sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
   .forEach(([v, e]) => console.log(`      ${v.padEnd(8)} ×${e.n}`));
 
 line(false, buttonSigs.size > B.buttons, `${buttonSigs.size} distinct inline button styles across ${[...buttonSigs.values()].reduce((a, c) => a + c, 0)} buttons — budget ${B.buttons}   [design.md §4.1 documents one Button]`);
+
+line(true, missingFont.length > 0, `${LEGACY_CONTROLS.length - missingFont.length}/${LEGACY_CONTROLS.length} legacy control classes declare a font-family   [design.md §11.0: no Arial fallback]`);
+if (missingFont.length) missingFont.forEach((sel) => console.log(`      ${sel} has no font-family — buttons don't inherit; add font-family:inherit`));
 if (LIST) [...buttonSigs].sort((a, b) => b[1] - a[1]).slice(0, 20)
   .forEach(([k, v]) => console.log(`      ×${String(v).padEnd(3)} ${k}`));
 
