@@ -12,6 +12,36 @@
 
 ---
 
+## 2026-08-11 (Session 6) — The stamped control standard lands: Arial fallback killed, steppers + chips migrate
+
+**State:** `main` = **v2.9.31-beta**, all green, three merges (PRs #68–#70), production current.
+**Migration step 3 (design.md §11.1b) is COMPLETE.** Owner picked "button migration step 3" over the
+feature backlog when offered the choice.
+
+### Shipped
+| Ver | PR | What |
+|---|---|---|
+| v2.9.29 | #68 | **§11.0 immediate fix** — `font-family:inherit` on legacy `.btn`/`.back-btn`/`.st-btn`/`.chip` (they declared no font stack; buttons don't inherit, so they rendered Arial on-device). New ui-check gate item: every legacy control class must declare a font-family. |
+| v2.9.30 | #69 | **Step 3a** — all 14 `.st-btn` steppers → `.ui-step` (48×48, class deleted); `.hit44` pattern (transparent ≥44×44 button, visual on inner span, negative margin keeps footprint) for the stamp's hit-area offenders: score ± (28px visual), AFL GOAL/BEH/undo, squad Build → chip. Ratchets lowered: a11y 31→27, inline-button sigs 52→49. |
+| v2.9.31 | #70 | **Step 3b** — all 16 `.chip` sites → `.ui-chip` (`.chip` + dead `.gk-sel` deleted); `.sel` ✓ tick moved to `.ui-chip.sel::after` (one affordance everywhere, POTM/scorer included); base gains centering for grid tiles. ui-check legacy list is down to `.btn` + `.back-btn`. |
+
+Before/after comparisons (settings tab, squad, keeper page, shape page, score header) shared with the
+owner at each step. Note: the intervening #56–#67 stretch (navigation constitution, dev gallery v1–v5,
+§11.0 stamp, deploy guard) predates this entry and has no session-log entry of its own — the commit
+messages carry the detail.
+
+### Next session — pick up here
+1. **Migration steps 4–5** (§11.1b): outline actions → `.ui-btn--secondary` + tones (27), then
+   primary/destructive + judge the rest. Step 5 also owes the 16/800 action-label stamp (§11.0).
+2. **Feature backlog** (unchanged): opposition log (s6 gap) · scenario smart-offer (subOrderOv) ·
+   ranked player strengths (editTeam gap) · cognitive-check ratchets · flow-walker + tree-path coverage.
+3. **Atlas is stale at v2.9.27 frames** — steppers + every chip surface restyled (squad, keeper, shape,
+   settings, S2, scorer, sound packs); re-shoot per the `figma-atlas` skill once the run settles.
+4. Owner's open calls: borderless on iPad fresh look · real-iPad screenshot into the atlas slot.
+5. Watch (unchanged): `swapFieldPositions` pair-membership remap on slot swaps · 3D pitch first-paint race.
+
+---
+
 ## 2026-08-09 (Session 5, final) — The first real game closes the loop: report → replay → rules → fixes
 
 **State:** `main` = **v2.9.27-beta**, all green, twelve merges this stretch (PRs #43–#54), production current.
