@@ -805,7 +805,7 @@ const SCENARIOS = [
       // stepper change → persists too (re-query: each change repaints the screen)
       const hmBefore = getTeamPrefs(currentTeam).hm;
       const firstRow = document.querySelector('#teamPrefsSection .set-row');
-      const plus = firstRow && [...firstRow.querySelectorAll('.st-btn')].find((b) => b.textContent === '+');
+      const plus = firstRow && [...firstRow.querySelectorAll('.ui-step')].find((b) => b.textContent === '+');
       if (plus) plus.click();
       const saved = (JSON.parse(localStorage.getItem('subTimerTeams') || '[]')).find((t) => t.name === 'Settings FC');
       return {
