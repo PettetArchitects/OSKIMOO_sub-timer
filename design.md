@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.28
+> Last updated: v2.9.29
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -752,7 +752,7 @@ The target every migration step (03–05 below) now aims at:
 | Action-button label | **16px / 800** (bottom-zone Next / Save / START tier). Micro-labels keep their small tier (tabs 10/700, tags 10/800, dash tiles 13/800) |
 | Radius scale | **{4, 8, 12, 16}** + pill — tags 4 · chips/inputs 8 or 12 · buttons 12 · sheets/pills 16. Everything else (6, 10, 14, 20…) migrates to the nearest step |
 | Touch targets | ≥44px hit area on every control — visual can stay smaller with padded hit zones (steppers 40, score ± 24, plan Build chip are the offenders) |
-| Immediate bug fix | `font-family:inherit` on the legacy `.btn` / `.back-btn` / stepper / chip controls — kills the Arial fallback ahead of the full migration |
+| Immediate bug fix | ✅ **done v2.9.29** — `font-family:inherit` on the legacy `.btn` / `.back-btn` / `.st-btn` / `.chip` controls kills the Arial fallback ahead of the full migration; ui-check now gates all four classes declaring a font stack |
 
 Audit tooling: `node test/grid-check.mjs` (margins 16 · heights %4 · the
 radius scale · ≥44 targets — reporting now, ratchet once numbers settle);

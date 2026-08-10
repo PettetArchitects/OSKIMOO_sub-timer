@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.29-beta — Legacy controls stop falling back to Arial (design.md §11.0 immediate fix)
+
+The live-gallery elements audit exposed three button font systems — including the legacy `.btn` family declaring **no font-family at all**. Buttons don't inherit fonts, so primary buttons, back buttons, steppers (`.st-btn`) and chips rendered in the UA default (Arial) on-device, a different typeface from the rest of the app. All four legacy control classes now carry `font-family:inherit` — the stamped stopgap ahead of the full `ui-` migration (steps 3–5, design.md §11.1b). A new ui-check gate item asserts every legacy control class declares a font stack, so the fallback can't return.
+
 ## v2.9.28-beta — Heading bands removed; back joins the bottom action row (owner directive)
 
 "I thought we were going to remove the headings" + "I want that whole band removed and the page navigation back can sit in line with the next" (atlas review, section D circled). v2.9.23 dropped header *back-links*; the h1 bands survived — no recorded decision either way, so this stamps one: **the brand bar is the only header, and per-screen navigation lives in the bottom action zone.** All ten h1s AND all content `.hdr` bands go (only home's long-hidden band markup remains). Each page's question folds into its info line ("Who's in goal? …", "Full time — match summary"); the squad page's team-name identity moves into the info line via `renderS1`. Back controls relocate: ← Squad / ← Keeper sit beside **Next** (keeper/shape pages), ← Squad beside **Apply settings** (s2), **Delete** beside **Save Team** (editor), ← Cancel / ← Back as bottom buttons (sport/format pickers, history). `s1Title`/`editTitle`, the h1/.sub/.hdr-row CSS removed. Also closes a latent bug found on the way: the sticky band was displacing 44px over the element beneath it (the info lines were never visible under it).
