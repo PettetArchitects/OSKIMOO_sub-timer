@@ -107,7 +107,7 @@ const SCENARIOS = [
   ['load + globals', async (page) => {
     await page.waitForFunction(() => typeof newTeam === 'function' && typeof FORMATS === 'object', { timeout: 8000 });
     chk('app globals present', true);
-    chk('home screen rendered', await page.evaluate(() => !!document.querySelector('button, .chip, [onclick]')));
+    chk('home screen rendered', await page.evaluate(() => !!document.querySelector('button, .ui-chip, [onclick]')));
     await shot(page, 'home');
   }],
 
@@ -310,14 +310,14 @@ const SCENARIOS = [
       selectTeam(teams[teams.length - 1].id);
       startFromSquad();
       const onGk = document.getElementById('gkStep').classList.contains('active');
-      const chips = document.querySelectorAll('#gkStepGrid .chip').length;
+      const chips = document.querySelectorAll('#gkStepGrid .ui-chip').length;
       const other = G.on.find((i) => i !== G.gk);
-      const chip = [...document.querySelectorAll('#gkStepGrid .chip')].find((c) => c.textContent.includes(fn(avail[other])));
+      const chip = [...document.querySelectorAll('#gkStepGrid .ui-chip')].find((c) => c.textContent.includes(fn(avail[other])));
       if (chip) chip.click();
       const gkChanged = G.gk === other;
       gkStepNext();
       const onShape = document.getElementById('shapeStep').classList.contains('active');
-      const tiles = [...document.querySelectorAll('#shapeStepGrid .chip')];
+      const tiles = [...document.querySelectorAll('#shapeStepGrid .ui-chip')];
       const otherTile = tiles.find((t) => t.textContent !== curFormation);
       const target = otherTile ? otherTile.textContent : null;
       if (otherTile) otherTile.click();
@@ -343,7 +343,7 @@ const SCENARIOS = [
       const shownPreKick = btn && btn.style.display !== 'none';
       openGkPick();
       const ovShown = document.getElementById('gkPickOv').classList.contains('show');
-      const chips = [...document.querySelectorAll('#gkPickGrid .chip')];
+      const chips = [...document.querySelectorAll('#gkPickGrid .ui-chip')];
       // pick a BENCHED player as keeper — must come on, old keeper must step off
       const oldGk = G.gk;
       const benchIdx = (G.bench || [])[0];
@@ -508,7 +508,7 @@ const SCENARIOS = [
       if (!btn) return { hasBtn: false };
       btn.click();                                        // opens the live picker
       const ovShown = document.getElementById('scorerOv').classList.contains('show');
-      const chip = document.querySelector('#scorerGrid .chip');
+      const chip = document.querySelector('#scorerGrid .ui-chip');
       const picked = chip ? chip.querySelector('div').textContent : null;
       if (chip) chip.click();                             // scorer step
       skipGoalStep();                                     // no assist
@@ -800,7 +800,7 @@ const SCENARIOS = [
       const host = document.getElementById('teamPrefsSection');
       const before = getTeamPrefs(currentTeam).formation;
       const target = Object.keys(FORMATIONS[currentTeam.format]).find((n) => n !== before);
-      const tile = [...host.querySelectorAll('.chip')].find((c) => c.textContent.trim() === target);
+      const tile = [...host.querySelectorAll('.ui-chip')].find((c) => c.textContent.trim() === target);
       if (tile) tile.click();
       // stepper change → persists too (re-query: each change repaints the screen)
       const hmBefore = getTeamPrefs(currentTeam).hm;

@@ -73,8 +73,9 @@ const classed = (html.match(/<button[^>]*class="/g) || []).length;
 // 5. Legacy control font — buttons don't inherit fonts, so a control class
 //    without an explicit font-family falls back to the UA default (Arial) on
 //    device. design.md §11.0 stamp: font-family:inherit until the ui- migration.
-// .st-btn left the list in v2.9.30 — the class is gone (steppers are .ui-step).
-const LEGACY_CONTROLS = ['.btn', '.back-btn', '.chip'];
+// .st-btn left the list in v2.9.30, .chip in v2.9.31 — the classes are gone
+// (steppers are .ui-step, chips are .ui-chip).
+const LEGACY_CONTROLS = ['.btn', '.back-btn'];
 const missingFont = LEGACY_CONTROLS.filter((sel) => {
   const rule = new RegExp(`(?:^|\\n)\\${sel}\\{([^}]*)\\}`).exec(html);
   return !rule || !/font-family/.test(rule[1]);
