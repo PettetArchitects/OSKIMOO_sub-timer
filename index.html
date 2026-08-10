@@ -195,6 +195,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   box-shadow:0 3px 0 #0d1828}
 .ui-step:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
 .ui-step.is-danger{color:#ff7088}
+/* v2.9.30: 44pt hit zone for dense-cluster controls (a11y §8, design.md §11.0:
+   "visual can stay smaller with padded hit zones"). The button box grows to
+   ≥44×44 and stays transparent; the visual lives on an inner <span>. A
+   negative inline margin keeps the layout footprint at the visual size. */
+.hit44{min-width:44px;min-height:44px;padding:0;background:none;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;flex-shrink:0}
 @media (prefers-reduced-motion:reduce){
   .ui-btn,.ui-chip,.ui-step{transition:none}
   .ui-btn:active,.ui-chip:active,.ui-step:active{transform:none}
@@ -214,7 +219,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
 .set-row label{font-size:14px;font-weight:600}
 .stepper{display:flex;align-items:center;gap:8px}
-.st-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(233,69,96,.16);color:#e94560;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+/* v2.9.30: .st-btn removed — every stepper is a .ui-step (migration step 3a). */
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
 
 /* Lineup */
@@ -960,9 +965,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div class="set-row">
       <label id="periodLengthLabel">Minutes per half</label>
       <div class="stepper">
-        <button class="st-btn" onclick="adj('hm',-1)">−</button>
+        <button class="ui-step" onclick="adj('hm',-1)">−</button>
         <div class="st-val" id="hmV">20</div>
-        <button class="st-btn" onclick="adj('hm',1)">+</button>
+        <button class="ui-step" onclick="adj('hm',1)">+</button>
       </div>
     </div>
     <h2 style="margin-top:14px">Sub Frequency</h2>
@@ -970,18 +975,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div class="set-row">
       <label>Sub every X mins</label>
       <div class="stepper">
-        <button class="st-btn" onclick="adj('sf',-1)">−</button>
+        <button class="ui-step" onclick="adj('sf',-1)">−</button>
         <div class="st-val" id="sfV">8</div>
-        <button class="st-btn" onclick="adj('sf',1)">+</button>
+        <button class="ui-step" onclick="adj('sf',1)">+</button>
       </div>
     </div>
     <h2 style="margin-top:14px">Players per Sub</h2>
     <div class="set-row">
       <label>Swap count</label>
       <div class="stepper">
-        <button class="st-btn" onclick="adj('sc',-1)">−</button>
+        <button class="ui-step" onclick="adj('sc',-1)">−</button>
         <div class="st-val" id="scV">2</div>
-        <button class="st-btn" onclick="adj('sc',1)">+</button>
+        <button class="ui-step" onclick="adj('sc',1)">+</button>
       </div>
     </div>
     <div id="gkSettingsSection" style="display:none">
@@ -1262,9 +1267,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="border-color:#5bc0de;max-width:380px;text-align:left;max-height:90dvh;overflow-y:auto">
     <h2 style="text-align:center;color:#5bc0de;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="clock" width="20" height="20" style="width:20px;height:20px;display:inline-flex"></i>Sub Settings</h2>
     <p style="color:#888;font-size:12px;text-align:center;margin:10px 0 14px">Tweak mid-match — changes apply to the running clock immediately.</p>
-    <div class="set-row" style="margin-bottom:6px"><label>Half length (mins)</label><div class="stepper"><button class="st-btn" onclick="ssAdj('hm',-1)">−</button><div class="st-val" id="ssHmV">8</div><button class="st-btn" onclick="ssAdj('hm',1)">+</button></div></div>
-    <div class="set-row" style="margin-bottom:6px"><label>Sub every X mins</label><div class="stepper"><button class="st-btn" onclick="ssAdj('sf',-1)">−</button><div class="st-val" id="ssSfV">4</div><button class="st-btn" onclick="ssAdj('sf',1)">+</button></div></div>
-    <div class="set-row" style="margin-bottom:14px"><label>Players per sub</label><div class="stepper"><button class="st-btn" onclick="ssAdj('sc',-1)">−</button><div class="st-val" id="ssScV">2</div><button class="st-btn" onclick="ssAdj('sc',1)">+</button></div></div>
+    <div class="set-row" style="margin-bottom:6px"><label>Half length (mins)</label><div class="stepper"><button class="ui-step" onclick="ssAdj('hm',-1)">−</button><div class="st-val" id="ssHmV">8</div><button class="ui-step" onclick="ssAdj('hm',1)">+</button></div></div>
+    <div class="set-row" style="margin-bottom:6px"><label>Sub every X mins</label><div class="stepper"><button class="ui-step" onclick="ssAdj('sf',-1)">−</button><div class="st-val" id="ssSfV">4</div><button class="ui-step" onclick="ssAdj('sf',1)">+</button></div></div>
+    <div class="set-row" style="margin-bottom:14px"><label>Players per sub</label><div class="stepper"><button class="ui-step" onclick="ssAdj('sc',-1)">−</button><div class="st-val" id="ssScV">2</div><button class="ui-step" onclick="ssAdj('sc',1)">+</button></div></div>
     <div style="font-size:11px;font-weight:800;color:#5bc0de;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Sub Strategy</div>
     <div id="ssStratGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px"></div>
     <button class="btn btn-g" onclick="closeSubSettings()">Done</button>
@@ -4076,12 +4081,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.29-beta';
+const APP_VERSION='v2.9.30-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.30-beta':{
+    title:'Chunkier steppers, easier taps',
+    items:['Every −/+ stepper (half length, sub interval, players per sub) is now the app’s big 48px rounded button — easier to hit with cold fingers on a sideline.','The score −/+ buttons, the AFL GOAL/BEH/undo buttons and the squad page’s Build → chip keep their compact look but their tap areas grew to the full 44pt minimum — less mis-tapping in the dense header.']
+  },
   'v2.9.29-beta':{
     title:'One typeface everywhere',
     items:['Buttons, steppers and chips from the app’s early days were silently rendering in the system’s fallback font (Arial) instead of the app’s own typeface — fixed, so every control now matches the rest of the app.','A new gate check keeps it fixed: any control class without an explicit font stack fails CI.']
@@ -5966,9 +5975,9 @@ function renderTeamSettings(){
     row.innerHTML=`<label>${label}</label>`;
     const st=document.createElement('div');
     st.className='stepper';
-    const dec=document.createElement('button'); dec.className='st-btn'; dec.textContent='−';
+    const dec=document.createElement('button'); dec.className='ui-step'; dec.textContent='−';
     const val=document.createElement('div'); val.className='st-val'; val.textContent=p[key];
-    const inc=document.createElement('button'); inc.className='st-btn'; inc.textContent='+';
+    const inc=document.createElement('button'); inc.className='ui-step'; inc.textContent='+';
     dec.onclick=()=>{ p[key]=Math.max(min,p[key]-1); change(); };
     inc.onclick=()=>{ p[key]=Math.min(max,p[key]+1); change(); };
     st.appendChild(dec); st.appendChild(val); st.appendChild(inc);
@@ -6435,7 +6444,7 @@ function renderSquadPlanPicker(){
     host.innerHTML=`<div style="background:rgba(167,139,250,.06);border:1px dashed rgba(167,139,250,.4);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:12px;color:#aaa;line-height:1.4">
       <i data-lucide="clipboard" width="16" height="16" style="width:16px;height:16px;color:#a78bfa;flex-shrink:0;display:inline-flex"></i>
       <span style="flex:1">Starting in <strong style="color:#00d4aa">AUTO</strong>. Want a custom plan?</span>
-      <button onclick="planAheadFromSquad()" style="background:rgba(167,139,250,.18);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">Build →</button>
+      <button onclick="planAheadFromSquad()" class="hit44" style="margin:-10px 0"><span style="background:rgba(167,139,250,.18);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.4px">Build →</span></button>
     </div>`;
     _li();
     return;
@@ -7953,7 +7962,9 @@ function renderScore(){
   if(!area||!G) return;
   const teamName=currentTeam?currentTeam.name.split(' ')[0].toUpperCase():'US';
   const isAfl=getSport(currentTeam).key==='afl';
-  const sBtn='width:28px;height:28px;border-radius:50%;border:none;background:#13203a;color:#888;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+  // v2.9.30: the visual circle lives on a <span> inside a transparent .hit44
+  // button — 44pt hit target, 28px visual, footprint unchanged via -8px margin.
+  const sBtn='width:28px;height:28px;border-radius:50%;background:#13203a;color:#888;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0';
   if(isAfl){
     const col=(who,colr)=>{
       const gl=G[who==='us'?'glUs':'glThem']||0, bh=G[who==='us'?'bhUs':'bhThem']||0;
@@ -7962,9 +7973,9 @@ function renderScore(){
         <span style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px">${lbl}</span>
         <span style="font-size:26px;font-weight:800;color:${colr};font-variant-numeric:tabular-nums;line-height:1">${gl}.${bh}<span style="font-size:13px;color:#888;font-weight:700;margin-left:5px">(${gl*6+bh})</span></span>
         <div style="display:flex;gap:4px;align-items:center">
-          <button onclick="aflScore('${who}','goal')" style="padding:3px 9px;border-radius:6px;border:1px solid #00d4aa;background:rgba(0,212,170,.14);color:#00d4aa;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.4px">GOAL</button>
-          <button onclick="aflScore('${who}','behind')" style="padding:3px 8px;border-radius:6px;border:1px solid #5bc0de;background:rgba(91,192,222,.12);color:#5bc0de;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.4px">BEH</button>
-          <button onclick="aflUndo('${who}')" title="Undo last score" style="width:22px;height:22px;border-radius:50%;border:1px solid #555;background:none;color:#888;font-size:14px;font-weight:700;cursor:pointer;line-height:1">−</button>
+          <button onclick="aflScore('${who}','goal')" class="hit44" style="margin:-10px -2px"><span style="padding:3px 9px;border-radius:6px;border:1px solid #00d4aa;background:rgba(0,212,170,.14);color:#00d4aa;font-size:11px;font-weight:800;letter-spacing:.4px">GOAL</span></button>
+          <button onclick="aflScore('${who}','behind')" class="hit44" style="margin:-10px -2px"><span style="padding:3px 8px;border-radius:6px;border:1px solid #5bc0de;background:rgba(91,192,222,.12);color:#5bc0de;font-size:11px;font-weight:800;letter-spacing:.4px">BEH</span></button>
+          <button onclick="aflUndo('${who}')" title="Undo last score" class="hit44" style="margin:-11px"><span style="width:22px;height:22px;border-radius:50%;border:1px solid #555;color:#888;font-size:14px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center">−</span></button>
         </div>
       </div>`;
     };
@@ -7975,9 +7986,9 @@ function renderScore(){
     const block=(who,colr,lbl,scoreVal)=>`<div class="team-block" style="display:flex;flex-direction:column;align-items:center;gap:3px">
       <span class="team-label" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px">${lbl}</span>
       <div class="team-controls" style="display:flex;align-items:center;gap:6px">
-        <button onclick="adjScore('${who}',-1)" style="${sBtn}">−</button>
+        <button onclick="adjScore('${who}',-1)" class="hit44" style="margin:-8px"><span style="${sBtn}">−</span></button>
         <span class="team-score" style="font-size:34px;font-weight:800;color:${colr};min-width:26px;text-align:center;font-variant-numeric:tabular-nums;line-height:1">${scoreVal}</span>
-        <button onclick="adjScore('${who}',1)" style="${sBtn}">+</button>
+        <button onclick="adjScore('${who}',1)" class="hit44" style="margin:-8px"><span style="${sBtn}">+</span></button>
       </div>
     </div>`;
     area.innerHTML=`${block('us','#00d4aa',teamName,G.scoreUs)}<span class="score-colon" style="color:#444;font-size:28px;font-weight:300;margin:0 4px;align-self:flex-end;padding-bottom:4px">:</span>${block('them','#e94560','THEM',G.scoreThem)}`;

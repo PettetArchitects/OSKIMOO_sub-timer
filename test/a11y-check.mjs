@@ -26,7 +26,9 @@ import { loadChromium, browserExecutable, startServer } from './harness.mjs';
 // Lower it as they're fixed; the build fails if it grows.
 // v2.9.17: 34 → 31 — the shared .back-btn grew to 44px (four entries cleared;
 // the setup step pages' back buttons arrived at full size). Ratchet: never rise.
-const BUDGET = Number(process.env.A11Y_BUDGET || 0) || 31;
+// v2.9.30: 31 → 27 — steppers → .ui-step (48×48); score ± + AFL undo + Build
+// chip get ≥44 boxes via the .hit44 padded-hit-zone pattern.
+const BUDGET = Number(process.env.A11Y_BUDGET || 0) || 27;
 const LIST = process.argv.includes('--list');
 const MIN = 44;
 

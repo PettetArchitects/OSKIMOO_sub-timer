@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.30-beta — Steppers join the ui- system; 44pt hit zones for the score cluster (migration step 3a)
+
+All 14 `−/+` stepper buttons (`.st-btn`, 40×40 red circles) become `.ui-step` — 48×48, SF Rounded, the 3px press lip; the `.st-btn` class is deleted and leaves ui-check's legacy list. The remaining §11.0 hit-area offenders get the padded-hit-zone treatment via a new `.hit44` pattern (transparent ≥44×44 button, visual on an inner span, negative margin keeps the layout footprint): score ± (28px visual), AFL GOAL/BEH/undo, and the squad page's Build → chip. a11y ratchet lowered 31 → 27, inline-button-signature ratchet 52 → 49; chips → `.ui-chip` (step 3b) is next.
+
 ## v2.9.29-beta — Legacy controls stop falling back to Arial (design.md §11.0 immediate fix)
 
 The live-gallery elements audit exposed three button font systems — including the legacy `.btn` family declaring **no font-family at all**. Buttons don't inherit fonts, so primary buttons, back buttons, steppers (`.st-btn`) and chips rendered in the UA default (Arial) on-device, a different typeface from the rest of the app. All four legacy control classes now carry `font-family:inherit` — the stamped stopgap ahead of the full `ui-` migration (steps 3–5, design.md §11.1b). A new ui-check gate item asserts every legacy control class declares a font stack, so the fallback can't return.

@@ -33,7 +33,7 @@ const B = {
   tiny: Number(process.env.UI_TINY || 0) || 11,      // declarations below MIN_FONT
   fonts: Number(process.env.UI_FONTS || 0) || 20,    // distinct font-size values
   radii: Number(process.env.UI_RADII || 0) || 13,    // distinct border-radius values
-  buttons: Number(process.env.UI_BUTTONS || 0) || 52, // distinct inline button styles (54 → 52: drawer rows → .ui-btn--ghost, v2.9.6)
+  buttons: Number(process.env.UI_BUTTONS || 0) || 49, // distinct inline button styles (54 → 52: drawer rows → .ui-btn--ghost, v2.9.6; → 49: score cluster + Build chip → .hit44 spans, v2.9.30)
 };
 const MIN_FONT = 9;   // below this, text on a sunlit sideline is not glanceable
 
@@ -73,7 +73,8 @@ const classed = (html.match(/<button[^>]*class="/g) || []).length;
 // 5. Legacy control font — buttons don't inherit fonts, so a control class
 //    without an explicit font-family falls back to the UA default (Arial) on
 //    device. design.md §11.0 stamp: font-family:inherit until the ui- migration.
-const LEGACY_CONTROLS = ['.btn', '.back-btn', '.st-btn', '.chip'];
+// .st-btn left the list in v2.9.30 — the class is gone (steppers are .ui-step).
+const LEGACY_CONTROLS = ['.btn', '.back-btn', '.chip'];
 const missingFont = LEGACY_CONTROLS.filter((sel) => {
   const rule = new RegExp(`(?:^|\\n)\\${sel}\\{([^}]*)\\}`).exec(html);
   return !rule || !/font-family/.test(rule[1]);
