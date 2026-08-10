@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.31-beta — Every chip joins the ui- system (migration step 3b — step 3 complete)
+
+All 16 `.chip` call sites — squad picker, keeper/shape step tiles, formation/format/sport pickers, sub-strategy cards, sound packs, scorer picker, opposition formation — become `.ui-chip`: solid fill (gradients gone), 14px radius, SF Rounded 13/700. The `.chip` class and the dead `.chip.gk-sel` are deleted; ui-check's legacy list is down to `.btn` + `.back-btn`. The `.sel` ✓ tick the squad picker relied on moves to `.ui-chip.sel::after`, so every selected chip (now including POTM and scorer picks) shares one affordance. `.ui-chip` gains `justify-content:center;text-align:center` so grid tiles centre; inline-flex is blockified inside `.chip-grid`, and the one stacked-content site without an explicit display (plan sub-strategy rows) sets `display:block`.
+
 ## v2.9.30-beta — Steppers join the ui- system; 44pt hit zones for the score cluster (migration step 3a)
 
 All 14 `−/+` stepper buttons (`.st-btn`, 40×40 red circles) become `.ui-step` — 48×48, SF Rounded, the 3px press lip; the `.st-btn` class is deleted and leaves ui-check's legacy list. The remaining §11.0 hit-area offenders get the padded-hit-zone treatment via a new `.hit44` pattern (transparent ≥44×44 button, visual on an inner span, negative margin keeps the layout footprint): score ± (28px visual), AFL GOAL/BEH/undo, and the squad page's Build → chip. a11y ratchet lowered 31 → 27, inline-button-signature ratchet 52 → 49; chips → `.ui-chip` (step 3b) is next.

@@ -177,13 +177,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
 .ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
 
-.ui-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:none;
-  border-radius:14px;background:#13203a;color:#eee;
+.ui-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 15px;border:none;
+  border-radius:14px;background:#13203a;color:#eee;text-align:center;
   font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,transform .08s;
   -webkit-tap-highlight-color:transparent}
 .ui-chip:active{transform:scale(.96)}
 .ui-chip.sel{background:rgba(0,212,170,.16);color:#00d4aa}
+/* The selection tick the legacy .chip.sel carried (v2.7.41: the squad picker
+   renders just the name and relies on this). One affordance for every chip. */
+.ui-chip.sel::after{content:' ✓'}
 
 /* 48×48 — sizing these removes 9 of the 34 undersized controls the
    accessibility audit found, in one place instead of nine. */
@@ -209,11 +212,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .card{background:linear-gradient(180deg,#1a2747,#141f3a);border-radius:var(--r-btn);padding:16px;margin-bottom:10px;box-shadow:var(--sh-raise)}
 .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(min-width:768px){.chip-grid{grid-template-columns:1fr 1fr 1fr}}
-.chip{padding:14px 10px;background:linear-gradient(180deg,#1a2645,#141d36);border:none;border-radius:var(--r-chip);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s;box-shadow:var(--sh-raise);font-family:inherit}
-.chip:active{transform:translateY(1px);box-shadow:var(--sh-press)}
-.chip.sel{background:linear-gradient(180deg,#0c3330,#0a2622);color:#00d4aa}
-.chip.sel::after{content:' ✓'}
-.chip.gk-sel{background:linear-gradient(180deg,#33121f,#260d18);color:#e94560}
+/* v2.9.31: .chip removed — every chip is a .ui-chip (migration step 3b).
+   .chip.gk-sel died with it (no callers). */
 
 /* Stepper */
 .set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
@@ -1291,11 +1291,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="max-width:360px;text-align:left">
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
-    <button class="chip" onclick="pickSubStrategy('auto')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+    <button class="ui-chip" onclick="pickSubStrategy('auto')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Auto</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App handles sub timing + selection. Longest-on comes off; longest-benched comes on. Tweak frequency + grouping anytime from the steppers on the Plan page.</div>
     </button>
-    <button class="chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
+    <button class="ui-chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
       <div style="font-weight:800;color:#a78bfa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">You decide when subs fire. Tap SUB live, or pre-build a full Plan in the Plan page — same strategy, different degree of detail.</div>
     </button>
@@ -3824,7 +3824,7 @@ function renderSoundPicker(){
   g.innerHTML='';
   Object.entries(SOUND_PACKS).forEach(([k,p])=>{
     const c=document.createElement('div');
-    c.className='chip'+(cur===k?' sel':'');
+    c.className='ui-chip'+(cur===k?' sel':'');
     c.style.cssText='padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px';
     c.innerHTML=`<div style="line-height:1;color:#5bc0de">${ic(p.icon,22)}</div>
       <div style="font-weight:800;font-size:12px;letter-spacing:.3px">${p.label}</div>
@@ -4081,12 +4081,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.30-beta';
+const APP_VERSION='v2.9.31-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.31-beta':{
+    title:'Every chip, one family',
+    items:['All the picker tiles — squad names, keeper, formation, format, sport, strategy, scorer — now share the app’s rounded chip style: solid fill, softer corners, the same friendly type as the buttons.','The selection tick (✓) now appears on every selected chip, including player of the match and scorer picks — one affordance everywhere.']
+  },
   'v2.9.30-beta':{
     title:'Chunkier steppers, easier taps',
     items:['Every −/+ stepper (half length, sub interval, players per sub) is now the app’s big 48px rounded button — easier to hit with cold fingers on a sideline.','The score −/+ buttons, the AFL GOAL/BEH/undo buttons and the squad page’s Build → chip keep their compact look but their tap areas grew to the full 44pt minimum — less mis-tapping in the dense header.']
@@ -5726,7 +5730,7 @@ function newTeam(){
   g.innerHTML='';
   Object.values(SPORTS).forEach(s=>{
     const c=document.createElement('div');
-    c.className='chip';
+    c.className='ui-chip';
     c.style.cssText='padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;'+(s.available?'':'opacity:0.5;cursor:not-allowed');
     c.innerHTML=`<div style="line-height:1;color:#5bc0de;display:flex">${ic(s.icon,32)}</div>
       <div style="font-size:14px;font-weight:800;color:${s.available?'#e94560':'#888'}">${s.label}</div>
@@ -5744,7 +5748,7 @@ function pickSport(sportKey){
     const f=FORMATS[k];
     if(!f)return;
     const c=document.createElement('div');
-    c.className='chip';
+    c.className='ui-chip';
     c.style.cssText='padding:18px 10px;display:flex;flex-direction:column;gap:4px';
     c.innerHTML=`<div style="font-size:16px;font-weight:800;color:#e94560">${f.label}</div>
       <div style="font-size:11px;color:#888;font-weight:600">${f.age}${sport.key==='netball'||sport.key==='basketball'?' · '+f.defaultHalf+'min Q':''}</div>`;
@@ -5942,7 +5946,7 @@ function renderTeamSettings(){
     fg.style.cssText='grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px';
     Object.keys(FORMATIONS[currentTeam.format]).forEach(name=>{
       const c=document.createElement('div');
-      c.className='chip'+(p.formation===name?' sel':'');
+      c.className='ui-chip'+(p.formation===name?' sel':'');
       c.style.cssText='padding:9px 4px;font-size:13px;font-weight:700';
       c.textContent=name;
       c.onclick=()=>{ p.formation=name; change(); };
@@ -5960,8 +5964,8 @@ function renderTeamSettings(){
   SUB_STRATEGIES.forEach(s=>{
     const sel=p.subStrategy===s.key;
     const c=document.createElement('div');
-    c.className='chip'+(sel?' sel':'');
-    c.style.cssText='padding:10px 12px;text-align:left;cursor:pointer';
+    c.className='ui-chip'+(sel?' sel':'');
+    c.style.cssText='display:block;padding:10px 12px;text-align:left;cursor:pointer';
     c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?s.color:'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?s.color:'#bbb')}${s.label}</div>
       <div style="font-size:11px;color:#888;line-height:1.35;font-weight:500">${s.stance}</div>`;
     c.onclick=()=>{ p.subStrategy=s.key; change(); };
@@ -6383,7 +6387,7 @@ function renderS1(){
   currentTeam.players.forEach((name,i)=>{
     const c=document.createElement('div');
     const isOut=!sel.has(i);
-    c.className='chip'+(isOut?'':' sel');
+    c.className='ui-chip'+(isOut?'':' sel');
     // v2.7.41: just the name. .chip.sel::after already adds " ✓" via CSS;
     // adding another inline check was rendering as "Name ✓ ✓". The line-
     // through + opacity on .chip:not(.sel) already telegraphs "out".
@@ -6578,7 +6582,7 @@ function renderGkStep(){
     const name=avail[pIdx];
     const cur=G.gk===pIdx;
     const c=document.createElement('button');
-    c.className='chip'+(cur?' sel':'');
+    c.className='ui-chip'+(cur?' sel':'');
     c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit'+(cur?';background:rgba(255,123,172,.16)':'');
     c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>{ setPlanKeeper(pIdx); renderGkStep(); };
@@ -6608,7 +6612,7 @@ function renderShapeStep(){
   Object.keys(FORMATIONS[curFmt]||{}).forEach(k=>{
     const sel=(curFormation===k);
     const c=document.createElement('button');
-    c.className='chip'+(sel?' sel':'');
+    c.className='ui-chip'+(sel?' sel':'');
     c.style.cssText='padding:18px 8px;min-height:56px;font-size:17px;font-weight:800;letter-spacing:.5px;cursor:pointer;border:none;font-family:inherit;color:'+(sel?'#5bc0de':'#eee')+(sel?';background:rgba(91,192,222,.16)':'');
     c.textContent=k;
     c.onclick=()=>{ selectGameFormation(k); renderShapeStep(); };
@@ -6871,7 +6875,7 @@ function renderFmtPicker(){
     const f=FORMATS[k];
     if(!f)return;
     const c=document.createElement('div');
-    c.className='chip'+(curFmt===k?' sel':'');
+    c.className='ui-chip'+(curFmt===k?' sel':'');
     c.style.cssText='padding:10px 4px;font-size:13px';
     c.textContent=f.label;
     c.onclick=()=>{ selectFormat(k); };
@@ -6998,7 +7002,7 @@ function renderFormationPicker(){
   const forms=FORMATIONS[curFmt];
   Object.keys(forms).forEach(k=>{
     const c=document.createElement('div');
-    c.className='chip'+(curFormation===k?' sel':'');
+    c.className='ui-chip'+(curFormation===k?' sel':'');
     c.style.cssText='padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px';
     const short=FORMATION_SHORTS[k]||'';
     c.innerHTML=`<div style="font-weight:800;font-size:14px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:10px;color:#888;font-weight:500;line-height:1.2;text-align:center">${short}</div>`:''}`;
@@ -7028,7 +7032,7 @@ function renderSubStratPicker(){
   SUB_STRATEGIES.forEach(s=>{
     const c=document.createElement('button');
     c.type='button';
-    c.className='chip'+(cur===s.key?' sel':'');
+    c.className='ui-chip'+(cur===s.key?' sel':'');
     const isSel=cur===s.key;
     c.style.cssText='display:block;width:100%;text-align:left;padding:10px 12px;cursor:pointer;border-color:'+(isSel?s.color:'#333');
     c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${isSel?s.color:'#bbb'};margin-bottom:3px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,isSel?s.color:'#bbb')}${s.label}</div>
@@ -8084,7 +8088,7 @@ function renderGoalPicker(){
     if(isAssist && name===_goalScorer) return;   // can't assist your own goal
     const pos=currentTeam?(getPlayerPos(currentTeam,name)[0]||''):'';
     const c=document.createElement('div');
-    c.className='chip';
+    c.className='ui-chip';
     c.style.cssText='padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:2px';
     c.innerHTML=`<div style="font-size:13px;font-weight:700;color:#eee">${fn(name)}</div>
       ${pos?`<div style="font-size:10px;color:#888;font-weight:600">${pos}</div>`:''}`;
@@ -8423,7 +8427,7 @@ function toggleOppFormation(){
     const forms=FORMATIONS[curFmt];
     Object.keys(forms).forEach(k=>{
       const c=document.createElement('div');
-      c.className='chip'+(G&&G.oppFormation===k?' sel':'');
+      c.className='ui-chip'+(G&&G.oppFormation===k?' sel':'');
       c.style.cssText='padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:84px';
       const short=FORMATION_SHORTS[k]||'';
       c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:#888;font-weight:500;line-height:1.1">${short}</div>`:''}`;
@@ -10284,7 +10288,7 @@ function openGkPick(){
     const name=avail[pIdx];
     const cur=G.gk===pIdx;
     const c=document.createElement('div');
-    c.className='chip'+(cur?' sel':'');
+    c.className='ui-chip'+(cur?' sel':'');
     c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer'+(cur?';background:rgba(255,123,172,.16)':'');
     c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>pickGk(pIdx);

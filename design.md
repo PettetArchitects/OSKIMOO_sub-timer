@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.30
+> Last updated: v2.9.31
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -811,12 +811,14 @@ font/size/radius so drift is visible at a glance.
    includes modal containers and the team-action menu — those belong to
    steps 4–5.
    **3.** steppers + chips → `.ui-step` / `.ui-chip` (21; where the 44pt fix
-   lands). **3a done v2.9.30**: all 14 `.st-btn` steppers → `.ui-step` (class
-   deleted), and the §11.0 hit-area offenders (score ± 28px, AFL GOAL/BEH/undo,
-   plan Build chip) got ≥44 boxes via the `.hit44` pattern — transparent
-   ≥44×44 button, visual on an inner span, negative margin keeps the layout
-   footprint (a11y ratchet 31 → 27). **3b remaining**: the 16 `.chip` call
-   sites → `.ui-chip`.
+   lands). **DONE.** 3a (v2.9.30): all 14 `.st-btn` steppers → `.ui-step`
+   (class deleted), and the §11.0 hit-area offenders (score ± 28px, AFL
+   GOAL/BEH/undo, plan Build chip) got ≥44 boxes via the `.hit44` pattern —
+   transparent ≥44×44 button, visual on an inner span, negative margin keeps
+   the layout footprint (a11y ratchet 31 → 27). 3b (v2.9.31): all 16 `.chip`
+   call sites → `.ui-chip`; `.chip` + `.chip.gk-sel` (dead) deleted; the
+   `.sel` ✓ tick moved onto `.ui-chip.sel` so every selected chip — including
+   POTM and scorer — shares one affordance.
    **4.** outline actions → `.ui-btn--secondary` + tone modifiers (27)
    **5.** primary/destructive, then judge the rest — genuinely singular things
    may stay inline if naming them adds nothing.
