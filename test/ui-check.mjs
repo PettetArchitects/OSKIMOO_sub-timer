@@ -103,6 +103,18 @@ line(false, buttonSigs.size > B.buttons, `${buttonSigs.size} distinct inline but
 
 line(true, missingFont.length > 0, `${LEGACY_CONTROLS.length - missingFont.length}/${LEGACY_CONTROLS.length} legacy control classes declare a font-family   [design.md §11.0: no Arial fallback]`);
 if (missingFont.length) missingFont.forEach((sel) => console.log(`      ${sel} has no font-family — buttons don't inherit; add font-family:inherit`));
+
+// 6. Benchmark guards (design.md §5.0, v2.9.33) — assert the exact
+//    inconsistencies the benchmark rollout removed cannot quietly return.
+const bench = [];
+if (/\.sel::after\s*\{/.test(html)) bench.push('.sel::after rule reappeared — selection is a solid fill, no ✓ furniture (§5.0.3)');
+if (!/\.ui-chip\.sel\{background:#00d4aa;color:#06231d\}/.test(html)) bench.push('.ui-chip.sel is not the solid green/inverse flip (§5.0.3)');
+const btnO = /\.btn-o\{([^}]*)\}/.exec(html);
+if (btnO && /#e94560|233,69,96/.test(btnO[1])) bench.push('.btn-o is red again — red is reserved for danger/theirs (§5.0.1)');
+const backB = /\n\.back-btn\{([^}]*)\}/.exec(html);
+if (backB && /#e94560/.test(backB[1])) bench.push('.back-btn is red again — red is reserved for danger/theirs (§5.0.1)');
+line(true, bench.length > 0, `benchmark §5.0 guards hold — solid-fill selection · no ✓ furniture · red ≠ navigation`);
+bench.forEach((v) => console.log(`      ${v}`));
 if (LIST) [...buttonSigs].sort((a, b) => b[1] - a[1]).slice(0, 20)
   .forEach(([k, v]) => console.log(`      ×${String(v).padEnd(3)} ${k}`));
 
