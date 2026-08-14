@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.34-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
+> App version: **v2.9.35-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -105,13 +105,12 @@ visible/clickable. This corrects §A/§B guesses.
 - `switchToView()`
 - `toggleGlobalMenu()`
 
-### Live game `s4` — 6 visible
+### Live game `s4` — 5 visible
 
 - `closeAnyDrawer()`
 - `gkStepNext()`
 - `home()`
 - `showScr()`
-- `switchToView()`
 - `toggleGlobalMenu()`
 
 ### Plan page `subOrderOv` — 13 visible

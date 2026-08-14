@@ -853,7 +853,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2>What sport do you coach?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">More sports on the way — tell me what you'd like next.</p>
     <div id="sportGrid" class="chip-grid"></div>
-    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Cancel</button>
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Home</button>
   </div>
 </div>
 
@@ -864,7 +864,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2>What format do you play?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">Pick the on-field size for your team.</p>
     <div id="gradeGrid" class="chip-grid"></div>
-    <button class="btn btn-o" onclick="showScr('sportPicker')" style="margin-top:16px">← Back</button>
+    <button class="btn btn-o" onclick="showScr('sportPicker')" style="margin-top:16px">← Sport</button>
   </div>
 </div>
 
@@ -961,7 +961,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S2: SETTINGS ===== -->
 <div id="s2" class="scr">
-  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Apply. -->
+  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Apply.
+       v2.9.35 (A2): the screen is "Today's game" — per-match tweaks, never the
+       seasonal defaults (those are the Settings tab). The info line is the identity. -->
+  <div class="info">Today's game — tweaks for this match only. Season defaults live in Settings.</div>
   <div class="sec">
     <!-- v2.9.33: benchmark §5.0 — eyebrow section labels (h2 bands gone), ONE
          grouped card per section, quiet sub-line units, two colours used. -->
@@ -1030,7 +1033,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:12px;font-size:13px;color:#aaa;text-align:center"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn btn-o" onclick="showScr('s1')" style="flex:0 0 auto;width:auto;margin-top:0">← Squad</button>
-      <button class="btn btn-g" onclick="quickStart()" style="flex:1;margin-top:0;font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply settings <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+      <button class="btn btn-g" onclick="quickStart()" style="flex:1;margin-top:0;font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply for today <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
     </div>
   </div>
 </div>
@@ -1227,15 +1230,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
          profile chips share one band so the page reads as "clock + controls" up
          top, then the field, then the timeline. -->
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
-      <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px;flex-shrink:0"></div>
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.3);border-radius:8px;padding:6px 12px;flex-shrink:0" id="planTopSteppers">
-        <span style="font-size:11px;color:#5bc0de;font-weight:700;letter-spacing:.3px">Players/sub</span>
-        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-        <span id="soScV" style="font-size:14px;font-weight:800;color:#5bc0de;min-width:16px;text-align:center;font-variant-numeric:tabular-nums">2</span>
-        <button onclick="soAdj('sc',1)" aria-label="More per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+      <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;padding:4px;flex-shrink:0"></div>
+      <!-- v2.9.35 (§5.0): green family (was cyan), ±44pt hit zones via .hit44. -->
+      <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:0 12px;flex-shrink:0" id="planTopSteppers">
+        <span style="font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">Players/sub</span>
+        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" class="hit44"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;line-height:1">−</span></button>
+        <span id="soScV" style="font-size:14px;font-weight:800;color:#00d4aa;min-width:16px;text-align:center;font-variant-numeric:tabular-nums">2</span>
+        <button onclick="soAdj('sc',1)" aria-label="More per sub" class="hit44"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;line-height:1">+</span></button>
       </div>
       <div id="planProfilesRow" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1">
-        <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase">Profiles</span>
+        <span style="font-size:10px;letter-spacing:1px;color:#888;font-weight:800;text-transform:uppercase">Profiles</span>
         <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -1496,7 +1500,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <!-- v2.9.28: heading band removed (owner) — navigation lives in the bottom action zone. -->
   <div class="sec" id="historyList"></div>
   <div class="sec" style="padding-top:0">
-    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Back</button>
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Home</button>
   </div>
 </div>
 
@@ -3936,7 +3940,11 @@ function renderViewSwitcher(){
   if(!host) return;
   // v2.7.80: hide the tab bar on landing-style screens (no team context selected).
   // The Game / Plan / Team tabs are only meaningful once the coach is INSIDE a team.
-  const onLanding=['home','sportPicker','gradePicker'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
+  // v2.9.35 (A1, owner-stamped): the bar also leaves the DEEP wizard steps —
+  // keeper + shape are mid-ritual, and a mistap teleporting to a PLAN surface
+  // was the audit's biggest "jumps all over" source. s1 keeps the bar (it is
+  // the Roster tab's landing, pending A3); s4 keeps it (mid-game utility).
+  const onLanding=['home','sportPicker','gradePicker','gkStep','shapeStep'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
   if(onLanding){ host.style.display='none'; }
   else { host.style.display='flex'; }
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
@@ -4108,12 +4116,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.34-beta';
+const APP_VERSION='v2.9.35-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.35-beta':{
+    title:'Calmer wayfinding',
+    items:['The tab bar steps aside during the keeper and shape steps — no more mistap mid-ritual teleporting you to settings. It\'s back on the game screen.','The per-match tweaks screen now introduces itself: "Today\'s game — tweaks for this match only. Season defaults live in Settings." Its button says Apply for today.','Back buttons name where they go — ← Home, ← Sport — never just "Back".','The Plan page\'s top controls joined the green family with proper tap targets, and saved-plan chips calmed down.']
+  },
   'v2.9.34-beta':{
     title:'Flat',
     items:['Buttons lost their drop shadows and gradient sheens — solid colours only now, everywhere: primaries, steppers, the game dash tiles (START, SUB, PAUSE). Pressing a button compresses it slightly instead of sinking a ledge.','Same colours, same layout — just calmer surfaces that read better in sunlight.']
@@ -10207,7 +10219,7 @@ function renderPlanProfiles(){
   const plans=(currentTeam.plans||[]);
   row.style.display=plans.length?'flex':'none';   // hide the whole row when empty — Save button alone handles the empty state
   if(!plans.length) return;
-  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 10px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:14px;font-size:12px;font-weight:700;color:#a78bfa;font-family:inherit">
+  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 10px;background:#13203a;border-radius:14px;font-size:12px;font-weight:700;color:#9fb3c8;font-family:inherit">
     <button onclick="applyPlanProfile((currentTeam.plans||[]).find(x=>x.id===${p.id}))" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0">${p.name}</button>
     <button onclick="renamePlanProfile(${p.id})" aria-label="Rename" title="Rename" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 3px;display:inline-flex;align-items:center"><i data-lucide="pencil" width="12" height="12" style="width:12px;height:12px;display:inline-flex"></i></button>
     <button onclick="deletePlanProfile(${p.id})" aria-label="Delete profile" title="Delete" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 4px 0 2px;font-size:13px;line-height:1">×</button>
@@ -10646,7 +10658,8 @@ function renderSubOrderTabs(){
   wrap.innerHTML=opts.map(o=>{
     const active=(_subOrderStrat===o.k);
     const isLive=(liveToggle===o.k);
-    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;padding:9px 4px;background:${active?'#5bc0de1a':'transparent'};color:${active?'#5bc0de':'#9fb3c8'};border:none;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
+    // v2.9.35 (§5.0): selected = solid green flip; 44pt boxes.
+    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;min-height:44px;padding:9px 10px;background:${active?'#00d4aa':'transparent'};color:${active?'#06231d':'#9fb3c8'};border:none;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
   }).join('');
 }
 function subOrderPick(strat){

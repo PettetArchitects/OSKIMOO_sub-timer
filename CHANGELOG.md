@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.35-beta — Navigation audit lands (A1/A2/A4) + the Plan page's benchmark-lite pass
+
+Three jump-audit items ship (NAVIGATION.md §4, owner go): **A1** — the tab bar hides on the deep wizard steps `gkStep`/`shapeStep` (mistap-mid-ritual was the audit's biggest "jumps all over" source; `s1` keeps the bar as the Roster tab's landing pending A3, `s4` keeps it for mid-game utility; the gallery's "ghosted 25%" staged option is deleted — the stamp chose hiding). **A2** — `s2` is **"Today's game"**: a new identity info line ("tweaks for this match only. Season defaults live in Settings.") and an "Apply for today" primary end the two-screens-called-Settings confusion. **A4** — back buttons name places: "← Home", "← Sport", "← Home". The Plan page gets its benchmark-lite pass: AUTO/CUSTOM tabs select as the solid-green flip at 44pt, the Players/sub mini-steppers join the green family with `.hit44` zones (were 22px cyan circles), the Profiles eyebrow and saved-plan chips go neutral. Fuller Plan-page work (choice budget −4, remaining `.is-plan` purple) waits on the palette stamp.
+
 ## v2.9.34-beta — Flat (benchmark §5.0.7): shadows and gradients leave the controls
 
 Owner: "we were going for a flat look." Every control goes solid-and-flat: legacy `.btn` loses `--sh-raise` and its gradient fills (`btn-g`/`btn-r` → solid green/red), the ui- family and `.ui-step` lose the v2.9.3 "3px colour lip" (superseded — press is now a scale compression), and the game-dash tiles (START/SUB/PAUSE/RESET/Undo) lose gradients, resting shadows and the armed-state glows (solid tints carry the state). Elevation now belongs to the overlay layer only (drawer/menu scrim shadows stay); pitch glows are pitch identity, untouched. design.md §5.0 gains rule 7 and §4.1.0's press row is restruck; ui-check's benchmark guards grow three flat assertions (no press-lip shadow, no resting shadow on `.btn`, no gradient fills on controls).
