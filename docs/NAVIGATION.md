@@ -97,20 +97,17 @@ if a door doesn't fit, it's a navigation bug, not a feature.
 Ranked by how much calm each fix buys. These are candidates for the
 backlog, not shipped decisions — each needs an owner stamp.
 
-**A1 — The tab bar rides the PLAY wizard.** On `s1`/`gkStep`/`shapeStep`
-(and `s4`) the tab bar offers Positions / Settings / Roster — three PLAN
-surfaces — while the coach is mid-ritual. One mistap during "who's in
-goal?" teleports to seasonal settings, and the wizard's state feeling is
-gone. This is the single biggest "jumps all over" source and directly
-breaks Rule 4. *Candidate: hide the tab bar on wizard steps (precedent:
-landing screens already hide it, v2.7.80) — or keep only Game.*
+**A1 — The tab bar rides the PLAY wizard. ✅ SHIPPED v2.9.35** (owner-stamped):
+the bar hides on the DEEP wizard steps `gkStep` + `shapeStep` (precedent:
+landing screens, v2.7.80). `s1` keeps it — it is the Roster tab's landing
+until A3 settles — and `s4` keeps it for mid-game utility. The "ghosted
+25%" option staged in the gallery strip died with the stamp.
 
-**A2 — Two screens answer to "Settings".** `teamSettings` (seasonal
-defaults, PLAN tab) and `s2` (today's game options, PLAY detour from
-squad). Same word, different rails, different lifetimes — the coach can't
-form a stable mental model of where "settings" live. Breaks Rule 6.
-*Candidate: s2 rebrands everywhere as "Today's game" (it already only
-holds per-game tweaks).*
+**A2 — Two screens answer to "Settings". ✅ SHIPPED v2.9.35**: `s2` is
+"Today's game" — its new info line states the identity and the boundary
+("tweaks for this match only. Season defaults live in Settings."), and the
+primary reads "Apply for today". `teamSettings` alone answers to
+"Settings".
 
 **A3 — The Roster tab lands on a PLAY screen.** `switchToView('roster')`
 jumps to `s1` squad select — mid-game that's correct (wave in late
@@ -119,9 +116,8 @@ matchday who's-here screen conflates the season roster (editTeam) with
 today's availability (s1). Breaks Rule 5. *Candidate: Roster tab only
 while a game context exists; otherwise it belongs to Positions.*
 
-**A4 — Back labels that name an action, not a place.** "← Cancel"
-(sportPicker), "← Back" (gradePicker), "← Back" (s6). Rule 2 violators.
-*Candidate: "← Home", "← Sport", "← Home" — one-word renames.*
+**A4 — Back labels that name an action, not a place. ✅ SHIPPED v2.9.35**:
+"← Home" (sportPicker), "← Sport" (gradePicker), "← Home" (s6).
 
 **A5 — The plan page has three doors and no back.** `subOrderOv` opens
 from the team sheet, from squad's plan-ahead, and programmatically — exits

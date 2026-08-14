@@ -317,9 +317,11 @@ const SCENARIOS = [
       const gkChanged = G.gk === other;
       gkStepNext();
       const onShape = document.getElementById('shapeStep').classList.contains('active');
+      // v2.9.32: formation tiles carry a descriptor line — the key is the first child div
       const tiles = [...document.querySelectorAll('#shapeStepGrid .ui-chip')];
-      const otherTile = tiles.find((t) => t.textContent !== curFormation);
-      const target = otherTile ? otherTile.textContent : null;
+      const keyOf = (t) => (t.firstElementChild ? t.firstElementChild.textContent : t.textContent).trim();
+      const otherTile = tiles.find((t) => keyOf(t) !== curFormation);
+      const target = otherTile ? keyOf(otherTile) : null;
       if (otherTile) otherTile.click();
       const shapeChanged = target ? curFormation === target : true;
       shapeStepNext();
@@ -800,7 +802,8 @@ const SCENARIOS = [
       const host = document.getElementById('teamPrefsSection');
       const before = getTeamPrefs(currentTeam).formation;
       const target = Object.keys(FORMATIONS[currentTeam.format]).find((n) => n !== before);
-      const tile = [...host.querySelectorAll('.ui-chip')].find((c) => c.textContent.trim() === target);
+      // v2.9.32: formation tiles carry a descriptor line — match on the key (first child div)
+      const tile = [...host.querySelectorAll('.ui-chip')].find((c) => (c.firstElementChild ? c.firstElementChild.textContent : c.textContent).trim() === target);
       if (tile) tile.click();
       // stepper change → persists too (re-query: each change repaints the screen)
       const hmBefore = getTeamPrefs(currentTeam).hm;

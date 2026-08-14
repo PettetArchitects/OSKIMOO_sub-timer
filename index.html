@@ -87,7 +87,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
 /* v2.9.17: 44px minimum — back buttons were 24px tall (a11y §8); the header
    row centres them so the extra height costs no layout. */
-.back-btn{background:none;border:none;color:#e94560;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px;font-family:inherit}
+/* v2.9.33 (benchmark §5.0): red exits navigation — back/secondary are neutral
+   chrome; red is reserved for danger/theirs (destructive callers override). */
+.back-btn{background:none;border:none;color:#9fb3c8;font-size:14px;font-weight:600;cursor:pointer;padding:10px 8px;min-height:44px;font-family:inherit}
 
 .scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;justify-content:flex-start}.scr.active{display:flex}#s3.active{justify-content:flex-start;overflow:hidden}#s4.active{overflow:hidden;justify-content:flex-start}#home.active,#s1.active,#s2.active,#editTeam.active,#sportPicker.active,#gradePicker.active,#s5.active{justify-content:flex-start}
 .sec{padding:16px}
@@ -105,12 +107,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   --sh-raise-lg:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
   --sh-press:inset 0 2px 5px rgba(0,0,0,.5);
 }
-.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;box-shadow:var(--sh-raise);font-family:inherit}
-.btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
-.btn-r{background:linear-gradient(180deg,#ef5872,#e0344f);color:#fff}
-.btn-r:disabled{background:#3a3f4c;color:#666;box-shadow:none}
-.btn-g{background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d}
-.btn-o{background:rgba(233,69,96,.16);border:none;color:#e94560}
+/* v2.9.34 (owner): FLAT — solid fills, no resting shadows, press = compression. */
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.btn-r{background:#e94560;color:#fff}
+.btn-r:disabled{background:#3a3f4c;color:#666}
+.btn-g{background:#00d4aa;color:#06231d}
+.btn-o{background:#13203a;border:none;color:#9fb3c8} /* v2.9.33: neutral (was red) — benchmark §5.0 */
 .btn-s{padding:10px 16px;font-size:14px;margin-top:0;display:inline-block;width:auto;border-radius:var(--r-sm)}
 .btn-del{background:#3a1525;color:#e94560;border:none}
 
@@ -147,11 +150,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   outline:3px solid #5bc0de;outline-offset:2px}
 
 .ui-btn--primary{min-height:52px;padding:15px 24px;background:#00d4aa;color:#06231d;
-  font-size:16px;box-shadow:0 3px 0 #0a9d83}
-.ui-btn--primary:active{transform:translateY(3px);box-shadow:0 0 0 #0a9d83}
+  font-size:16px}
+.ui-btn--primary:active{transform:scale(.97)}
 
-.ui-btn--secondary{background:#13203a;color:#eee;box-shadow:0 3px 0 #0d1828}
-.ui-btn--secondary:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+.ui-btn--secondary{background:#13203a;color:#eee}
+.ui-btn--secondary:active{transform:scale(.97)}
 /* Tone modifiers — meaning on top of shape, not new variants. */
 .ui-btn--secondary.is-go{background:rgba(0,212,170,.16);color:#00d4aa}
 .ui-btn--secondary.is-preview{background:rgba(91,192,222,.16);color:#5bc0de}
@@ -174,8 +177,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    44px hit target via padding + negative margin, visual stays a text link. */
 .nsi-link{display:inline-block;cursor:pointer;text-decoration:underline;font-weight:700;padding:16px 8px;margin:-14px -4px}
 
-.ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
-.ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
+.ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088}
+.ui-btn--danger:active{transform:scale(.97)}
 
 .ui-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 15px;border:none;
   border-radius:14px;background:#13203a;color:#eee;text-align:center;
@@ -183,10 +186,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,transform .08s;
   -webkit-tap-highlight-color:transparent}
 .ui-chip:active{transform:scale(.96)}
-.ui-chip.sel{background:rgba(0,212,170,.16);color:#00d4aa}
-/* The selection tick the legacy .chip.sel carried (v2.7.41: the squad picker
-   renders just the name and relies on this). One affordance for every chip. */
-.ui-chip.sel::after{content:' ✓'}
+/* v2.9.32 (owner): selection is a SOLID accent fill with inverse text — a
+   luminance flip readable in sunlight and by colour-blind coaches, so no ✓
+   tick is needed (the tick only existed to prop up the old whisper-quiet
+   16%-alpha tint). One affordance for every chip, now with no furniture. */
+.ui-chip.sel{background:#00d4aa;color:#06231d}
+/* v2.9.32: two shapes for content-bearing chips. --card = block chip with a
+   title + description line (strategy cards); --tile = column tile with a key
+   + one-line descriptor (the ONE formation picker, every screen). */
+.ui-chip--card{display:block;width:100%;text-align:left}
+.ui-chip--tile{flex-direction:column;gap:3px;min-height:56px;padding:10px 6px}
 
 /* 48×48 — sizing these removes 9 of the 34 undersized controls the
    accessibility audit found, in one place instead of nine. */
@@ -194,9 +203,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   padding:0;border:none;border-radius:16px;background:#13203a;color:#00d4aa;
   font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:20px;font-weight:700;line-height:1;cursor:pointer;
-  transition:background .15s,transform .08s;-webkit-tap-highlight-color:transparent;
-  box-shadow:0 3px 0 #0d1828}
-.ui-step:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+  transition:background .15s,transform .08s;-webkit-tap-highlight-color:transparent}
+.ui-step:active{transform:scale(.94)}
 .ui-step.is-danger{color:#ff7088}
 /* v2.9.30: 44pt hit zone for dense-cluster controls (a11y §8, design.md §11.0:
    "visual can stay smaller with padded hit zones"). The button box grows to
@@ -216,8 +224,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    .chip.gk-sel died with it (no callers). */
 
 /* Stepper */
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:12px;margin-bottom:8px}
 .set-row label{font-size:14px;font-weight:600}
+/* v2.9.32: grouped settings — ONE container per section instead of a box per
+   row (owner: the settings read noisy). Rows divide with hairlines; the
+   surface count on screen drops to background / section / control. */
+/* Section eyebrow — the benchmark's one label style for screen sections. */
+.sec-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px}
+.set-group{background:#16213e;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.set-group .set-row{background:none;border-radius:0;margin:0}
+.set-group>*+*{border-top:1px solid #1e2a45}
+/* Option row inside a group — a radio-list choice (sub strategy). Selection
+   is the same solid-fill flip as .ui-chip.sel; the fill takes the option's
+   own accent inline (strategy rows are colour-coded). */
+.opt-row{display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#eee;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+/* v2.9.32: settings read as one column — cap the measure on wide screens
+   (iPad) so a row's label stays next to the control it describes.
+   v2.9.33: game settings (s2) joins the benchmark measure. */
+#teamSettings .sec,#s2 .sec,#s1 .sec,#gkStep .sec,#shapeStep .sec,#editTeam .sec{max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
 .stepper{display:flex;align-items:center;gap:8px}
 /* v2.9.30: .st-btn removed — every stepper is a .ui-step (migration step 3a). */
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
@@ -304,7 +328,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   }
   #s4 #gameDash .gd-btn{flex:1!important;width:100%;min-height:0!important;font-size:10px!important}
   #s4 #gameDash .gd-btn.gd-go,#s4 #gameDash .gd-btn.gd-pause,
-  #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:11px!important}
+  #s4 #gameDash .gd-btn.gd-sub{font-size:11px!important}
   #s4 #gameDash .gd-btn svg{width:18px!important;height:18px!important}
   /* v2.7.79 — landscape phone: shrink the Plan-page dual clock so it stops eating the whole viewport (backlog #3). Same trick as game-screen clock above. */
   #subOrderOv .tmr-c{font-size:28px!important;letter-spacing:1px!important}
@@ -435,26 +459,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* In-game action dashboard — mode buttons (Swap / Keeper / Injury / Undo).
    Shares the soft-UI language: subtle gradient, soft shadow, top highlight. */
-.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:none;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise);text-align:center;line-height:1.05}
-.gd-btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
+.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:none;background:#13203a;color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;text-align:center;line-height:1.05}
+.gd-btn:active{transform:scale(.98)}
 .gd-btn svg{width:19px;height:19px}
-.gd-btn.active{background:linear-gradient(180deg,rgba(91,192,222,.22),rgba(91,192,222,.1));color:#5bc0de;box-shadow:0 0 10px rgba(91,192,222,.3), inset 0 1px 0 rgba(255,255,255,.08)}
-#gdInjury.active{background:linear-gradient(180deg,rgba(233,69,96,.22),rgba(233,69,96,.1));border-color:#e94560;color:#e94560;box-shadow:0 0 10px rgba(233,69,96,.3), inset 0 1px 0 rgba(255,255,255,.08)}
-.gd-btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.gd-btn.active{background:rgba(91,192,222,.16);color:#5bc0de}
+#gdInjury.active{background:rgba(233,69,96,.16);border-color:#e94560;color:#e94560}
+.gd-btn:disabled{opacity:.4;cursor:default}
 /* Bottom-bar primary actions — START / PAUSE / SUB. Coloured to stand out from
    the soft-UI secondary buttons while keeping the same stacked nav-item shape.
    Slightly wider (flex:1.5) since they're the most-used controls. */
-.gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d;font-size:13px}
-.gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));color:#ff7088;font-size:13px}
-.gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);color:#1a1a2e;font-size:13px}
-.gd-btn.gd-reset{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));color:#ff7088;font-size:13px}
-.gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
+.gd-btn.gd-go{flex:1.5;background:#00d4aa;color:#06231d;font-size:13px}
+.gd-btn.gd-pause{flex:1.5;background:rgba(233,69,96,.12);color:#ff7088;font-size:13px}
+.gd-btn.gd-sub{flex:1.5;background:#f0a500;color:#1a1a2e;font-size:13px}
+/* v2.9.36: .gd-reset deleted — RESET lives in the game menu (resetHalfConfirm). */
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
 /* v2.7.8: fixed dashboard positions in both states (the v2.7.4 swap was jarring).
    Layout (always): [SUB/RESET] [Undo] [Formation] [View] [Edit] [PAUSE/START]
    Only the end-button labels + colours morph between states; nothing slides. */
-.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg,.gd-btn.gd-reset svg{width:21px;height:21px}
+.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg{width:21px;height:21px}
 
 /* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
    .lu-pitch is the perspective frustum. .lu-plane is the tilted SVG ground.
@@ -829,7 +852,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2>What sport do you coach?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">More sports on the way — tell me what you'd like next.</p>
     <div id="sportGrid" class="chip-grid"></div>
-    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Cancel</button>
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Home</button>
   </div>
 </div>
 
@@ -840,35 +863,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <h2>What format do you play?</h2>
     <p style="font-size:13px;color:#888;margin-bottom:12px">Pick the on-field size for your team.</p>
     <div id="gradeGrid" class="chip-grid"></div>
-    <button class="btn btn-o" onclick="showScr('sportPicker')" style="margin-top:16px">← Back</button>
+    <button class="btn btn-o" onclick="showScr('sportPicker')" style="margin-top:16px">← Sport</button>
   </div>
 </div>
 
 <!-- ===== TEAM EDITOR ===== -->
 <div id="editTeam" class="scr">
-  <!-- v2.9.28: heading band removed (owner) — Delete rides the bottom row beside Save Team. -->
+  <!-- v2.9.28: heading band removed (owner) — Delete rides the bottom row beside Save Team.
+       v2.9.37: benchmark §5.0 pass — info-line identity, .sec-label eyebrows,
+       two-colour discipline (the photo-import's cyan/purple gradient goes
+       green-tint flat), radius scale. -->
+  <div class="info">Your roster — names, positions, strengths. Every proposal the app makes reads from here.</div>
   <div class="sec">
-    <h2>Team Name</h2>
+    <div class="sec-label">Team name</div>
     <input class="input" id="teamNameInput" placeholder="e.g. Dragonflies U8">
 
-    <h2 style="margin-top:16px">Players</h2>
+    <div class="sec-label" style="margin-top:16px">Players</div>
     <input type="file" id="rosterPhotoInput" accept="image/*" style="display:none" onchange="handleRosterPhoto(this)">
-    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:none;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
-      <span style="color:#5bc0de;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
+    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:rgba(0,212,170,.16);border:none;border-radius:12px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
+      <span style="color:#00d4aa;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
       <span style="text-align:left">
-        <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
-        <span style="display:block;font-size:11px;color:#999;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
+        <span style="display:block;font-size:14px;font-weight:800;color:#00d4aa;letter-spacing:.3px">Auto-fill from photo</span>
+        <span style="display:block;font-size:11px;color:#9fb3c8;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
       </span>
     </button>
-    <div id="rosterImportStatus" style="display:none;margin-bottom:10px;padding:8px 10px;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:8px;font-size:12px;color:#5bc0de;text-align:center"></div>
-    <button id="sampleSquadBtn" type="button" onclick="fillSampleSquad()" style="width:100%;padding:10px 12px;background:none;border:1px dashed #444;border-radius:10px;color:#999;cursor:pointer;margin-bottom:12px;font-family:inherit;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Fill a sample squad — just to try the app</button>
-    <div id="posTagsHint" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc"></div>
+    <div id="rosterImportStatus" style="display:none;margin-bottom:10px;padding:8px 10px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:12px;font-size:12px;color:#00d4aa;text-align:center"></div>
+    <button id="sampleSquadBtn" type="button" onclick="fillSampleSquad()" style="width:100%;padding:10px 12px;background:none;border:1px dashed #2a3550;border-radius:12px;color:#9fb3c8;cursor:pointer;margin-bottom:12px;font-family:inherit;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Fill a sample squad — just to try the app</button>
+    <div id="posTagsHint" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc"></div>
     <div id="nameCleanupBanner" style="display:none"></div>
     <div id="playerEditList"></div>
     <button class="btn btn-o btn-s" onclick="addPlayerField()" style="margin-top:8px;width:100%">+ Add Player</button>
 
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-o" onclick="deleteTeam()" id="delTeamBtn" style="flex:0 0 auto;width:auto;margin-top:0">Delete</button>
+      <!-- destructive — keeps the red the neutral .btn-o gave up (§5.0) -->
+      <button class="btn btn-o" onclick="deleteTeam()" id="delTeamBtn" style="flex:0 0 auto;width:auto;margin-top:0;background:rgba(233,69,96,.16);color:#e94560">Delete</button>
       <button class="btn btn-g" onclick="saveAndBack()" style="flex:1;margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:8px">Save Team</button>
     </div>
   </div>
@@ -891,7 +919,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <!-- v2.9.28: heading band removed (owner) — the team name folds into the info line (renderS1). -->
   <div class="info" id="s1Info">Tap to mark players NOT available today</div>
   <div class="sec">
-    <h2>Squad</h2>
+    <div class="sec-label">Squad</div>
     <div class="chip-grid" id="playerGrid"></div>
     <div id="countInfo" style="text-align:center;margin-top:12px;font-size:13px;color:#888">0 selected</div>
     <!-- Equal-game-time helper: suggests a sub interval from who's actually here today. -->
@@ -936,20 +964,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== S2: SETTINGS ===== -->
 <div id="s2" class="scr">
-  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Apply. -->
+  <!-- v2.9.28: heading band removed (owner) — back rides the bottom row beside Apply.
+       v2.9.35 (A2): the screen is "Today's game" — per-match tweaks, never the
+       seasonal defaults (those are the Settings tab). The info line is the identity. -->
+  <div class="info">Today's game — tweaks for this match only. Season defaults live in Settings.</div>
   <div class="sec">
-    <h2>Game Format</h2>
+    <!-- v2.9.33: benchmark §5.0 — eyebrow section labels (h2 bands gone), ONE
+         grouped card per section, quiet sub-line units, two colours used. -->
+    <div class="sec-label">Game format</div>
     <div class="chip-grid" id="fmtGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
-    <div id="fmtInfo" style="margin-top:8px;padding:10px;background:#16213e;border-radius:10px;font-size:12px;color:#888;text-align:center"></div>
+    <div id="fmtInfo" style="margin-top:8px;padding:10px;background:#16213e;border-radius:12px;font-size:12px;color:#888;text-align:center"></div>
 
-    <h2 style="margin-top:14px">Sub Strategy</h2>
-    <div style="font-size:12px;color:#888;margin-bottom:8px">What kind of coach are you today?</div>
-    <div id="subStratGrid" style="display:flex;flex-direction:column;gap:6px"></div>
+    <div class="sec-label" style="margin-top:14px">Sub strategy</div>
+    <div id="subStratGrid" class="set-group"></div>
     <!-- Game Plan panel (visible when Full Control strategy is selected) -->
-    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border-radius:10px">
+    <div id="gamePlanPanel" style="display:none;margin-top:14px;padding:12px;background:#16213e;border-radius:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#a78bfa;font-size:13px;letter-spacing:.5px"><i data-lucide="clipboard-list" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i><span>Game Plan</span></div>
-        <button type="button" onclick="document.getElementById('planPhotoInput').click()" style="background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid #a78bfa;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px"><i data-lucide="camera" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>SNAP MY PLAN</button>
+        <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#9fb3c8;font-size:13px;letter-spacing:.5px"><i data-lucide="clipboard-list" width="16" height="16" style="width:16px;height:16px;display:inline-flex"></i><span>Game Plan</span></div>
+        <button type="button" onclick="document.getElementById('planPhotoInput').click()" style="background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:12px;padding:8px 12px;min-height:44px;font-size:11px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px;font-family:inherit"><i data-lucide="camera" width="13" height="13" style="width:13px;height:13px;display:inline-flex"></i>SNAP MY PLAN</button>
         <input type="file" id="planPhotoInput" accept="image/*" style="display:none" onchange="handlePlanPhoto(this)">
       </div>
       <div id="planPhotoStatus" style="display:none;margin-bottom:8px;font-size:12px;padding:8px 10px;border-radius:6px"></div>
@@ -957,53 +989,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
       <div id="planTimeline" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
 
-    <h2 style="margin-top:14px">Formation</h2>
+    <div class="sec-label" style="margin-top:14px">Formation</div>
     <div class="chip-grid" id="formationGrid" style="grid-template-columns:repeat(3,1fr);gap:6px"></div>
     <div id="formationTip" style="margin-top:8px;padding:10px 12px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.25);border-radius:8px;font-size:12px;color:#bbb;line-height:1.5;display:none"></div>
 
-    <h2 id="periodLengthHeading" style="margin-top:14px">Half Length</h2>
-    <div class="set-row">
-      <label id="periodLengthLabel">Minutes per half</label>
-      <div class="stepper">
-        <button class="ui-step" onclick="adj('hm',-1)">−</button>
-        <div class="st-val" id="hmV">20</div>
-        <button class="ui-step" onclick="adj('hm',1)">+</button>
+    <div class="sec-label" style="margin-top:14px">Timing</div>
+    <div class="set-group">
+      <div class="set-row">
+        <label id="periodLengthLabel">Half length<br><span style="font-size:11px;color:#888;font-weight:500">minutes per half</span></label>
+        <div class="stepper">
+          <button class="ui-step" onclick="adj('hm',-1)">−</button>
+          <div class="st-val" id="hmV">20</div>
+          <button class="ui-step" onclick="adj('hm',1)">+</button>
+        </div>
       </div>
-    </div>
-    <h2 style="margin-top:14px">Sub Frequency</h2>
-    <div id="subFreqHint" style="font-size:12px;color:#888;margin-bottom:8px">Continuous across both halves — cadence doesn't restart at halftime.</div>
-    <div class="set-row">
-      <label>Sub every X mins</label>
-      <div class="stepper">
-        <button class="ui-step" onclick="adj('sf',-1)">−</button>
-        <div class="st-val" id="sfV">8</div>
-        <button class="ui-step" onclick="adj('sf',1)">+</button>
+      <div class="set-row">
+        <label>Sub every<br><span id="subFreqHint" style="font-size:11px;color:#888;font-weight:500">minutes — restarts each half (5′, 10′… into each half)</span></label>
+        <div class="stepper">
+          <button class="ui-step" onclick="adj('sf',-1)">−</button>
+          <div class="st-val" id="sfV">8</div>
+          <button class="ui-step" onclick="adj('sf',1)">+</button>
+        </div>
       </div>
-    </div>
-    <h2 style="margin-top:14px">Players per Sub</h2>
-    <div class="set-row">
-      <label>Swap count</label>
-      <div class="stepper">
-        <button class="ui-step" onclick="adj('sc',-1)">−</button>
-        <div class="st-val" id="scV">2</div>
-        <button class="ui-step" onclick="adj('sc',1)">+</button>
+      <div class="set-row">
+        <label>Players per sub</label>
+        <div class="stepper">
+          <button class="ui-step" onclick="adj('sc',-1)">−</button>
+          <div class="st-val" id="scV">2</div>
+          <button class="ui-step" onclick="adj('sc',1)">+</button>
+        </div>
       </div>
     </div>
     <div id="gkSettingsSection" style="display:none">
-      <h2 style="margin-top:14px">Goalkeepers</h2>
-      <div class="set-row">
-        <label>1st Half GK</label>
-        <select id="gk1SettingSel" onchange="gk1=parseInt(this.value)" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
-      </div>
-      <div class="set-row" style="margin-top:0">
-        <label>2nd Half GK</label>
-        <select id="gk2SettingSel" onchange="gk2=parseInt(this.value);gk2Explicit=true" style="background:#0a1628;color:#eee;border:1.5px solid #e94560;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
+      <div class="sec-label" style="margin-top:14px">Goalkeepers</div>
+      <div class="set-group">
+        <div class="set-row">
+          <label>1st Half GK</label>
+          <select id="gk1SettingSel" onchange="gk1=parseInt(this.value)" style="background:#0a1628;color:#eee;border:1.5px solid #2a3550;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
+        </div>
+        <div class="set-row">
+          <label>2nd Half GK</label>
+          <select id="gk2SettingSel" onchange="gk2=parseInt(this.value);gk2Explicit=true" style="background:#0a1628;color:#eee;border:1.5px solid #2a3550;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;font-family:inherit;outline:none"></select>
+        </div>
       </div>
     </div>
-    <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:10px;font-size:13px;color:#aaa;text-align:center"></div>
+    <div id="subPrev" style="margin-top:12px;padding:12px;background:#16213e;border-radius:12px;font-size:13px;color:#aaa;text-align:center"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn btn-o" onclick="showScr('s1')" style="flex:0 0 auto;width:auto;margin-top:0">← Squad</button>
-      <button class="btn btn-g" onclick="quickStart()" style="flex:1;margin-top:0;font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply settings <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
+      <button class="btn btn-g" onclick="quickStart()" style="flex:1;margin-top:0;font-size:18px;padding:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px">Apply for today <i data-lucide="timer" width="18" height="18" style="width:18px;height:18px;display:inline-flex"></i></button>
     </div>
   </div>
 </div>
@@ -1044,6 +1077,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
            not live on the game view). Reached from the team card's Plan ahead instead. -->
       <!-- v2.7.85: Settings item removed — injected into the drawer dynamically by openDrawer(). -->
       <div style="height:1px;background:#243049;margin:4px 0"></div>
+      <!-- v2.9.36: RESET left the dash — a rare recovery action doesn't earn a
+           primary slab. Visible only when there is a half to reset (paused,
+           progress made); renderGameDash manages it. -->
+      <button class="ui-btn ui-btn--ghost is-danger" id="gmResetHalf" style="display:none" onclick="closeGameMenu();resetHalfConfirm()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset half</button>
       <button class="ui-btn ui-btn--ghost is-danger" onclick="closeGameMenu();abandonGame()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
     <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
@@ -1128,7 +1165,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Subs coming on — sits just above the bottom control bar (clear of the
        pitch so it never overlaps the forward line / field tokens). -->
-  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:36dvh;overflow-y:auto"></div>
+  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:30dvh;overflow-y:auto"></div>
 
   <!-- Sub confirmation banner (hidden by default) — above the control bar. -->
   <div id="subBanner" style="display:none;flex-shrink:0;margin:6px 12px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
@@ -1141,15 +1178,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        follow as soft-UI nav items. One unified row (gameDash id kept so
        renderGameDash still finds it). -->
   <!-- v2.7.32: gameFmtPicker moved INTO the pitch wrapper above #fmtToggle as a vertical popup; no longer takes a row above the dashboard. -->
-  <!-- v2.7.29 layout: Formation toggle moved onto the pitch overlay (bottom-right). Dashboard is three buttons. -->
-  <!-- Running:  [SUB]   [Undo] [PAUSE] -->
-  <!-- Paused:   [RESET] [Undo] [START] -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
-    <button class="gd-btn gd-sub" id="subB"></button>
+  <!-- v2.9.36 (owner: "buttons in awkward spots"): STABLE slots, ranked by
+       frequency — quiet utilities left, loud actions right, and no morphing.
+       [Undo · quiet] [END HALF · quiet amber] [SUB · loud] [START/PAUSE · loud]
+       SUB owns its slot permanently (dimmed when it can't fire) instead of
+       becoming RESET on pause — an action's position never changes meaning.
+       RESET moved to the game menu (rare recovery ≠ a primary slab). -->
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
-    <!-- v2.9.19: the half-time override lives next to PAUSE (owner placement call —
-         the period-label affordance wasn't obvious). Shown only while play is on. -->
+    <!-- v2.9.19: the half-time override rides the clock cluster. Shown only while play is on. -->
     <button class="gd-btn gd-endhalf" id="gdEndHalf" onclick="endPeriodNow()" style="display:none"></button>
+    <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
@@ -1200,15 +1239,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
          profile chips share one band so the page reads as "clock + controls" up
          top, then the field, then the timeline. -->
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
-      <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:8px;padding:4px;flex-shrink:0"></div>
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,192,222,.06);border:1px solid rgba(91,192,222,.3);border-radius:8px;padding:6px 12px;flex-shrink:0" id="planTopSteppers">
-        <span style="font-size:11px;color:#5bc0de;font-weight:700;letter-spacing:.3px">Players/sub</span>
-        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">−</button>
-        <span id="soScV" style="font-size:14px;font-weight:800;color:#5bc0de;min-width:16px;text-align:center;font-variant-numeric:tabular-nums">2</span>
-        <button onclick="soAdj('sc',1)" aria-label="More per sub" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(91,192,222,.2);color:#5bc0de;font-size:14px;font-weight:800;cursor:pointer;line-height:1;padding:0">+</button>
+      <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;padding:4px;flex-shrink:0"></div>
+      <!-- v2.9.35 (§5.0): green family (was cyan), ±44pt hit zones via .hit44. -->
+      <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:0 12px;flex-shrink:0" id="planTopSteppers">
+        <span style="font-size:11px;color:#00d4aa;font-weight:700;letter-spacing:.3px">Players/sub</span>
+        <button onclick="soAdj('sc',-1)" aria-label="Fewer per sub" class="hit44"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;line-height:1">−</span></button>
+        <span id="soScV" style="font-size:14px;font-weight:800;color:#00d4aa;min-width:16px;text-align:center;font-variant-numeric:tabular-nums">2</span>
+        <button onclick="soAdj('sc',1)" aria-label="More per sub" class="hit44"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(0,212,170,.2);color:#00d4aa;font-size:14px;font-weight:800;line-height:1">+</span></button>
       </div>
       <div id="planProfilesRow" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1">
-        <span style="font-size:10px;letter-spacing:1px;color:#a78bfa;font-weight:800;text-transform:uppercase">Profiles</span>
+        <span style="font-size:10px;letter-spacing:1px;color:#888;font-weight:800;text-transform:uppercase">Profiles</span>
         <div id="planProfilesList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -1291,12 +1331,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="max-width:360px;text-align:left">
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
-    <button class="ui-chip" onclick="pickSubStrategy('auto')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+    <button class="ui-chip ui-chip--card" onclick="pickSubStrategy('auto')" style="padding:12px 14px;margin-bottom:8px">
       <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Auto</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App handles sub timing + selection. Longest-on comes off; longest-benched comes on. Tweak frequency + grouping anytime from the steppers on the Plan page.</div>
     </button>
-    <button class="ui-chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
-      <div style="font-weight:800;color:#a78bfa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
+    <button class="ui-chip ui-chip--card" onclick="pickSubStrategy('planned')" style="padding:12px 14px">
+      <div style="font-weight:800;color:#eee;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">You decide when subs fire. Tap SUB live, or pre-build a full Plan in the Plan page — same strategy, different degree of detail.</div>
     </button>
   </div>
@@ -1469,7 +1509,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <!-- v2.9.28: heading band removed (owner) — navigation lives in the bottom action zone. -->
   <div class="sec" id="historyList"></div>
   <div class="sec" style="padding-top:0">
-    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Back</button>
+    <button class="btn btn-o" onclick="showScr('home')" style="margin-top:16px">← Home</button>
   </div>
 </div>
 
@@ -3826,9 +3866,9 @@ function renderSoundPicker(){
     const c=document.createElement('div');
     c.className='ui-chip'+(cur===k?' sel':'');
     c.style.cssText='padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px';
-    c.innerHTML=`<div style="line-height:1;color:#5bc0de">${ic(p.icon,22)}</div>
+    c.innerHTML=`<div style="line-height:1;color:${cur===k?'#06231d':'#5bc0de'}">${ic(p.icon,22)}</div>
       <div style="font-weight:800;font-size:12px;letter-spacing:.3px">${p.label}</div>
-      <div style="font-size:10px;color:#888;font-weight:500">${p.desc}</div>`;
+      <div style="font-size:10px;color:${cur===k?'#06231d':'#888'};${cur===k?'opacity:.75;':''}font-weight:500">${p.desc}</div>`;
     c.onclick=()=>selectSoundPack(k);
     g.appendChild(c);
   });
@@ -3909,7 +3949,11 @@ function renderViewSwitcher(){
   if(!host) return;
   // v2.7.80: hide the tab bar on landing-style screens (no team context selected).
   // The Game / Plan / Team tabs are only meaningful once the coach is INSIDE a team.
-  const onLanding=['home','sportPicker','gradePicker'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
+  // v2.9.35 (A1, owner-stamped): the bar also leaves the DEEP wizard steps —
+  // keeper + shape are mid-ritual, and a mistap teleporting to a PLAN surface
+  // was the audit's biggest "jumps all over" source. s1 keeps the bar (it is
+  // the Roster tab's landing, pending A3); s4 keeps it (mid-game utility).
+  const onLanding=['home','sportPicker','gradePicker','gkStep','shapeStep'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
   if(onLanding){ host.style.display='none'; }
   else { host.style.display='flex'; }
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
@@ -4081,12 +4125,36 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.31-beta';
+const APP_VERSION='v2.9.37-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.37-beta':{
+    title:'Louder next-on, tidier roster editor',
+    items:['Who\u2019s coming on next is the single most important thing on the game screen \u2014 those rows are now unmissable: bigger names, a bigger "for Riley at LB" line, a proper position badge.','The roster editor joins the cleaned-up look: quiet section labels, a one-line "what this screen is" up top, and the photo auto-fill in the app\u2019s green instead of its own blue-purple.']
+  },
+  'v2.9.36-beta':{
+    title:'A control bar that stays put',
+    items:['The game screen\'s buttons stop moving around: SUB now owns its spot permanently next to START/PAUSE (it used to turn into RESET whenever you paused — the same button meaning two very different things). It just dims when there\'s nobody to bring on.','You can now fire a sub while paused — stoppages are exactly when coaches make changes.','RESET moved into the menu (☰) as "Reset half", with a proper confirm. A rare fix-it action doesn\'t need a big red button next to Undo.','Bench players beyond the next wave are easier to read — proper names, not faint small print — so the whole bench reads as your bench.']
+  },
+  'v2.9.35-beta':{
+    title:'Calmer wayfinding',
+    items:['The tab bar steps aside during the keeper and shape steps — no more mistap mid-ritual teleporting you to settings. It\'s back on the game screen.','The per-match tweaks screen now introduces itself: "Today\'s game — tweaks for this match only. Season defaults live in Settings." Its button says Apply for today.','Back buttons name where they go — ← Home, ← Sport — never just "Back".','The Plan page\'s top controls joined the green family with proper tap targets, and saved-plan chips calmed down.']
+  },
+  'v2.9.34-beta':{
+    title:'Flat',
+    items:['Buttons lost their drop shadows and gradient sheens — solid colours only now, everywhere: primaries, steppers, the game dash tiles (START, SUB, PAUSE). Pressing a button compresses it slightly instead of sinking a ledge.','Same colours, same layout — just calmer surfaces that read better in sunlight.']
+  },
+  'v2.9.33-beta':{
+    title:'The whole setup path, one calm look',
+    items:['Game settings now matches the Settings tab: one card per section, the same formation tiles, timing rows with quiet unit lines — and a long-standing incorrect hint is fixed (sub cadence restarts each half, it was never continuous).','Back and secondary buttons are no longer red — red now only ever means danger or the other team. Deleting a team keeps its warning colour.','The keeper pick and your saved-plan chips select in the same solid green as everything else, and the squad page’s plan nudge lost its purple.','On iPad every setup page holds a comfortable single column.']
+  },
+  'v2.9.32-beta':{
+    title:'A calmer Settings tab, bolder picks',
+    items:['Selected now looks selected: your picks fill solid in their colour (green for most, pink for the keeper, amber for player of the match) with dark text — readable in full sun. The little ✓ ticks are gone.','Far fewer boxes: the sub-strategy choices share one card, and the three timing controls + the breaks-only switch share another — rows divided by hairlines, like your phone’s own Settings app.','One formation picker everywhere — the Settings tab, the shape page and game settings now show the same tile: the shape up top, what it means underneath.','The even-time suggestion now lives inside the Sub every row it tunes, and on iPad the settings hold a comfortable single column instead of stretching edge to edge.']
+  },
   'v2.9.31-beta':{
     title:'Every chip, one family',
     items:['All the picker tiles — squad names, keeper, formation, format, sport, strategy, scorer — now share the app’s rounded chip style: solid fill, softer corners, the same friendly type as the buttons.','The selection tick (✓) now appears on every selected chip, including player of the match and scorer picks — one affordance everywhere.']
@@ -5938,45 +6006,48 @@ function renderTeamSettings(){
   // --- Formation (skip for netball — fixed positions) ---
   if(!isNb && FORMATIONS[currentTeam.format]){
     const fLbl=document.createElement('div');
-    fLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
+    fLbl.className='sec-label';
     fLbl.textContent='Formation';
     host.appendChild(fLbl);
     const fg=document.createElement('div');
     fg.className='chip-grid';
     fg.style.cssText='grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px';
-    Object.keys(FORMATIONS[currentTeam.format]).forEach(name=>{
-      const c=document.createElement('div');
-      c.className='ui-chip'+(p.formation===name?' sel':'');
-      c.style.cssText='padding:9px 4px;font-size:13px;font-weight:700';
-      c.textContent=name;
-      c.onclick=()=>{ p.formation=name; change(); };
-      fg.appendChild(c);
-    });
+    // v2.9.32: the shared formation tile (was this page's own flat text chip)
+    renderFormationTiles(fg,currentTeam.format,p.formation,(name)=>{ p.formation=name; change(); });
     host.appendChild(fg);
   }
   // --- Sub strategy ---
   const sLbl=document.createElement('div');
-  sLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
+  sLbl.className='sec-label';
   sLbl.textContent='Sub strategy';
   host.appendChild(sLbl);
+  // v2.9.32: one grouped card, three option rows (was three separate boxes —
+  // the page read as a wall of panels).
   const sg=document.createElement('div');
-  sg.style.cssText='display:flex;flex-direction:column;gap:6px;margin-bottom:14px';
+  sg.className='set-group';
+  sg.style.marginBottom='14px';
   SUB_STRATEGIES.forEach(s=>{
     const sel=p.subStrategy===s.key;
-    const c=document.createElement('div');
-    c.className='ui-chip'+(sel?' sel':'');
-    c.style.cssText='display:block;padding:10px 12px;text-align:left;cursor:pointer';
-    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?s.color:'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?s.color:'#bbb')}${s.label}</div>
-      <div style="font-size:11px;color:#888;line-height:1.35;font-weight:500">${s.stance}</div>`;
+    const c=document.createElement('button');
+    c.type='button';
+    c.className='opt-row'+(sel?' sel':'');
+    // Selected = solid brand green, always (owner benchmark: a screen speaks
+    // TWO colours — neutrals + one accent. Strategy identity colours stay on
+    // matchday surfaces; the settings page doesn't need them).
+    if(sel) c.style.background='#00d4aa';
+    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?'#06231d':'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?'#06231d':'#bbb')}${s.label}</div>
+      <div style="font-size:11px;color:${sel?'#06231d':'#888'};${sel?'opacity:.8;':''}line-height:1.35;font-weight:500">${s.stance}</div>`;
     c.onclick=()=>{ p.subStrategy=s.key; change(); };
     sg.appendChild(c);
   });
   host.appendChild(sg);
   // --- Steppers: period length, sub interval, players per sub ---
-  const stepRow=(label,key,min,max)=>{
+  // v2.9.32: units moved out of the label's parentheses into a quiet sub-line
+  // ("Half length (min / half)" → "Half length" over "minutes per half").
+  const stepRow=(label,unit,key,min,max)=>{
     const row=document.createElement('div');
     row.className='set-row';
-    row.innerHTML=`<label>${label}</label>`;
+    row.innerHTML=`<label>${label}${unit?`<br><span style="font-size:11px;color:#888;font-weight:500">${unit}</span>`:''}</label>`;
     const st=document.createElement('div');
     st.className='stepper';
     const dec=document.createElement('button'); dec.className='ui-step'; dec.textContent='−';
@@ -5989,14 +6060,21 @@ function renderTeamSettings(){
     return row;
   };
   const pLbl=document.createElement('div');
-  pLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
+  pLbl.className='sec-label';
   pLbl.textContent='Timing';
   host.appendChild(pLbl);
-  host.appendChild(stepRow(periodWord+' ('+periodUnit+')','hm',4,60));
-  host.appendChild(stepRow('Sub every (mins)','sf',1,30));
+  // v2.9.32: the timing rows + breaks-only toggle share ONE grouped card.
+  const tg=document.createElement('div');
+  tg.className='set-group';
+  host.appendChild(tg);
+  tg.appendChild(stepRow(periodWord,'minutes per '+(isQ?'quarter':'half'),'hm',4,60));
+  const sfRow=stepRow('Sub every','minutes','sf',1,30);
   // v2.9.27 (owner): the timing section carries the even-time split — the same
   // suggestion the squad page makes, computed from the FULL roster midweek.
   // One tap sets the interval so every kid's minutes come out level.
+  // v2.9.32: the suggestion lives INSIDE the Sub-every card — it exists only
+  // to tune this one control, so it reads as that card's footer, not a loose
+  // line between rows.
   {
     const n=(currentTeam.players||[]).length;
     const onF=fmt.onField||7;
@@ -6005,24 +6083,30 @@ function renderTeamSettings(){
       const scv=Math.max(1,p.sc||1);
       const suggested=Math.max(1,Math.round((p.hm||20)*periods*scv/n));
       const isSet=p.sf===suggested;
-      const evRow=document.createElement('div');
-      evRow.style.cssText='display:flex;align-items:center;gap:10px;padding:2px 4px 10px;font-size:12px;color:#9fb3c8;font-weight:600';
+      const top=document.createElement('div');
+      top.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px';
+      while(sfRow.firstChild) top.appendChild(sfRow.firstChild);
+      sfRow.style.cssText='flex-direction:column;align-items:stretch';
+      sfRow.appendChild(top);
+      const hint=document.createElement('div');
+      hint.style.cssText='display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1e2a45;font-size:12px;color:#9fb3c8;font-weight:600';
       if(isSet){
-        evRow.innerHTML=`<span style="color:#00d4aa">✓ Even time for ${n} players — subs every ${suggested}′</span>`;
+        hint.innerHTML=`<span style="color:#00d4aa">✓ Even time for ${n} players</span>`;
       }else{
-        evRow.innerHTML=`<span style="flex:1;min-width:0">Even time for ${n} players: subs every <strong style="color:#eee">${suggested}′</strong></span>`;
+        hint.innerHTML=`<span style="flex:1;min-width:0">Even time for ${n} players: <strong style="color:#eee">${suggested}′</strong></span>`;
         const use=document.createElement('button');
         use.type='button';
         use.textContent=`USE ${suggested}′`;
         use.setAttribute('aria-label',`Set sub interval to ${suggested} minutes for even time`);
-        use.style.cssText='flex-shrink:0;min-height:44px;padding:10px 14px;background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:10px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit';
+        use.style.cssText='flex-shrink:0;min-height:44px;padding:10px 14px;background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit';
         use.onclick=()=>{ p.sf=suggested; change(); };
-        evRow.appendChild(use);
+        hint.appendChild(use);
       }
-      host.appendChild(evRow);
+      sfRow.appendChild(hint);
     }
   }
-  host.appendChild(stepRow('Players per sub','sc',1,Math.max(1,fmt.onField-1)));
+  tg.appendChild(sfRow);
+  tg.appendChild(stepRow('Players per sub','','sc',1,Math.max(1,fmt.onField-1)));
   // --- Subs at breaks only (no rolling mid-play subs) ---
   const periodName=isNb?'quarter':'period';
   const boRow=document.createElement('div');
@@ -6030,14 +6114,20 @@ function renderTeamSettings(){
   boRow.style.cssText='align-items:flex-start';
   const boNote=isNb?' (Standard netball rule.)':'';
   boRow.innerHTML=`<label style="flex:1;min-width:0">Subs at breaks only<br><span style="font-size:11px;color:#888;font-weight:500">No rolling subs — rotate only at ${periodName} breaks.${boNote}</span></label>`;
+  // v2.9.32: 44pt hit zone via the .hit44 pattern (§11.0) — the visual pill
+  // stays 52×30 on an inner span; a negative margin keeps the row's footprint.
+  const on=!!p.breaksOnly;
   const tog=document.createElement('button');
   tog.type='button';
-  const on=!!p.breaksOnly;
-  tog.style.cssText=`flex-shrink:0;width:52px;height:30px;border-radius:15px;border:1.5px solid ${on?'#00d4aa':'#2a3550'};background:${on?'#00d4aa':'#0a1628'};position:relative;cursor:pointer;transition:all .15s;margin-top:2px`;
-  tog.innerHTML=`<span style="position:absolute;top:2px;${on?'right:2px':'left:2px'};width:22px;height:22px;border-radius:50%;background:${on?'#0a1628':'#666'};transition:all .15s"></span>`;
+  tog.className='hit44';
+  tog.setAttribute('role','switch');
+  tog.setAttribute('aria-checked',on?'true':'false');
+  tog.setAttribute('aria-label','Subs at breaks only');
+  tog.style.margin='-7px 0';
+  tog.innerHTML=`<span style="display:inline-block;width:52px;height:30px;border-radius:15px;border:1.5px solid ${on?'#00d4aa':'#2a3550'};background:${on?'#00d4aa':'#0a1628'};position:relative;transition:all .15s"><span style="position:absolute;top:2px;${on?'right:2px':'left:2px'};width:22px;height:22px;border-radius:50%;background:${on?'#0a1628':'#666'};transition:all .15s"></span></span>`;
   tog.onclick=()=>{ p.breaksOnly=!p.breaksOnly; change(); };
   boRow.appendChild(tog);
-  host.appendChild(boRow);
+  tg.appendChild(boRow);
 }
 // Live-save for the Settings tab: currentTeam is a reference into `teams`, so
 // persisting is just writing the array back. Cloud push is debounced (stepper
@@ -6388,9 +6478,8 @@ function renderS1(){
     const c=document.createElement('div');
     const isOut=!sel.has(i);
     c.className='ui-chip'+(isOut?'':' sel');
-    // v2.7.41: just the name. .chip.sel::after already adds " ✓" via CSS;
-    // adding another inline check was rendering as "Name ✓ ✓". The line-
-    // through + opacity on .chip:not(.sel) already telegraphs "out".
+    // v2.9.32: present = solid green fill (.ui-chip.sel), no tick. The line-
+    // through + opacity on the unselected chip already telegraphs "out".
     c.style.cssText=isOut
       ?'opacity:0.45;text-decoration:line-through;padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:50px'
       :'padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:50px';
@@ -6445,21 +6534,24 @@ function renderSquadPlanPicker(){
   const plans=(currentTeam.plans||[]);
   if(!plans.length){
     // Empty state — nudge into the builder.
-    host.innerHTML=`<div style="background:rgba(167,139,250,.06);border:1px dashed rgba(167,139,250,.4);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:12px;color:#aaa;line-height:1.4">
-      <i data-lucide="clipboard" width="16" height="16" style="width:16px;height:16px;color:#a78bfa;flex-shrink:0;display:inline-flex"></i>
+    // v2.9.33 (§5.0 two-colour): the plan nudge is neutral chrome + the one
+    // green action — purple no longer marks plan surfaces here.
+    host.innerHTML=`<div style="background:none;border:1px dashed #2a3550;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:12px;color:#aaa;line-height:1.4">
+      <i data-lucide="clipboard" width="16" height="16" style="width:16px;height:16px;color:#9fb3c8;flex-shrink:0;display:inline-flex"></i>
       <span style="flex:1">Starting in <strong style="color:#00d4aa">AUTO</strong>. Want a custom plan?</span>
-      <button onclick="planAheadFromSquad()" class="hit44" style="margin:-10px 0"><span style="background:rgba(167,139,250,.18);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.4px">Build →</span></button>
+      <button onclick="planAheadFromSquad()" class="hit44" style="margin:-10px 0"><span style="background:rgba(0,212,170,.16);color:#00d4aa;border-radius:12px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px">Build →</span></button>
     </div>`;
     _li();
     return;
   }
   // Have profiles — show AUTO + each as a chip.
-  const opts=[{id:null,label:'Auto',color:'#00d4aa',icon:'timer'}].concat(plans.map(p=>({id:p.id,label:p.name,color:'#a78bfa',icon:'clipboard'})));
+  // v2.9.33 (§5.0): selection = solid green fill, one accent for all chips.
+  const opts=[{id:null,label:'Auto',icon:'timer'}].concat(plans.map(p=>({id:p.id,label:p.name,icon:'clipboard'})));
   const chips=opts.map(o=>{
     const sel=(_squadPickedPlanId===o.id);
-    return `<button onclick="pickSquadPlan(${o.id===null?'null':o.id})" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:${sel?o.color+'1f':'#13203a'};border:none;color:${sel?o.color:'#9fb3c8'};border-radius:16px;font-size:12px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${ic(o.icon,13,sel?o.color:'#9fb3c8')}${o.label}</button>`;
+    return `<button onclick="pickSquadPlan(${o.id===null?'null':o.id})" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:${sel?'#00d4aa':'#13203a'};border:none;color:${sel?'#06231d':'#9fb3c8'};border-radius:16px;font-size:12px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit">${ic(o.icon,13,sel?'#06231d':'#9fb3c8')}${o.label}</button>`;
   }).join('');
-  host.innerHTML=`<div style="font-size:10px;letter-spacing:1.2px;color:#888;font-weight:800;text-transform:uppercase;margin-bottom:6px">Use a plan</div>
+  host.innerHTML=`<div class="sec-label" style="font-size:10px;letter-spacing:1.2px;font-weight:800">Use a plan</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div>`;
   _li();
 }
@@ -6496,7 +6588,7 @@ function renderEqualTimeHint(n, onField){
         ? `Subbing every <strong style="color:#00d4aa">${cfg.sf} min</strong> ✓`
         : `Suggested: sub every <strong style="color:#eee">${suggested} min</strong> <button onclick="applyEqualTime(${suggested})" style="margin-left:6px;background:#00d4aa;color:#0a1628;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px">USE ${suggested}′</button>`);
   host.innerHTML=`
-    <div style="display:inline-flex;flex-direction:column;gap:6px;align-items:center;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.3);border-radius:10px;padding:10px 14px;max-width:100%">
+    <div style="display:inline-flex;flex-direction:column;gap:6px;align-items:center;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:10px 14px;max-width:100%">
       <div style="font-size:12px;color:#bbb;line-height:1.4">
         <span style="color:#00d4aa;font-weight:700">⚖ Equal game time</span> · ~<strong style="color:#eee">${perPlayer} min</strong> each over ${totalGame} min
       </div>
@@ -6583,8 +6675,8 @@ function renderGkStep(){
     const cur=G.gk===pIdx;
     const c=document.createElement('button');
     c.className='ui-chip'+(cur?' sel':'');
-    c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit'+(cur?';background:rgba(255,123,172,.16)':'');
-    c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit';
+    c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#06231d':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#06231d;opacity:.8;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>{ setPlanKeeper(pIdx); renderGkStep(); };
     g.appendChild(c);
   });
@@ -6606,18 +6698,12 @@ function finishSetupToField(){
 function renderShapeStep(){
   const g=document.getElementById('shapeStepGrid');
   if(!g)return;
-  g.innerHTML='';
   const back=document.getElementById('shapeBackLbl');
   if(back)back.textContent=(FORMATS[curFmt]&&FORMATS[curFmt].hasGk)?'Keeper':'Squad';
-  Object.keys(FORMATIONS[curFmt]||{}).forEach(k=>{
-    const sel=(curFormation===k);
-    const c=document.createElement('button');
-    c.className='ui-chip'+(sel?' sel':'');
-    c.style.cssText='padding:18px 8px;min-height:56px;font-size:17px;font-weight:800;letter-spacing:.5px;cursor:pointer;border:none;font-family:inherit;color:'+(sel?'#5bc0de':'#eee')+(sel?';background:rgba(91,192,222,.16)':'');
-    c.textContent=k;
-    c.onclick=()=>{ selectGameFormation(k); renderShapeStep(); };
-    g.appendChild(c);
-  });
+  // v2.9.32: same tile as every other formation picker (was its own slab
+  // style with a cyan selected tint — green .sel is the app's one selection
+  // affordance, and the descriptor helps here most of all).
+  renderFormationTiles(g,curFmt,curFormation,(k)=>{ selectGameFormation(k); renderShapeStep(); });
   _li();
 }
 function shapeStepBack(){
@@ -6890,16 +6976,18 @@ function renderFmtPicker(){
     `<strong style="color:#00d4aa">${f.label}</strong> · ${f.age} · ${f.onField} on field` +
     (f.hasGk?' (incl. GK)':'') +
     ` · ${f.defaultHalf}${periodWord}`;
-  // Sport-aware period-length labels
-  const ph=document.getElementById('periodLengthHeading');
+  // Sport-aware period-length label (v2.9.33: benchmark row — main + sub-line)
   const pl=document.getElementById('periodLengthLabel');
-  if(ph)ph.textContent=isQ?'Quarter Length':'Half Length';
-  if(pl)pl.textContent=isQ?'Minutes per quarter':'Minutes per half';
-  // Sport-aware sub-frequency hint
+  const sub='font-size:11px;color:#888;font-weight:500';
+  if(pl)pl.innerHTML=(isQ?'Quarter length':'Half length')
+    +`<br><span style="${sub}">minutes per ${isQ?'quarter':'half'}</span>`;
+  // Sport-aware sub-frequency hint. v2.9.33: copy fixed — it claimed the
+  // cadence was continuous across periods, but subs RESTART each period
+  // since v2.8.2 (sf, 2·sf, … within each half/quarter; UX-PATHWAYS P3.8).
   const sfh=document.getElementById('subFreqHint');
   if(sfh)sfh.textContent=isQ
-    ?"Continuous across all quarters — cadence doesn't restart at quarter time."
-    :"Continuous across both halves — cadence doesn't restart at halftime.";
+    ?'minutes — restarts each quarter'
+    :'minutes — restarts each half (5′, 10′… into each half)';
 }
 
 function selectFormat(k){
@@ -6996,19 +7084,26 @@ const FORMATION_SHORTS={
   // Netball
   'standard':'Fixed positions'
 };
+// v2.9.32: ONE formation tile, every screen (owner report: the picker looked
+// different on the Settings tab, the shape page and game settings). Key +
+// one-line descriptor, standard .sel treatment; the container grid decides
+// the column count, never the tile.
+function renderFormationTiles(host,fmtKey,selected,onPick){
+  host.innerHTML='';
+  Object.keys(FORMATIONS[fmtKey]||{}).forEach(k=>{
+    const c=document.createElement('button');
+    c.type='button';
+    c.className='ui-chip ui-chip--tile'+(selected===k?' sel':'');
+    const short=FORMATION_SHORTS[k]||'';
+    const selNow=selected===k;
+    c.innerHTML=`<div style="font-weight:800;font-size:16px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:10px;color:${selNow?'#06231d':'#888'};${selNow?'opacity:.75;':''}font-weight:500;line-height:1.2;text-align:center">${short}</div>`:''}`;
+    c.onclick=()=>onPick(k);
+    host.appendChild(c);
+  });
+}
 function renderFormationPicker(){
   const g=document.getElementById('formationGrid');
-  g.innerHTML='';
-  const forms=FORMATIONS[curFmt];
-  Object.keys(forms).forEach(k=>{
-    const c=document.createElement('div');
-    c.className='ui-chip'+(curFormation===k?' sel':'');
-    c.style.cssText='padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px';
-    const short=FORMATION_SHORTS[k]||'';
-    c.innerHTML=`<div style="font-weight:800;font-size:14px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:10px;color:#888;font-weight:500;line-height:1.2;text-align:center">${short}</div>`:''}`;
-    c.onclick=()=>{curFormation=k;renderFormationPicker();};
-    g.appendChild(c);
-  });
+  renderFormationTiles(g,curFmt,curFormation,(k)=>{curFormation=k;renderFormationPicker();});
   // Hide the legacy long-tip box — pill blurbs replace it
   const tipEl=document.getElementById('formationTip');
   if(tipEl)tipEl.style.display='none';
@@ -7029,16 +7124,20 @@ function renderSubStratPicker(){
   if(!g)return;
   g.innerHTML='';
   const cur=cfg.subStrategy||'fair';
+  // v2.9.33: benchmark rows (§5.0) — one grouped card, title + stance,
+  // selection = solid brand green. The long descriptions moved out of the
+  // matchday path (they live in the strategy's behaviour, and the warning
+  // line survives — it's load-bearing).
   SUB_STRATEGIES.forEach(s=>{
+    const isSel=cur===s.key;
     const c=document.createElement('button');
     c.type='button';
-    c.className='ui-chip'+(cur===s.key?' sel':'');
-    const isSel=cur===s.key;
-    c.style.cssText='display:block;width:100%;text-align:left;padding:10px 12px;cursor:pointer;border-color:'+(isSel?s.color:'#333');
-    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${isSel?s.color:'#bbb'};margin-bottom:3px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,isSel?s.color:'#bbb')}${s.label}</div>
-      <div style="font-size:11px;color:${isSel?'#bbb':'#888'};font-weight:600;font-style:italic;margin-bottom:3px">${s.stance}</div>
-      ${s.warning?`<div style="font-size:11px;color:#f0a500;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px">${ic('triangle-alert',12,'#f0a500')}${s.warning}</div>`:''}
-      <div style="font-size:11px;color:#888;font-weight:500;line-height:1.4">${s.desc}</div>`;
+    c.className='opt-row'+(isSel?' sel':'');
+    if(isSel)c.style.background='#00d4aa';
+    const inner=isSel?'#06231d':null;
+    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${inner||'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,inner||'#bbb')}${s.label}</div>
+      <div style="font-size:11px;color:${inner||'#888'};${isSel?'opacity:.8;':''}line-height:1.35;font-weight:500">${s.stance}</div>
+      ${s.warning?`<div style="font-size:11px;color:${inner||'#f0a500'};${isSel?'opacity:.85;':''}font-weight:700;margin-top:3px;display:flex;align-items:center;gap:5px">${ic('triangle-alert',12,inner||'#f0a500')}${s.warning}</div>`:''}`;
     c.onclick=()=>{cfg.subStrategy=s.key;renderSubStratPicker();renderGamePlanPanel();};
     g.appendChild(c);
   });
@@ -7903,28 +8002,19 @@ function renderG(){
   // v2.7.8: end buttons stay in fixed positions (iPhone-Stopwatch style).
   // Only labels + colours morph; nothing slides between sides on play/pause.
 
-  // Secondary button (subB) — morphs between SUB (when running / at break) and
-  // RESET (when paused mid-half). Double-tap confirm (TAP AGAIN) for RESET.
+  // v2.9.36: SUB owns its slot permanently — no more morphing into RESET on
+  // pause (the same position flipping between "make a sub" and "wipe the
+  // half" broke spatial memory and was a mistap hazard). Subs are allowed
+  // while paused too (coaches sub at stoppages); dimmed only when it can't
+  // fire. RESET lives in the game menu now (resetHalfConfirm).
   const subBtn=document.getElementById('subB');
   if(subBtn){
-    const inResetMode=!G.running && !G.atBreak;
-    if(inResetMode){
-      const hasProgress=G.secs>0 || G.elapsedMs>0;
-      subBtn.disabled=!hasProgress;
-      subBtn.style.opacity=hasProgress?'1':'0.4';
-      subBtn.className='gd-btn gd-reset'+(_resetArmed?' armed':'');
-      subBtn.innerHTML=`${ic('rotate-ccw',21)}<span>${_resetArmed?'TAP AGAIN':'RESET'}</span>`;
-      subBtn.onclick=resetHalf;
-    } else {
-      // v2.7.25: SUB button reverted (manual sub trigger). A separate Plan
-      // button (#gdPlan) opens the Sub Order overlay.
-      const canSub=G.bench.length>0;
-      subBtn.disabled=!canSub;
-      subBtn.style.opacity=canSub?'1':'0.4';
-      subBtn.className='gd-btn gd-sub';
-      subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
-      subBtn.onclick=manualSub;
-    }
+    const canSub=G.bench.length>0 && (G.running||G.atBreak||gameInProgress());
+    subBtn.disabled=!canSub;
+    subBtn.style.opacity=canSub?'1':'0.4';
+    subBtn.className='gd-btn gd-sub';
+    subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
+    subBtn.onclick=manualSub;
   }
 
   // (Our formation now shows on the bottom-bar Formation button — see renderGameDash.)
@@ -8157,6 +8247,16 @@ function tog(){
 // Scores and the game log carry over (we just append a 'reset_half' entry).
 let _resetArmed=false;
 let _resetTimer=null;
+// v2.9.36: the menu route to resetHalf. The dash's old double-tap arming
+// needed a persistent button to show its TAP AGAIN state; a menu row closes
+// on tap, so it confirms with a dialog instead (endPeriodNow precedent).
+function resetHalfConfirm(){
+  if(!G || G.running || G.atBreak) return;
+  if(!G._halfStart || (G.secs===0 && G.elapsedMs===0)) return;
+  if(!confirm(`Reset this half? Line-up and clock go back to the way the half kicked off.`)) return;
+  _resetArmed=true;   // satisfy resetHalf's arming gate — the dialog was the confirm
+  resetHalf();
+}
 function resetHalf(){
   if(!G || G.running || G.atBreak) return;
   if(!G._halfStart) return;                 // nothing to restore
@@ -8430,7 +8530,8 @@ function toggleOppFormation(){
       c.className='ui-chip'+(G&&G.oppFormation===k?' sel':'');
       c.style.cssText='padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:84px';
       const short=FORMATION_SHORTS[k]||'';
-      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:#888;font-weight:500;line-height:1.1">${short}</div>`:''}`;
+      const oSel=G&&G.oppFormation===k;
+      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:${oSel?'#06231d':'#888'};${oSel?'opacity:.75;':''}font-weight:500;line-height:1.1">${short}</div>`:''}`;
       c.onclick=()=>{ selectOppFormation(k); };
       g.appendChild(c);
     });
@@ -8657,6 +8758,13 @@ function renderGameDash(){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
     undo.disabled=!(G&&G.lastSub);
     undo.className='gd-btn';
+  }
+  // v2.9.36: the game menu's Reset half row — visible exactly when the old
+  // dash RESET was tappable (paused mid-half, progress made).
+  const gmReset=document.getElementById('gmResetHalf');
+  if(gmReset){
+    const canReset=G && !G.running && !G.atBreak && G._halfStart && (G.secs>0||G.elapsedMs>0);
+    gmReset.style.display=canReset?'inline-flex':'none';
   }
   _li();
 }
@@ -9073,7 +9181,7 @@ function renderPotmChips(){
     const b=document.createElement('button');
     b.className='ui-chip'+(G.potm===n?' sel':'');
     // 44px minimum: full-time, gloves on — every chip is a real hit target.
-    b.style.cssText='min-height:44px;padding:10px 16px'+(G.potm===n?';background:rgba(240,165,0,.18);color:#f0a500':'');
+    b.style.cssText='min-height:44px;padding:10px 16px'+(G.potm===n?';background:#f0a500;color:#06231d':'');
     b.textContent=fn(n);
     b.setAttribute('aria-label',`Player of the match: ${fn(n)}`);
     b.setAttribute('aria-pressed',G.potm===n?'true':'false');
@@ -9208,7 +9316,7 @@ function renderMatchDetail(){
     (m.playingTime||[]).slice().sort((a,b)=>b.secs-a.secs).forEach(({name})=>{
       const b=document.createElement('button');
       b.className='ui-chip'+(m.potm===name?' sel':'');
-      b.style.cssText='min-height:44px;padding:10px 16px'+(m.potm===name?';background:rgba(240,165,0,.18);color:#f0a500':'');
+      b.style.cssText='min-height:44px;padding:10px 16px'+(m.potm===name?';background:#f0a500;color:#06231d':'');
       b.textContent=fn(name);
       b.setAttribute('aria-pressed',m.potm===name?'true':'false');
       b.onclick=()=>{ m.potm=(m.potm===name)?null:name; renderMatchDetail(); };
@@ -9664,7 +9772,13 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // v2.9.25 (owner): the NEXT-ON wave is what the sub manager watches —
       // bigger name, bigger instruction line, bigger badge. Later waves stay
       // small so the hierarchy reads at a glance.
-      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'3px 8px'};background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
+      // v2.9.36 (owner): later-wave players were 3px-padded #888 rows that
+      // read as metadata, not players — "the bench only shows two". They keep
+      // their quieter tier but are unmistakably people now.
+      // v2.9.37 (owner): who's-coming-on is THE most important information on
+      // the live game — the next-on rows step up a full tier (18px names,
+      // 14px instruction, deeper padding, heavier border).
+      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'12px 14px':'6px 10px'};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
@@ -9681,12 +9795,12 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
-        <div style="width:${isNext?'30':'18'}px;height:${isNext?'30':'18'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
+        <div style="width:${isNext?'36':'18'}px;height:${isNext?'36':'18'}px;border-radius:${isNext?'8':'5'}px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'11':'8'):(isNext?'14':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:${isNext?'10':'7'}px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:${isNext?'16':'13'}px;font-weight:${isNext?'800':'600'};color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:13px;color:#f0a500;font-weight:700;margin-top:2px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:${isNext?'18':'14'}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',14,'#00d4aa'):''}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:14px;color:#f0a500;font-weight:700;margin-top:3px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
-        <div style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
+        <div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
       `;
       return row;
@@ -9714,16 +9828,26 @@ function renderBenchInto(container, swapMap, posForPlayer){
       nextCol.appendChild(nextTag);
       waves[0].forEach(pIdx=>nextCol.appendChild(makeBenchPill(pIdx,0,true)));
       benchSection.appendChild(nextCol);
+      // v2.9.37: later waves flow as compact WRAP ROWS (was stacked
+      // full-width rows) — with the louder next-on tier above, vertical
+      // space belongs to the pitch, not the tail of the bench.
       waves.slice(1).forEach((waveList,wi)=>{
         const waveIdx=wi+1;
         const labelColour=waveIdx===1?'#f0a500':'#888';
         const col=document.createElement('div');
-        col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0';
+        col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;grid-column:1/-1';
         const tag=document.createElement('div');
         tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
         tag.textContent=`+${(cfg.sf||5)*waveIdx}'`;
         col.appendChild(tag);
-        waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,false)));
+        const rowWrap=document.createElement('div');
+        rowWrap.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+        waveList.forEach(pIdx=>{
+          const pill=makeBenchPill(pIdx,0,false);
+          pill.style.flex='1 1 150px';
+          rowWrap.appendChild(pill);
+        });
+        col.appendChild(rowWrap);
         grid.appendChild(col);
       });
     } else {
@@ -10136,7 +10260,7 @@ function renderPlanProfiles(){
   const plans=(currentTeam.plans||[]);
   row.style.display=plans.length?'flex':'none';   // hide the whole row when empty — Save button alone handles the empty state
   if(!plans.length) return;
-  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 10px;background:rgba(167,139,250,.14);border:1px solid #a78bfa;border-radius:14px;font-size:12px;font-weight:700;color:#a78bfa;font-family:inherit">
+  list.innerHTML=plans.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 10px;background:#13203a;border-radius:14px;font-size:12px;font-weight:700;color:#9fb3c8;font-family:inherit">
     <button onclick="applyPlanProfile((currentTeam.plans||[]).find(x=>x.id===${p.id}))" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0">${p.name}</button>
     <button onclick="renamePlanProfile(${p.id})" aria-label="Rename" title="Rename" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 3px;display:inline-flex;align-items:center"><i data-lucide="pencil" width="12" height="12" style="width:12px;height:12px;display:inline-flex"></i></button>
     <button onclick="deletePlanProfile(${p.id})" aria-label="Delete profile" title="Delete" style="background:none;border:none;color:#a78bfa;opacity:.55;cursor:pointer;padding:0 4px 0 2px;font-size:13px;line-height:1">×</button>
@@ -10289,8 +10413,8 @@ function openGkPick(){
     const cur=G.gk===pIdx;
     const c=document.createElement('div');
     c.className='ui-chip'+(cur?' sel':'');
-    c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer'+(cur?';background:rgba(255,123,172,.16)':'');
-    c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer';
+    c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#06231d':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#06231d;opacity:.8;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>pickGk(pIdx);
     g.appendChild(c);
   });
@@ -10575,7 +10699,8 @@ function renderSubOrderTabs(){
   wrap.innerHTML=opts.map(o=>{
     const active=(_subOrderStrat===o.k);
     const isLive=(liveToggle===o.k);
-    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;padding:9px 4px;background:${active?'#5bc0de1a':'transparent'};color:${active?'#5bc0de':'#9fb3c8'};border:none;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
+    // v2.9.35 (§5.0): selected = solid green flip; 44pt boxes.
+    return `<button onclick="subOrderPick('${o.k}')" style="flex:1;min-height:44px;padding:9px 10px;background:${active?'#00d4aa':'transparent'};color:${active?'#06231d':'#9fb3c8'};border:none;border-radius:8px;font-size:12px;font-weight:800;letter-spacing:.4px;cursor:pointer;font-family:inherit">${o.label}${isLive?' ●':''}</button>`;
   }).join('');
 }
 function subOrderPick(strat){
