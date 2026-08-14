@@ -12,6 +12,35 @@
 
 ---
 
+## 2026-08-14/15 (Session 7) — THE BENCHMARK ERA: §5.0 stamped and rolled out, flat controls, nav audit lands, atlas re-shot
+
+**State:** `main` = **v2.9.37-beta**, all green (full gate at every version), eleven commits `a68d2f1…6ea7a7c`, working tree clean. NOT yet deployed to production — deploy per DEPLOY.md when ready.
+
+### The big stamp
+**design.md §5.0 — the Team settings page is THE BENCHMARK** every screen is measured against (owner, 2026-08-14): TWO COLOURS USED (neutrals + one accent; red/amber only when their meaning is on screen) · three surfaces max (`.set-group` hairline cards, `.opt-row` choices) · selection = SOLID accent fill, ✓ ticks deleted app-wide · one component per family · quiet sub-line labels · FLAT (§5.0.7 — no shadows/gradients on controls, press = scale) · 600px measure. ui-check now **defends** it: no `.sel::after` rule, no red `.btn-o`/`.back-btn`, no press-lip shadows, no gradient fills — regressions fail CI.
+
+### Shipped (one version per decision, records in docs/records/)
+| Ver | What |
+|---|---|
+| v2.9.32 | Benchmark page (grouped cards, no ticks, ONE `renderFormationTiles()` for settings/shape/s2 — was three treatments); `docs/COMPONENT-CENSUS.md` born (14 families); palette proposal §2.1.1 (B + C, **unstamped**) |
+| v2.9.33 | Rollout: s2/s1/keeper/shape/summary; red exits navigation; stale s2 cadence copy fixed (subs RESTART each period, P3.8) |
+| v2.9.34 | FLAT — `.btn` gradients/shadows gone, ui- 3px press lip gone, dash tiles flat; off-token ratchet 43→31 |
+| v2.9.35 | Nav audit A1 (tab bar leaves keeper/shape; ghost option REJECTED + K sections retired) · A2 (s2 = "Today's game") · A4 (backs name places); Plan page lite pass |
+| v2.9.36 | Game dash STABLE slots (SUB never morphs into RESET; Reset half → menu w/ confirm; SUB works paused); bench later-waves legible |
+| v2.9.37 | Next-on steps up a tier (owner: most important info on the live game); 4-bench test exposed pitch-starvation → later waves wrap as pills, 30dvh cap; team editor benchmark pass; atlas fixture now 11 players |
+
+Dev gallery: UX-flow-grouped 16-tile spread (~0.7s boot), continuous zoom, `?app=` alternate builds, benchmark specimens in the strip. Atlas: **all 47 fills re-shot at v2.9.37**, K/K2/K3/K4 proposal sections deleted, L moved into grid, legend rewritten.
+
+### Next session — pick up here
+1. **Palette Option C awaits the owner's stamp** (§2.1.1): 9 accent hue families → 3 (green/red/amber). Mock: `node build-palette-mock.mjs` → browse `dev-gallery.html?app=palette-mock.html`. Implementing it clears most remaining purples (`.is-plan`), the Plan page's colour debt, and the neutral-ramp collapse.
+2. **Plan page full benchmark pass** — worst choice budget (+4); red KEEPER select / red mini-steppers / EQUAL-TIME IDEAL block (§11 #4) visible in `docs/records/v2.9.35-navigation/plan-top-band.png`.
+3. **Migration steps 4–5** (census #3/#4, the last 🔴): legacy `.btn` sites → ui- classes. Flat pass already unified their look; this is the class swap.
+4. **Nav audit remainder**: A3 (Roster tab lands on a PLAY screen) · A5 (Plan page labeled back — unblocked now A1 landed).
+5. Smaller: `.sec-label` sweep on record/history screens · flat `.card`s · `.info` variants · tab-icon contrast on device · S-sandbox ghost symbol removal (owner call).
+6. **Deploy**: v2.9.31→37 are local-only; sync-first per DEPLOY.md + deploy-guard.
+
+---
+
 ## 2026-08-11 (Session 6) — The stamped control standard lands: Arial fallback killed, steppers + chips migrate
 
 **State:** `main` = **v2.9.31-beta**, all green, three merges (PRs #68–#70), production current.
