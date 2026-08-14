@@ -328,7 +328,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   }
   #s4 #gameDash .gd-btn{flex:1!important;width:100%;min-height:0!important;font-size:10px!important}
   #s4 #gameDash .gd-btn.gd-go,#s4 #gameDash .gd-btn.gd-pause,
-  #s4 #gameDash .gd-btn.gd-sub,#s4 #gameDash .gd-btn.gd-reset{font-size:11px!important}
+  #s4 #gameDash .gd-btn.gd-sub{font-size:11px!important}
   #s4 #gameDash .gd-btn svg{width:18px!important;height:18px!important}
   /* v2.7.79 — landscape phone: shrink the Plan-page dual clock so it stops eating the whole viewport (backlog #3). Same trick as game-screen clock above. */
   #subOrderOv .tmr-c{font-size:28px!important;letter-spacing:1px!important}
@@ -471,14 +471,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .gd-btn.gd-go{flex:1.5;background:#00d4aa;color:#06231d;font-size:13px}
 .gd-btn.gd-pause{flex:1.5;background:rgba(233,69,96,.12);color:#ff7088;font-size:13px}
 .gd-btn.gd-sub{flex:1.5;background:#f0a500;color:#1a1a2e;font-size:13px}
-.gd-btn.gd-reset{flex:1.5;background:rgba(233,69,96,.12);color:#ff7088;font-size:13px}
-.gd-btn.gd-reset.armed{background:#e94560;border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
+/* v2.9.36: .gd-reset deleted — RESET lives in the game menu (resetHalfConfirm). */
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
 /* v2.7.8: fixed dashboard positions in both states (the v2.7.4 swap was jarring).
    Layout (always): [SUB/RESET] [Undo] [Formation] [View] [Edit] [PAUSE/START]
    Only the end-button labels + colours morph between states; nothing slides. */
-.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg,.gd-btn.gd-reset svg{width:21px;height:21px}
+.gd-btn.gd-go svg,.gd-btn.gd-pause svg,.gd-btn.gd-sub svg{width:21px;height:21px}
 
 /* Diagrammatic pitch — v1.9 uses CSS 3D perspective to tilt the ground plane.
    .lu-pitch is the perspective frustum. .lu-plane is the tilted SVG ground.
@@ -1074,6 +1073,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
            not live on the game view). Reached from the team card's Plan ahead instead. -->
       <!-- v2.7.85: Settings item removed — injected into the drawer dynamically by openDrawer(). -->
       <div style="height:1px;background:#243049;margin:4px 0"></div>
+      <!-- v2.9.36: RESET left the dash — a rare recovery action doesn't earn a
+           primary slab. Visible only when there is a half to reset (paused,
+           progress made); renderGameDash manages it. -->
+      <button class="ui-btn ui-btn--ghost is-danger" id="gmResetHalf" style="display:none" onclick="closeGameMenu();resetHalfConfirm()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset half</button>
       <button class="ui-btn ui-btn--ghost is-danger" onclick="closeGameMenu();abandonGame()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>End game</button>
     </div>
     <!-- Score controls rendered per-sport by renderScore() — AFL gets goals/behinds. -->
@@ -1171,15 +1174,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        follow as soft-UI nav items. One unified row (gameDash id kept so
        renderGameDash still finds it). -->
   <!-- v2.7.32: gameFmtPicker moved INTO the pitch wrapper above #fmtToggle as a vertical popup; no longer takes a row above the dashboard. -->
-  <!-- v2.7.29 layout: Formation toggle moved onto the pitch overlay (bottom-right). Dashboard is three buttons. -->
-  <!-- Running:  [SUB]   [Undo] [PAUSE] -->
-  <!-- Paused:   [RESET] [Undo] [START] -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)">
-    <button class="gd-btn gd-sub" id="subB"></button>
+  <!-- v2.9.36 (owner: "buttons in awkward spots"): STABLE slots, ranked by
+       frequency — quiet utilities left, loud actions right, and no morphing.
+       [Undo · quiet] [END HALF · quiet amber] [SUB · loud] [START/PAUSE · loud]
+       SUB owns its slot permanently (dimmed when it can't fire) instead of
+       becoming RESET on pause — an action's position never changes meaning.
+       RESET moved to the game menu (rare recovery ≠ a primary slab). -->
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
-    <!-- v2.9.19: the half-time override lives next to PAUSE (owner placement call —
-         the period-label affordance wasn't obvious). Shown only while play is on. -->
+    <!-- v2.9.19: the half-time override rides the clock cluster. Shown only while play is on. -->
     <button class="gd-btn gd-endhalf" id="gdEndHalf" onclick="endPeriodNow()" style="display:none"></button>
+    <button class="gd-btn gd-sub" id="subB"></button>
     <button class="gd-btn gd-go" id="ppB" onclick="tog()"></button>
   </div>
 
@@ -4116,12 +4121,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.35-beta';
+const APP_VERSION='v2.9.36-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.36-beta':{
+    title:'A control bar that stays put',
+    items:['The game screen\'s buttons stop moving around: SUB now owns its spot permanently next to START/PAUSE (it used to turn into RESET whenever you paused — the same button meaning two very different things). It just dims when there\'s nobody to bring on.','You can now fire a sub while paused — stoppages are exactly when coaches make changes.','RESET moved into the menu (☰) as "Reset half", with a proper confirm. A rare fix-it action doesn\'t need a big red button next to Undo.','Bench players beyond the next wave are easier to read — proper names, not faint small print — so the whole bench reads as your bench.']
+  },
   'v2.9.35-beta':{
     title:'Calmer wayfinding',
     items:['The tab bar steps aside during the keeper and shape steps — no more mistap mid-ritual teleporting you to settings. It\'s back on the game screen.','The per-match tweaks screen now introduces itself: "Today\'s game — tweaks for this match only. Season defaults live in Settings." Its button says Apply for today.','Back buttons name where they go — ← Home, ← Sport — never just "Back".','The Plan page\'s top controls joined the green family with proper tap targets, and saved-plan chips calmed down.']
@@ -7985,28 +7994,19 @@ function renderG(){
   // v2.7.8: end buttons stay in fixed positions (iPhone-Stopwatch style).
   // Only labels + colours morph; nothing slides between sides on play/pause.
 
-  // Secondary button (subB) — morphs between SUB (when running / at break) and
-  // RESET (when paused mid-half). Double-tap confirm (TAP AGAIN) for RESET.
+  // v2.9.36: SUB owns its slot permanently — no more morphing into RESET on
+  // pause (the same position flipping between "make a sub" and "wipe the
+  // half" broke spatial memory and was a mistap hazard). Subs are allowed
+  // while paused too (coaches sub at stoppages); dimmed only when it can't
+  // fire. RESET lives in the game menu now (resetHalfConfirm).
   const subBtn=document.getElementById('subB');
   if(subBtn){
-    const inResetMode=!G.running && !G.atBreak;
-    if(inResetMode){
-      const hasProgress=G.secs>0 || G.elapsedMs>0;
-      subBtn.disabled=!hasProgress;
-      subBtn.style.opacity=hasProgress?'1':'0.4';
-      subBtn.className='gd-btn gd-reset'+(_resetArmed?' armed':'');
-      subBtn.innerHTML=`${ic('rotate-ccw',21)}<span>${_resetArmed?'TAP AGAIN':'RESET'}</span>`;
-      subBtn.onclick=resetHalf;
-    } else {
-      // v2.7.25: SUB button reverted (manual sub trigger). A separate Plan
-      // button (#gdPlan) opens the Sub Order overlay.
-      const canSub=G.bench.length>0;
-      subBtn.disabled=!canSub;
-      subBtn.style.opacity=canSub?'1':'0.4';
-      subBtn.className='gd-btn gd-sub';
-      subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
-      subBtn.onclick=manualSub;
-    }
+    const canSub=G.bench.length>0 && (G.running||G.atBreak||gameInProgress());
+    subBtn.disabled=!canSub;
+    subBtn.style.opacity=canSub?'1':'0.4';
+    subBtn.className='gd-btn gd-sub';
+    subBtn.innerHTML=`${ic('refresh',21)}<span>SUB</span>`;
+    subBtn.onclick=manualSub;
   }
 
   // (Our formation now shows on the bottom-bar Formation button — see renderGameDash.)
@@ -8239,6 +8239,16 @@ function tog(){
 // Scores and the game log carry over (we just append a 'reset_half' entry).
 let _resetArmed=false;
 let _resetTimer=null;
+// v2.9.36: the menu route to resetHalf. The dash's old double-tap arming
+// needed a persistent button to show its TAP AGAIN state; a menu row closes
+// on tap, so it confirms with a dialog instead (endPeriodNow precedent).
+function resetHalfConfirm(){
+  if(!G || G.running || G.atBreak) return;
+  if(!G._halfStart || (G.secs===0 && G.elapsedMs===0)) return;
+  if(!confirm(`Reset this half? Line-up and clock go back to the way the half kicked off.`)) return;
+  _resetArmed=true;   // satisfy resetHalf's arming gate — the dialog was the confirm
+  resetHalf();
+}
 function resetHalf(){
   if(!G || G.running || G.atBreak) return;
   if(!G._halfStart) return;                 // nothing to restore
@@ -8740,6 +8750,13 @@ function renderGameDash(){
     undo.innerHTML=`${ic('undo-2',17)}<span>Undo</span>`;
     undo.disabled=!(G&&G.lastSub);
     undo.className='gd-btn';
+  }
+  // v2.9.36: the game menu's Reset half row — visible exactly when the old
+  // dash RESET was tappable (paused mid-half, progress made).
+  const gmReset=document.getElementById('gmResetHalf');
+  if(gmReset){
+    const canReset=G && !G.running && !G.atBreak && G._halfStart && (G.secs>0||G.elapsedMs>0);
+    gmReset.style.display=canReset?'inline-flex':'none';
   }
   _li();
 }
@@ -9747,7 +9764,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // v2.9.25 (owner): the NEXT-ON wave is what the sub manager watches —
       // bigger name, bigger instruction line, bigger badge. Later waves stay
       // small so the hierarchy reads at a glance.
-      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'3px 8px'};background:${bgC};border:1.5px solid ${borderC};border-radius:7px;${glow}${isInjuryPick?'cursor:pointer':''}`;
+      // v2.9.36 (owner): later-wave players were 3px-padded #888 rows that
+      // read as metadata, not players — "the bench only shows two". They keep
+      // their quieter tier but are unmistakably people now.
+      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'6px 10px'};background:${bgC};border:1.5px solid ${borderC};border-radius:8px;${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
@@ -9766,10 +9786,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       row.innerHTML=`
         <div style="width:${isNext?'30':'18'}px;height:${isNext?'30':'18'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:${isNext?'16':'13'}px;font-weight:${isNext?'800':'600'};color:${isNext?'#00d4aa':'#888'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
+          <div style="font-size:${isNext?'16':'14'}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
           ${isNext&&replacesP!==undefined?`<div style="font-size:13px;color:#f0a500;font-weight:700;margin-top:2px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
-        <div style="font-size:11px;font-weight:700;color:#555;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
+        <div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
       `;
       return row;
