@@ -113,6 +113,10 @@ const btnO = /\.btn-o\{([^}]*)\}/.exec(html);
 if (btnO && /#e94560|233,69,96/.test(btnO[1])) bench.push('.btn-o is red again — red is reserved for danger/theirs (§5.0.1)');
 const backB = /\n\.back-btn\{([^}]*)\}/.exec(html);
 if (backB && /#e94560/.test(backB[1])) bench.push('.back-btn is red again — red is reserved for danger/theirs (§5.0.1)');
+if (/box-shadow:0 3px 0/.test(html)) bench.push('press-lip shadow reappeared — controls are flat, press = scale (§5.0.7)');
+const btnRule = /\n\.btn\{([^}]*)\}/.exec(html);
+if (btnRule && /box-shadow/.test(btnRule[1])) bench.push('.btn has a resting shadow again — controls are flat (§5.0.7)');
+if (/\.gd-btn[^{]*\{[^}]*linear-gradient/.test(html) || /\.btn-[gr]\{[^}]*linear-gradient/.test(html)) bench.push('gradient fill returned to a control — fills are solid (§5.0.7)');
 line(true, bench.length > 0, `benchmark §5.0 guards hold — solid-fill selection · no ✓ furniture · red ≠ navigation`);
 bench.forEach((v) => console.log(`      ${v}`));
 if (LIST) [...buttonSigs].sort((a, b) => b[1] - a[1]).slice(0, 20)

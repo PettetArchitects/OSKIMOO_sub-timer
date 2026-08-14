@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.33
+> Last updated: v2.9.34
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -388,7 +388,7 @@ Spond, Heja, Stack Team App — and Duolingo for the tactile press.
 | | Legacy | `ui-` |
 |---|---|---|
 | Type | system sans, 800, +.3px tracking | `ui-rounded` (SF Pro Rounded on Apple), 700 |
-| Press | 1px nudge | 3px colour lip that compresses — most of the "fun" |
+| Press | 1px nudge | ~~3px colour lip~~ → scale compression (§5.0.7 flat stamp, v2.9.34) |
 | Fill | `linear-gradient(180deg,…)` | solid, confident |
 | Radius | 8px | 16px (14px chips) |
 | Height | 7–13px padding | 48–52px min-height |
@@ -730,6 +730,12 @@ measured against**. What makes it the benchmark:
    parentheses; helper text lives INSIDE the row it tunes, as its footer.
 6. **Real controls**: `<button>` everywhere, ≥44pt hit areas, and a capped
    measure (600px) so wide screens keep labels beside their controls.
+7. **FLAT (owner, 2026-08-14, v2.9.34)**: solid fills, no gradients, no
+   resting shadows on controls; press feedback is a scale compression
+   (.94–.98), not a drop or a lip. This supersedes the v2.9.3 "3px colour
+   lip" press treatment in §4.1.0. Elevation belongs to the overlay layer
+   only (drawers/menus keep their scrim shadow); state glows on the pitch
+   are pitch identity, not chrome.
 
 Rolling the rest of the app onto this bar is the §11 backlog's frame; the
 component census (`docs/COMPONENT-CENSUS.md`) is the checklist. Suggested

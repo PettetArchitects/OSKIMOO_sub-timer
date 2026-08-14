@@ -107,11 +107,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   --sh-raise-lg:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
   --sh-press:inset 0 2px 5px rgba(0,0,0,.5);
 }
-.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;box-shadow:var(--sh-raise);font-family:inherit}
-.btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
-.btn-r{background:linear-gradient(180deg,#ef5872,#e0344f);color:#fff}
-.btn-r:disabled{background:#3a3f4c;color:#666;box-shadow:none}
-.btn-g{background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d}
+/* v2.9.34 (owner): FLAT — solid fills, no resting shadows, press = compression. */
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r-btn);font-size:17px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.btn-r{background:#e94560;color:#fff}
+.btn-r:disabled{background:#3a3f4c;color:#666}
+.btn-g{background:#00d4aa;color:#06231d}
 .btn-o{background:#13203a;border:none;color:#9fb3c8} /* v2.9.33: neutral (was red) — benchmark §5.0 */
 .btn-s{padding:10px 16px;font-size:14px;margin-top:0;display:inline-block;width:auto;border-radius:var(--r-sm)}
 .btn-del{background:#3a1525;color:#e94560;border:none}
@@ -149,11 +150,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   outline:3px solid #5bc0de;outline-offset:2px}
 
 .ui-btn--primary{min-height:52px;padding:15px 24px;background:#00d4aa;color:#06231d;
-  font-size:16px;box-shadow:0 3px 0 #0a9d83}
-.ui-btn--primary:active{transform:translateY(3px);box-shadow:0 0 0 #0a9d83}
+  font-size:16px}
+.ui-btn--primary:active{transform:scale(.97)}
 
-.ui-btn--secondary{background:#13203a;color:#eee;box-shadow:0 3px 0 #0d1828}
-.ui-btn--secondary:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+.ui-btn--secondary{background:#13203a;color:#eee}
+.ui-btn--secondary:active{transform:scale(.97)}
 /* Tone modifiers — meaning on top of shape, not new variants. */
 .ui-btn--secondary.is-go{background:rgba(0,212,170,.16);color:#00d4aa}
 .ui-btn--secondary.is-preview{background:rgba(91,192,222,.16);color:#5bc0de}
@@ -176,8 +177,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    44px hit target via padding + negative margin, visual stays a text link. */
 .nsi-link{display:inline-block;cursor:pointer;text-decoration:underline;font-weight:700;padding:16px 8px;margin:-14px -4px}
 
-.ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088;box-shadow:0 3px 0 #3a1525}
-.ui-btn--danger:active{transform:translateY(3px);box-shadow:0 0 0 #3a1525}
+.ui-btn--danger{background:rgba(233,69,96,.16);color:#ff7088}
+.ui-btn--danger:active{transform:scale(.97)}
 
 .ui-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 15px;border:none;
   border-radius:14px;background:#13203a;color:#eee;text-align:center;
@@ -202,9 +203,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   padding:0;border:none;border-radius:16px;background:#13203a;color:#00d4aa;
   font-family:ui-rounded,-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:20px;font-weight:700;line-height:1;cursor:pointer;
-  transition:background .15s,transform .08s;-webkit-tap-highlight-color:transparent;
-  box-shadow:0 3px 0 #0d1828}
-.ui-step:active{transform:translateY(3px);box-shadow:0 0 0 #0d1828}
+  transition:background .15s,transform .08s;-webkit-tap-highlight-color:transparent}
+.ui-step:active{transform:scale(.94)}
 .ui-step.is-danger{color:#ff7088}
 /* v2.9.30: 44pt hit zone for dense-cluster controls (a11y §8, design.md §11.0:
    "visual can stay smaller with padded hit zones"). The button box grows to
@@ -459,20 +459,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* In-game action dashboard — mode buttons (Swap / Keeper / Injury / Undo).
    Shares the soft-UI language: subtle gradient, soft shadow, top highlight. */
-.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:none;background:linear-gradient(180deg,#13203a,#0d1828);color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;box-shadow:var(--sh-raise);text-align:center;line-height:1.05}
-.gd-btn:active{transform:translateY(1px);box-shadow:var(--sh-press)}
+.gd-btn{flex:1;min-height:56px;padding:8px 4px;border-radius:var(--r-sm);border:none;background:#13203a;color:#9fb3c8;font-size:11px;font-weight:800;letter-spacing:.3px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;text-align:center;line-height:1.05}
+.gd-btn:active{transform:scale(.98)}
 .gd-btn svg{width:19px;height:19px}
-.gd-btn.active{background:linear-gradient(180deg,rgba(91,192,222,.22),rgba(91,192,222,.1));color:#5bc0de;box-shadow:0 0 10px rgba(91,192,222,.3), inset 0 1px 0 rgba(255,255,255,.08)}
-#gdInjury.active{background:linear-gradient(180deg,rgba(233,69,96,.22),rgba(233,69,96,.1));border-color:#e94560;color:#e94560;box-shadow:0 0 10px rgba(233,69,96,.3), inset 0 1px 0 rgba(255,255,255,.08)}
-.gd-btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.gd-btn.active{background:rgba(91,192,222,.16);color:#5bc0de}
+#gdInjury.active{background:rgba(233,69,96,.16);border-color:#e94560;color:#e94560}
+.gd-btn:disabled{opacity:.4;cursor:default}
 /* Bottom-bar primary actions — START / PAUSE / SUB. Coloured to stand out from
    the soft-UI secondary buttons while keeping the same stacked nav-item shape.
    Slightly wider (flex:1.5) since they're the most-used controls. */
-.gd-btn.gd-go{flex:1.5;background:linear-gradient(180deg,#1ae0b8,#00c2a0);color:#06231d;font-size:13px}
-.gd-btn.gd-pause{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.16),rgba(233,69,96,.05));color:#ff7088;font-size:13px}
-.gd-btn.gd-sub{flex:1.5;background:linear-gradient(180deg,#ffb52e,#ec9c00);color:#1a1a2e;font-size:13px}
-.gd-btn.gd-reset{flex:1.5;background:linear-gradient(180deg,rgba(233,69,96,.12),rgba(233,69,96,.04));color:#ff7088;font-size:13px}
-.gd-btn.gd-reset.armed{background:linear-gradient(180deg,#e94560,#c8334b);border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
+.gd-btn.gd-go{flex:1.5;background:#00d4aa;color:#06231d;font-size:13px}
+.gd-btn.gd-pause{flex:1.5;background:rgba(233,69,96,.12);color:#ff7088;font-size:13px}
+.gd-btn.gd-sub{flex:1.5;background:#f0a500;color:#1a1a2e;font-size:13px}
+.gd-btn.gd-reset{flex:1.5;background:rgba(233,69,96,.12);color:#ff7088;font-size:13px}
+.gd-btn.gd-reset.armed{background:#e94560;border-color:#e94560;color:#fff;animation:pulse .5s infinite alternate}
 /* Stopwatch-style positioning: PAUSE sits on the far left when running;
    when paused, START slides to the far right via flex order. */
 /* v2.7.8: fixed dashboard positions in both states (the v2.7.4 swap was jarring).
@@ -4108,12 +4108,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.33-beta';
+const APP_VERSION='v2.9.34-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.34-beta':{
+    title:'Flat',
+    items:['Buttons lost their drop shadows and gradient sheens — solid colours only now, everywhere: primaries, steppers, the game dash tiles (START, SUB, PAUSE). Pressing a button compresses it slightly instead of sinking a ledge.','Same colours, same layout — just calmer surfaces that read better in sunlight.']
+  },
   'v2.9.33-beta':{
     title:'The whole setup path, one calm look',
     items:['Game settings now matches the Settings tab: one card per section, the same formation tiles, timing rows with quiet unit lines — and a long-standing incorrect hint is fixed (sub cadence restarts each half, it was never continuous).','Back and secondary buttons are no longer red — red now only ever means danger or the other team. Deleting a team keeps its warning colour.','The keeper pick and your saved-plan chips select in the same solid green as everything else, and the squad page’s plan nudge lost its purple.','On iPad every setup page holds a comfortable single column.']
