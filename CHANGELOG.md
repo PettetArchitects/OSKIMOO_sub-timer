@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.37-beta — Next-on steps up a tier (owner: the most important information on the live game)
+
+The next-on bench rows — who's coming on, for whom, at which position — are the sub manager's primary read, and they weren't dominant enough. They step up a full tier: 18px/800 names, 14px instruction line, a 36px position badge, deeper padding, a 2px border on a 12px radius. Later waves keep their v2.9.36 quieter-but-legible tier, so the hierarchy next-on ≫ later ≫ everything-else reads in one glance. The team editor gets its benchmark §5.0 pass in the same version: an identity info line, `.sec-label` eyebrows replace its `h2`s, the photo auto-fill loses its cyan/purple gradient for a flat green tint (two-colour rule + §5.0.7), the sample-squad and hint boxes join the neutral/radius scale, and the screen caps at the 600px measure.
+
 ## v2.9.36-beta — The game dash stops shapeshifting; the whole bench reads as the bench
 
 Owner report on the main game screen: "buttons in awkward spots… doesn't feel logical." The cause was a morphing slot — the same dash position was amber SUB while running and became red RESET when paused, so the button coaches build muscle memory on changed meaning with the clock, and the rarest destructive action held a primary slab. The dash now has STABLE slots ranked by frequency: [Undo · quiet] [END HALF · quiet amber, play-only] [SUB · loud] [START/PAUSE · loud] — SUB owns its position permanently, dims when it can't fire, and **works while paused** (stoppages are when coaches sub). RESET moved to the game menu as "Reset half" (`resetHalfConfirm` — dialog confirm per the endPeriodNow precedent; row visible exactly when the old button was tappable; `.gd-reset` CSS deleted). Second owner report: the bench "only shows two players" — later-wave bench pills were 3px-padded `#888` rows that read as metadata; they keep their quieter tier but get real padding, 14px/700 blue-grey names and tokened minutes, so every wave reads as players. Dash background flattens (§5.0.7 straggler: it was still a gradient).

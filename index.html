@@ -241,7 +241,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* v2.9.32: settings read as one column — cap the measure on wide screens
    (iPad) so a row's label stays next to the control it describes.
    v2.9.33: game settings (s2) joins the benchmark measure. */
-#teamSettings .sec,#s2 .sec,#s1 .sec,#gkStep .sec,#shapeStep .sec{max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
+#teamSettings .sec,#s2 .sec,#s1 .sec,#gkStep .sec,#shapeStep .sec,#editTeam .sec{max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
 .stepper{display:flex;align-items:center;gap:8px}
 /* v2.9.30: .st-btn removed — every stepper is a .ui-step (migration step 3a). */
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
@@ -869,23 +869,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 <!-- ===== TEAM EDITOR ===== -->
 <div id="editTeam" class="scr">
-  <!-- v2.9.28: heading band removed (owner) — Delete rides the bottom row beside Save Team. -->
+  <!-- v2.9.28: heading band removed (owner) — Delete rides the bottom row beside Save Team.
+       v2.9.37: benchmark §5.0 pass — info-line identity, .sec-label eyebrows,
+       two-colour discipline (the photo-import's cyan/purple gradient goes
+       green-tint flat), radius scale. -->
+  <div class="info">Your roster — names, positions, strengths. Every proposal the app makes reads from here.</div>
   <div class="sec">
-    <h2>Team Name</h2>
+    <div class="sec-label">Team name</div>
     <input class="input" id="teamNameInput" placeholder="e.g. Dragonflies U8">
 
-    <h2 style="margin-top:16px">Players</h2>
+    <div class="sec-label" style="margin-top:16px">Players</div>
     <input type="file" id="rosterPhotoInput" accept="image/*" style="display:none" onchange="handleRosterPhoto(this)">
-    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:linear-gradient(135deg,rgba(91,192,222,.18),rgba(167,139,250,.18));border:none;border-radius:10px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
-      <span style="color:#5bc0de;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
+    <button id="rosterImportBtn" type="button" onclick="document.getElementById('rosterPhotoInput').click()" style="width:100%;padding:14px 12px;background:rgba(0,212,170,.16);border:none;border-radius:12px;color:#eee;cursor:pointer;margin-bottom:10px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.2">
+      <span style="color:#00d4aa;display:flex"><i data-lucide="sparkles" width="24" height="24" style="width:24px;height:24px;display:inline-flex"></i></span>
       <span style="text-align:left">
-        <span style="display:block;font-size:14px;font-weight:800;color:#5bc0de;letter-spacing:.3px">Auto-fill from photo</span>
-        <span style="display:block;font-size:11px;color:#999;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
+        <span style="display:block;font-size:14px;font-weight:800;color:#00d4aa;letter-spacing:.3px">Auto-fill from photo</span>
+        <span style="display:block;font-size:11px;color:#9fb3c8;font-weight:600;margin-top:2px">AI reads your team list — snap or upload</span>
       </span>
     </button>
-    <div id="rosterImportStatus" style="display:none;margin-bottom:10px;padding:8px 10px;background:rgba(91,192,222,.08);border:1px solid rgba(91,192,222,.35);border-radius:8px;font-size:12px;color:#5bc0de;text-align:center"></div>
-    <button id="sampleSquadBtn" type="button" onclick="fillSampleSquad()" style="width:100%;padding:10px 12px;background:none;border:1px dashed #444;border-radius:10px;color:#999;cursor:pointer;margin-bottom:12px;font-family:inherit;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Fill a sample squad — just to try the app</button>
-    <div id="posTagsHint" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc"></div>
+    <div id="rosterImportStatus" style="display:none;margin-bottom:10px;padding:8px 10px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:12px;font-size:12px;color:#00d4aa;text-align:center"></div>
+    <button id="sampleSquadBtn" type="button" onclick="fillSampleSquad()" style="width:100%;padding:10px 12px;background:none;border:1px dashed #2a3550;border-radius:12px;color:#9fb3c8;cursor:pointer;margin-bottom:12px;font-family:inherit;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" width="15" height="15" style="width:15px;height:15px;display:inline-flex"></i>Fill a sample squad — just to try the app</button>
+    <div id="posTagsHint" style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.35);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#ccc"></div>
     <div id="nameCleanupBanner" style="display:none"></div>
     <div id="playerEditList"></div>
     <button class="btn btn-o btn-s" onclick="addPlayerField()" style="margin-top:8px;width:100%">+ Add Player</button>
@@ -1161,7 +1165,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Subs coming on — sits just above the bottom control bar (clear of the
        pitch so it never overlaps the forward line / field tokens). -->
-  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:36dvh;overflow-y:auto"></div>
+  <div id="benchTop" style="flex-shrink:0;padding:4px 12px 2px;max-height:30dvh;overflow-y:auto"></div>
 
   <!-- Sub confirmation banner (hidden by default) — above the control bar. -->
   <div id="subBanner" style="display:none;flex-shrink:0;margin:6px 12px;padding:10px 12px;background:#1a1508;border:2px solid #f0a500;border-radius:10px">
@@ -4121,12 +4125,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.36-beta';
+const APP_VERSION='v2.9.37-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.37-beta':{
+    title:'Louder next-on, tidier roster editor',
+    items:['Who\u2019s coming on next is the single most important thing on the game screen \u2014 those rows are now unmissable: bigger names, a bigger "for Riley at LB" line, a proper position badge.','The roster editor joins the cleaned-up look: quiet section labels, a one-line "what this screen is" up top, and the photo auto-fill in the app\u2019s green instead of its own blue-purple.']
+  },
   'v2.9.36-beta':{
     title:'A control bar that stays put',
     items:['The game screen\'s buttons stop moving around: SUB now owns its spot permanently next to START/PAUSE (it used to turn into RESET whenever you paused — the same button meaning two very different things). It just dims when there\'s nobody to bring on.','You can now fire a sub while paused — stoppages are exactly when coaches make changes.','RESET moved into the menu (☰) as "Reset half", with a proper confirm. A rare fix-it action doesn\'t need a big red button next to Undo.','Bench players beyond the next wave are easier to read — proper names, not faint small print — so the whole bench reads as your bench.']
@@ -9767,7 +9775,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // v2.9.36 (owner): later-wave players were 3px-padded #888 rows that
       // read as metadata, not players — "the bench only shows two". They keep
       // their quieter tier but are unmistakably people now.
-      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'8px 10px':'6px 10px'};background:${bgC};border:1.5px solid ${borderC};border-radius:8px;${glow}${isInjuryPick?'cursor:pointer':''}`;
+      // v2.9.37 (owner): who's-coming-on is THE most important information on
+      // the live game — the next-on rows step up a full tier (18px names,
+      // 14px instruction, deeper padding, heavier border).
+      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'12px 14px':'6px 10px'};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
@@ -9784,10 +9795,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
       const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
       row.innerHTML=`
-        <div style="width:${isNext?'30':'18'}px;height:${isNext?'30':'18'}px;border-radius:5px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'10':'8'):(isNext?'12':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:7px">${posLabel}</div>
+        <div style="width:${isNext?'36':'18'}px;height:${isNext?'36':'18'}px;border-radius:${isNext?'8':'5'}px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'11':'8'):(isNext?'14':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:${isNext?'10':'7'}px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:${isNext?'16':'14'}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',13,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:13px;color:#f0a500;font-weight:700;margin-top:2px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:${isNext?'18':'14'}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',14,'#00d4aa'):''}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:14px;color:#f0a500;font-weight:700;margin-top:3px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
         </div>
         <div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
         ${reorderHtml}
@@ -9817,16 +9828,26 @@ function renderBenchInto(container, swapMap, posForPlayer){
       nextCol.appendChild(nextTag);
       waves[0].forEach(pIdx=>nextCol.appendChild(makeBenchPill(pIdx,0,true)));
       benchSection.appendChild(nextCol);
+      // v2.9.37: later waves flow as compact WRAP ROWS (was stacked
+      // full-width rows) — with the louder next-on tier above, vertical
+      // space belongs to the pitch, not the tail of the bench.
       waves.slice(1).forEach((waveList,wi)=>{
         const waveIdx=wi+1;
         const labelColour=waveIdx===1?'#f0a500':'#888';
         const col=document.createElement('div');
-        col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0';
+        col.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;grid-column:1/-1';
         const tag=document.createElement('div');
         tag.style.cssText=`font-size:9px;font-weight:800;letter-spacing:1.2px;color:${labelColour};text-transform:uppercase;padding:0 4px 2px`;
         tag.textContent=`+${(cfg.sf||5)*waveIdx}'`;
         col.appendChild(tag);
-        waveList.forEach(pIdx=>col.appendChild(makeBenchPill(pIdx,0,false)));
+        const rowWrap=document.createElement('div');
+        rowWrap.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+        waveList.forEach(pIdx=>{
+          const pill=makeBenchPill(pIdx,0,false);
+          pill.style.flex='1 1 150px';
+          rowWrap.appendChild(pill);
+        });
+        col.appendChild(rowWrap);
         grid.appendChild(col);
       });
     } else {

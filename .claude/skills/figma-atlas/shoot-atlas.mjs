@@ -37,7 +37,13 @@ const JOURNEY = [
   { n: '02', label: 'Sport picker', go: () => newTeam() },
   { n: '03', label: 'Format picker', go: () => pickSport('soccer') },
   { n: '04', label: 'Team editor', go: () => { pickFormat('7v7', 'soccer'); fillSampleSquad(); } },
-  { n: '05', label: 'Home — My Teams', go: () => { document.getElementById('teamNameInput').value = 'Atlas'; saveAndBack(); } },
+  // v2.9.37: top the sample squad up to 11 (7 on field + 4 bench) so the shots
+  // exercise the multi-wave bench — next-on loud, later waves quiet.
+  { n: '05', label: 'Home — My Teams', go: () => {
+    addPlayerField(); editingTeam.players[editingTeam.players.length - 1] = 'Harper';
+    addPlayerField(); editingTeam.players[editingTeam.players.length - 1] = 'Billie';
+    document.getElementById('teamNameInput').value = 'Atlas'; saveAndBack();
+  } },
   { n: '13', label: 'Home drawer', go: () => openDrawer('homeMenu') },
   { n: '06', label: 'Squad select', go: () => { closeAnyDrawer(); selectTeam(teams[teams.length - 1].id); } },
   { n: '15', label: 'Keeper page', go: () => startFromSquad(), sizes: ['phone', 'ipad'] },
