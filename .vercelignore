@@ -7,3 +7,5 @@ flows
 *.md
 deploy-guard.sh
 screen-audit.json
+# palette experiments are dev-only mock builds
+palette-mock.html

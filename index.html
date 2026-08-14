@@ -183,10 +183,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,transform .08s;
   -webkit-tap-highlight-color:transparent}
 .ui-chip:active{transform:scale(.96)}
-.ui-chip.sel{background:rgba(0,212,170,.16);color:#00d4aa}
-/* The selection tick the legacy .chip.sel carried (v2.7.41: the squad picker
-   renders just the name and relies on this). One affordance for every chip. */
-.ui-chip.sel::after{content:' ✓'}
+/* v2.9.32 (owner): selection is a SOLID accent fill with inverse text — a
+   luminance flip readable in sunlight and by colour-blind coaches, so no ✓
+   tick is needed (the tick only existed to prop up the old whisper-quiet
+   16%-alpha tint). One affordance for every chip, now with no furniture. */
+.ui-chip.sel{background:#00d4aa;color:#06231d}
+/* v2.9.32: two shapes for content-bearing chips. --card = block chip with a
+   title + description line (strategy cards); --tile = column tile with a key
+   + one-line descriptor (the ONE formation picker, every screen). */
+.ui-chip--card{display:block;width:100%;text-align:left}
+.ui-chip--tile{flex-direction:column;gap:3px;min-height:56px;padding:10px 6px}
 
 /* 48×48 — sizing these removes 9 of the 34 undersized controls the
    accessibility audit found, in one place instead of nine. */
@@ -216,8 +222,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    .chip.gk-sel died with it (no callers). */
 
 /* Stepper */
-.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:10px;margin-bottom:8px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px;background:#16213e;border-radius:12px;margin-bottom:8px}
 .set-row label{font-size:14px;font-weight:600}
+/* v2.9.32: grouped settings — ONE container per section instead of a box per
+   row (owner: the settings read noisy). Rows divide with hairlines; the
+   surface count on screen drops to background / section / control. */
+.set-group{background:#16213e;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.set-group .set-row{background:none;border-radius:0;margin:0}
+.set-group>*+*{border-top:1px solid #1e2a45}
+/* Option row inside a group — a radio-list choice (sub strategy). Selection
+   is the same solid-fill flip as .ui-chip.sel; the fill takes the option's
+   own accent inline (strategy rows are colour-coded). */
+.opt-row{display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#eee;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+/* v2.9.32: settings read as one column — cap the measure on wide screens
+   (iPad) so a row's label stays next to the control it describes. */
+#teamSettings .sec{max-width:600px;width:100%;margin:0 auto;box-sizing:border-box}
 .stepper{display:flex;align-items:center;gap:8px}
 /* v2.9.30: .st-btn removed — every stepper is a .ui-step (migration step 3a). */
 .st-val{font-size:20px;font-weight:800;width:44px;text-align:center;color:#00d4aa}
@@ -1291,11 +1310,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   <div class="ab" style="max-width:360px;text-align:left">
     <h2 style="text-align:center;margin-bottom:8px">How should I handle subs?</h2>
     <div style="text-align:center;font-size:12px;color:#888;margin-bottom:14px">Pick once — applies to this game. You can change anytime from the game screen.</div>
-    <button class="ui-chip" onclick="pickSubStrategy('auto')" style="display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+    <button class="ui-chip ui-chip--card" onclick="pickSubStrategy('auto')" style="padding:12px 14px;margin-bottom:8px">
       <div style="font-weight:800;color:#00d4aa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="timer" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Auto</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">App handles sub timing + selection. Longest-on comes off; longest-benched comes on. Tweak frequency + grouping anytime from the steppers on the Plan page.</div>
     </button>
-    <button class="ui-chip" onclick="pickSubStrategy('planned')" style="display:block;width:100%;text-align:left;padding:12px 14px;cursor:pointer">
+    <button class="ui-chip ui-chip--card" onclick="pickSubStrategy('planned')" style="padding:12px 14px">
       <div style="font-weight:800;color:#a78bfa;font-size:14px;margin-bottom:3px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard" width="14" height="14" style="width:14px;height:14px;display:inline-flex"></i>Custom</div>
       <div style="font-size:12px;color:#bbb;line-height:1.4;font-weight:500">You decide when subs fire. Tap SUB live, or pre-build a full Plan in the Plan page — same strategy, different degree of detail.</div>
     </button>
@@ -3826,9 +3845,9 @@ function renderSoundPicker(){
     const c=document.createElement('div');
     c.className='ui-chip'+(cur===k?' sel':'');
     c.style.cssText='padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px';
-    c.innerHTML=`<div style="line-height:1;color:#5bc0de">${ic(p.icon,22)}</div>
+    c.innerHTML=`<div style="line-height:1;color:${cur===k?'#06231d':'#5bc0de'}">${ic(p.icon,22)}</div>
       <div style="font-weight:800;font-size:12px;letter-spacing:.3px">${p.label}</div>
-      <div style="font-size:10px;color:#888;font-weight:500">${p.desc}</div>`;
+      <div style="font-size:10px;color:${cur===k?'#06231d':'#888'};${cur===k?'opacity:.75;':''}font-weight:500">${p.desc}</div>`;
     c.onclick=()=>selectSoundPack(k);
     g.appendChild(c);
   });
@@ -4081,12 +4100,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.31-beta';
+const APP_VERSION='v2.9.32-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.32-beta':{
+    title:'A calmer Settings tab, bolder picks',
+    items:['Selected now looks selected: your picks fill solid in their colour (green for most, pink for the keeper, amber for player of the match) with dark text — readable in full sun. The little ✓ ticks are gone.','Far fewer boxes: the sub-strategy choices share one card, and the three timing controls + the breaks-only switch share another — rows divided by hairlines, like your phone’s own Settings app.','One formation picker everywhere — the Settings tab, the shape page and game settings now show the same tile: the shape up top, what it means underneath.','The even-time suggestion now lives inside the Sub every row it tunes, and on iPad the settings hold a comfortable single column instead of stretching edge to edge.']
+  },
   'v2.9.31-beta':{
     title:'Every chip, one family',
     items:['All the picker tiles — squad names, keeper, formation, format, sport, strategy, scorer — now share the app’s rounded chip style: solid fill, softer corners, the same friendly type as the buttons.','The selection tick (✓) now appears on every selected chip, including player of the match and scorer picks — one affordance everywhere.']
@@ -5944,14 +5967,8 @@ function renderTeamSettings(){
     const fg=document.createElement('div');
     fg.className='chip-grid';
     fg.style.cssText='grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px';
-    Object.keys(FORMATIONS[currentTeam.format]).forEach(name=>{
-      const c=document.createElement('div');
-      c.className='ui-chip'+(p.formation===name?' sel':'');
-      c.style.cssText='padding:9px 4px;font-size:13px;font-weight:700';
-      c.textContent=name;
-      c.onclick=()=>{ p.formation=name; change(); };
-      fg.appendChild(c);
-    });
+    // v2.9.32: the shared formation tile (was this page's own flat text chip)
+    renderFormationTiles(fg,currentTeam.format,p.formation,(name)=>{ p.formation=name; change(); });
     host.appendChild(fg);
   }
   // --- Sub strategy ---
@@ -5959,24 +5976,33 @@ function renderTeamSettings(){
   sLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
   sLbl.textContent='Sub strategy';
   host.appendChild(sLbl);
+  // v2.9.32: one grouped card, three option rows (was three separate boxes —
+  // the page read as a wall of panels).
   const sg=document.createElement('div');
-  sg.style.cssText='display:flex;flex-direction:column;gap:6px;margin-bottom:14px';
+  sg.className='set-group';
+  sg.style.marginBottom='14px';
   SUB_STRATEGIES.forEach(s=>{
     const sel=p.subStrategy===s.key;
-    const c=document.createElement('div');
-    c.className='ui-chip'+(sel?' sel':'');
-    c.style.cssText='display:block;padding:10px 12px;text-align:left;cursor:pointer';
-    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?s.color:'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?s.color:'#bbb')}${s.label}</div>
-      <div style="font-size:11px;color:#888;line-height:1.35;font-weight:500">${s.stance}</div>`;
+    const c=document.createElement('button');
+    c.type='button';
+    c.className='opt-row'+(sel?' sel':'');
+    // Selected = solid brand green, always (owner benchmark: a screen speaks
+    // TWO colours — neutrals + one accent. Strategy identity colours stay on
+    // matchday surfaces; the settings page doesn't need them).
+    if(sel) c.style.background='#00d4aa';
+    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${sel?'#06231d':'#bbb'};margin-bottom:2px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,sel?'#06231d':'#bbb')}${s.label}</div>
+      <div style="font-size:11px;color:${sel?'#06231d':'#888'};${sel?'opacity:.8;':''}line-height:1.35;font-weight:500">${s.stance}</div>`;
     c.onclick=()=>{ p.subStrategy=s.key; change(); };
     sg.appendChild(c);
   });
   host.appendChild(sg);
   // --- Steppers: period length, sub interval, players per sub ---
-  const stepRow=(label,key,min,max)=>{
+  // v2.9.32: units moved out of the label's parentheses into a quiet sub-line
+  // ("Half length (min / half)" → "Half length" over "minutes per half").
+  const stepRow=(label,unit,key,min,max)=>{
     const row=document.createElement('div');
     row.className='set-row';
-    row.innerHTML=`<label>${label}</label>`;
+    row.innerHTML=`<label>${label}${unit?`<br><span style="font-size:11px;color:#888;font-weight:500">${unit}</span>`:''}</label>`;
     const st=document.createElement('div');
     st.className='stepper';
     const dec=document.createElement('button'); dec.className='ui-step'; dec.textContent='−';
@@ -5992,11 +6018,18 @@ function renderTeamSettings(){
   pLbl.style.cssText='font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin:0 0 6px';
   pLbl.textContent='Timing';
   host.appendChild(pLbl);
-  host.appendChild(stepRow(periodWord+' ('+periodUnit+')','hm',4,60));
-  host.appendChild(stepRow('Sub every (mins)','sf',1,30));
+  // v2.9.32: the timing rows + breaks-only toggle share ONE grouped card.
+  const tg=document.createElement('div');
+  tg.className='set-group';
+  host.appendChild(tg);
+  tg.appendChild(stepRow(periodWord,'minutes per '+(isQ?'quarter':'half'),'hm',4,60));
+  const sfRow=stepRow('Sub every','minutes','sf',1,30);
   // v2.9.27 (owner): the timing section carries the even-time split — the same
   // suggestion the squad page makes, computed from the FULL roster midweek.
   // One tap sets the interval so every kid's minutes come out level.
+  // v2.9.32: the suggestion lives INSIDE the Sub-every card — it exists only
+  // to tune this one control, so it reads as that card's footer, not a loose
+  // line between rows.
   {
     const n=(currentTeam.players||[]).length;
     const onF=fmt.onField||7;
@@ -6005,24 +6038,30 @@ function renderTeamSettings(){
       const scv=Math.max(1,p.sc||1);
       const suggested=Math.max(1,Math.round((p.hm||20)*periods*scv/n));
       const isSet=p.sf===suggested;
-      const evRow=document.createElement('div');
-      evRow.style.cssText='display:flex;align-items:center;gap:10px;padding:2px 4px 10px;font-size:12px;color:#9fb3c8;font-weight:600';
+      const top=document.createElement('div');
+      top.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px';
+      while(sfRow.firstChild) top.appendChild(sfRow.firstChild);
+      sfRow.style.cssText='flex-direction:column;align-items:stretch';
+      sfRow.appendChild(top);
+      const hint=document.createElement('div');
+      hint.style.cssText='display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1e2a45;font-size:12px;color:#9fb3c8;font-weight:600';
       if(isSet){
-        evRow.innerHTML=`<span style="color:#00d4aa">✓ Even time for ${n} players — subs every ${suggested}′</span>`;
+        hint.innerHTML=`<span style="color:#00d4aa">✓ Even time for ${n} players</span>`;
       }else{
-        evRow.innerHTML=`<span style="flex:1;min-width:0">Even time for ${n} players: subs every <strong style="color:#eee">${suggested}′</strong></span>`;
+        hint.innerHTML=`<span style="flex:1;min-width:0">Even time for ${n} players: <strong style="color:#eee">${suggested}′</strong></span>`;
         const use=document.createElement('button');
         use.type='button';
         use.textContent=`USE ${suggested}′`;
         use.setAttribute('aria-label',`Set sub interval to ${suggested} minutes for even time`);
-        use.style.cssText='flex-shrink:0;min-height:44px;padding:10px 14px;background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:10px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit';
+        use.style.cssText='flex-shrink:0;min-height:44px;padding:10px 14px;background:rgba(0,212,170,.16);color:#00d4aa;border:none;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit';
         use.onclick=()=>{ p.sf=suggested; change(); };
-        evRow.appendChild(use);
+        hint.appendChild(use);
       }
-      host.appendChild(evRow);
+      sfRow.appendChild(hint);
     }
   }
-  host.appendChild(stepRow('Players per sub','sc',1,Math.max(1,fmt.onField-1)));
+  tg.appendChild(sfRow);
+  tg.appendChild(stepRow('Players per sub','','sc',1,Math.max(1,fmt.onField-1)));
   // --- Subs at breaks only (no rolling mid-play subs) ---
   const periodName=isNb?'quarter':'period';
   const boRow=document.createElement('div');
@@ -6030,14 +6069,20 @@ function renderTeamSettings(){
   boRow.style.cssText='align-items:flex-start';
   const boNote=isNb?' (Standard netball rule.)':'';
   boRow.innerHTML=`<label style="flex:1;min-width:0">Subs at breaks only<br><span style="font-size:11px;color:#888;font-weight:500">No rolling subs — rotate only at ${periodName} breaks.${boNote}</span></label>`;
+  // v2.9.32: 44pt hit zone via the .hit44 pattern (§11.0) — the visual pill
+  // stays 52×30 on an inner span; a negative margin keeps the row's footprint.
+  const on=!!p.breaksOnly;
   const tog=document.createElement('button');
   tog.type='button';
-  const on=!!p.breaksOnly;
-  tog.style.cssText=`flex-shrink:0;width:52px;height:30px;border-radius:15px;border:1.5px solid ${on?'#00d4aa':'#2a3550'};background:${on?'#00d4aa':'#0a1628'};position:relative;cursor:pointer;transition:all .15s;margin-top:2px`;
-  tog.innerHTML=`<span style="position:absolute;top:2px;${on?'right:2px':'left:2px'};width:22px;height:22px;border-radius:50%;background:${on?'#0a1628':'#666'};transition:all .15s"></span>`;
+  tog.className='hit44';
+  tog.setAttribute('role','switch');
+  tog.setAttribute('aria-checked',on?'true':'false');
+  tog.setAttribute('aria-label','Subs at breaks only');
+  tog.style.margin='-7px 0';
+  tog.innerHTML=`<span style="display:inline-block;width:52px;height:30px;border-radius:15px;border:1.5px solid ${on?'#00d4aa':'#2a3550'};background:${on?'#00d4aa':'#0a1628'};position:relative;transition:all .15s"><span style="position:absolute;top:2px;${on?'right:2px':'left:2px'};width:22px;height:22px;border-radius:50%;background:${on?'#0a1628':'#666'};transition:all .15s"></span></span>`;
   tog.onclick=()=>{ p.breaksOnly=!p.breaksOnly; change(); };
   boRow.appendChild(tog);
-  host.appendChild(boRow);
+  tg.appendChild(boRow);
 }
 // Live-save for the Settings tab: currentTeam is a reference into `teams`, so
 // persisting is just writing the array back. Cloud push is debounced (stepper
@@ -6388,9 +6433,8 @@ function renderS1(){
     const c=document.createElement('div');
     const isOut=!sel.has(i);
     c.className='ui-chip'+(isOut?'':' sel');
-    // v2.7.41: just the name. .chip.sel::after already adds " ✓" via CSS;
-    // adding another inline check was rendering as "Name ✓ ✓". The line-
-    // through + opacity on .chip:not(.sel) already telegraphs "out".
+    // v2.9.32: present = solid green fill (.ui-chip.sel), no tick. The line-
+    // through + opacity on the unselected chip already telegraphs "out".
     c.style.cssText=isOut
       ?'opacity:0.45;text-decoration:line-through;padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:50px'
       :'padding:14px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;min-height:50px';
@@ -6583,8 +6627,8 @@ function renderGkStep(){
     const cur=G.gk===pIdx;
     const c=document.createElement('button');
     c.className='ui-chip'+(cur?' sel':'');
-    c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit'+(cur?';background:rgba(255,123,172,.16)':'');
-    c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.style.cssText='padding:14px 8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;font-family:inherit'+(cur?';background:#ff7bac':'');
+    c.innerHTML=`<div style="font-size:14px;font-weight:700;color:${cur?'#06231d':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#06231d;opacity:.8;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>{ setPlanKeeper(pIdx); renderGkStep(); };
     g.appendChild(c);
   });
@@ -6606,18 +6650,12 @@ function finishSetupToField(){
 function renderShapeStep(){
   const g=document.getElementById('shapeStepGrid');
   if(!g)return;
-  g.innerHTML='';
   const back=document.getElementById('shapeBackLbl');
   if(back)back.textContent=(FORMATS[curFmt]&&FORMATS[curFmt].hasGk)?'Keeper':'Squad';
-  Object.keys(FORMATIONS[curFmt]||{}).forEach(k=>{
-    const sel=(curFormation===k);
-    const c=document.createElement('button');
-    c.className='ui-chip'+(sel?' sel':'');
-    c.style.cssText='padding:18px 8px;min-height:56px;font-size:17px;font-weight:800;letter-spacing:.5px;cursor:pointer;border:none;font-family:inherit;color:'+(sel?'#5bc0de':'#eee')+(sel?';background:rgba(91,192,222,.16)':'');
-    c.textContent=k;
-    c.onclick=()=>{ selectGameFormation(k); renderShapeStep(); };
-    g.appendChild(c);
-  });
+  // v2.9.32: same tile as every other formation picker (was its own slab
+  // style with a cyan selected tint — green .sel is the app's one selection
+  // affordance, and the descriptor helps here most of all).
+  renderFormationTiles(g,curFmt,curFormation,(k)=>{ selectGameFormation(k); renderShapeStep(); });
   _li();
 }
 function shapeStepBack(){
@@ -6996,19 +7034,26 @@ const FORMATION_SHORTS={
   // Netball
   'standard':'Fixed positions'
 };
+// v2.9.32: ONE formation tile, every screen (owner report: the picker looked
+// different on the Settings tab, the shape page and game settings). Key +
+// one-line descriptor, standard .sel treatment; the container grid decides
+// the column count, never the tile.
+function renderFormationTiles(host,fmtKey,selected,onPick){
+  host.innerHTML='';
+  Object.keys(FORMATIONS[fmtKey]||{}).forEach(k=>{
+    const c=document.createElement('button');
+    c.type='button';
+    c.className='ui-chip ui-chip--tile'+(selected===k?' sel':'');
+    const short=FORMATION_SHORTS[k]||'';
+    const selNow=selected===k;
+    c.innerHTML=`<div style="font-weight:800;font-size:16px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:10px;color:${selNow?'#06231d':'#888'};${selNow?'opacity:.75;':''}font-weight:500;line-height:1.2;text-align:center">${short}</div>`:''}`;
+    c.onclick=()=>onPick(k);
+    host.appendChild(c);
+  });
+}
 function renderFormationPicker(){
   const g=document.getElementById('formationGrid');
-  g.innerHTML='';
-  const forms=FORMATIONS[curFmt];
-  Object.keys(forms).forEach(k=>{
-    const c=document.createElement('div');
-    c.className='ui-chip'+(curFormation===k?' sel':'');
-    c.style.cssText='padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px';
-    const short=FORMATION_SHORTS[k]||'';
-    c.innerHTML=`<div style="font-weight:800;font-size:14px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:10px;color:#888;font-weight:500;line-height:1.2;text-align:center">${short}</div>`:''}`;
-    c.onclick=()=>{curFormation=k;renderFormationPicker();};
-    g.appendChild(c);
-  });
+  renderFormationTiles(g,curFmt,curFormation,(k)=>{curFormation=k;renderFormationPicker();});
   // Hide the legacy long-tip box — pill blurbs replace it
   const tipEl=document.getElementById('formationTip');
   if(tipEl)tipEl.style.display='none';
@@ -7032,13 +7077,15 @@ function renderSubStratPicker(){
   SUB_STRATEGIES.forEach(s=>{
     const c=document.createElement('button');
     c.type='button';
-    c.className='ui-chip'+(cur===s.key?' sel':'');
+    c.className='ui-chip ui-chip--card'+(cur===s.key?' sel':'');
     const isSel=cur===s.key;
-    c.style.cssText='display:block;width:100%;text-align:left;padding:10px 12px;cursor:pointer;border-color:'+(isSel?s.color:'#333');
-    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${isSel?s.color:'#bbb'};margin-bottom:3px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,isSel?s.color:'#bbb')}${s.label}</div>
-      <div style="font-size:11px;color:${isSel?'#bbb':'#888'};font-weight:600;font-style:italic;margin-bottom:3px">${s.stance}</div>
-      ${s.warning?`<div style="font-size:11px;color:#f0a500;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px">${ic('triangle-alert',12,'#f0a500')}${s.warning}</div>`:''}
-      <div style="font-size:11px;color:#888;font-weight:500;line-height:1.4">${s.desc}</div>`;
+    // Selected = solid fill in the strategy's own accent, inner text dark.
+    c.style.cssText='padding:10px 12px'+(isSel?';background:'+s.color:'');
+    const inner=isSel?'#06231d':null;
+    c.innerHTML=`<div style="font-weight:800;font-size:13px;color:${inner||'#bbb'};margin-bottom:3px;display:flex;align-items:center;gap:6px">${ic(s.icon,13,inner||'#bbb')}${s.label}</div>
+      <div style="font-size:11px;color:${inner||'#888'};${isSel?'opacity:.85;':''}font-weight:600;font-style:italic;margin-bottom:3px">${s.stance}</div>
+      ${s.warning?`<div style="font-size:11px;color:${inner||'#f0a500'};font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px">${ic('triangle-alert',12,inner||'#f0a500')}${s.warning}</div>`:''}
+      <div style="font-size:11px;color:${inner||'#888'};${isSel?'opacity:.75;':''}font-weight:500;line-height:1.4">${s.desc}</div>`;
     c.onclick=()=>{cfg.subStrategy=s.key;renderSubStratPicker();renderGamePlanPanel();};
     g.appendChild(c);
   });
@@ -8430,7 +8477,8 @@ function toggleOppFormation(){
       c.className='ui-chip'+(G&&G.oppFormation===k?' sel':'');
       c.style.cssText='padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:84px';
       const short=FORMATION_SHORTS[k]||'';
-      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:#888;font-weight:500;line-height:1.1">${short}</div>`:''}`;
+      const oSel=G&&G.oppFormation===k;
+      c.innerHTML=`<div style="font-weight:800;font-size:13px;letter-spacing:.3px">${k}</div>${short?`<div style="font-size:9px;color:${oSel?'#06231d':'#888'};${oSel?'opacity:.75;':''}font-weight:500;line-height:1.1">${short}</div>`:''}`;
       c.onclick=()=>{ selectOppFormation(k); };
       g.appendChild(c);
     });
@@ -9073,7 +9121,7 @@ function renderPotmChips(){
     const b=document.createElement('button');
     b.className='ui-chip'+(G.potm===n?' sel':'');
     // 44px minimum: full-time, gloves on — every chip is a real hit target.
-    b.style.cssText='min-height:44px;padding:10px 16px'+(G.potm===n?';background:rgba(240,165,0,.18);color:#f0a500':'');
+    b.style.cssText='min-height:44px;padding:10px 16px'+(G.potm===n?';background:#f0a500;color:#06231d':'');
     b.textContent=fn(n);
     b.setAttribute('aria-label',`Player of the match: ${fn(n)}`);
     b.setAttribute('aria-pressed',G.potm===n?'true':'false');
@@ -9208,7 +9256,7 @@ function renderMatchDetail(){
     (m.playingTime||[]).slice().sort((a,b)=>b.secs-a.secs).forEach(({name})=>{
       const b=document.createElement('button');
       b.className='ui-chip'+(m.potm===name?' sel':'');
-      b.style.cssText='min-height:44px;padding:10px 16px'+(m.potm===name?';background:rgba(240,165,0,.18);color:#f0a500':'');
+      b.style.cssText='min-height:44px;padding:10px 16px'+(m.potm===name?';background:#f0a500;color:#06231d':'');
       b.textContent=fn(name);
       b.setAttribute('aria-pressed',m.potm===name?'true':'false');
       b.onclick=()=>{ m.potm=(m.potm===name)?null:name; renderMatchDetail(); };
@@ -10289,8 +10337,8 @@ function openGkPick(){
     const cur=G.gk===pIdx;
     const c=document.createElement('div');
     c.className='ui-chip'+(cur?' sel':'');
-    c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer'+(cur?';background:rgba(255,123,172,.16)':'');
-    c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#ff7bac':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#ff7bac;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
+    c.style.cssText='padding:12px 8px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer'+(cur?';background:#ff7bac':'');
+    c.innerHTML=`<div style="font-size:13px;font-weight:700;color:${cur?'#06231d':'#eee'}">${fn(name)}</div>${cur?'<div style="font-size:10px;color:#06231d;opacity:.8;font-weight:800;letter-spacing:.5px">IN GOAL</div>':''}`;
     c.onclick=()=>pickGk(pIdx);
     g.appendChild(c);
   });

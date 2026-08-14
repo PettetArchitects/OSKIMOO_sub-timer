@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.31
+> Last updated: v2.9.32
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -123,6 +123,92 @@ family.
 
 Backgrounds are ~12% tints of their foreground on `--surface-card`. A new sport
 adding positions must map onto this palette rather than introduce new hues.
+
+### 2.1.1 Palette rationalisation — PROPOSAL (v2.9.32, awaiting owner stamp)
+
+> Written from the owner's ask ("rationalise the colour palette with some
+> colour theory"). Nothing below is implemented; hex values are deliberately
+> not in token-table format so the design-check parser ignores them until
+> stamped. Implementation order per §10: stamp → rewrite §2.1 → migrate →
+> ratchet the off-token budget DOWN.
+
+**What the audit shows** (40 tokens; design-check: 37 off-token colours / 61 uses):
+
+1. **Surface hue wobble.** Every surface sits in a 213–223° blue cluster —
+   except the app background #1a1a2e at 240°. Blue cards on a
+   purple-cast ground is part of why busy screens read "noisy": two ambient
+   hues compete. Six of the off-token colours (#0f1422, #141a2e, #1a2747,
+   #141f3a…) are hand-mixed surfaces invented because no rule said how to
+   make one.
+2. **Elevation is undeclared.** The app actually runs a coherent model —
+   bands and controls float ABOVE the background (panel L16%, input L15% vs
+   bg L14%), content cards sink BELOW it as wells (card L10%, pitch L7%) —
+   but it's written nowhere, so new surfaces guess.
+3. **Thirteen greys.** Four blue-tinted text tokens + the nine-step plain
+   neutral ramp. On a blue ground, pure greys shift perceptually warm — they
+   read as a different material (why dense lists feel patchwork). §11
+   backlog #1 already wants this collapsed.
+4. **Accent duplicates.** Yellow 44° vs amber 41° are 3° apart — one
+   meaning, two tokens. The stray #ff7bac (7 uses) is a pink drift off
+   red-light. Green's tone family (light/dark/deep) is fine — that's a tone
+   ladder, not a duplicate.
+5. **Two tint alphas.** Selection tints use rgba(accent,.14) *and* .16.
+
+**The proposed system (colour theory, stated as rules):**
+
+- **Hue encodes meaning; lightness encodes elevation; never both.**
+- **One surface hue** — anchor everything at ~218° (the current cluster
+  median). Option A (conservative): keep #1a1a2e as a stamped "brand navy"
+  exception. Option B (full): re-anchor the background to ~218° at the same
+  lightness (≈ #161f33) — visibly calmer, but it touches the app's identity,
+  so it needs its own before/after pass. **Recommend A now, B behind
+  screenshots.**
+- **Declare the elevation ladder** (all one hue, lightness only):
+  overlay < pitch (deepest well) < card (well) < background (ground) <
+  input/control (raised) < panel/band (highest). New surfaces pick a rung,
+  never a new mix.
+- **One grey family.** Text/de-emphasis uses the four blue-grey text tokens;
+  the plain ramp keeps only its two darkest steps (true-black wells) and the
+  other seven map onto the blue-greys. ~13 greys → 6.
+- **Five semantic accents, positioned on the wheel relative to brand green
+  (166°):** cyan 194° *analogous* = calm, related → preview/info · purple
+  255° = plan/custom · red 349° *near-complement* = maximum tension → theirs
+  / stop / danger · amber 41° *split-complement* = attention. Yellow merges
+  into amber; #ff7bac snaps to red-light (red's tone pair, not a meaning).
+- **One tint rule:** selected/tinted fills are rgba(accent, .16) — nothing
+  else. Gradient stop pairs are ±5% lightness of the base token (the
+  documented accent-green-light/dark precedent) — closing §11 backlog #0's
+  biggest bucket.
+- **Budget per screen (60-30-10):** surfaces ~60%, text ~30%, ONE accent
+  family ~10% per region. A second accent on screen must be earning a
+  semantic difference (e.g. green us / red them on the score), never variety.
+
+**End state (Option B):** ~24 tokens (7 surfaces · 3 borders · 4 text + 2
+deep neutrals · 5 accents + tone/tint rules + inverse), a written old→new
+mapping for every retired token, and the design-check budget ratcheted from
+43 toward ~10.
+
+**Option C — three-accent discipline (owner follow-up: "reduce how many
+colours we use").** B still speaks five accent hues — and the app today
+actually speaks NINE hue families once the position-tag palette (periwinkle
+#7b8cff, sage #8dd68d), GK pink #ff7bac and stray yellows are counted. C cuts
+the accent vocabulary to THREE:
+
+- **green** — ours / go / interactive / selected (cyan's preview-and-SUB
+  duties fold in here: analogous hues, one family);
+- **red** — theirs / stop / danger ONLY. **Red exits navigation**: the
+  `.btn-o` secondary and `.back-btn` (red today) become neutral chrome —
+  a red "Done" reads destructive when it's just a door;
+- **amber** — attention: warnings, sub-due, player of the match, BETA.
+
+Everything else goes neutral: purple's plan/custom marking is carried by the
+mode label (`.is-plan` becomes a neutral tone), the GK pick's pink folds into
+selection green (the IN GOAL label carries the role — the pitch shirt
+palette, the app's identity layer, is untouched per §11 1a), and the
+five-colour position-tag palette becomes ONE quiet neutral tag with a single
+amber exception for GK (the one role-critical tag). End state: **~17 tokens,
+3 accent hues.** Mock: `palette-mock.html` (built with C), browsable across
+the whole app via `dev-gallery.html?app=palette-mock.html`.
 
 ### 2.2 Typography
 
@@ -282,6 +368,7 @@ by screen as callers migrate, never in one sweep.
 | `.ui-btn--ghost` | Menu and drawer rows. Full width, left-aligned. | 48px min |
 | `.ui-btn--danger` | Loses data or ends something. | 44px min |
 | `.ui-chip` | Compact, inline with content — tags, toggles, scores. | — |
+| `.ui-chip--card` | Block chip with a title + description line (strategy cards). | full width |
 | `.ui-step` | The −/+ steppers. | **44×44** |
 
 Tone modifiers sit **on top of** `--secondary` rather than multiplying into new
@@ -436,6 +523,24 @@ overflow: hidden;
 ```
 
 Internal padding 8-12px. Often has a header row with an eyebrow label (10px, weight 800, 1.2px letter-spacing, uppercase) on the left and optional action chips on the right.
+
+#### 4.3.1 Grouped settings list — `.set-group` / `.opt-row` (v2.9.32)
+
+ONE container per settings section instead of a box per row (the Settings tab
+read as a wall of panels). `.set-group` is a `#16213e` 12px-radius card whose
+children divide with `--border-subtle` hairlines; `.set-row` inside it drops
+its own fill/radius/margins. `.opt-row` is the radio-list choice row (sub
+strategy): full-width transparent button, title + one-line stance, selected =
+the solid-fill flip below. Surfaces visible on a settings screen are exactly
+three: background / section card / control.
+
+**Selection affordance (v2.9.32, owner):** selected = a SOLID accent fill
+with inverse (#06231d) text — no ✓ tick, no tint. The old treatment
+(16%-alpha tint + ✓) was a whisper plus furniture; the solid fill is a
+luminance flip, which is what survives sunlight and colour-blindness (WCAG
+1.4.1 is satisfied by lightness contrast, not hue). The fill takes the
+option's semantic accent: green by default, GK pink for keeper picks, amber
+for player-of-the-match, the strategy's own colour on strategy rows.
 
 ### 4.4 DSEG clock
 
@@ -601,6 +706,36 @@ belongs to that family.
 ---
 
 ## 5. Patterns
+
+### 5.0 THE BENCHMARK — the Team settings standard (owner-stamped, v2.9.32)
+
+The refined Settings tab (`teamSettings`; before/after record in
+`docs/records/v2.9.32-team-settings/`) is **the bar every screen gets
+measured against**. What makes it the benchmark:
+
+1. **Two colours used** (owner's words): NEUTRALS + ONE ACCENT. The page is
+   surfaces and blue-grey text, with brand green as the only accent — on
+   selection fills, stepper values, the one helper action. Red and amber may
+   appear ONLY when their meaning is on screen (danger / opponent / a live
+   warning), never as decoration or variety.
+2. **Three surfaces max**: background / section card / control. ONE
+   `.set-group` card per section, rows divided by hairlines — never a box
+   per row.
+3. **Selection is a solid accent fill** with inverse text — a luminance
+   flip. No ticks, no tints.
+4. **One component per family**, shared with every other screen
+   (`renderFormationTiles`, `.ui-chip` shapes, `.ui-step`) — nothing bespoke
+   that another screen renders differently.
+5. **Quiet labels**: units and qualifiers live in an 11px sub-line, not in
+   parentheses; helper text lives INSIDE the row it tunes, as its footer.
+6. **Real controls**: `<button>` everywhere, ≥44pt hit areas, and a capped
+   measure (600px) so wide screens keep labels beside their controls.
+
+Rolling the rest of the app onto this bar is the §11 backlog's frame; the
+component census (`docs/COMPONENT-CENSUS.md`) is the checklist. Suggested
+order: game settings `s2` (shares three families with the benchmark, most
+divergent sibling) → squad select `s1` → keeper/shape steps → summary `s5`
+→ the Plan page.
 
 ### 5.1 Sub-flow gestures
 
