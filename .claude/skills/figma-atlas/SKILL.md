@@ -40,10 +40,12 @@ Sections lettered A–J in reading order, grouped by device size, all at x=0:
 | H | PLAY web | `5:16` | 8200 | 940 |
 | I | PLAN web | `5:15` | 9200 | 940 |
 | J | DRAWERS web | `5:17` | 10200 | 940 |
-| L | SETUP STEPS + SETTINGS iPad | `78:3` | 12300 | 1160 |
+| L | SETUP STEPS + SETTINGS iPad | `78:3` | 11250 | 1160 |
+| S | SANDBOX bottom-zone system | `93:2` | 17200 | 1200 |
 
-(K is reserved for temporary proposal sections — currently the nav-strategy
-mocks at y=11250; L sits below it and moves up into the grid when K dies.)
+(K remains reserved for temporary proposal sections. The nav-strategy mocks
+K–K4 were retired 2026-08-15 when A1/A2/A4 shipped in v2.9.35 — proposals die
+with their stamp. L moved up into the grid at that point.)
 
 Frames inside a section sit at y=70, x=60 + n·pitch — pitch 435 (phone),
 830 (iPad), 1345 (web) — **in ascending state-number order left to right**.
@@ -107,7 +109,10 @@ Partial re-shoots are fine: only swap the frames whose screens changed.
 
 ## Workflow 2 — add a new screen
 
-1. Add a shoot state to `shoot-atlas.mjs` (next number; drive with real app
+1. Add a shoot state to `shoot-atlas.mjs` (fixture note: since v2.9.37 the
+   Atlas team is 11 players — sample squad + Harper + Billie — so live-game
+   shots exercise the multi-wave bench)
+1b. Add a shoot state to `shoot-atlas.mjs` (next number; drive with real app
    functions — verify names in `index.html` first, mirror
    `test/screen-audit.mjs`).
 2. Place the frame ONCE in the correct section, keeping ascending state order
