@@ -92,11 +92,17 @@ const STATES = [
 ];
 
 let bootGen = 0;
+// Resolves once boot()'s driver pass has run — the first SELECT driver creates
+// the shared Gallery team, so the elements harvest must not race it.
+let seededResolve;
+const seeded = new Promise(r => { seededResolve = r; });
 async function boot() {
   const gen = ++bootGen; // a device toggle mid-boot invalidates the old loop
   const canvas = document.getElementById('canvas');
-  for (const [label, drive] of STATES) {
-    if (gen !== bootGen) return;
+  // All tiles are created up front so the 13 iframes load in parallel — the
+  // old one-at-a-time boot (await load + poll + 250ms stagger per tile) was
+  // where all the wall-clock went.
+  const tiles = STATES.map(([label, drive]) => {
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
@@ -117,32 +123,48 @@ async function boot() {
       document.body.dataset.zoom = document.body.dataset.zoom === 'fit' ? 'full' : 'fit';
       tile.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     };
-    await new Promise(res => { frame.onload = res; });
-    const w = frame.contentWindow;
+    return { drive, frame, status };
+  });
+  // Wait for every app instance to finish booting (concurrently).
+  await Promise.all(tiles.map(async (t) => {
+    await new Promise(res => { t.frame.onload = res; });
+    const w = t.frame.contentWindow;
+    for (let i = 0; i < 400 && typeof w.newTeam !== 'function'; i++) await wait(25);
+    w.document.getElementById('launchSplash')?.remove();
+  }));
+  if (gen !== bootGen) return;
+  // Drivers run in order, but they're cheap synchronous evals now. Each frame
+  // booted in parallel (possibly against empty storage), so it re-reads
+  // localStorage first to see the Gallery team an earlier driver created.
+  // Tile 01 has no driver and keeps whatever state it booted with.
+  for (const t of tiles) {
+    if (gen !== bootGen) return;
+    const w = t.frame.contentWindow;
     try {
-      // wait for the app's functions to exist
-      for (let i = 0; i < 100 && typeof w.newTeam !== 'function'; i++) await wait(100);
-      w.document.getElementById('launchSplash')?.remove();
-      if (drive) w.eval(drive);
-      status.textContent = 'live';
+      if (t.drive) w.eval('teams = loadTeams();' + t.drive);
+      t.status.textContent = 'live';
     } catch (e) {
-      status.textContent = '⚠ ' + String(e.message || e).slice(0, 40);
+      t.status.textContent = '⚠ ' + String(e.message || e).slice(0, 40);
     }
-    await wait(250); // stagger boots — tiles share localStorage
   }
+  seededResolve();
+  window.__galleryReady = Math.round(performance.now()); // boot-time probe (read from console/devtools)
 }
 async function bootElements() {
   const f = document.getElementById('elFrame');
   await new Promise(res => { if (f.contentDocument?.readyState === 'complete') res(); else f.onload = res; });
   const w = f.contentWindow;
-  for (let i = 0; i < 100 && typeof w.newTeam !== 'function'; i++) await wait(100);
+  for (let i = 0; i < 400 && typeof w.newTeam !== 'function'; i++) await wait(25);
+  // The harvest's ensure-team check must not race the tile drivers' — two
+  // concurrent check-then-creates would leave duplicate Gallery teams.
+  await seeded;
   // Every specimen at TRUE pixel size (1:1 — same relative scale as the app);
   // widths only where the design rule fixes them (128 primary, 343 = full width
   // inside a 375 phone with 16px margins).
   const S = (html) => `<div class="spec">${html}</div>`;
   const G = (title, inner) => `<div><div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#7d8a9c;text-transform:uppercase;margin-bottom:10px">${title}</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">${inner}</div></div>`;
   // harvest real controls from live screens before the body is replaced
-  const harvested = w.eval(`(() => {
+  const harvested = w.eval(`teams = loadTeams(); (() => {
     const found = teams.find(t => t.name === 'Gallery');
     const id = found ? found.id : (newTeam(), pickSport('soccer'), pickFormat('7v7','soccer'), fillSampleSquad(),
       document.getElementById('teamNameInput').value = 'Gallery', saveAndBack(), teams[teams.length - 1].id);
