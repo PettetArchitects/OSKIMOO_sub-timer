@@ -15,17 +15,20 @@
   header button:hover{border-color:var(--accent)}
   body[data-device="phone"]{--pw:375px;--ph:812px;--fit:.5}
   body[data-device="ipad"]{--pw:768px;--ph:1024px;--fit:.4}
-  #canvas{display:flex;gap:26px;align-items:flex-start;padding:26px;overflow-x:auto;min-height:60vh}
+  body{--zoom:.5} /* continuous canvas zoom — set from JS (buttons / ⌘+wheel / pinch) */
+  #canvas{display:flex;gap:34px;align-items:flex-start;padding:26px;overflow-x:auto;min-height:60vh}
+  .grp{flex:0 0 auto;padding-right:34px;border-right:1px dashed #232b3b}
+  .grp:last-child{border-right:0;padding-right:0}
+  .grp-title{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--accent);border-left:3px solid var(--accent);padding-left:8px;margin:0 0 12px}
+  .grp-tiles{display:flex;gap:26px;align-items:flex-start}
   .tile{flex:0 0 auto}
   .tile .label{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--dim);margin:0 0 8px 2px;cursor:pointer;user-select:none}
   .tile .label b{color:var(--ink)}
   .tile .label .st{color:var(--accent);font-weight:700;margin-left:6px;font-size:11px}
   .port{width:var(--pw);height:var(--ph);border-radius:18px;overflow:hidden;background:#000;border:1px solid #2a3550;box-shadow:0 12px 40px rgba(0,0,0,.5);transform-origin:top left}
   .port iframe{width:var(--pw);height:var(--ph);border:0;display:block}
-  body[data-zoom="fit"] .port{transform:scale(var(--fit));margin-bottom:calc(var(--ph) * (var(--fit) - 1))}
-  body[data-zoom="fit"] .tile{width:calc(var(--pw) * var(--fit))}
-  body[data-zoom="full"] .port{transform:none;margin-bottom:0}
-  body[data-zoom="full"] .tile{width:var(--pw)}
+  .port{transform:scale(var(--zoom));margin-bottom:calc(var(--ph) * (var(--zoom) - 1))}
+  .tile{width:calc(var(--pw) * var(--zoom))}
   .port{position:relative}
   .grid{position:absolute;inset:0;pointer-events:none;display:none;z-index:10}
   body[data-grid="on"] .grid{display:block}
@@ -46,11 +49,13 @@
   .grid .line.amber span{color:#f0a500}
 </style>
 </head>
-<body data-zoom="fit" data-device="phone">
+<body data-device="phone">
 <header>
   <h1>SUB TIMER · LIVE GALLERY</h1>
-  <span class="hint">Every tile is the real app — tap, type, play. Zoom toggles size; Reset wipes storage and reboots all tiles.</span>
-  <button onclick="toggleZoom()">Zoom</button>
+  <span class="hint">Every tile is the real app — tap, type, play. Zoom: ⌘/ctrl + scroll (pinch) on the canvas, or − / + here; click the % for fit ↔ 100%. Reset wipes storage and reboots all tiles.</span>
+  <button onclick="zoomBy(1/1.25)" title="Zoom out">−</button>
+  <button id="zoomPct" onclick="toggleZoom()" title="Toggle fit / 100%">50%</button>
+  <button onclick="zoomBy(1.25)" title="Zoom in">+</button>
   <button onclick="toggleGrid()">Grid</button>
   <button id="devBtn" onclick="toggleDevice()">iPad</button>
   <button onclick="resetAll()">Reset all</button>
@@ -62,6 +67,9 @@
 // Each state drives the same journey functions the test harness uses
 // (mirrors test/screen-audit.mjs / the figma-atlas shoot script).
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
+// ?app=<file> boots every tile + the elements strip from an alternate build
+// of the app (e.g. palette-mock.html for colour experiments).
+const APP = new URLSearchParams(location.search).get('app') || 'index.html';
 // Drivers run via contentWindow.eval so they share the app's top-level
 // lexical scope (teams / G / currentTeam are `let` bindings — not on window).
 const ENSURE = `
@@ -75,20 +83,42 @@ const ENSURE = `
   })()`;
 const SELECT = `selectTeam(${ENSURE});`;
 const TO_GAME = SELECT + `startFromSquad(); gkStepNext(); shapeStepNext();`;
-const STATES = [
-  ['01 · Home / landing', ''],
-  ['02 · Sport picker', 'newTeam();'],
-  ['03 · Format picker', "newTeam(); pickSport('soccer');"],
-  ['04 · Team editor', "newTeam(); pickSport('soccer'); pickFormat('7v7','soccer'); fillSampleSquad();"],
-  ['05 · Squad select', SELECT],
-  ['06 · Keeper page', SELECT + 'startFromSquad();'],
-  ['07 · Shape page', SELECT + 'startFromSquad(); gkStepNext();'],
-  ['08 · Live game', TO_GAME],
-  ['09 · Announce', TO_GAME + 'openAnnounce();'],
-  ['10 · Plan page', TO_GAME + "switchToView('plan');"],
-  ['11 · Summary', TO_GAME + 'G.half = getSport(currentTeam).periodCount; advH();'],
-  ['12 · History', SELECT + 'showHistory();'],
-  ['13 · Team settings', SELECT + "switchToView('settings');"],
+// Tiles grouped by the UX flow (docs/FLOW.md phases / UX-PATHWAYS P1–P7) so the
+// spread reads left-to-right as the coach's journey. Numbers are assigned at
+// render time — insert/move states freely.
+const GROUPS = [
+  ['START', [
+    ['Home / landing', ''],
+  ]],
+  ['P1 · TEAM SETUP', [
+    ['Sport picker', 'newTeam();'],
+    ['Format picker', "newTeam(); pickSport('soccer');"],
+    ['Team editor', "newTeam(); pickSport('soccer'); pickFormat('7v7','soccer'); fillSampleSquad();"],
+    ['Team settings', SELECT + "switchToView('settings');"],
+  ]],
+  ['P2 · PRE-GAME', [
+    ['Squad select', SELECT],
+    ['Game settings', SELECT + 'goSettings();'],
+    ['Keeper page', SELECT + 'startFromSquad();'],
+    ['Shape page', SELECT + 'startFromSquad(); gkStepNext();'],
+    ['Announce', TO_GAME + 'openAnnounce();'],
+  ]],
+  ['P3 · LIVE GAME', [
+    ['Live game', TO_GAME],
+  ]],
+  ['P4 · BREAK', [
+    ['Half-time', TO_GAME + 'advH();'],
+  ]],
+  ['P5 · RECORD', [
+    ['Summary', TO_GAME + 'G.half = getSport(currentTeam).periodCount; advH();'],
+    ['History', SELECT + 'showHistory();'],
+  ]],
+  ['P6 · PLAN AHEAD', [
+    ['Plan page', TO_GAME + "switchToView('plan');"],
+  ]],
+  ['P7 · ACCOUNT', [
+    ['Sign-in overlay', "document.getElementById('authOv').classList.add('show');"],
+  ]],
 ];
 
 let bootGen = 0;
@@ -99,14 +129,23 @@ const seeded = new Promise(r => { seededResolve = r; });
 async function boot() {
   const gen = ++bootGen; // a device toggle mid-boot invalidates the old loop
   const canvas = document.getElementById('canvas');
-  // All tiles are created up front so the 13 iframes load in parallel — the
+  // All tiles are created up front so the iframes load in parallel — the
   // old one-at-a-time boot (await load + poll + 250ms stagger per tile) was
-  // where all the wall-clock went.
-  const tiles = STATES.map(([label, drive]) => {
+  // where all the wall-clock went. Tiles render inside their UX-flow group.
+  const tiles = [];
+  let n = 0;
+  for (const [groupTitle, states] of GROUPS) {
+    const grp = document.createElement('div');
+    grp.className = 'grp';
+    grp.innerHTML = `<div class="grp-title">${groupTitle}</div><div class="grp-tiles"></div>`;
+    canvas.appendChild(grp);
+    const grpTiles = grp.querySelector('.grp-tiles');
+    for (const [name, drive] of states) {
+    const label = String(++n).padStart(2, '0') + ' · ' + name;
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
-      <div class="port"><iframe src="index.html"></iframe>
+      <div class="port"><iframe src="${APP}"></iframe>
         <div class="grid">
           <div class="baseline"></div>
           <div class="cols"><div></div><div></div><div></div><div></div></div>
@@ -116,15 +155,16 @@ async function boot() {
           <div class="line amber" style="bottom:132px"><span>action row</span></div>
         </div>
       </div>`;
-    canvas.appendChild(tile);
+    grpTiles.appendChild(tile);
     const frame = tile.querySelector('iframe');
     const status = tile.querySelector('.st');
     tile.querySelector('.label').onclick = () => {
-      document.body.dataset.zoom = document.body.dataset.zoom === 'fit' ? 'full' : 'fit';
+      toggleZoom();
       tile.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     };
-    return { drive, frame, status };
-  });
+    tiles.push({ drive, frame, status });
+    }
+  }
   // Wait for every app instance to finish booting (concurrently).
   await Promise.all(tiles.map(async (t) => {
     await new Promise(res => { t.frame.onload = res; });
@@ -152,9 +192,18 @@ async function boot() {
 }
 async function bootElements() {
   const f = document.getElementById('elFrame');
-  await new Promise(res => { if (f.contentDocument?.readyState === 'complete') res(); else f.onload = res; });
+  if (APP !== 'index.html') {
+    f.src = APP; // re-point the static iframe at the alternate build
+    await new Promise(res => { f.onload = res; });
+  } else {
+    await new Promise(res => { if (f.contentDocument?.readyState === 'complete') res(); else f.onload = res; });
+  }
   const w = f.contentWindow;
   for (let i = 0; i < 400 && typeof w.newTeam !== 'function'; i++) await wait(25);
+  // The strip's ground is the APP's own body colour, so an alternate build
+  // (?app=palette-mock.html) shows its real background behind the specimens.
+  const appBg = getComputedStyle(w.document.body).backgroundColor || '#1a1a2e';
+  f.style.background = appBg;
   // The harvest's ensure-team check must not race the tile drivers' — two
   // concurrent check-then-creates would leave duplicate Gallery teams.
   await seeded;
@@ -208,7 +257,7 @@ async function bootElements() {
     `<div class="spec" data-label="${h.label}"><div style="${h.w ? 'width:' + h.w + 'px;' : ''}${h.color ? 'color:' + h.color : ''}">${h.html}</div></div>`).join('');
   const BODY =
     '<style>.spec{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.spec .cap{font:10px/1.5 ui-monospace,Menlo,monospace;color:#5b8ba6;white-space:pre}</style>'
-    + '<div id="elRoot" style="padding:22px;display:flex;flex-direction:column;gap:26px;background:#1a1a2e;min-height:100vh">'
+    + `<div id="elRoot" style="padding:22px;display:flex;flex-direction:column;gap:26px;background:${appBg};min-height:100vh">`
     + G('Primary — START width rule (128) + full-width (343)',
         S('<button class="btn btn-g" style="width:128px;margin-top:0;white-space:nowrap">Next →</button>')
       + S('<button class="btn btn-g" style="width:128px;margin-top:0;white-space:nowrap;padding:15px 6px">Save Match ✓</button>')
@@ -296,9 +345,31 @@ async function bootElements() {
   const h = w.document.getElementById('elRoot')?.scrollHeight;
   if (h) f.style.height = (h + 24) + 'px';
 }
-function toggleZoom() {
-  document.body.dataset.zoom = document.body.dataset.zoom === 'fit' ? 'full' : 'fit';
+// ===== Continuous canvas zoom — inspect any tile at any scale =====
+function fitZoom() { return parseFloat(getComputedStyle(document.body).getPropertyValue('--fit')) || .5; }
+let zoom = fitZoom();
+function setZoom(z, anchorX) {
+  z = Math.min(2, Math.max(.12, z));
+  const canvas = document.getElementById('canvas');
+  const rect = canvas.getBoundingClientRect();
+  // keep the point under the cursor (or the viewport centre) fixed while scaling
+  const ax = (anchorX == null ? rect.width / 2 : anchorX - rect.left);
+  const content = canvas.scrollLeft + ax;
+  const prev = zoom;
+  zoom = z;
+  document.body.style.setProperty('--zoom', z);
+  canvas.scrollLeft = content * (z / prev) - ax;
+  document.getElementById('zoomPct').textContent = Math.round(z * 100) + '%';
 }
+function zoomBy(f, anchorX) { setZoom(zoom * f, anchorX); }
+function toggleZoom() { setZoom(Math.abs(zoom - 1) < .01 ? fitZoom() : 1); }
+// pinch / ⌘+scroll / ctrl+scroll over the canvas zooms toward the cursor
+document.getElementById('canvas').addEventListener('wheel', (e) => {
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
+  zoomBy(Math.exp(-e.deltaY * 0.01), e.clientX);
+}, { passive: false });
+setZoom(fitZoom());
 function toggleGrid() {
   document.body.dataset.grid = document.body.dataset.grid === 'on' ? 'off' : 'on';
 }
@@ -306,6 +377,7 @@ function toggleDevice() {
   const next = document.body.dataset.device === 'phone' ? 'ipad' : 'phone';
   document.body.dataset.device = next;
   document.getElementById('devBtn').textContent = next === 'phone' ? 'iPad' : 'Phone';
+  setZoom(fitZoom()); // re-fit for the new device size
   document.getElementById('canvas').innerHTML = '';
   boot(); // reload every tile at the new size — the app lays out responsively per viewport
 }
