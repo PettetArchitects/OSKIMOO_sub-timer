@@ -35,7 +35,7 @@ const VERSION = (html.match(/APP_VERSION\s*=\s*'([^']+)'/) || [])[1] || '?';
 // --- ratchet ---------------------------------------------------------------
 // The count of distinct off-token colours at the time this check was written.
 // It may go DOWN, never up. Lower it as the backlog is cleaned.
-const BUDGET = Number(process.env.DESIGN_BUDGET || 0) || 43;
+const BUDGET = Number(process.env.DESIGN_BUDGET || 0) || 31; // 43 → 31: the v2.9.34 flat pass deleted the gradient stop-pair colours
 
 // Colours that are legitimately not tokens. Each needs a reason.
 const ALLOW = [
