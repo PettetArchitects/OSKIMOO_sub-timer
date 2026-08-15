@@ -12,6 +12,38 @@
 
 ---
 
+## 2026-08-15 (Session 11) — Live on the phone: favourites, the "bottom band" saga, HIG→capsule nav, seating/pairing fixes, the LAN rig (v2.9.51–56)
+
+**State:** `main` = **v2.9.56-beta**, deployed. Session 10's PR #75 merged first thing; then five more PRs (#76–#80), each merged on the owner's word after the smoke check.
+
+### What happened (owner testing the installed iPhone app, reports as they came)
+| v | Report | What it actually was |
+|---|---|---|
+| .51 | "favourited team does not persist" | `toggleFavorite` pushed to a function that never existed + no cloud column → migration `teams_favorite_and_prefs`; push/merge wired |
+| .52 | "still not working" | .51's merge let cloud (false, never pushed) overwrite the local pin on first boot → local wins for a pin; disagreement re-pushes |
+| .53 | "modern iOS nav bar" · "off-the-shelf standard?" · "weird gradient on the left" | Bar rewritten to the **HIG tab-bar spec** (§3.2 is the contract); the gradient was the closed drawer's box-shadow bleeding on-page |
+| .54 | "tab bar still too high" | I read `win 506 vs scr 430` as Safari page zoom 85% — **wrong tree** (owner said so, twice). Zoom card kept, Safari-only |
+| .55 | "as if a Safari address bar" · "it must shrink it" | **The band appeared with `viewport-fit=cover` (v2.9.45)**; iOS standalone lays the page out as if Safari's toolbar were present (Apple forums 799216). Cover **reverted**; `html{background:#0d1828}` keeps the edge-to-edge look; `body.ios-noinset` cushion. Also: **capsule nav stamped** (radius = half height); **game settings not sticking** = stale `currentTeam` after every `renderHome()` (rebind); **"not a defender"** = `smartAssign` mismatch scored like untagged + formation-order fill (mismatch −5, scarcity order); **sub into a position she doesn't play** = incoming paired to outgoing by list order (`pairByFit`); Top view rotated 90° |
+| .56 | "Molly going into a position she is marked not to play" (paired, both defenders off) | The card showed the pre-re-seat slot; `_reseatArr()` pure, preview simulates → card shows FINAL position + "Charlie moves to RB" |
+
+### The rig that finally worked
+`?diag=1` (sticky per origin; ☰ → "Layout readout (dev)" on LAN builds) + the "sub-timer (real app)" server on :8001 reachable at `http://<mac-ip>:8001/` → owner adds THAT to the home screen = the standalone shell running the working branch. Reviewed .55 there before merging. **The Session-9 memory ("phone LAN diag rig") is now permanent code**, not a hack.
+
+### Lessons
+- **When the owner says "wrong tree", stop and re-read the evidence.** The numbers were consistent with page zoom AND with a viewport bug; the .44-vs-.45 timeline settled it and I had it in front of me the whole time.
+- **A stale in-memory reference is the same bug as "not saving".** Any `teams=loadTeams()` must rebind `currentTeam`.
+- **Preview and action must run the same code.** Every "the card said X, the field did Y" report was two code paths.
+
+### Owner decisions stamped
+Capsule nav (default) · `viewport-fit=cover` off · favourite = local wins · Top view horizontal · injury/manual grammar from Session 10 confirmed in use.
+
+### Next — agreed direction (owner: "ok")
+1. **Position-aware strategy** (the real fix for the whole "wrong position" class): generate the full rotation plan from tags + side + formation + timing; every sub pre-checked for fit; reviewed on the Plan page; offered on Settings as "Build a plan from positions". **Map first (P8), show the Dragonflies plan, then wire.**
+2. **Strengths** stubbed as an optional star per player on the Positions tab; the planner honours it when present.
+3. Backlog carried: squad-page boxes crowding the list · slot-based rotation (subsumed by 1) · retire injury-pick code · atlas re-shoot (nav bar, fills) · Supabase Auth URL config (owner) · the unrelated RLS-disabled tables in the same Supabase project (owner to look).
+
+---
+
 ## 2026-08-15 (Session 10) — A game-day session: seven phone reports → six versions, and the manual-changes flow redesigned from the sideline (v2.9.45–50)
 
 **State:** PR `session-10 → main` = **v2.9.50-beta**, gate green on every version. Production still at v2.9.44 until merged.
