@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.48-beta** · 0 static + 125 JS-rendered controls · runtime-verified 9 screens.
+> App version: **v2.9.49-beta** · 0 static + 129 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -36,6 +36,7 @@ screen shows them. See §C for the runtime-verified placement.
 - **`renderHome()`** → `newTeam`, `openAuth`, `openTeamCodeEntry`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
 - **`renderScore()`** → `adjScore`, `aflScore`, `aflUndo`
+- **`proposeChange()`** → `cancelPending`, `confSub`, `confirmPending`
 - **`renderPlanProfiles()`** → `applyPlanProfile`, `deletePlanProfile`, `renamePlanProfile`
 - **`renderAuthChip()`** → `openAuth`, `signOutCloud`
 - **`renderSquadPlanPicker()`** → `pickSquadPlan`, `planAheadFromSquad`
@@ -46,6 +47,7 @@ screen shows them. See §C for the runtime-verified placement.
 - **`renderEqualTimeHint()`** → `applyEqualTime`
 - **`openPlanSwapEditor()`** → `closePlanEdit`
 - **`renderG()`** → `openAnnounce`
+- **`cancelPending()`** → `confSub`
 - **`injurySub()`** → `confInjury`
 - **`renderSumLog()`** → `promptScorer`
 - **`renderSsStratGrid()`** → `ssSetStrat`

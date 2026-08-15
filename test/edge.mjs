@@ -597,6 +597,119 @@ const SCENARIOS = [
     });
     chk('break rotation skips the relay', atBreak.atBreak && !atBreak.relayShown);
   }],
+
+  // v2.9.49 — P3b: manual changes are ONE gesture — tap, tap, confirm — and
+  // nothing moves before the confirm. Field+field = position swap, field↔bench
+  // = interchange (indistinguishable from an engine sub afterwards), bench+bench
+  // = queue swap; a keeper anywhere in the pair hands over the gloves.
+  ['manual changes — tap, tap, confirm (P3b)', async (page, { chk }) => {
+    await bootstrap(page);
+    const r = await page.evaluate(() => {
+      if (!G.running) tog();
+      G.secs = 100;
+      const nm = (i) => avail[i];
+      const out = {};
+      const banner = () => document.getElementById('subBanner').style.display !== 'none';
+      // 1. field + field: arm, propose, nothing moved, confirm swaps
+      const f1 = G.on.find((p) => p !== G.gk), f2 = G.on.filter((p) => p !== G.gk)[1];
+      const before = [...G.on];
+      tapFieldPlayer(f1); tapFieldPlayer(f2);
+      out.posProposed = banner() && _pend && _pend.type === 'pos';
+      out.posNotYetMoved = JSON.stringify(G.on) === JSON.stringify(before);
+      confirmPending();
+      out.posSwapped = G.on.indexOf(f1) === before.indexOf(f2) && G.on.indexOf(f2) === before.indexOf(f1);
+      out.posSize = G.on.length === before.length;
+      // 2. arm + cancel applies nothing
+      const snap = [...G.on];
+      tapFieldPlayer(f1); tapFieldPlayer(f2); cancelPending(true);
+      out.cancelNoOp = !_pend && !banner() && JSON.stringify(G.on) === JSON.stringify(snap);
+      // 3. bench → field interchange = an engine sub afterwards
+      const b0 = G.bench[0]; const logLen = G.log.length;
+      tapBenchPlayer(b0); tapFieldPlayer(f1);
+      out.interProposed = _pend && _pend.type === 'inter';
+      confirmPending();
+      out.interApplied = G.on.includes(b0) && !G.on.includes(f1) && G.bench.includes(f1) && !G.bench.includes(b0);
+      out.interSize = G.on.length === before.length;
+      out.interLog = G.log.length > logLen && G.log[logLen].type === 'sub' && G.log[logLen].on === nm(b0) && G.log[logLen].off === nm(f1);
+      out.interRelay = document.getElementById('relayCard').style.display !== 'none';
+      out.interUndoable = !!G.lastSub;
+      undoLastSub();
+      out.interUndone = G.on.includes(f1) && G.bench.includes(b0) && G.log.length === logLen;
+      // 4. keeper interchange hands over the gloves; undo hands them back
+      out.gk = null;
+      if (G.gk !== null) {
+        const gk = G.gk, b1 = G.bench[0];
+        tapFieldPlayer(gk); tapBenchPlayer(b1);
+        const cardText = document.getElementById('subBannerSwaps').textContent;
+        confirmPending();
+        const handed = G.gk === b1 && G.on.includes(b1) && !G.on.includes(gk);
+        undoLastSub();
+        out.gk = { cardSaysGloves: /takes the gloves/.test(cardText), handed, undone: G.gk === gk };
+      }
+      // 5. bench + bench swaps queue places
+      const q0 = G.bench[0], q1 = G.bench[1];
+      tapBenchPlayer(q0); tapBenchPlayer(q1);
+      out.queueProposed = _pend && _pend.type === 'queue';
+      confirmPending();
+      out.queueSwapped = G.bench[0] === q1 && G.bench[1] === q0;
+      return out;
+    });
+    chk('field+field proposes, nothing moves before confirm', r.posProposed && r.posNotYetMoved);
+    chk('confirm swaps the two positions; field size unchanged', r.posSwapped && r.posSize);
+    chk('cancel applies nothing', r.cancelNoOp);
+    chk('bench→field proposes an interchange', r.interProposed);
+    chk('confirmed interchange = engine sub: log row, relay, undoable, field size', r.interApplied && r.interSize && r.interLog && r.interRelay && r.interUndoable);
+    chk('undo restores the interchange', r.interUndone);
+    if (r.gk) chk('keeper interchange hands over the gloves (card says so); undo hands them back', r.gk.cardSaysGloves && r.gk.handed && r.gk.undone, JSON.stringify(r.gk));
+    chk('bench+bench swaps queue places', r.queueProposed && r.queueSwapped);
+  }],
+
+  // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
+  // any strategy; the auto-sub still fires with whoever IS in the queue; their
+  // minutes and queue place survive; the state survives a reload.
+  ['out of the queue — the engine skips them, minutes + place kept', async (page, { chk }) => {
+    await bootstrap(page);
+    const r = await page.evaluate(() => {
+      const nm = (i) => avail[i];
+      const out = {};
+      const q = G.bench[0];
+      G.pt[nm(q)] = 123;
+      toggleOutOfQueue(q);
+      out.marked = isOutQ(q) && !benchQ().includes(q) && G.bench.includes(q);
+      out.logged = G.log[G.log.length - 1].type === 'queue' && G.log[G.log.length - 1].out === true;
+      // every strategy's preview skips them
+      out.skippedBy = {};
+      for (const s of ['fair', 'paired', 'manual']) { G.subStrategy = s; out.skippedBy[s] = !getNextSwap().onArr.includes(q); }
+      G.subStrategy = 'fair';
+      // the auto-sub fires with the rest of the queue
+      if (!G.running) tog();
+      G.secs = cfg.sf * 60; trigSub();
+      const subs = G.log.filter((e) => e.type === 'sub');
+      out.subFired = subs.length > 0;
+      out.subSkipped = subs.every((e) => e.on !== nm(q));
+      out.minutesKept = G.pt[nm(q)] === 123;
+      // bench card shows them greyed at the bottom
+      renderG();
+      const bt = document.getElementById('benchTop').innerText;
+      out.rendered = /OUT OF THE QUEUE/i.test(bt) && bt.lastIndexOf(nm(q)) > bt.indexOf('OUT OF THE QUEUE');
+      // back in restores their place
+      const idx = G.bench.indexOf(q);
+      toggleOutOfQueue(q);
+      out.backIn = !isOutQ(q) && G.bench.indexOf(q) === idx;
+      toggleOutOfQueue(q); saveActiveGame();
+      return out;
+    });
+    chk('toggle marks them out (still on the bench list) and logs it', r.marked && r.logged);
+    chk('every strategy preview skips them', Object.values(r.skippedBy).every(Boolean), JSON.stringify(r.skippedBy));
+    chk('the auto-sub still fires, without them', r.subFired && r.subSkipped);
+    chk('minutes kept while out', r.minutesKept);
+    chk('bench shows them greyed at the bottom', r.rendered);
+    chk('back in restores their queue place', r.backIn);
+    await safeReload(page);
+    await page.waitForFunction(() => typeof resumeActiveGame === 'function', { timeout: 10000 });
+    const survived = await page.evaluate(() => { resumeActiveGame(); return !!(G && G.out && G.out.length === 1); });
+    chk('out-of-queue survives a reload', survived);
+  }],
 ];
 
 runSuite({ title: 'Sub Timer edge cases', slug: 'edge', scenarios: SCENARIOS })

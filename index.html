@@ -4375,12 +4375,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.48-beta';
+const APP_VERSION='v2.9.49-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.49-beta':{
+    title:'Tap, tap, confirm',
+    items:['Every change you make by hand mid-game is now one visible gesture: tap a player, tap the other player, confirm. Two on the field swaps positions. One on the field and one on the bench is an interchange — that kid on, this kid off, at that spot — and it looks exactly like an ordinary sub afterwards (in the log, on the shout card, undoable). Two on the bench swap places in the queue. Nothing moves until you confirm, so a mis-tap can’t shift anyone.','Tap the keeper as either half and the card says who takes the gloves — a keeper change no longer waits for a break.','A kid who isn’t going back on — injured, had enough, getting a lift home — gets one tap on the bench: out of the queue. They grey out at the bottom, the rotation skips them, their minutes are kept, and one more tap puts them back where they were. The app doesn’t ask why.','The long-press-for-injury gesture is retired (it still works as a shortcut into the same flow, but nothing depends on it any more).']
+  },
   'v2.9.48-beta':{
     title:'An injured keeper can come off',
     items:['Fixed: mid-game there was no way to replace an injured keeper — the keeper picker only opens before kick-off or at a break, and the injury long-press skipped the keeper on purpose. Long-press the keeper like anyone else now: pick the replacement from the bench and they take the gloves. The banner says so, and the match log records the handover.']
@@ -8305,7 +8309,7 @@ function renderG(){
   } else {
     document.getElementById('hLbl').textContent=_sport.periodShort(G.half);
     document.getElementById('hLbl').style.color='#e94560';
-    if(!cfg.breaksOnly&&ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
+    if(!cfg.breaksOnly&&ns!==null&&benchQ().length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
     if(cfg.breaksOnly){
       // Breaks-only mode (e.g. netball): rotate at the quarter/half break, no rolling subs.
       const brk=(_sport.key==='netball'||_sport.key==='afl')?'quarter break':'the break';
@@ -8343,7 +8347,7 @@ function renderG(){
   // fire. RESET lives in the game menu now (resetHalfConfirm).
   const subBtn=document.getElementById('subB');
   if(subBtn){
-    const canSub=G.bench.length>0 && (G.running||G.atBreak||gameInProgress());
+    const canSub=benchQ().length>0 && (G.running||G.atBreak||gameInProgress());
     subBtn.disabled=!canSub;
     subBtn.style.opacity=canSub?'1':'0.4';
     subBtn.className='gd-btn gd-sub';
@@ -8684,7 +8688,7 @@ function updateClkSub(){
   const grp=document.getElementById('clkSubGrp');
   const ns=typeof nxtST==='function'?nxtST():null;
   const bt=document.getElementById('benchTop');
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){
+  if(cfg.breaksOnly||ns===null||!benchQ().length||(ns-G.secs)<=0){
     if(grp) grp.style.display='none';
     _setBenchUrgency(bt,false,false);
     return;
@@ -8737,7 +8741,7 @@ function _tickSecondBody(){
     });
   }
   const ns=nxtST();
-  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
+  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&benchQ().length>0){
     G.sd.push(ns);
     // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
     // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
@@ -8784,6 +8788,12 @@ function tickLoop(now){
 // game. Selection therefore sorts on OUTFIELD seconds (pt − gkt). Displayed
 // minutes everywhere remain the true total. When the keeper never changes,
 // gkt cancels out of every comparison and behaviour is identical to before.
+// v2.9.49: the QUEUE — bench players the rotation may pick. G.out holds the
+// kids the coach has marked out of the queue (injured, not going back on, gone
+// home early — the app doesn't ask why). They stay in G.bench (they're at the
+// ground, their minutes are theirs) but no picker sees them.
+function benchQ(){ return (G&&G.bench?G.bench:[]).filter(p=>!isOutQ(p)); }
+function isOutQ(p){ return !!(G&&G.out&&G.out.includes(p)); }
 function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0)+((G.rotCredit&&G.rotCredit[avail[p]])||0);}
 // v2.9.21 (owner rule, from the Dragonflies vs Curl Curl review): when the
 // gloves leave a player mid-game she goes "back into the normal cycle as if
@@ -8794,7 +8804,7 @@ function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0)+((
 // the credit lives in its own ledger and only feeds _rotSecs.
 function creditExKeeper(old){
   if(!G||old==null||!gameInProgress())return;
-  const others=[...(G.on||[]),...(G.bench||[])].filter(p=>p!==old&&p!==G.gk);
+  const others=[...(G.on||[]),...benchQ()].filter(p=>p!==old&&p!==G.gk);
   if(!others.length)return;
   const mean=others.reduce((s,p)=>s+_rotSecs(p),0)/others.length;
   const cur=_rotSecs(old);
@@ -8806,7 +8816,10 @@ function creditExKeeper(old){
 }
 function trigSub(){
   // DON'T pause the clock — keep running, show banner for coach to confirm
-  if(!G.bench.length)return;
+  // v2.9.49: the QUEUE (bench minus out-of-queue kids) is what the engine
+  // picks from — see benchQ(). G.bench itself still holds everyone at the ground.
+  const _bq=benchQ();
+  if(!_bq.length)return;
   let off=[],on=[];
   const strat=G.subStrategy||'paired';
   if(strat==='planned'&&G.subPlan&&G.subPlan.events){
@@ -8818,37 +8831,37 @@ function trigSub(){
     if(planned){
       // Validate the planned off players are on field + on players are on bench
       off=planned.off.filter(p=>G.on.includes(p)&&p!==G.gk);
-      on=planned.on.filter(p=>G.bench.includes(p));
+      on=planned.on.filter(p=>_bq.includes(p));
       // If plan is partially unusable (e.g. player got swapped earlier mid-game), fall back to fair
       if(off.length===0||on.length===0){
-        const c=Math.min(cfg.sc,G.bench.length);
+        const c=Math.min(cfg.sc,_bq.length);
         const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
         off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
-        on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
+        on=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
       }
     } else {
       // No planned event at this time — coach hit SUB manually outside the plan
-      const c=Math.min(cfg.sc,G.bench.length);
+      const c=Math.min(cfg.sc,_bq.length);
       const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
       off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
-      on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
+      on=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
     }
   } else if(strat==='fair'){
     // Equal-time: pick the on-field player(s) with the most playing time to come off,
     // and the bench player(s) with the least playing time to come on.
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(strat==='manual'){
     // Manual: same suggestion as fair-time so the coach has a sensible default in the banner,
     // but trigSub is only ever called via the manual SUB button (not auto-tick).
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
@@ -8873,17 +8886,17 @@ function trigSub(){
       .sort((a,b)=>b.totalMins-a.totalMins);
     if(pairsByMinutes.length>0){
       off=pairsByMinutes[0].onFieldMembers;
-      const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+      const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
       on=sortedBench.slice(0,off.length);
     } else {
-      const c=Math.min(cfg.sc,G.bench.length);
-      off=onFieldElig.slice(-c);on=G.bench.slice(0,c);
+      const c=Math.min(cfg.sc,_bq.length);
+      off=onFieldElig.slice(-c);on=_bq.slice(0,c);
     }
     G.pairIdx++;
   } else {
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    off=of.slice(-c);on=G.bench.slice(0,c);
+    off=of.slice(-c);on=_bq.slice(0,c);
   }
   const c=Math.min(off.length,on.length);
   G.ps={off:off.slice(0,c),on:on.slice(0,c)};
@@ -8989,6 +9002,25 @@ function updateViewToggle(){
 // Only meaningful for Equal-time (as a tiebreaker) and Manual (where queue
 // order = next-on order). Paired mode swaps whole groups so we hide the
 // controls there.
+// v2.9.49 (owner: "I should be able to flexibly change the bench around if I
+// have people not wanting to go back on" → "once the interchange has been done
+// we can mark the player on the bench as not in the queue"): the out-of-queue
+// toggle. Whatever the reason — injury, a sulk, a lift home — the kid stays on
+// the bench list (they're at the ground, their minutes are theirs) but no
+// picker sees them (benchQ). Toggling back restores their queue place: G.out
+// keeps them at their G.bench index; only the RENDER pushes them to the bottom.
+function toggleOutOfQueue(pIdx){
+  if(!G||!G.bench||!G.bench.includes(pIdx))return;
+  if(!G.out)G.out=[];
+  const i=G.out.indexOf(pIdx);
+  if(i>=0) G.out.splice(i,1); else G.out.push(pIdx);
+  G.log.push({type:'queue',half:G.half,time:G.secs,who:avail[pIdx],out:i<0});
+  // A pending engine proposal may now name a kid who's out — drop it and let
+  // the next tick re-propose from the queue.
+  if(G.ps&&!G.ps.injury&&G.ps.on.some(p=>isOutQ(p))){ G.ps=null; document.getElementById('subBanner').style.display='none'; }
+  saveActiveGame();
+  renderG();
+}
 function moveBenchUp(pIdx){
   if(!G||!G.bench)return;
   const i=G.bench.indexOf(pIdx);
@@ -9014,7 +9046,9 @@ function moveBenchDown(pIdx){
 let _breakRotation=false;   // true while advH() applies the period-break rotation
 let gameMode='swap';        // 'swap' | 'keeper' | 'injury'
 let fieldSwapSel=null;      // first player tapped in swap mode
-let injuryOffSel=null;      // injured player tapped, awaiting replacement pick
+let injuryOffSel=null;      // injured player tapped, awaiting replacement pick (legacy — v2.9.49 retired the injury gesture; kept for the harness)
+let benchArmSel=null;       // v2.9.49: first BENCH player tapped (tap-tap-confirm)
+let _pend=null;             // v2.9.49: the proposed change awaiting Confirm — {type:'pos'|'inter'|'queue', a, b}
 
 function setGameMode(m){
   gameMode=(gameMode===m)?'swap':m;   // tapping the active mode returns to swap
@@ -9030,24 +9064,117 @@ function setGameMode(m){
 const LONG_PRESS_MS=500;
 let _lpTimer=null, _lpFired=false, _lpStartX=0, _lpStartY=0;
 
+// v2.9.49 (owner, from the sideline): ONE gesture for every manual change —
+// tap a player, tap the other player, CONFIRM. Field+field = position swap,
+// field+bench (either order) = interchange, bench+bench = queue swap. Nothing
+// applies before the confirm (the old two-tap position swap applied instantly —
+// a mistap moved two kids mid-play). The injury long-press and its red
+// bench-pick mode are retired: an injured kid comes off through the same
+// interchange, and 'not going back on' is the out-of-queue toggle on the bench.
 function tapFieldPlayer(pIdx, isGk){
-  // Mid-swap completion: tap a second on-field player to finish the swap.
-  if(fieldSwapSel!==null){
-    if(fieldSwapSel===pIdx){
-      fieldSwapSel=null;
-    } else {
-      window._justSwapped={ names:new Set([avail[fieldSwapSel], avail[pIdx]]), t:Date.now() };
-      setTimeout(()=>{ window._justSwapped=null; if(typeof renderG==='function') renderG(); }, 1200);
-      swapFieldPositions(fieldSwapSel, pIdx);
-      fieldSwapSel=null;
-      saveActiveGame();
-    }
-    renderG();
+  if(_pend){ cancelPending(false); }
+  if(benchArmSel!==null){            // bench kid armed → interchange
+    proposeChange('inter',pIdx,benchArmSel);
     return;
   }
-  // Default short tap: arm swap mode for this player.
-  fieldSwapSel=pIdx;
+  if(fieldSwapSel!==null){
+    if(fieldSwapSel===pIdx){ fieldSwapSel=null; renderG(); return; }   // tap again = disarm
+    proposeChange('pos',fieldSwapSel,pIdx);
+    return;
+  }
+  fieldSwapSel=pIdx;                 // arm
   renderG();
+}
+function tapBenchPlayer(pIdx){
+  if(!G||!G.bench.includes(pIdx))return;
+  if(_pend){ cancelPending(false); }
+  if(fieldSwapSel!==null){           // field kid armed → interchange
+    proposeChange('inter',fieldSwapSel,pIdx);
+    return;
+  }
+  if(benchArmSel!==null){
+    if(benchArmSel===pIdx){ benchArmSel=null; renderG(); return; }
+    proposeChange('queue',benchArmSel,pIdx);
+    return;
+  }
+  benchArmSel=pIdx;
+  renderG();
+}
+// Build the proposal and show the confirm card. a/b semantics per type:
+//   pos   — a,b both on field (either may be the keeper)
+//   inter — a on field (off), b on bench (on)
+//   queue — a,b both on bench
+function proposeChange(type,a,b){
+  _pend={type,a,b};
+  fieldSwapSel=null; benchArmSel=null;
+  const banner=document.getElementById('subBanner');
+  const swaps=document.getElementById('subBannerSwaps');
+  if(!banner||!swaps){ _pend=null; return; }
+  const pos=p=>posLabelFor(p)||'';
+  const gkNote=(who)=>`<div style="text-align:center;font-size:12px;color:#ff7bac;font-weight:700;margin-top:4px">${fn(avail[who])} takes the gloves</div>`;
+  let title='',body='',note='';
+  if(type==='pos'){
+    title='SWAP POSITIONS';
+    body=`<span style="color:#eee">${fn(avail[a])}</span> <span style="color:#5bc0de">${pos(b)}</span> <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span> <span style="color:#eee">${fn(avail[b])}</span> <span style="color:#5bc0de">${pos(a)}</span>`;
+    if(G.gk===a) note=gkNote(b); else if(G.gk===b) note=gkNote(a);
+  } else if(type==='inter'){
+    title='INTERCHANGE';
+    body=`<span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[b])}</span> <span style="color:#9fb3c8;font-weight:600">on for</span> <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[a])}${ic('arrowDown',13,'#f0a500')}</span> <span style="color:#9fb3c8;font-weight:600">·</span> <span style="color:#5bc0de">${pos(a)}</span>`;
+    if(G.gk===a) note=gkNote(b);
+  } else {
+    title='SWAP QUEUE PLACES';
+    body=`<span style="color:#eee">${fn(avail[a])}</span> <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span> <span style="color:#eee">${fn(avail[b])}</span>`;
+  }
+  swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#f0a500;font-weight:700;letter-spacing:1px;margin-bottom:4px">${title}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:15px;font-weight:700;flex-wrap:wrap">${body}</div>${note}
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button onclick="cancelPending(true)" style="flex:1;padding:10px;background:#13203a;color:#9fb3c8;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">CANCEL</button>
+      <button onclick="confirmPending()" style="flex:2;padding:10px;background:#00d4aa;color:#06231d;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">CONFIRM</button>
+    </div>`;
+  // The engine's SUBS DONE button belongs to G.ps banners only.
+  const done=banner.querySelector('button[onclick="confSub()"]'); if(done) done.style.display='none';
+  banner.style.display='block';
+  _li();
+  renderG();
+}
+function cancelPending(rerender){
+  _pend=null;
+  const banner=document.getElementById('subBanner');
+  if(banner){ banner.style.display='none'; const done=banner.querySelector('button[onclick="confSub()"]'); if(done) done.style.display=''; }
+  if(rerender) renderG();
+}
+function confirmPending(){
+  if(!G||!_pend)return;
+  const {type,a,b}=_pend;
+  cancelPending(false);
+  if(type==='pos'){
+    if(!G.on.includes(a)||!G.on.includes(b))return;
+    window._justSwapped={ names:new Set([avail[a], avail[b]]), t:Date.now() };
+    setTimeout(()=>{ window._justSwapped=null; if(typeof renderG==='function') renderG(); }, 1200);
+    swapFieldPositions(a,b);
+    saveActiveGame(); renderG();
+  } else if(type==='inter'){
+    if(!G.on.includes(a)||!G.bench.includes(b))return;
+    // A coach's explicit pick overrides out-of-queue — they're on the field now.
+    if(G.out){ const i=G.out.indexOf(b); if(i>=0) G.out.splice(i,1); }
+    const wasGk=(G.gk===a);
+    if(wasGk){                       // gloves follow the slot — BEFORE confSub so re-seating + the relay see the new keeper
+      creditExKeeper(a); G.gk=b;
+      if(G.half<=1) gk1=b; else { gk2=b; gk2Explicit=true; }
+    }
+    G.ps={off:[a],on:[b]};
+    confSub();                       // log · undo snapshot · relay · re-seat — same as an engine sub
+    if(wasGk){
+      G.lastSub.prevGk=a;            // undo hands the gloves back
+      G.log.push({type:'gk',half:G.half,time:G.secs,off:avail[a],on:avail[b]});
+      saveActiveGame();
+    }
+  } else if(type==='queue'){
+    const i=G.bench.indexOf(a), j=G.bench.indexOf(b);
+    if(i<0||j<0)return;
+    [G.bench[i],G.bench[j]]=[G.bench[j],G.bench[i]];
+    saveActiveGame(); renderG();
+  }
 }
 
 // Long-press triggers an injury sub for the held player. Hooked up to the
@@ -9067,9 +9194,9 @@ function fieldPillPointerDown(e, pIdx, isGk){
     _lpTimer=null;
     _lpFired=true;
     if(navigator.vibrate) navigator.vibrate(45);
-    gameMode='injury';
-    injuryOffSel=pIdx;
-    fieldSwapSel=null;
+    // v2.9.49: long-press is a shortcut into the same tap-tap-confirm flow.
+    if(_pend) cancelPending(false);
+    benchArmSel=null; fieldSwapSel=pIdx;
     renderG();
   }, LONG_PRESS_MS);
 }
@@ -9221,6 +9348,7 @@ function injurySub(pIdx, replacementIdx){
 }
 function confSub(){
   if(!G.ps)return;
+  if(_pend) cancelPending(false);   // v2.9.49: an engine sub supersedes a half-built proposal
   const{off,on}=G.ps;
   // Snapshot every pill's CURRENT world position before mutating G — those become the "from" points so the new pills can tween from where they were (bench→field for incoming, field→bench for outgoing), pulling each other across.
   const _animSnap=(typeof afl3d!=='undefined' && afl3d.snapshotPositions)?afl3d.snapshotPositions():null;
@@ -9292,6 +9420,7 @@ function undoLastSub(){
   G.bench=ls.prevBench;
   G.pairIdx=ls.prevPairIdx;
   G.pairs=ls.prevPairs;
+  if(ls.prevGk!==undefined){ G.gk=ls.prevGk; if(G.half<=1) gk1=ls.prevGk; else gk2=ls.prevGk; }   // v2.9.49: keeper interchange undo
   Object.entries(ls.prevPt).forEach(([name,t])=>{G.pt[name]=t;});
   // Drop the sub log entries that were added by confSub
   if(G.log.length>ls.prevLogLen) G.log.length=ls.prevLogLen;
@@ -9389,7 +9518,7 @@ function advH(){
     // break (Undo button), and the coach can still Swap/sub before starting.
     // Skip for manual / full-control — those coaches drive their own subs.
     const strat=G.subStrategy||'fair';
-    if((strat==='fair'||strat==='paired') && G.bench.length){
+    if((strat==='fair'||strat==='paired') && benchQ().length){
       _breakRotation=true;   // tags the resulting subs as belonging to the break
       try{
         trigSub();           // stage the recommended off/on (plays the break alert)
@@ -9539,6 +9668,8 @@ function renderSumLog(){
       icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
     } else if(e.type==='injury_sub'){
       icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
+    } else if(e.type==='queue'){
+      icon=ic(e.out?'user-x':'user-check',14,e.out?'#7d8a9c':'#00d4aa');detail=`<span style="color:${e.out?'#7d8a9c':'#00d4aa'}">${fn(e.who)} ${e.out?'out of the queue':'back in the queue'}</span>`;
     } else if(e.type==='reset_half'){
       icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
     } else if(e.type==='opp_formation'){
@@ -9775,6 +9906,7 @@ function renderMatchDetail(){
       const editableGoal=editing&&e.type==='goal'&&e.who==='us'&&e.afl!=='behind';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
       else if(e.type==='injury_sub'){icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;}
+      else if(e.type==='queue'){icon=ic(e.out?'user-x':'user-check',14,e.out?'#7d8a9c':'#00d4aa');detail=`<span style="color:${e.out?'#7d8a9c':'#00d4aa'}">${fn(e.who)} ${e.out?'out of the queue':'back in the queue'}</span>`;}
       else if(e.type==='reset_half'){icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;}
       else if(e.type==='opp_formation'){icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;}
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
@@ -9905,33 +10037,34 @@ function getNextSwap(){
   // Returns paired arrays: offArr[i] is replaced by onArr[i]
   const nextOff=new Set(), nextOn=new Set();
   let offArr=[],onArr=[];
-  if(!G||!G.bench.length) return {nextOff,nextOn,offArr,onArr};
+  const _bq=G?benchQ():[];   // v2.9.49: pick from the queue, not the whole bench
+  if(!G||!_bq.length) return {nextOff,nextOn,offArr,onArr};
   const ns=nxtST();
   if(ns===null) return {nextOff,nextOn,offArr,onArr};
   const strat=G.subStrategy||'paired';
   if(strat==='fair'||strat==='manual'){
     // Equal-time logic: longest-on come off, longest-benched come on
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     // v2.9.5: same basis as trigSub — outfield seconds, keeper time excluded —
     // or the pitch would preview a different swap than the one that fires.
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     offArr=sortedOn.slice(0,c);
     onArr=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
     offArr=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
-    onArr=G.bench.slice(0,offArr.length);
+    onArr=_bq.slice(0,offArr.length);
     if(!offArr.length||!onArr.length){
-      const c=Math.min(cfg.sc,G.bench.length);
+      const c=Math.min(cfg.sc,_bq.length);
       const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-      offArr=of.slice(-c);onArr=G.bench.slice(0,c);
+      offArr=of.slice(-c);onArr=_bq.slice(0,c);
     }
   } else {
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    offArr=of.slice(-c);onArr=G.bench.slice(0,c);
+    offArr=of.slice(-c);onArr=_bq.slice(0,c);
   }
   const swapC=Math.min(offArr.length,onArr.length);
   offArr=offArr.slice(0,swapC);onArr=onArr.slice(0,swapC);
@@ -10005,7 +10138,9 @@ function renderRoster(){
     if(gameMode==='injury' && injuryOffSel!==null){
       hintCol='#e94560'; hintHtml=`${ic('arrow-down',12,'#e94560')} ${fn(avail[injuryOffSel])} off — tap a bench player to bring on`;
     } else if(fieldSwapSel!==null){
-      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} Tap another to swap (incl. keeper)`;
+      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} ${fn(avail[fieldSwapSel])} — tap a field player to swap, or a bench player to interchange`;
+    } else if(benchArmSel!==null){
+      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} ${fn(avail[benchArmSel])} — tap a field player to bring on, or a bench player to swap places`;
     }
     hintC.innerHTML='';
     if(hintHtml){
@@ -10178,15 +10313,24 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
     // player nobody was coming off for (an empty "— / SUB" row) while the player
     // genuinely next on sat down in a later wave. Bench order is the fallback
     // for when there's no pending swap (end of period, no eligible pairing).
-    const _engineNext=(nextOnArr||[]).filter(p=>G.bench.includes(p));
-    const nextOnList=_engineNext.length?_engineNext:G.bench.slice(0,sc);
-    const _rest=G.bench.filter(p=>!nextOnList.includes(p));
-    const waves=[nextOnList];
+    // v2.9.49: waves are built from the QUEUE; out-of-queue kids render as their
+    // own greyed group at the very bottom (still visible — they're at the ground).
+    const _q=benchQ();
+    const outList=G.bench.filter(p=>isOutQ(p));
+    const _engineNext=(nextOnArr||[]).filter(p=>_q.includes(p));
+    const nextOnList=_engineNext.length?_engineNext:_q.slice(0,sc);
+    const _rest=_q.filter(p=>!nextOnList.includes(p));
+    const waves=nextOnList.length?[nextOnList]:[];
     for(let i=0;i<_rest.length;i+=sc) waves.push(_rest.slice(i,i+sc));
 
     // Reorder arrows operate on the FULL G.bench list — shared by the pill and
     // table renderers.
     const _benchArrow=(dir,disabled,pIdx)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
+
+    // v2.9.49: the out-of-queue toggle — a real, visible control on every bench
+    // row (owner: no more hidden gestures). 44px hit area, 16px glyph; the
+    // greyed OUT group gets the inverse ('back in').
+    const _outBtn=(pIdx)=>{ const out=isOutQ(pIdx); return `<button class="hit44" onclick="event.stopPropagation();toggleOutOfQueue(${pIdx})" aria-label="${out?'Put '+fn(avail[pIdx])+' back in the queue':fn(avail[pIdx])+' out of the queue'}" title="${out?'Back in the queue':'Out of the queue'}" style="margin-left:2px;color:${out?'#00d4aa':'#5a6b82'}">${ic(out?'user-check':'user-x',16,out?'#00d4aa':'#5a6b82')}</button>`; };
 
     function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
@@ -10212,15 +10356,17 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
       // the live game — the next-on rows step up a full tier (18px names,
       // 14px instruction, deeper padding, heavier border).
       if(isNext&&!isInjuryPick) row.className='bp-next';
-      row.style.cssText=`display:flex;align-items:center;padding:${rail?(isNext?'8px 8px':'5px 8px'):(isNext?'12px 14px':'6px 10px')};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
-      if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
+      const _armed=(benchArmSel===pIdx);
+      row.style.cssText=`display:flex;align-items:center;padding:${rail?(isNext?'8px 8px':'5px 8px'):(isNext?'12px 14px':'6px 10px')};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${_armed?'#fff':borderC};border-radius:${isNext?'12px':'8px'};${_armed?'box-shadow:0 0 0 2px rgba(255,255,255,.35);':glow}cursor:pointer`;
+      row.classList.add('bp-row');
+      row.onclick=(e)=>{e.stopPropagation();tapBenchPlayer(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
       const posLabel=isNext&&takesPos?takesPos:'SUB';
       const benchIdx=G.bench.indexOf(pIdx);
       const isFirst=benchIdx===0;
       const isLast=benchIdx===G.bench.length-1;
-      const reorderHtml=allowReorder
+      const reorderHtml=(allowReorder&&!isOutQ(pIdx))
         ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${_benchArrow('up',isFirst,pIdx)}${_benchArrow('down',isLast,pIdx)}</div>`
         : '';
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
@@ -10236,7 +10382,9 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
         </div>
         ${rail?'':`<div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>`}
         ${reorderHtml}
+        ${rail?'':_outBtn(pIdx)}
       `;
+      if(isOutQ(pIdx)){ row.style.opacity='.55'; row.style.borderStyle='dashed'; }
       return row;
     }
 
@@ -10249,18 +10397,19 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
       const card=document.createElement('div');
       card.className='bp-next';
       card.style.cssText='background:#0a1a16;border:2px solid #00d4aa;border-radius:12px;padding:2px 12px 4px;box-shadow:0 0 8px rgba(0,212,170,.3)';
-      const cols=`minmax(0,1.2fr) minmax(0,1fr) auto auto${allowReorder?' auto':''}`;
+      const cols=`minmax(0,1.2fr) minmax(0,1fr) auto auto${allowReorder?' auto':''} auto`;
       const tbl=document.createElement('div');
       tbl.style.cssText=`display:grid;grid-template-columns:${cols};align-items:center;column-gap:10px`;
       const eyebrow=(txt,col)=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.2px;color:${col};text-transform:uppercase;padding:6px 0 2px">${txt}</div>`;
-      tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'');
+      tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'')+eyebrow('','#7d8a9c');
       list.forEach((pIdx,ri)=>{
         const replacesP=swapMap?swapMap[pIdx]:undefined;
         const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
         const mins=Math.floor(G.pt[avail[pIdx]]/60);
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         const hairline=ri?'border-top:1px solid #16213e;':'';
-        const cell=(html,extra='')=>{const d=document.createElement('div');d.style.cssText=`${hairline}padding:9px 0;min-width:0;align-self:stretch;display:flex;align-items:center;${extra}`;d.innerHTML=html;return d;};
+        const _armed=(benchArmSel===pIdx);
+        const cell=(html,extra='')=>{const d=document.createElement('div');d.className='bp-row';d.style.cssText=`${hairline}padding:9px 0;min-width:0;align-self:stretch;display:flex;align-items:center;cursor:pointer;${_armed?'background:rgba(255,255,255,.08);':''}${extra}`;d.innerHTML=html;d.onclick=(e)=>{e.stopPropagation();tapBenchPlayer(pIdx);};return d;};
         tbl.appendChild(cell(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:17px;font-weight:800;color:#00d4aa;line-height:1.15;min-width:0">${ic('arrowUp',13,'#00d4aa')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${jersey?`<span style="font-size:11px;color:#7d8a9c;font-weight:800;font-variant-numeric:tabular-nums">#${jersey}</span> `:''}${fn(avail[pIdx])}</span></span>`));
         tbl.appendChild(cell(replacesP!==undefined
           ?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:700;color:#f0a500;line-height:1.15;min-width:0">${ic('arrowDown',12,'#f0a500')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fn(avail[replacesP])}</span></span>`
@@ -10271,6 +10420,7 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
           const benchIdx=G.bench.indexOf(pIdx);
           tbl.appendChild(cell(`<div style="display:flex;flex-direction:column;gap:0">${_benchArrow('up',benchIdx===0,pIdx)}${_benchArrow('down',benchIdx===G.bench.length-1,pIdx)}</div>`,'justify-content:flex-end'));
         }
+        tbl.appendChild(cell(_outBtn(pIdx),'justify-content:flex-end'));
       });
       card.appendChild(tbl);
       return card;
@@ -10286,11 +10436,15 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
     // - Single-wave: cards lay out in a 2-column auto-fit grid so a long bench doesn't run off the page.
     const grid=document.createElement('div');
     const useGrid=waves.length>1;
+    // v2.9.49: everyone's out (or the bench is only out-of-queue kids) — no
+    // NEXT ON card to draw; fall through to the OUT group alone.
+    const _emptyQ=!waves.length;
     grid.style.cssText=useGrid
       ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:start'
       : 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;align-items:start';
 
-    if(useGrid){
+    if(_emptyQ){ /* nothing in the queue */ }
+    else if(useGrid){
       // v2.9.26: the NEXT-ON wave takes the full width (the loud rows); later
       // waves sit in narrow columns BESIDE each other (130px min — two fit on a
       // phone), so the whole bench stays on screen for a typical squad.
@@ -10332,6 +10486,21 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
       else { const t=makeNextOnTable(nextOnList); t.style.gridColumn='1/-1'; grid.appendChild(t); }
     }
     benchSection.appendChild(grid);
+    // v2.9.49: OUT OF QUEUE — greyed, at the very bottom, one 'back in' tap
+    // each. Visible so the coach still sees who's at the ground.
+    if(outList.length){
+      const oc=document.createElement('div');
+      oc.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;margin-top:6px';
+      const ot=document.createElement('div');
+      ot.style.cssText='font-size:9px;font-weight:800;letter-spacing:1.2px;color:#5a6b82;text-transform:uppercase;padding:0 4px 2px';
+      ot.textContent='Out of the queue';
+      oc.appendChild(ot);
+      const ow=document.createElement('div');
+      ow.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+      outList.forEach(pIdx=>{ const pill=makeBenchPill(pIdx,0,false); pill.style.flex='1 1 150px'; ow.appendChild(pill); });
+      oc.appendChild(ow);
+      benchSection.appendChild(oc);
+    }
     container.appendChild(benchSection);
   }
 }
@@ -10432,7 +10601,7 @@ document.addEventListener('click',(e)=>{
     const t=document.getElementById('planFmtToggle');
     if(t){ t.style.borderColor='#2a3550'; t.style.color='#9fb3c8'; t.style.background='rgba(13,18,30,.85)'; }
   }
-  if(fieldSwapSel===null && injuryOffSel===null) return;     // nothing armed
+  if(fieldSwapSel===null && injuryOffSel===null && benchArmSel===null && !_pend) return;     // nothing armed
   // Keep these clickables out of the cancel path — they're part of the armed flow:
   //   .fc       — field player pill (swap targets)
   //   .fb       — bench pill (injury-sub replacement)
@@ -10440,10 +10609,12 @@ document.addEventListener('click',(e)=>{
   //   #subBanner — injury BACK TO BENCH / OUT FOR GAME prompt
   //   #gameDash — bottom dashboard buttons (Undo, etc.)
   //   #gameMenu / #gameMenuBtn — top-left hamburger menu and its trigger
-  if(e.target.closest('.fc, .fb, .ov.show, #subBanner, #gameDash, #gameMenu, #gameMenuBtn')) return;
+  if(e.target.closest('.fc, .fb, .bp-row, .ov.show, #subBanner, #gameDash, #gameMenu, #gameMenuBtn')) return;
   fieldSwapSel=null;
   injuryOffSel=null;
+  benchArmSel=null;
   gameMode='swap';
+  if(_pend) cancelPending(false);
   renderG();
 });
 
