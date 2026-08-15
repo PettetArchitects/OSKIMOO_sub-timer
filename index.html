@@ -1922,7 +1922,8 @@ async function pushCloudTeam(team){
       // v2.9.51: the favourite pin + the team's game defaults ride the row too —
       // they were local-only, so a team rebuilt from the cloud lost both.
       favorite:!!team.favorite,
-      prefs:team.prefs||{}
+      prefs:team.prefs||{},
+      stars:team.stars||{}
     };
     if(team.cloud_id){
       const{error}=await sb.from('teams').update(row).eq('id',team.cloud_id);
@@ -2026,6 +2027,9 @@ async function doInitialSync(){
           const cloudHasPrefs=ct.prefs&&Object.keys(ct.prefs).length>0;
           const localHasPrefs=existing&&existing.prefs&&Object.keys(existing.prefs).length>0;
           const prefs=cloudHasPrefs?ct.prefs:(localHasPrefs?existing.prefs:{});
+          const cloudHasStars=ct.stars&&Object.keys(ct.stars).length>0;
+          const localHasStars=existing&&existing.stars&&Object.keys(existing.stars).length>0;
+          const stars=cloudHasStars?ct.stars:(localHasStars?existing.stars:{});
           const favorite=existing?!!existing.favorite:!!ct.favorite;
           const favDiffers=existing&&(!!existing.favorite!==!!ct.favorite);
           // Players: same rule. If local has more players than cloud, the
@@ -2040,11 +2044,11 @@ async function doInitialSync(){
           // would lose the rename, but that needs per-field timestamps to
           // fix robustly. Logged as a known limitation.
           if(existing){
-            merged.push({...existing,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite,cloud_id:ct.id});
-            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||(localHasPrefs&&!cloudHasPrefs)||favDiffers||localPlayers.length>cloudPlayers.length;
+            merged.push({...existing,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite,stars,cloud_id:ct.id});
+            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||(localHasPrefs&&!cloudHasPrefs)||(localHasStars&&!cloudHasStars)||favDiffers||localPlayers.length>cloudPlayers.length;
             if(localRicher)needsRePush.push(merged[merged.length-1]);
           }else{
-            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite});
+            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite,stars});
           }
         });
         saveTeamsRaw(merged);
@@ -2865,6 +2869,11 @@ function setPlayerSide(team,name,side){
 // Dominant foot. Separate from side preference (a right-footer often prefers
 // playing left to cut inside). Defaults to 'B' as well.
 function getPlayerFoot(team,name){ return (team.foots&&team.foots[name])||'B'; }
+// v2.9.57 (P8, owner: strengths): an optional ★ per player — 'key player'. The
+// planner never takes two ★ off in the same sub when an alternative exists.
+// That's ALL it does: fair minutes stay the floor (grassroots).
+function getPlayerStar(team,name){ return !!(team&&team.stars&&team.stars[name]); }
+function setPlayerStar(team,name,on){ if(!team.stars)team.stars={}; if(on)team.stars[name]=true; else delete team.stars[name]; }
 function setPlayerFoot(team,name,foot){
   if(!team.foots)team.foots={};
   team.foots[name]=foot;
@@ -4456,12 +4465,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.56-beta';
+const APP_VERSION='v2.9.57-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.57-beta':{
+    title:'Rotation that knows your positions',
+    items:['The app now plans the game from what you\u2019ve entered \u2014 position tags, formation, timing. Who comes off is chosen so that whoever is due on can fill the gap in a position they play; fair minutes stay the floor. It\u2019s the same rule in the live game (Equal time) and in the plan, so the card, the plan and the field agree.','The Plan page shows the position each kid takes at every sub, names any cover move, and lists the rare spots where fair time left no fit \u2014 re-tag or accept.','New, optional: a \u2605 Key player mark on the Positions tab. The plan won\u2019t take two key players off together when there\u2019s an equal choice. That\u2019s all it does \u2014 minutes stay even.']
+  },
   'v2.9.56-beta':{
     title:'The card says where she\u2019ll really play',
     items:['When two kids come off from the same line (say both defenders) and one of the kids coming on isn\u2019t a defender, the app has always shuffled someone to cover after the sub \u2014 but the NEXT ON card was showing the vacated spot, not the shuffle. It now shows the position each kid will actually take, and names who moves to cover (\u201cCharlie moves to RB\u201d) before you tap SUB.']
@@ -6368,6 +6381,13 @@ function renderEditTeam(){
       };
       prefRow.appendChild(buildPicker('Side',getPlayerSide(editingTeam,p),v=>{setPlayerSide(editingTeam,ensureName(),v);renderEditTeam();}));
       prefRow.appendChild(buildPicker('Foot',getPlayerFoot(editingTeam,p),v=>{setPlayerFoot(editingTeam,ensureName(),v);renderEditTeam();}));
+      // v2.9.57: ★ key player (optional) — see getPlayerStar.
+      { const st=document.createElement('button'); st.type='button'; const on=getPlayerStar(editingTeam,p);
+        st.setAttribute('aria-label',(on?'Unmark ':'Mark ')+(p||'player')+' as a key player'); st.title=on?'Key player — the plan avoids taking two key players off together':'Mark as key player';
+        st.style.cssText='display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:2px 8px;border:1px solid '+(on?'#f0a500':'#2a3550')+';border-radius:6px;background:'+(on?'rgba(240,165,0,.16)':'transparent')+';color:'+(on?'#f0a500':'#666')+';font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit';
+        st.innerHTML=(on?'★':'☆')+' Key';
+        st.onclick=(e)=>{e.preventDefault();setPlayerStar(editingTeam,ensureName(),!on);renderEditTeam();};
+        prefRow.appendChild(st); }
       wrap.appendChild(prefRow);
     }
     c.appendChild(wrap);
@@ -7619,7 +7639,7 @@ function generateAutoPlan(){
   const simRot=Object.fromEntries(avail.map((_,i)=>[i,0]));
   const gkIdx=fmt.hasGk?(gk1!==null?gk1:start[0]):null;
   let simGk=gkIdx;
-  const events=[];
+  const events=[], issues=[];
   let lastMin=0;
   // Walk the timeline minute-by-minute crediting playing time + applying scheduled subs
   for(let gameMin=1;gameMin<=cfg.hm*totalPeriods;gameMin++){
@@ -7647,25 +7667,33 @@ function generateAutoPlan(){
       // to take the gloves at halftime. Excluding an auto-defaulted gk2 pinned
       // that player on the pitch for the whole game, never rotated.
       const elig=fmt.hasGk&&simGk!==null?simOn.filter(p=>p!==simGk&&!(gk2Explicit&&p===gk2)):simOn.slice();
-      // Off: highest OUTFIELD minutes first — keeper time doesn't count (v2.9.5)
-      const off=[...elig].sort((a,b)=>simRot[b]-simRot[a]).slice(0,c);
       // On: lowest outfield minutes first
-      const on=[...simBench].sort((a,b)=>simRot[a]-simRot[b]).slice(0,c);
+      const on0=[...simBench].sort((a,b)=>simRot[a]-simRot[b]).slice(0,c);
+      // Off: chosen for FIT among the most-played (v2.9.57, P8) — the same rule
+      // the live engine runs, so plan and game agree. Then pair by tag.
+      const off=chooseOffByFit(simOn,simGk,elig,on0,p=>simRot[p],(cfg.sf||5)/2);
+      const on=pairByFit(off,on0,simOn,simGk);
       // v2.8.2: period-aware (1..N), not hardcoded to 2 halves — quarter sports
       // place subs in Q1..Q4. timeInHalf is the minute WITHIN its period.
       const _period=Math.floor((gameMin-1)/cfg.hm)+1;
       const _timeInHalf=gameMin-(_period-1)*cfg.hm;
-      events.push({type:'sub',gameMin,off,on,half:_period,timeInHalf:_timeInHalf});
-      // Apply swap
+      // Apply swap, then the same re-seat the live game runs; record where each
+      // incoming kid ends up and any cover move, so the Plan page can say so.
       for(let i=0;i<c;i++){
         const oi=simOn.indexOf(off[i]);
         if(oi>=0)simOn[oi]=on[i];
       }
+      let at={},moves=[];
+      try{ const r=_reseatArr(simOn,simGk); simOn=r.arr; const pp=getPositions(); let k=0; for(let i=0;i<simOn.length;i++){ if(simOn[i]===simGk) continue; k++; if(on.includes(simOn[i])) at[simOn[i]]=(pp[k]&&pp[k].label)||''; } moves=r.moved.filter(m=>!on.includes(m.pIdx)).map(m=>({name:m.name,pos:m.pos})); }catch(e){}
+      events.push({type:'sub',gameMin,off,on,half:_period,timeInHalf:_timeInHalf,at,moves});
+      // P8 step 5: name the compromises — a kid seated off her tag because
+      // fairness left no fitting alternative — so the coach can re-tag or accept.
+      try{ Object.entries(at).forEach(([p,lbl])=>{ if(_fitScore(parseInt(p),lbl)===0) issues.push(`${fn(avail[p])} at ${lbl} at ${gameMin}′ — no ${labelToTag(lbl)}-tagged kid was due on`); }); }catch(e){}
       simBench=simBench.filter(p=>!on.includes(p));
       simBench.push(...off);
     }
   }
-  return {events,start,issues:[]};
+  return {events,start,issues};
 }
 // Render the Game Plan panel inline in Settings when Full Control is selected
 function renderGamePlanPanel(){
@@ -7679,9 +7707,17 @@ function renderGamePlanPanel(){
   const tl=document.getElementById('planTimeline');
   tl.innerHTML='';
   const plan=cfg.subPlan;
-  if(plan.issues&&plan.issues.length){
+  // A plan with no events is a hard stop (not enough players); P8 compromises
+  // (v2.9.57) are advisory — shown above the timeline, the plan still runs.
+  if(plan.issues&&plan.issues.length&&!(plan.events||[]).length){
     tl.innerHTML=`<div style="font-size:12px;color:#e94560;padding:8px;text-align:center">${plan.issues.join(' · ')}</div>`;
     _li();return;
+  }
+  if(plan.issues&&plan.issues.length){
+    const note=document.createElement('div');
+    note.style.cssText='padding:8px 10px;background:#1f1a08;border:1px solid #f0a500;border-radius:8px;font-size:12px;color:#f0a500;line-height:1.45';
+    note.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1px;margin-bottom:3px">OUT OF POSITION — FAIR TIME LEFT NO FIT</div>${plan.issues.map(i=>`<div>${i}</div>`).join('')}<div style="color:#9fb3c8;margin-top:3px">Re-tag a player, or accept.</div>`;
+    tl.appendChild(note);
   }
   // Starting lineup row
   const startRow=document.createElement('div');
@@ -7700,12 +7736,15 @@ function renderGamePlanPanel(){
         <div style="color:#e94560;line-height:1.5">GK ${fn(avail[ev.off])} → GK ${fn(avail[ev.on])}</div>`;
     } else {
       const offHtml=ev.off.map(i=>`<span style="color:#f0a500">${fn(avail[i])}</span>`).join(', ');
-      const onHtml=ev.on.map(i=>`<span style="color:#00d4aa">${fn(avail[i])}</span>`).join(', ');
+      // v2.9.57 (P8): each incoming kid carries the position she will take —
+      // the planner's post-re-seat slot — and any cover move is named.
+      const onHtml=ev.on.map(i=>`<span style="color:#00d4aa">${fn(avail[i])}</span>${ev.at&&ev.at[i]?` <span style="color:#5bc0de;font-size:11px;font-weight:800">${ev.at[i]}</span>`:''}`).join(', ');
+      const movesHtml=(ev.moves&&ev.moves.length)?`<div style="margin-top:3px;font-size:11px;color:#f0a500;font-weight:700">${ev.moves.map(m=>`${fn(m.name)} <span style="color:#9fb3c8;font-weight:600">moves to</span> <span style="color:#5bc0de">${m.pos}</span>`).join(' · ')}</div>`:'';
       row.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <span style="font-size:10px;font-weight:800;color:#888;letter-spacing:1px">${halfLbl} · ${min}:00</span>
           <span style="font-size:10px;color:#a78bfa;font-weight:700">tap to edit</span>
         </div>
-        <div style="line-height:1.5">${offHtml} <span style="color:#444">→</span> ${onHtml}</div>`;
+        <div style="line-height:1.5">${offHtml} <span style="color:#444">→</span> ${onHtml}</div>${movesHtml}`;
       row.onclick=()=>openPlanSwapEditor(evIdx);
     }
     tl.appendChild(row);
@@ -7882,10 +7921,13 @@ function _fitScore(pIdx,lbl){
   if(/^(LM|RM)$/.test(lbl)&&ptags.includes('WNG')) return 2;
   return 0;
 }
-function pairByFit(off,on){
+function pairByFit(off,on,onArr,gk){
   const n=Math.min(off.length,on.length);
   if(n<=1||n>6) return on;
-  const labels=off.slice(0,n).map(p=>posLabelFor(p));
+  // Slot labels from an explicit on-field array (the planner's sim, pre-kickoff
+  // when G is null) or the live game.
+  const labelIn=(p)=>{ if(!onArr) return posLabelFor(p); const pp=getPositions(); let k=0; for(let i=0;i<onArr.length;i++){ if(onArr[i]===gk) continue; k++; if(onArr[i]===p) return (pp[k]&&pp[k].label)||''; } return ''; };
+  const labels=off.slice(0,n).map(labelIn);
   let best=null,bestScore=-1;
   const perm=(arr,used,cur)=>{
     if(cur.length===n){ let sc=0; for(let i=0;i<n;i++) sc+=_fitScore(cur[i],labels[i]); if(sc>bestScore){bestScore=sc;best=cur.slice();} return; }
@@ -7900,7 +7942,7 @@ function pairByFit(off,on){
 // position she is marked not to play" — the card showed the pre-re-seat slot).
 function _reseatArr(onArr,gk){
   const out={arr:onArr.slice(),moved:[]};
-  if(!G||!currentTeam)return out;
+  if(!currentTeam)return out;   // pure — usable pre-kickoff by the planner (G may be null)
   const fmt=FORMATS[curFmt];
   if(!fmt||!fmt.hasGk)return out;   // labelled-slot sports with a keeper (soccer-style)
   const arr=out.arr, _before=onArr.slice();
@@ -7946,6 +7988,49 @@ function _reseatArr(onArr,gk){
     out.moved.push({pIdx:arr[onI],name:avail[arr[onI]],pos:lbl});
   }
   return out;
+}
+// v2.9.57 (P8, owner: "look at the team's strengths and positions to set up a
+// strategy"): ONE rule for plan and live engine. Given the on-field array, the
+// keeper, an eligibility filter, the incoming kids (already chosen by minutes)
+// and a per-player rotation-minutes lookup: choose WHICH c players come off —
+// from the c+2 most-played (fairness stays tight) — as the subset the incoming
+// kids fit best (pairByFit's scoring), ties → more minutes off first.
+// Stars: two ★ players never leave in the same sub when an alternative exists.
+function chooseOffByFit(onArr,gk,elig,onKids,rotOf,tol){
+  const c=onKids.length;
+  if(!c) return [];
+  const sorted=[...elig].sort((a,b)=>rotOf(b)-rotOf(a));
+  if(sorted.length<=c) return sorted.slice(0,c);
+  // Candidates: everyone within HALF a sub interval of the c-th most-played —
+  // effectively "tied on minutes" — so fairness never drifts; fit chooses among
+  // the tied. Capped at 8 for the combinatorics. At kick-off everyone is tied →
+  // the whole field is eligible.
+  const floor=rotOf(sorted[c-1])-(tol||0);
+  let pool=sorted.filter(p=>rotOf(p)>=floor);
+  if(pool.length<c) pool=sorted.slice(0,c);
+  pool=pool.slice(0,8);
+  const pp=getPositions();
+  const labelOf=(p)=>{ let k=0; for(let i=0;i<onArr.length;i++){ if(onArr[i]===gk) continue; k++; if(onArr[i]===p) return (pp[k]&&pp[k].label)||''; } return ''; };
+  const star=(p)=>!!(currentTeam&&currentTeam.stars&&currentTeam.stars[avail[p]]);
+  const bestPair=(offSet)=>{ const labels=offSet.map(labelOf); let best=-1; const n=offSet.length;
+    const perm=(used,cur)=>{ if(cur.length===n){ let sc=0; for(let i=0;i<n;i++) sc+=_fitScore(cur[i],labels[i]); if(sc>best) best=sc; return; } for(let i=0;i<n;i++){ if(used[i]) continue; used[i]=true; cur.push(onKids[i]); perm(used,cur); cur.pop(); used[i]=false; } };
+    perm([],[]); return best; };
+  let bestSet=null,bestKey=-Infinity;
+  const combos=(start,cur)=>{
+    if(cur.length===c){
+      const fit=bestPair(cur);
+      const stars=cur.filter(star).length;
+      const mins=cur.reduce((s,p)=>s+rotOf(p),0);
+      // fit dominates (a kid out of position is worse than two ★ resting);
+      // then never two ★ off together; then more minutes off
+      const key=fit*1e6-(stars>1?1e5:0)+mins/1e3;
+      if(key>bestKey){bestKey=key;bestSet=cur.slice();}
+      return;
+    }
+    for(let i=start;i<pool.length;i++){ cur.push(pool[i]); combos(i+1,cur); cur.pop(); }
+  };
+  combos(0,[]);
+  return bestSet||sorted.slice(0,c);
 }
 function repairSeating(){
   if(!G)return[];
@@ -9010,23 +9095,21 @@ function trigSub(){
       on=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
     }
   } else if(strat==='fair'){
-    // Equal-time: pick the on-field player(s) with the most playing time to come off,
-    // and the bench player(s) with the least playing time to come on.
+    // Equal-time: the bench player(s) with the least playing time come on; who
+    // comes OFF is chosen for FIT among the most-played (v2.9.57, P8).
     const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
     const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
-    off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
+    off=chooseOffByFit(G.on,G.gk,onFieldElig,on,_rotSecs,(cfg.sf||5)*30);
   } else if(strat==='manual'){
     // Manual: same suggestion as fair-time so the coach has a sensible default in the banner,
     // but trigSub is only ever called via the manual SUB button (not auto-tick).
     const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
     const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
-    off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
+    off=chooseOffByFit(G.on,G.gk,onFieldElig,on,_rotSecs,(cfg.sf||5)*30);
   } else if(G.pairs.length>0){
     // Paired rotation + equal time: pre-grouped pairs swap on/off together,
     // and the pair with the most cumulative playing minutes is the one to
@@ -10207,15 +10290,14 @@ function getNextSwap(){
   if(ns===null) return {nextOff,nextOn,offArr,onArr};
   const strat=G.subStrategy||'paired';
   if(strat==='fair'||strat==='manual'){
-    // Equal-time logic: longest-on come off, longest-benched come on
+    // Equal-time: longest-benched come on; who comes off is chosen for FIT among
+    // the most-played — the same chooser trigSub uses (v2.9.57), or the card
+    // would preview a different swap than the one that fires.
     const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    // v2.9.5: same basis as trigSub — outfield seconds, keeper time excluded —
-    // or the pitch would preview a different swap than the one that fires.
-    const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
     const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
-    offArr=sortedOn.slice(0,c);
     onArr=sortedBench.slice(0,c);
+    offArr=chooseOffByFit(G.on,G.gk,onFieldElig,onArr,_rotSecs,(cfg.sf||5)*30);
   } else if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
     offArr=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);

@@ -756,6 +756,83 @@ const SCENARIOS = [
     chk('the card matches what the sub actually does', r.cardPos === r.actual, `card ${r.cardPos} · actual ${r.actual}`);
   }],
 
+  // v2.9.57 — P8: position-aware rotation. The auto plan and the live engine
+  // choose WHO comes off for fit among the most-played, pair incoming to slots
+  // by tag, keep minutes even, and never take two ★ off together when avoidable.
+  ['P8: the auto plan is position-aware and stays fair', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Plan FC', extraBench: 1 });
+    const r = await page.evaluate(() => {
+      const nm = (i) => avail[i];
+      const pos = getPositions();
+      // Tag the whole squad: 3 DEF, 3 MID, 2 FWD, keeper, rest untagged.
+      currentTeam.positions = {};
+      const out = avail.map((_, i) => i).filter((i) => i !== gk1);
+      const tags = ['DEF', 'DEF', 'MID', 'MID', 'FWD', 'DEF', 'MID', 'FWD'];
+      out.forEach((p, i) => { if (tags[i]) setPlayerPos(currentTeam, nm(p), [tags[i]]); });
+      cfg.sc = 2; cfg.sf = 5; cfg.hm = 20;
+      smartAssign();
+      const plan = generateAutoPlan();
+      // Every planned incoming kid: is she in a slot she is tagged out of?
+      const bad = [];
+      plan.events.filter((e) => e.type === 'sub').forEach((e) => {
+        e.on.forEach((p) => {
+          const at = e.at && e.at[p]; const tag = at && labelToTag(at);
+          const ptags = getPlayerPos(currentTeam, nm(p)); if (!tag || !ptags.length) return;
+          if (!ptags.includes(tag) && !(/^(LM|RM)$/.test(at) && ptags.includes('WNG'))) bad.push(`${nm(p)}@${at}@${e.gameMin}`);
+        });
+      });
+      // Fairness: simulate the plan's minutes.
+      const mins = {}; avail.forEach((n) => { mins[n] = 0; });
+      let simOn = [...plan.start]; let last = 0;
+      const subs = plan.events.filter((e) => e.type === 'sub');
+      const total = cfg.hm * getSport(currentTeam).periodCount;
+      for (let m = 1; m <= total; m++) {
+        simOn.forEach((p) => { if (p !== gk1) mins[nm(p)] += 1; });
+        const ev = subs.find((e) => e.gameMin === m);
+        if (ev) { ev.off.forEach((o, i) => { const oi = simOn.indexOf(o); if (oi >= 0) simOn[oi] = ev.on[i]; }); }
+      }
+      const outMins = out.map((p) => mins[nm(p)]);
+      return { subs: subs.length, bad, spread: Math.max(...outMins) - Math.min(...outMins), sf: cfg.sf, sample: subs.slice(0, 2).map((e) => ({ min: e.gameMin, on: e.on.map((p) => `${nm(p)}→${e.at && e.at[p]}`), moves: e.moves })) };
+    });
+    chk('the plan has subs', r.subs > 0, `${r.subs} subs`);
+    // Fairness is the floor (P8 step 5): with 3 DEF / 3 MID / 2 FWD across 6
+    // outfield slots some sub will have to seat a kid off her tag. What must NOT
+    // happen is the old behaviour — mismatches on most subs. Allow ≤ 2 for this
+    // fixture (the fair-only planner produced 5+).
+    chk('mismatched placements are the rare, unavoidable ones (≤ 2)', r.bad.length <= 2, r.bad.join(', ') || 'none');
+    chk('plan minutes stay even (spread ≤ one sub interval)', r.spread <= r.sf + 1, `spread ${r.spread}′`);
+  }],
+
+  ['P8: live Equal-time uses the same fit rule; ★ never off together', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Star FC' });
+    const r = await page.evaluate(() => {
+      const nm = (i) => avail[i];
+      currentTeam.positions = {}; currentTeam.stars = {};
+      G.subStrategy = 'fair'; cfg.sc = 2;
+      const pos = getPositions();
+      const out = G.on.filter((p) => p !== G.gk);
+      // Field: LB, RB, LM, CM, RM, FW. Bench[0] MID-only, bench[1] FWD-only.
+      // Minutes: LB and RB have played most — the old rule takes BOTH defenders
+      // off; fit must take off the LM/CM/RM/FW kids the bench can replace.
+      G.on.forEach((p) => { G.pt[nm(p)] = 60; });
+      G.pt[nm(out[0])] = 900; G.pt[nm(out[1])] = 880; G.pt[nm(out[2])] = 870; G.pt[nm(out[5])] = 860;
+      setPlayerPos(currentTeam, nm(G.bench[0]), ['MID']); setPlayerPos(currentTeam, nm(G.bench[1]), ['FWD']);
+      G.bench.forEach((p) => { G.pt[nm(p)] = 0; });
+      const prev = getNextSwap();
+      const offLabels = prev.offArr.map((p) => posLabelFor(p));
+      // Stars are a TIE-BREAKER after fit. Make fit equal everywhere (untagged
+      // bench), mark the two most-played (LB, RB) as ★ — with LM and FW also in
+      // the pool, the plan must not take both ★ off together.
+      currentTeam.positions = {};
+      setPlayerStar(currentTeam, nm(out[0]), true); setPlayerStar(currentTeam, nm(out[1]), true);
+      const prev2 = getNextSwap();
+      const starsOff = prev2.offArr.filter((p) => getPlayerStar(currentTeam, nm(p))).length;
+      return { offLabels, starsOff, off2: prev2.offArr.map((p) => `${nm(p)}@${posLabelFor(p)}`) };
+    });
+    chk('live Equal-time takes off the kids the bench can replace (not just the most-played)', !r.offLabels.includes('LB') || !r.offLabels.includes('RB'), r.offLabels.join(','));
+    chk('two ★ players are not taken off in the same sub when an equal-fit alternative exists', r.starsOff <= 1, r.off2.join(', '));
+  }],
+
   // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
   // any strategy; the auto-sub still fires with whoever IS in the queue; their
   // minutes and queue place survive; the state survives a reload.

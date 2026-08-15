@@ -142,6 +142,28 @@ queue".)
 
 ---
 
+## P8 — Position-aware rotation (owner: "look at the team's strengths and positions to set up a strategy") 🟢
+
+**Goal:** the app plans the whole game's rotation from what the coach has already
+entered — position tags, side, formation, timing — so that minutes come out even
+AND every kid is in a position she plays, checked BEFORE kick-off rather than
+patched sub by sub. Strengths (an optional star per player) refine it when present.
+
+| # | Action | Expected result |
+| --- | --- | --- |
+| 1 | The auto plan (Plan page, and the plan behind kick-off) is built | For each sub, who comes OFF is chosen from the most-played kids so that who comes ON (least-played) can fill the vacated spots by tag; among equal fit, more minutes come off first. Nobody is planned into a position she's tagged out of while a fitting alternative exists |
+| 2 | Read the plan | Every planned sub names the position each incoming kid takes; a "moves to" note appears only when a cover move is genuinely unavoidable; the projected-minutes table stays even (spread ≤ one sub interval) |
+| 3 | The live engine (Equal time / Matched) fires a sub | Same rule as the plan: off-set chosen for fit among the most-played, incoming paired to slots by tag, and the NEXT ON card shows the final position (P3 v2.9.56) |
+| 4 | A player has a ★ (optional, Positions tab) | Among equal-fit choices the plan never takes two starred players off in the same sub. Fit comes first (a kid out of position is worse than two key players resting) and fair minutes remain the floor |
+| 5 | Nobody fits (e.g. three defenders benched, one DEF slot open) | The plan still runs — fairness first — and the Plan page lists the compromise ("Molly at RB at 14′") so the coach can re-tag or accept |
+
+✓ In the auto plan, no incoming player is placed in a slot she is tagged out of while some other planned pairing avoids it.  [edge: mismatched placements are the rare, unavoidable ones (≤ 2)]
+✓ Plan minutes stay even (spread ≤ sub interval) with position-awareness on.  [edge: plan minutes stay even (spread ≤ one sub interval)]
+✓ Live Equal-time subs use the same off-choice rule as the plan (fit among the most-played).  [edge: live Equal-time takes off the kids the bench can replace (not just the most-played)]
+✓ Two starred players are never taken off in the same sub when an equal-fit alternative exists.  [edge: two ★ players are not taken off in the same sub when an equal-fit alternative exists]
+
+---
+
 ## P4 — Breaks & resume 🟡
 
 **Goal:** manage the gap between periods, and survive interruptions.
