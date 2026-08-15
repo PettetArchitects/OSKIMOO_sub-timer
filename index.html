@@ -4211,12 +4211,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.42-beta';
+const APP_VERSION='v2.9.43-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.43-beta':{
+    title:'The \u2630 menu works on iPhone again',
+    items:['On iPhone and iPad, tapping anything inside the side menu \u2014 Sign in for cloud sync, Help & gestures, Send feedback \u2014 just closed the menu. Safari was sending those taps to the dark backdrop behind the menu. Fixed: the menu now sits above the backdrop for real, on every screen (home, game, plan).']
+  },
   'v2.9.42-beta':{
     title:'Sideways nav for sideways phones',
     items:['In landscape the bottom tabs become a slim rail on the LEFT edge — sideways, height is what\u2019s scarce, and the pitch gets that whole band back. Your game buttons (SUB, START) keep the right edge where your thumb already lives.','The rail steps aside on screens that never showed tabs (landing, the keeper/shape steps) — no dead edge.']
@@ -11317,8 +11321,27 @@ function toggleGlobalMenu(ev){
   toggleHomeMenu(ev);
 }
 
+// v2.9.43 — hoist the three drawers out of their screens to body level, right after
+// the scrim. Each drawer is position:fixed but was authored INSIDE its screen's .scr
+// scroll container (#home / #s4 / #subOrderOv). WebKit hit-tests a fixed element
+// nested in an overflow scroller wrongly: it PAINTS the drawer above the scrim
+// (z 9500 vs 9400) but routes taps to the scrim underneath — so on iPhone every
+// tap inside the drawer (Sign in, Help, Send feedback…) just closed the drawer.
+// Chromium hit-tests it correctly, which is why no desktop test caught it. Fixed
+// elements don't depend on their DOM parent for layout, so moving them is safe;
+// toggleGlobalMenu already routes by the ACTIVE screen, not by nesting.
+function hoistDrawers(){
+  const scrim=document.getElementById('appDrawerScrim');
+  ['homeMenu','gameMenu','planMenu'].forEach(id=>{
+    const m=document.getElementById(id);
+    if(!m||m.parentNode===document.body)return;
+    if(scrim&&scrim.parentNode===document.body) document.body.insertBefore(m,scrim.nextSibling);
+    else document.body.appendChild(m);
+  });
+}
 // v2.7.83 — side-drawer behaviour: any open menu gets .drawer-open and the scrim turns on.
 function openDrawer(menuId){
+  hoistDrawers();
   document.querySelectorAll('#homeMenu, #gameMenu, #planMenu').forEach(m=>m.classList.remove('drawer-open'));
   const m=document.getElementById(menuId); if(!m) return;
   // v2.7.85: inject the universal SETTINGS items (Sub-alert sound + Help & gestures + Sign in if not already on home) just BEFORE the drawer-donate footer. Standalone Settings modal gone.
