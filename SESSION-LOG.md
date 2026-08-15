@@ -12,6 +12,52 @@
 
 ---
 
+## 2026-08-15 (Session 10) — A game-day session: seven phone reports → six versions, and the manual-changes flow redesigned from the sideline (v2.9.45–50)
+
+**State:** PR `session-10 → main` = **v2.9.50-beta**, gate green on every version. Production still at v2.9.44 until merged.
+
+### What happened
+The owner ran the app on their phone through the day and sent reports as they hit them; each became a version with its own record. In order:
+
+| v | Report (owner's words) | Root cause | Fix |
+|---|---|---|---|
+| **2.9.45** | "the full bleed isn't really working … some clipping of buttons" | `viewport-fit=cover` was **never in the viewport meta** — iOS letterboxed the app AND every `env(safe-area-inset-*)` resolved to 0, so all the safe-area maths in the file had never run. Separately, screens reserved a hard-coded 58px for a 67px tab bar → SUB/START under it | Add `viewport-fit=cover`; brand bar/rails *grow* by the inset (border-box crush bug); `--tabbar-h` measured by `syncTabBarHeight()`. design.md §3.0. Also removed the score-band fill (owner) |
+| **2.9.46** | "something weird no one coming off on this one?" | NEXT ON card rows came from **bench order**, pairings from the engine which picks by **least-played** → phantom unpaired row, real next-on buried in `+5′` | Wave 0 = engine's `onArr`. Also removed the field panel fill (owner) |
+| **2.9.47** | "updated the sub time to 7 mins but it didn't change when I went back" · "position preferences don't take effect unless I start a new game" · "it also moved a player's position" | Live game was a snapshot: settings and seating only reached the *next* game; `repairSeating()` moved uninvolved players silently on every sub | Owner: **apply to the live game** (`absorbPassedSubTimes()` so nothing fires retroactively) · **name the moves** — `repairSeating()` returns them, relay card says "X moves to CM"; relay timing left as-is (owner) |
+| **2.9.48** | "you can't do a keeper swap if the keeper is injured" | Long-press refused the GK ("goes through the keeper-change flow") but that flow is gated to setup/breaks → no mid-play path at all | Keeper long-presses; `confInjury` hands over the gloves |
+| **2.9.49** | "the long press is a bit subtle — need a clearer way to make manual changes" → brainstorm → "tap player, tap the player you want to swap with, confirm" → "if it's an injury it's a swap with someone on the bench" → "then mark the player on the bench as not in the queue" | Manual changes scattered across hidden gestures; "not going back on" didn't exist | **Mapped first (UX-PATHWAYS P3b)**, then built: tap-tap-confirm for field/field, field↔bench (= engine sub afterwards), bench/bench; keeper handover on the card; **out-of-queue** toggle on every bench row (`G.out`, `benchQ()` is what every picker reads). Long-press retired to a shortcut. 15 new edge checks, P3b 🟢 |
+| **2.9.50** | "why if I save the app as a bookmark app it doesn't refresh?" | Not caching — SW network-first, CDN must-revalidate — but iOS *resumes* a home-screen PWA, never reloads it | `checkForUpdate()`: HEAD `index.html` on resume/every 10 min, compare ETag; reload between games, "New version — tap to update" pill mid-game |
+
+Records: `docs/records/v2.9.45-safe-area/`, `v2.9.49-manual-changes/`. CHANGELOG has the full reasoning per version.
+
+### Owner decisions stamped this session
+- Mid-game settings **apply to the live game** (was: next game only).
+- Re-seating stays, but **names its moves**; relay card timing **unchanged** (post-swap record).
+- Position swap now **confirms** (was instant) — owner: yes.
+- Injury is **not a gesture** — interchange + out-of-queue; the app doesn't ask why.
+- Score band + field panel fills **removed**.
+
+### Lessons (→ LESSONS.md candidates)
+- **A meta tag was load-bearing for ~40 CSS rules.** Every `env(safe-area-inset-*)` in the file was dead until `viewport-fit=cover` existed; no desktop test can see that. Rule now in design.md §3.0.
+- **Never hard-code a bar's height** — measure it (`--tabbar-h`).
+- **Two lists that should agree, rendered by two code paths, will drift** (bench order vs engine pick). Render from the engine.
+- **"Silent side-effect" bugs come in pairs**: the position-prefs gap and the "it moved a player" complaint were the same `repairSeating()` seen from both ends.
+- **Map before build paid off** — the P3b table found the missing "sitting out" state and the injured-keeper hole before any code was written.
+
+### Ask the owner on the phone (v2.9.49 taste calls)
+1. Confirm card pushes the pitch up (same slot as the sub banner) — OK, or float it?
+2. Out-of-queue glyph (person-✕ at row end) — visible enough in sunlight?
+3. Position swap now needs a confirm — right trade after a real game?
+
+### Backlog (new this session, unstamped)
+- **Squad page space** (owner, with screenshot): Auto-fill-from-photo, sample-squad and bulk-tag boxes crowd out the player list once a team already exists — collapse/hide them for existing teams.
+- Slot-based rotation (per-position queues) — the structural answer to re-seating; parked, owner chose "name the moves" for now.
+- Injury-pick mode + `injurySub`/`confInjury`/`tapBenchForInjury` are unreachable from the UI (kept for the harness) — retire once the edit-harness tests move to the tap-tap-confirm path.
+- Figma atlas: game screen frames show the old score/field fills — re-shoot (figma-atlas skill).
+- Carried from Session 9: Supabase Auth URL configuration (owner action); OTP-code flow for the installed app.
+
+---
+
 ## 2026-08-15 (Session 9) — Field bug from the owner's phone: the ☰ drawer was dead on iPhone (v2.9.43)
 
 **State:** PR #74 `session-9 → main` = **v2.9.43-beta**, gate green. Production was already at v2.9.42 at session start (Session 8's PR #73 had merged + deployed).

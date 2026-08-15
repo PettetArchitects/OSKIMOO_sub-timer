@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<!-- v2.9.45: viewport-fit=cover — without it iOS insets the web view BELOW the
+     status bar / above the home indicator (letterboxed in the page background)
+     AND resolves every env(safe-area-inset-*) to 0. Every safe-area calc in this
+     file was dead until this line existed. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
@@ -66,7 +70,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #appDrawerScrim.on{opacity:1;pointer-events:auto}
 .drawer-donate{margin-top:auto!important;border-top:1px solid #1e2a45;padding-top:10px!important}
 /* v2.7.82: persistent app header — hamburger LEFT, logo CENTRE, version RIGHT. Single bar across every page. */
-#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:44px;padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
+/* v2.9.45: height INCLUDES the top inset. Everything is border-box (line 37), so
+   the old height:44px + padding-top:env() crushed the 44px content row down to
+   nothing the moment viewport-fit=cover made the inset real. The bar now grows
+   into the status bar and paints it — that's the full bleed. */
+#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:calc(44px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
 #appBrandBar .ab-center{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;min-width:0;cursor:pointer;align-self:stretch;min-height:44px}
 #appBrandBar .ab-logo{width:14px;height:21px}
 #appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
@@ -81,7 +89,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
 .btb-btn svg{width:22px;height:22px}
 /* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
-.scr{padding-top:calc(44px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
+/* v2.9.45: --tabbar-h is the MEASURED height of #bottomTabBar (syncTabBarHeight,
+   below the render code), not a guess. The hard-coded 58px was ~9px short of the
+   bar's real 67px on a phone — every screen that reserved 58px had its bottom
+   action row sitting under the bar, which is the "clipped buttons" the owner
+   photographed. The declaration here is the pre-measure fallback only. */
+:root{--tabbar-h:calc(58px + env(safe-area-inset-bottom))}
+.scr{padding-top:calc(44px + env(safe-area-inset-top));padding-bottom:var(--tabbar-h);box-sizing:border-box}
 #s4.active,#subOrderOv.active{padding-bottom:0}
 /* v2.7.80: landing pages don't show the tab bar, so they don't need the bottom reservation either. */
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
@@ -347,15 +361,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      be a mis-tap adjacency. The .app column clears it via body.has-tabbar
      (set by renderViewSwitcher — landing/wizard screens hide the bar and
      reclaim the edge). */
-  #bottomTabBar{top:44px!important;bottom:0!important;left:0!important;right:auto!important;width:64px;flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
+  /* v2.9.45: the rail WIDENS by the notch inset rather than padding its 64px
+     content away — landscape puts the notch on one side, and with viewport-fit=
+     cover that inset is ~59px, which would have left ~5px of usable rail. */
+  #bottomTabBar{top:calc(44px + env(safe-area-inset-top))!important;bottom:0!important;left:0!important;right:auto!important;width:calc(64px + env(safe-area-inset-left));flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
   #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important}
-  body.has-tabbar .app{padding-left:64px!important;box-sizing:border-box}
+  body.has-tabbar .app{padding-left:calc(64px + env(safe-area-inset-left))!important;box-sizing:border-box}
   /* Game screen: side rails right (bench 170 + dash 92); with the nav rail on
      the left the bottom needs only the safe inset. */
-  #s4{position:relative!important;padding-right:262px!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
-  /* Rails start under the fixed 44px brand bar — top:0 buried the rail's
+  #s4{position:relative!important;padding-right:calc(262px + env(safe-area-inset-right))!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+  /* Rails start under the fixed brand bar — top:0 buried the rail's
      BENCH · N / NEXT ON header behind it. */
-  #s4 #benchTop,#s4 #gameDash{top:44px!important;bottom:env(safe-area-inset-bottom)!important}
+  #s4 #benchTop,#s4 #gameDash{top:calc(44px + env(safe-area-inset-top))!important;bottom:env(safe-area-inset-bottom)!important}
   /* Header = ONE row: menu | score centred in the free width (the score band
      has been a single line since v2.9.39). */
   #s4 > div:first-child{flex-direction:row!important;justify-content:center!important;align-items:center!important;padding:4px 10px 4px 42px!important;min-height:40px!important}
@@ -394,7 +411,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   }
   /* Dashboard column — full height on the far right. */
   #s4 #gameDash{
-    position:absolute!important;right:0;top:0;bottom:0;width:92px;
+    position:absolute!important;right:0;top:0;bottom:0;width:calc(92px + env(safe-area-inset-right));
     flex-direction:column!important;
     border-top:none!important;border-left:1px solid #243049;
     padding:8px calc(8px + env(safe-area-inset-right)) 8px 8px!important;
@@ -575,7 +592,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    so the oval sits tall with its sides drawn in slightly (no egg). */
 .lu-pitch.np-afl{aspect-ratio:135/165}
 /* ===== 3D AFL pitch viewer (Three.js) — a clean self-contained zone ===== */
-.afl3d-wrap{position:absolute;inset:0;overflow:hidden;border-radius:10px;touch-action:none;background:rgba(9,14,24,.45);border:1px solid rgba(42,53,80,.55)}
+/* v2.9.46 (owner: "drop the panel fill on the score bar and the field"): no
+   panel fill behind the field — the pitch graphic IS the surface. The hairline
+   stays as the only edge (§5.0: structure by rule, not by fill). */
+.afl3d-wrap{position:absolute;inset:0;overflow:hidden;border-radius:10px;touch-action:none;background:transparent;border:1px solid rgba(42,53,80,.55)}
 .afl3d-wrap canvas{display:block;width:100%;height:100%;touch-action:none}
 .afl3d-overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .afl3d-overlay .fc{pointer-events:auto}
@@ -1151,7 +1171,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        v2.9.39: band tightened to a single row (min-height 84 → 52; the v2.7.69
        84px Plan-header height-match is moot — the Plan page left the game view
        in v2.9.11). Menu button (38px @ top:6) still clears the band. -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative;min-height:52px">
+  <!-- v2.9.45 (owner: "remove the drop fill behind the scoring line"): the
+       #16213e band is gone — the score sits on the page surface, divided by the
+       hairline alone (§5.0: three surfaces, structure by rule not by fill). -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;border-bottom:1px solid #243049;flex-shrink:0;position:relative;min-height:52px">
     <button id="gameMenuBtn" onclick="toggleGameMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -1277,7 +1300,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        SUB owns its slot permanently (dimmed when it can't fire) instead of
        becoming RESET on pause — an action's position never changes meaning.
        RESET moved to the game menu (rare recovery ≠ a primary slab). -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + var(--tabbar-h));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
     <!-- v2.9.19: the half-time override rides the clock cluster. Shown only while play is on. -->
     <button class="gd-btn gd-endhalf" id="gdEndHalf" onclick="endPeriodNow()" style="display:none"></button>
@@ -1359,9 +1382,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
   </div>
   <!-- v2.7.58/71: bottom control band shares the gameDash styling. Bottom padding
-       includes the 58px tab bar offset so the tile buttons sit ABOVE the app-wide
-       bottom tab bar instead of hiding behind it. -->
-  <div id="planControlBand" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)"></div>
+       clears --tabbar-h (v2.9.45: measured, was a hard-coded 58px) so the tile
+       buttons sit ABOVE the app-wide bottom tab bar instead of behind it. -->
+  <div id="planControlBand" style="display:flex;gap:6px;padding:8px 10px calc(8px + var(--tabbar-h));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)"></div>
 </div>
 
 <!-- v2.7.17: full Settings overlay — Sound, Account, Feedback, Help. Replaces the old openSettings() shortcut into the sound picker. -->
@@ -4148,6 +4171,23 @@ function showScr(id, keepClock){
 // team card; the Settings tab arrived in v2.9.23). Single body-level
 // #bottomTabBar element, position:fixed at the bottom of the viewport — a true
 // nav anchor visible on every screen (like iOS native apps).
+// v2.9.45: publish the tab bar's REAL height as --tabbar-h. The bar has no fixed
+// height — it's icon + label + padding + safe-area inset, so it lands ~67px on a
+// phone and taller again under iOS Dynamic Type. Screens used to reserve a
+// hard-coded 58px, which put their bottom action rows behind the bar (the owner's
+// clipped SUB / START photo). Measured beats guessed.
+function syncTabBarHeight(){
+  const bar=document.getElementById('bottomTabBar');
+  if(!bar) return;
+  // Hidden (landing/wizard screens) or rotated into the landscape side rail →
+  // there is no bottom bar to clear; the screens' own rules own the spacing.
+  const landscapeRail=window.matchMedia('(orientation:landscape) and (max-height:500px)').matches;
+  const h=(bar.style.display==='none'||landscapeRail)?0:bar.offsetHeight;
+  document.documentElement.style.setProperty('--tabbar-h',h+'px');
+}
+addEventListener('resize',syncTabBarHeight);
+addEventListener('orientationchange',()=>setTimeout(syncTabBarHeight,100));
+
 function renderViewSwitcher(){
   const host=document.getElementById('bottomTabBar');
   if(!host) return;
@@ -4166,7 +4206,7 @@ function renderViewSwitcher(){
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
   const fab=document.getElementById('coffeeFab');
   if(fab){ const home=document.getElementById('home'); fab.style.display=(home&&home.classList.contains('active'))?'flex':'none'; }
-  if(onLanding) return;
+  if(onLanding){ syncTabBarHeight(); return; }
   // Active view = whichever .scr currently has .active. Default to Game-context.
   let active='game';
   const ov=document.getElementById('subOrderOv');
@@ -4223,6 +4263,9 @@ function renderViewSwitcher(){
   host.innerHTML=`<div class="btb-pill">
     ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="switchToView('${t.k}')" aria-label="${t.label} view">${t.svg}<span>${t.label}</span></button>`).join('')}
   </div>`;
+  // The bar has its tabs now — measure it and publish --tabbar-h so every
+  // screen's bottom reservation matches the real bar (v2.9.45).
+  syncTabBarHeight();
 }
 
 function switchToView(v){
@@ -4332,12 +4375,36 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.44-beta';
+const APP_VERSION='v2.9.50-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.50-beta':{
+    title:'The home-screen app keeps itself current',
+    items:['Saved to your home screen, the app used to sit on whatever version it opened with — iPhone brings a home-screen app back exactly as you left it rather than reloading it, sometimes for days. Now every time you come back to it (and every ten minutes while it’s open) it quietly checks for a newer build. Between games it just refreshes itself. Mid-game it shows a small "New version — tap to update" pill instead, so it never reloads under you; your game is saved and picks up where it was.','And there’s a Check for updates row in the ☰ menu — it tells you you’re current, or refreshes on the spot.']
+  },
+  'v2.9.49-beta':{
+    title:'Tap, tap, confirm',
+    items:['Every change you make by hand mid-game is now one visible gesture: tap a player, tap the other player, confirm. Two on the field swaps positions. One on the field and one on the bench is an interchange — that kid on, this kid off, at that spot — and it looks exactly like an ordinary sub afterwards (in the log, on the shout card, undoable). Two on the bench swap places in the queue. Nothing moves until you confirm, so a mis-tap can’t shift anyone.','Tap the keeper as either half and the card says who takes the gloves — a keeper change no longer waits for a break.','A kid who isn’t going back on — injured, had enough, getting a lift home — gets one tap on the bench: out of the queue. They grey out at the bottom, the rotation skips them, their minutes are kept, and one more tap puts them back where they were. The app doesn’t ask why.','The long-press-for-injury gesture is retired (it still works as a shortcut into the same flow, but nothing depends on it any more).']
+  },
+  'v2.9.48-beta':{
+    title:'An injured keeper can come off',
+    items:['Fixed: mid-game there was no way to replace an injured keeper — the keeper picker only opens before kick-off or at a break, and the injury long-press skipped the keeper on purpose. Long-press the keeper like anyone else now: pick the replacement from the bench and they take the gloves. The banner says so, and the match log records the handover.']
+  },
+  'v2.9.47-beta':{
+    title:'Changes reach the game you’re in',
+    items:['Change the sub interval, players per sub or the strategy mid-match and it now applies to the game you’re playing — not just the next one. Sub times that have already gone by are left alone, so nothing fires the moment you save: switch 5′ to 7′ at 8 minutes and your next sub is 14, as you’d expect.','Edit a player’s positions or side mid-game and the field takes it straight away, instead of quietly waiting for the next sub to apply it.','When a sub shuffles someone who was already on — because the kid coming on doesn’t suit that spot — the card now says so: "Molly moves to CM". It used to happen silently.']
+  },
+  'v2.9.46-beta':{
+    title:'The next-on card names the right kids',
+    items:['Fixed: the NEXT ON card could list a player with nobody coming off — a blank row and "SUB" instead of a position. It was showing the first names on the bench, while the app was actually about to bring on whoever had played least. Now the card shows exactly who is going on, for whom, and where — and the player who really is next stops getting buried in a later wave.','The panel behind the field is gone. The pitch is the surface; only a fine line marks its edge.']
+  },
+  'v2.9.45-beta':{
+    title:'Edge to edge on iPhone',
+    items:['Installed on an iPhone, the app now fills the whole screen — the app bar paints up behind the clock and signal icons instead of the phone leaving a mismatched strip above it.','The SUB and START buttons no longer sit under the bottom tab bar. The app measures that bar for real now rather than assuming a height, so nothing gets clipped whatever your text size.','Sideways, the nav rail keeps its full width on notched phones instead of being squeezed to a sliver.','The block of colour behind the score line is gone — the score sits on the page with a single dividing line.']
+  },
   'v2.9.44-beta':{
     title:'Sign in with a password',
     items:['Cloud sign-in is now email + password \u2014 no more waiting on an emailed link. Tap Sign in, enter your email and a password (6+ characters), done. New here? Create account with the same two fields.','Forgot your password? One tap emails you a reset link; open it on your phone and choose a new one.','Already signed in and want a password on your account? \u2630 menu \u2192 Set / change password.','Continue with Google is coming to the same screen \u2014 it appears automatically once switched on.']
@@ -6372,13 +6439,15 @@ function saveTeamSettings(){
   if(!currentTeam) return;
   saveTeams(teams);
   if(cloudUser){ clearTimeout(_tsCloudTimer); _tsCloudTimer=setTimeout(()=>{ if(currentTeam) pushCloudTeam(currentTeam); },800); }
-  // No game underway → refresh the working cfg now, same as selectTeam does,
-  // so Settings → Roster → kick off uses the new defaults without a re-select.
-  // "Underway" is the active-game SNAPSHOT, not G: after a completed match is
-  // saved, G lingers in memory with no snapshot — settings changed from the
-  // summary must still reach the next game. A live/pre-kick game (snapshot
-  // present) keeps its cfg; the next game picks the changes up.
-  if((!G || loadActiveGame()===null) && curFmt===currentTeam.format) applyTeamPrefsToCfg(currentTeam);
+  // v2.9.47 (owner: "I updated the sub time to even recommended 7mins but it
+  // didn't change when I went back to the game"): settings now reach the LIVE
+  // game too. Until now a game underway kept its cfg and only the next match
+  // picked changes up — deliberate, but from the sideline it reads as broken:
+  // the Settings tab is one tap from the game and its controls appear to work.
+  if(curFmt===currentTeam.format){
+    applyTeamPrefsToCfg(currentTeam);
+    if(G && loadActiveGame()!==null) absorbPassedSubTimes();
+  }
   const tick=document.getElementById('teamSettingsSaved');
   if(tick){ tick.style.opacity='1'; clearTimeout(_tsTickTimer); _tsTickTimer=setTimeout(()=>{ tick.style.opacity='0'; },1200); }
 }
@@ -6678,6 +6747,11 @@ function saveAndBack(){
       if(fresh)currentTeam=fresh;
     }
     showScr('s4');
+    // v2.9.47 (owner: "if I change a players positional preferences it doesn't
+    // take effect unless I start a new game"): the edited tags now reach the
+    // field immediately instead of waiting for the next sub to apply them as a
+    // side-effect. Any resulting move is named on the card, never silent.
+    showSeatingMoves(repairSeating());
     renderG();
     saveActiveGame();
     return;
@@ -7125,7 +7199,10 @@ function posLabelFor(pIdx){
 // where the kid should run to. "You're on for Riley" is wayfinding: the
 // outgoing name tells the incoming kid where to go.
 let _relayTimer=null;
-function showRelay(off,on){
+// v2.9.47: `moved` = repairSeating()'s report. Players who were already on the
+// field and got re-seated by this sub are named here — the coach shouts them
+// too, and a position change stops being something you only notice later.
+function showRelay(off,on,moved){
   const el=document.getElementById('relayCard'); if(!el||!G) return;
   const c=Math.min(off.length,on.length);
   let rows='';
@@ -7133,7 +7210,27 @@ function showRelay(off,on){
     const pos=posLabelFor(on[i]);
     rows+=`<div style="font-size:16px;font-weight:800;color:#eee;padding:2px 0"><span style="color:#00d4aa">${avail[on[i]]}</span> <span style="font-weight:600;color:#9fb3c8">on for</span> <span style="color:#ff7088">${avail[off[i]]}</span>${pos?` <span style="font-weight:600;color:#9fb3c8">·</span> <span style="color:#5bc0de">${pos}</span>`:''}</div>`;
   }
+  // Only players who stayed ON the field count as a "move" — the incoming subs
+  // are already named above, and saying it twice reads as a second instruction.
+  const _in=new Set((on||[]).map(p=>avail[p]));
+  (moved||[]).filter(m=>!_in.has(m.name)&&m.pos).forEach(m=>{
+    rows+=`<div style="font-size:15px;font-weight:700;color:#eee;padding:2px 0"><span style="color:#f0a500">${m.name}</span> <span style="font-weight:600;color:#9fb3c8">moves to</span> <span style="color:#5bc0de">${m.pos}</span></div>`;
+  });
   el.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#00d4aa;margin-bottom:2px">SUB MADE — TELL THEM</div>`+rows;
+  el.style.display='block';
+  if(_relayTimer)clearTimeout(_relayTimer);
+  _relayTimer=setTimeout(hideRelay,12000);
+}
+// v2.9.47: the same card, without a sub behind it — used when a mid-game edit
+// (new position tags, a changed side preference) re-seats the field. Silent
+// re-seating is what made "I changed a player's positions and nothing happened"
+// and "it moved a player's position" the same bug seen from two ends.
+function showSeatingMoves(moved){
+  const el=document.getElementById('relayCard');
+  if(!el||!G||!moved||!moved.length) return;
+  const rows=moved.filter(m=>m.pos).map(m=>`<div style="font-size:15px;font-weight:700;color:#eee;padding:2px 0"><span style="color:#f0a500">${m.name}</span> <span style="font-weight:600;color:#9fb3c8">moves to</span> <span style="color:#5bc0de">${m.pos}</span></div>`).join('');
+  if(!rows) return;
+  el.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#00d4aa;margin-bottom:2px">POSITIONS UPDATED — TELL THEM</div>`+rows;
   el.style.display='block';
   if(_relayTimer)clearTimeout(_relayTimer);
   _relayTimer=setTimeout(hideRelay,12000);
@@ -7655,10 +7752,16 @@ function labelToTag(lbl){
 // with no outfield tags fits anywhere; the keeper is untouched. Runs at
 // kickoff (after any saved plan applies) and after each engine sub — never on
 // the coach's own tap-swaps between subs, and not in Plan-ahead build mode.
+// v2.9.47 (owner: "it also moved a players position" → "name the moves
+// instead"): returns the players whose SLOT changed — [{name, pos}] — so the
+// caller can say so out loud. Re-seating is still allowed to move a player who
+// had nothing to do with the sub (that's how it resolves a bad fit), but it is
+// no longer silent.
 function repairSeating(){
-  if(!G||!currentTeam)return;
+  if(!G||!currentTeam)return[];
   const fmt=FORMATS[curFmt];
-  if(!fmt||!fmt.hasGk)return;   // labelled-slot sports with a keeper (soccer-style)
+  if(!fmt||!fmt.hasGk)return[];   // labelled-slot sports with a keeper (soccer-style)
+  const _before=[...G.on];
   const pp=getPositions();
   const fits=(pIdx,posIdx)=>{
     const lbl=(pp[posIdx]&&pp[posIdx].label)||'';
@@ -7694,6 +7797,15 @@ function repairSeating(){
       }
     }
   }
+  // Who ended up in a different slot than they started this pass in? Report by
+  // the slot they NOW hold — that's the instruction ("Molly, go to CM").
+  const moved=[];
+  for(const {onI,posI} of idxs){
+    if(G.on[onI]===_before[onI])continue;
+    const lbl=(pp[posI]&&pp[posI].label)||'';
+    moved.push({name:avail[G.on[onI]],pos:lbl});
+  }
+  return moved;
 }
 
 function smartAssign(){
@@ -8157,6 +8269,15 @@ function subTs(){
   return r;
 }
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
+// v2.9.47: changing the sub interval mid-half rewrites the schedule under a
+// clock that has already run. Every new-schedule time at or before NOW is
+// marked done, so the new cadence starts from this moment forward instead of
+// firing a retroactive sub the instant the coach saves. (5′→7′ at 8:00 makes
+// the next sub 14′, not an immediate one for the 7′ that "passed".)
+function absorbPassedSubTimes(){
+  if(!G||!G.sd)return;
+  subTs().forEach(t=>{ if(t<=G.secs && !G.sd.includes(t)) G.sd.push(t); });
+}
 
 function renderG(){
   // v2.8.7: two render passes are DEFERRED — confSub schedules one 1.7s out to
@@ -8192,7 +8313,7 @@ function renderG(){
   } else {
     document.getElementById('hLbl').textContent=_sport.periodShort(G.half);
     document.getElementById('hLbl').style.color='#e94560';
-    if(!cfg.breaksOnly&&ns!==null&&G.bench.length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
+    if(!cfg.breaksOnly&&ns!==null&&benchQ().length>0){const d=ns-G.secs;if(d<=10&&d>0)ce.className='tmr-c alert';else if(d<=30&&d>0)ce.className='tmr-c warn';}
     if(cfg.breaksOnly){
       // Breaks-only mode (e.g. netball): rotate at the quarter/half break, no rolling subs.
       const brk=(_sport.key==='netball'||_sport.key==='afl')?'quarter break':'the break';
@@ -8230,7 +8351,7 @@ function renderG(){
   // fire. RESET lives in the game menu now (resetHalfConfirm).
   const subBtn=document.getElementById('subB');
   if(subBtn){
-    const canSub=G.bench.length>0 && (G.running||G.atBreak||gameInProgress());
+    const canSub=benchQ().length>0 && (G.running||G.atBreak||gameInProgress());
     subBtn.disabled=!canSub;
     subBtn.style.opacity=canSub?'1':'0.4';
     subBtn.className='gd-btn gd-sub';
@@ -8571,7 +8692,7 @@ function updateClkSub(){
   const grp=document.getElementById('clkSubGrp');
   const ns=typeof nxtST==='function'?nxtST():null;
   const bt=document.getElementById('benchTop');
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){
+  if(cfg.breaksOnly||ns===null||!benchQ().length||(ns-G.secs)<=0){
     if(grp) grp.style.display='none';
     _setBenchUrgency(bt,false,false);
     return;
@@ -8624,7 +8745,7 @@ function _tickSecondBody(){
     });
   }
   const ns=nxtST();
-  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&G.bench.length>0){
+  if(!cfg.breaksOnly&&ns!==null&&G.secs>=ns&&benchQ().length>0){
     G.sd.push(ns);
     // v2.7.31: Manual merged into Custom (subStrategy='planned'). Auto-fire when the
     // strategy has a definite "sub THIS player for THIS one" decision: fair / paired
@@ -8671,6 +8792,12 @@ function tickLoop(now){
 // game. Selection therefore sorts on OUTFIELD seconds (pt − gkt). Displayed
 // minutes everywhere remain the true total. When the keeper never changes,
 // gkt cancels out of every comparison and behaviour is identical to before.
+// v2.9.49: the QUEUE — bench players the rotation may pick. G.out holds the
+// kids the coach has marked out of the queue (injured, not going back on, gone
+// home early — the app doesn't ask why). They stay in G.bench (they're at the
+// ground, their minutes are theirs) but no picker sees them.
+function benchQ(){ return (G&&G.bench?G.bench:[]).filter(p=>!isOutQ(p)); }
+function isOutQ(p){ return !!(G&&G.out&&G.out.includes(p)); }
 function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0)+((G.rotCredit&&G.rotCredit[avail[p]])||0);}
 // v2.9.21 (owner rule, from the Dragonflies vs Curl Curl review): when the
 // gloves leave a player mid-game she goes "back into the normal cycle as if
@@ -8681,7 +8808,7 @@ function _rotSecs(p){return (G.pt[avail[p]]||0)-((G.gkt&&G.gkt[avail[p]])||0)+((
 // the credit lives in its own ledger and only feeds _rotSecs.
 function creditExKeeper(old){
   if(!G||old==null||!gameInProgress())return;
-  const others=[...(G.on||[]),...(G.bench||[])].filter(p=>p!==old&&p!==G.gk);
+  const others=[...(G.on||[]),...benchQ()].filter(p=>p!==old&&p!==G.gk);
   if(!others.length)return;
   const mean=others.reduce((s,p)=>s+_rotSecs(p),0)/others.length;
   const cur=_rotSecs(old);
@@ -8693,7 +8820,10 @@ function creditExKeeper(old){
 }
 function trigSub(){
   // DON'T pause the clock — keep running, show banner for coach to confirm
-  if(!G.bench.length)return;
+  // v2.9.49: the QUEUE (bench minus out-of-queue kids) is what the engine
+  // picks from — see benchQ(). G.bench itself still holds everyone at the ground.
+  const _bq=benchQ();
+  if(!_bq.length)return;
   let off=[],on=[];
   const strat=G.subStrategy||'paired';
   if(strat==='planned'&&G.subPlan&&G.subPlan.events){
@@ -8705,37 +8835,37 @@ function trigSub(){
     if(planned){
       // Validate the planned off players are on field + on players are on bench
       off=planned.off.filter(p=>G.on.includes(p)&&p!==G.gk);
-      on=planned.on.filter(p=>G.bench.includes(p));
+      on=planned.on.filter(p=>_bq.includes(p));
       // If plan is partially unusable (e.g. player got swapped earlier mid-game), fall back to fair
       if(off.length===0||on.length===0){
-        const c=Math.min(cfg.sc,G.bench.length);
+        const c=Math.min(cfg.sc,_bq.length);
         const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
         off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
-        on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
+        on=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
       }
     } else {
       // No planned event at this time — coach hit SUB manually outside the plan
-      const c=Math.min(cfg.sc,G.bench.length);
+      const c=Math.min(cfg.sc,_bq.length);
       const elig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
       off=[...elig].sort((a,b)=>_rotSecs(b)-_rotSecs(a)).slice(0,c);
-      on=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
+      on=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b)).slice(0,c);
     }
   } else if(strat==='fair'){
     // Equal-time: pick the on-field player(s) with the most playing time to come off,
     // and the bench player(s) with the least playing time to come on.
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(strat==='manual'){
     // Manual: same suggestion as fair-time so the coach has a sensible default in the banner,
     // but trigSub is only ever called via the manual SUB button (not auto-tick).
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     off=sortedOn.slice(0,c);
     on=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
@@ -8760,17 +8890,17 @@ function trigSub(){
       .sort((a,b)=>b.totalMins-a.totalMins);
     if(pairsByMinutes.length>0){
       off=pairsByMinutes[0].onFieldMembers;
-      const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+      const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
       on=sortedBench.slice(0,off.length);
     } else {
-      const c=Math.min(cfg.sc,G.bench.length);
-      off=onFieldElig.slice(-c);on=G.bench.slice(0,c);
+      const c=Math.min(cfg.sc,_bq.length);
+      off=onFieldElig.slice(-c);on=_bq.slice(0,c);
     }
     G.pairIdx++;
   } else {
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    off=of.slice(-c);on=G.bench.slice(0,c);
+    off=of.slice(-c);on=_bq.slice(0,c);
   }
   const c=Math.min(off.length,on.length);
   G.ps={off:off.slice(0,c),on:on.slice(0,c)};
@@ -8876,6 +9006,25 @@ function updateViewToggle(){
 // Only meaningful for Equal-time (as a tiebreaker) and Manual (where queue
 // order = next-on order). Paired mode swaps whole groups so we hide the
 // controls there.
+// v2.9.49 (owner: "I should be able to flexibly change the bench around if I
+// have people not wanting to go back on" → "once the interchange has been done
+// we can mark the player on the bench as not in the queue"): the out-of-queue
+// toggle. Whatever the reason — injury, a sulk, a lift home — the kid stays on
+// the bench list (they're at the ground, their minutes are theirs) but no
+// picker sees them (benchQ). Toggling back restores their queue place: G.out
+// keeps them at their G.bench index; only the RENDER pushes them to the bottom.
+function toggleOutOfQueue(pIdx){
+  if(!G||!G.bench||!G.bench.includes(pIdx))return;
+  if(!G.out)G.out=[];
+  const i=G.out.indexOf(pIdx);
+  if(i>=0) G.out.splice(i,1); else G.out.push(pIdx);
+  G.log.push({type:'queue',half:G.half,time:G.secs,who:avail[pIdx],out:i<0});
+  // A pending engine proposal may now name a kid who's out — drop it and let
+  // the next tick re-propose from the queue.
+  if(G.ps&&!G.ps.injury&&G.ps.on.some(p=>isOutQ(p))){ G.ps=null; document.getElementById('subBanner').style.display='none'; }
+  saveActiveGame();
+  renderG();
+}
 function moveBenchUp(pIdx){
   if(!G||!G.bench)return;
   const i=G.bench.indexOf(pIdx);
@@ -8901,7 +9050,9 @@ function moveBenchDown(pIdx){
 let _breakRotation=false;   // true while advH() applies the period-break rotation
 let gameMode='swap';        // 'swap' | 'keeper' | 'injury'
 let fieldSwapSel=null;      // first player tapped in swap mode
-let injuryOffSel=null;      // injured player tapped, awaiting replacement pick
+let injuryOffSel=null;      // injured player tapped, awaiting replacement pick (legacy — v2.9.49 retired the injury gesture; kept for the harness)
+let benchArmSel=null;       // v2.9.49: first BENCH player tapped (tap-tap-confirm)
+let _pend=null;             // v2.9.49: the proposed change awaiting Confirm — {type:'pos'|'inter'|'queue', a, b}
 
 function setGameMode(m){
   gameMode=(gameMode===m)?'swap':m;   // tapping the active mode returns to swap
@@ -8917,24 +9068,117 @@ function setGameMode(m){
 const LONG_PRESS_MS=500;
 let _lpTimer=null, _lpFired=false, _lpStartX=0, _lpStartY=0;
 
+// v2.9.49 (owner, from the sideline): ONE gesture for every manual change —
+// tap a player, tap the other player, CONFIRM. Field+field = position swap,
+// field+bench (either order) = interchange, bench+bench = queue swap. Nothing
+// applies before the confirm (the old two-tap position swap applied instantly —
+// a mistap moved two kids mid-play). The injury long-press and its red
+// bench-pick mode are retired: an injured kid comes off through the same
+// interchange, and 'not going back on' is the out-of-queue toggle on the bench.
 function tapFieldPlayer(pIdx, isGk){
-  // Mid-swap completion: tap a second on-field player to finish the swap.
-  if(fieldSwapSel!==null){
-    if(fieldSwapSel===pIdx){
-      fieldSwapSel=null;
-    } else {
-      window._justSwapped={ names:new Set([avail[fieldSwapSel], avail[pIdx]]), t:Date.now() };
-      setTimeout(()=>{ window._justSwapped=null; if(typeof renderG==='function') renderG(); }, 1200);
-      swapFieldPositions(fieldSwapSel, pIdx);
-      fieldSwapSel=null;
-      saveActiveGame();
-    }
-    renderG();
+  if(_pend){ cancelPending(false); }
+  if(benchArmSel!==null){            // bench kid armed → interchange
+    proposeChange('inter',pIdx,benchArmSel);
     return;
   }
-  // Default short tap: arm swap mode for this player.
-  fieldSwapSel=pIdx;
+  if(fieldSwapSel!==null){
+    if(fieldSwapSel===pIdx){ fieldSwapSel=null; renderG(); return; }   // tap again = disarm
+    proposeChange('pos',fieldSwapSel,pIdx);
+    return;
+  }
+  fieldSwapSel=pIdx;                 // arm
   renderG();
+}
+function tapBenchPlayer(pIdx){
+  if(!G||!G.bench.includes(pIdx))return;
+  if(_pend){ cancelPending(false); }
+  if(fieldSwapSel!==null){           // field kid armed → interchange
+    proposeChange('inter',fieldSwapSel,pIdx);
+    return;
+  }
+  if(benchArmSel!==null){
+    if(benchArmSel===pIdx){ benchArmSel=null; renderG(); return; }
+    proposeChange('queue',benchArmSel,pIdx);
+    return;
+  }
+  benchArmSel=pIdx;
+  renderG();
+}
+// Build the proposal and show the confirm card. a/b semantics per type:
+//   pos   — a,b both on field (either may be the keeper)
+//   inter — a on field (off), b on bench (on)
+//   queue — a,b both on bench
+function proposeChange(type,a,b){
+  _pend={type,a,b};
+  fieldSwapSel=null; benchArmSel=null;
+  const banner=document.getElementById('subBanner');
+  const swaps=document.getElementById('subBannerSwaps');
+  if(!banner||!swaps){ _pend=null; return; }
+  const pos=p=>posLabelFor(p)||'';
+  const gkNote=(who)=>`<div style="text-align:center;font-size:12px;color:#ff7bac;font-weight:700;margin-top:4px">${fn(avail[who])} takes the gloves</div>`;
+  let title='',body='',note='';
+  if(type==='pos'){
+    title='SWAP POSITIONS';
+    body=`<span style="color:#eee">${fn(avail[a])}</span> <span style="color:#5bc0de">${pos(b)}</span> <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span> <span style="color:#eee">${fn(avail[b])}</span> <span style="color:#5bc0de">${pos(a)}</span>`;
+    if(G.gk===a) note=gkNote(b); else if(G.gk===b) note=gkNote(a);
+  } else if(type==='inter'){
+    title='INTERCHANGE';
+    body=`<span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[b])}</span> <span style="color:#9fb3c8;font-weight:600">on for</span> <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[a])}${ic('arrowDown',13,'#f0a500')}</span> <span style="color:#9fb3c8;font-weight:600">·</span> <span style="color:#5bc0de">${pos(a)}</span>`;
+    if(G.gk===a) note=gkNote(b);
+  } else {
+    title='SWAP QUEUE PLACES';
+    body=`<span style="color:#eee">${fn(avail[a])}</span> <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span> <span style="color:#eee">${fn(avail[b])}</span>`;
+  }
+  swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#f0a500;font-weight:700;letter-spacing:1px;margin-bottom:4px">${title}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:15px;font-weight:700;flex-wrap:wrap">${body}</div>${note}
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button onclick="cancelPending(true)" style="flex:1;padding:10px;background:#13203a;color:#9fb3c8;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">CANCEL</button>
+      <button onclick="confirmPending()" style="flex:2;padding:10px;background:#00d4aa;color:#06231d;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">CONFIRM</button>
+    </div>`;
+  // The engine's SUBS DONE button belongs to G.ps banners only.
+  const done=banner.querySelector('button[onclick="confSub()"]'); if(done) done.style.display='none';
+  banner.style.display='block';
+  _li();
+  renderG();
+}
+function cancelPending(rerender){
+  _pend=null;
+  const banner=document.getElementById('subBanner');
+  if(banner){ banner.style.display='none'; const done=banner.querySelector('button[onclick="confSub()"]'); if(done) done.style.display=''; }
+  if(rerender) renderG();
+}
+function confirmPending(){
+  if(!G||!_pend)return;
+  const {type,a,b}=_pend;
+  cancelPending(false);
+  if(type==='pos'){
+    if(!G.on.includes(a)||!G.on.includes(b))return;
+    window._justSwapped={ names:new Set([avail[a], avail[b]]), t:Date.now() };
+    setTimeout(()=>{ window._justSwapped=null; if(typeof renderG==='function') renderG(); }, 1200);
+    swapFieldPositions(a,b);
+    saveActiveGame(); renderG();
+  } else if(type==='inter'){
+    if(!G.on.includes(a)||!G.bench.includes(b))return;
+    // A coach's explicit pick overrides out-of-queue — they're on the field now.
+    if(G.out){ const i=G.out.indexOf(b); if(i>=0) G.out.splice(i,1); }
+    const wasGk=(G.gk===a);
+    if(wasGk){                       // gloves follow the slot — BEFORE confSub so re-seating + the relay see the new keeper
+      creditExKeeper(a); G.gk=b;
+      if(G.half<=1) gk1=b; else { gk2=b; gk2Explicit=true; }
+    }
+    G.ps={off:[a],on:[b]};
+    confSub();                       // log · undo snapshot · relay · re-seat — same as an engine sub
+    if(wasGk){
+      G.lastSub.prevGk=a;            // undo hands the gloves back
+      G.log.push({type:'gk',half:G.half,time:G.secs,off:avail[a],on:avail[b]});
+      saveActiveGame();
+    }
+  } else if(type==='queue'){
+    const i=G.bench.indexOf(a), j=G.bench.indexOf(b);
+    if(i<0||j<0)return;
+    [G.bench[i],G.bench[j]]=[G.bench[j],G.bench[i]];
+    saveActiveGame(); renderG();
+  }
 }
 
 // Long-press triggers an injury sub for the held player. Hooked up to the
@@ -8943,15 +9187,20 @@ function fieldPillPointerDown(e, pIdx, isGk){
   _lpFired=false;
   _lpStartX=e.clientX; _lpStartY=e.clientY;
   if(_lpTimer) clearTimeout(_lpTimer);
-  // GK injury goes through the keeper-change flow, not here. Empty bench = no replacement available.
-  if(isGk || !G || !G.bench.length) return;
+  // v2.9.48 (owner: "you can't do a keeper swap if the keeper is injured"):
+  // the keeper long-presses like anyone else. The old guard sent GK injuries
+  // to "the keeper-change flow" — but that door (openGkPick) only opens
+  // pre-kickoff or at a break, so mid-play an injured keeper had NO path at
+  // all. confInjury hands the gloves to the replacement. Empty bench = no
+  // replacement available.
+  if(!G || !G.bench.length) return;
   _lpTimer=setTimeout(()=>{
     _lpTimer=null;
     _lpFired=true;
     if(navigator.vibrate) navigator.vibrate(45);
-    gameMode='injury';
-    injuryOffSel=pIdx;
-    fieldSwapSel=null;
+    // v2.9.49: long-press is a shortcut into the same tap-tap-confirm flow.
+    if(_pend) cancelPending(false);
+    benchArmSel=null; fieldSwapSel=pIdx;
     renderG();
   }, LONG_PRESS_MS);
 }
@@ -9082,12 +9331,15 @@ function injurySub(pIdx, replacementIdx){
   const banner=document.getElementById('subBanner');
   const swaps=document.getElementById('subBannerSwaps');
   G.ps.injury=true;
+  // v2.9.48: say it when the replacement is going IN GOAL — the keeper is the
+  // one slot where "on for Alex" isn't enough instruction.
+  const _gkNote=(G.gk===pIdx)?`<div style="text-align:center;font-size:12px;color:#ff7bac;font-weight:700;margin-top:2px">${fn(avail[on[0]])} takes the gloves</div>`:'';
   swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#e94560;font-weight:700;letter-spacing:1px;margin-bottom:4px;display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%">${ic('bandage',13,'#e94560')}INJURY SUB</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:14px;font-weight:700">
       <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[off[0]])}${ic('arrowDown',13,'#f0a500')}</span>
       <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span>
       <span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[on[0]])}</span>
-    </div>
+    </div>${_gkNote}
     <div style="display:flex;gap:6px;margin-top:8px">
       <button onclick="confInjury(false)" style="flex:1;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">BACK TO BENCH</button>
       <button onclick="confInjury(true)" style="flex:1;padding:10px;background:#e94560;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">OUT FOR GAME</button>
@@ -9100,6 +9352,7 @@ function injurySub(pIdx, replacementIdx){
 }
 function confSub(){
   if(!G.ps)return;
+  if(_pend) cancelPending(false);   // v2.9.49: an engine sub supersedes a half-built proposal
   const{off,on}=G.ps;
   // Snapshot every pill's CURRENT world position before mutating G — those become the "from" points so the new pills can tween from where they were (bench→field for incoming, field→bench for outgoing), pulling each other across.
   const _animSnap=(typeof afl3d!=='undefined' && afl3d.snapshotPositions)?afl3d.snapshotPositions():null;
@@ -9154,9 +9407,9 @@ function confSub(){
   // v2.9.22: engine subs inherit the outgoing player's slot — re-seat by
   // position strengths BEFORE the relay card reads the slots (never changes
   // who plays; coach tap-swaps between subs are untouched).
-  repairSeating();
+  const _moved=repairSeating();
   // relay card. Break auto-rotation is excluded: the announce view owns breaks.
-  if(!_breakRotation) showRelay(off,on);
+  if(!_breakRotation) showRelay(off,on,_moved);
   saveActiveGame();
   renderG();
 }
@@ -9171,6 +9424,7 @@ function undoLastSub(){
   G.bench=ls.prevBench;
   G.pairIdx=ls.prevPairIdx;
   G.pairs=ls.prevPairs;
+  if(ls.prevGk!==undefined){ G.gk=ls.prevGk; if(G.half<=1) gk1=ls.prevGk; else gk2=ls.prevGk; }   // v2.9.49: keeper interchange undo
   Object.entries(ls.prevPt).forEach(([name,t])=>{G.pt[name]=t;});
   // Drop the sub log entries that were added by confSub
   if(G.log.length>ls.prevLogLen) G.log.length=ls.prevLogLen;
@@ -9187,6 +9441,17 @@ function confInjury(outForGame){
   const fieldIdx=G.on.indexOf(off[0]);
   if(fieldIdx>=0) G.on[fieldIdx]=on[0];
   G.bench=G.bench.filter(p=>p!==on[0]);
+  // v2.9.48: the injured player was the keeper → the replacement takes the
+  // gloves. Same bookkeeping as a planned handover (setPlanKeeper): the old
+  // keeper is credited for outfield time missed so the fairness maths doesn't
+  // treat their GK minutes as rest, and the period's keeper pick follows.
+  const _wasGk=(G.gk===off[0]);
+  if(_wasGk){
+    creditExKeeper(off[0]);
+    G.gk=on[0];
+    if(G.half<=1) gk1=on[0]; else { gk2=on[0]; gk2Explicit=true; }
+    G.log.push({type:'gk',half:G.half,time:G.secs,off:avail[off[0]],on:avail[on[0]]});
+  }
   if(outForGame){
     // The injured player leaves the game — but their REPLACEMENT must take
     // their slot in the rotation pair, exactly as the minor-knock branch does.
@@ -9257,7 +9522,7 @@ function advH(){
     // break (Undo button), and the coach can still Swap/sub before starting.
     // Skip for manual / full-control — those coaches drive their own subs.
     const strat=G.subStrategy||'fair';
-    if((strat==='fair'||strat==='paired') && G.bench.length){
+    if((strat==='fair'||strat==='paired') && benchQ().length){
       _breakRotation=true;   // tags the resulting subs as belonging to the break
       try{
         trigSub();           // stage the recommended off/on (plays the break alert)
@@ -9407,6 +9672,8 @@ function renderSumLog(){
       icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;
     } else if(e.type==='injury_sub'){
       icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;
+    } else if(e.type==='queue'){
+      icon=ic(e.out?'user-x':'user-check',14,e.out?'#7d8a9c':'#00d4aa');detail=`<span style="color:${e.out?'#7d8a9c':'#00d4aa'}">${fn(e.who)} ${e.out?'out of the queue':'back in the queue'}</span>`;
     } else if(e.type==='reset_half'){
       icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;
     } else if(e.type==='opp_formation'){
@@ -9643,6 +9910,7 @@ function renderMatchDetail(){
       const editableGoal=editing&&e.type==='goal'&&e.who==='us'&&e.afl!=='behind';
       if(e.type==='sub'){icon=ic('refresh',14,'#5bc0de');detail=`<span style="color:#f0a500">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span>`;}
       else if(e.type==='injury_sub'){icon=ic('bandage',14,'#e94560');detail=`<span style="color:#e94560">${fn(e.off)}</span> ${ic('swap',12,'#444')} <span style="color:#00d4aa">${fn(e.on)}</span><span style="color:#e94560"> · injury${e.outForGame?' (out for the game)':''}</span>`;}
+      else if(e.type==='queue'){icon=ic(e.out?'user-x':'user-check',14,e.out?'#7d8a9c':'#00d4aa');detail=`<span style="color:${e.out?'#7d8a9c':'#00d4aa'}">${fn(e.who)} ${e.out?'out of the queue':'back in the queue'}</span>`;}
       else if(e.type==='reset_half'){icon=ic('undo-2',14,'#f0a500');detail=`<span style="color:#f0a500">${_logPeriodLabel(e.half)} reset to kickoff</span>`;}
       else if(e.type==='opp_formation'){icon=ic('layout-grid',14,'#9fb3c8');detail=`<span style="color:#9fb3c8">Opposition shape: ${e.formation}</span>`;}
       else if(e.type==='gk'){icon=ic('target',14,'#e94560');detail=`GK: ${fn(e.off)} ${ic('swap',12,'#444')} ${fn(e.on)}`;}
@@ -9773,33 +10041,34 @@ function getNextSwap(){
   // Returns paired arrays: offArr[i] is replaced by onArr[i]
   const nextOff=new Set(), nextOn=new Set();
   let offArr=[],onArr=[];
-  if(!G||!G.bench.length) return {nextOff,nextOn,offArr,onArr};
+  const _bq=G?benchQ():[];   // v2.9.49: pick from the queue, not the whole bench
+  if(!G||!_bq.length) return {nextOff,nextOn,offArr,onArr};
   const ns=nxtST();
   if(ns===null) return {nextOff,nextOn,offArr,onArr};
   const strat=G.subStrategy||'paired';
   if(strat==='fair'||strat==='manual'){
     // Equal-time logic: longest-on come off, longest-benched come on
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const onFieldElig=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
     // v2.9.5: same basis as trigSub — outfield seconds, keeper time excluded —
     // or the pitch would preview a different swap than the one that fires.
     const sortedOn=[...onFieldElig].sort((a,b)=>_rotSecs(b)-_rotSecs(a));
-    const sortedBench=[...G.bench].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
+    const sortedBench=[..._bq].sort((a,b)=>_rotSecs(a)-_rotSecs(b));
     offArr=sortedOn.slice(0,c);
     onArr=sortedBench.slice(0,c);
   } else if(G.pairs.length>0){
     const pair=G.pairs[G.pairIdx % G.pairs.length];
     offArr=pair.on.filter(p=>G.on.includes(p)&&p!==G.gk);
-    onArr=G.bench.slice(0,offArr.length);
+    onArr=_bq.slice(0,offArr.length);
     if(!offArr.length||!onArr.length){
-      const c=Math.min(cfg.sc,G.bench.length);
+      const c=Math.min(cfg.sc,_bq.length);
       const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-      offArr=of.slice(-c);onArr=G.bench.slice(0,c);
+      offArr=of.slice(-c);onArr=_bq.slice(0,c);
     }
   } else {
-    const c=Math.min(cfg.sc,G.bench.length);
+    const c=Math.min(cfg.sc,_bq.length);
     const of=G.gk!==null?G.on.filter(p=>p!==G.gk):G.on.slice();
-    offArr=of.slice(-c);onArr=G.bench.slice(0,c);
+    offArr=of.slice(-c);onArr=_bq.slice(0,c);
   }
   const swapC=Math.min(offArr.length,onArr.length);
   offArr=offArr.slice(0,swapC);onArr=onArr.slice(0,swapC);
@@ -9833,7 +10102,7 @@ function renderRoster(){
   if(hintC) hintC.innerHTML='';
   const fmtDef=FORMATS[curFmt];
   const positions=getPositions();
-  const {nextOff,nextOn,swapMap}=getNextSwap();
+  const {nextOff,nextOn,swapMap,onArr}=getNextSwap();
 
   // Build position-to-player mapping so we can look up positions by player index
   let playerSlots=[];
@@ -9862,7 +10131,7 @@ function renderRoster(){
   const _drawerBody=document.getElementById('benchDrawerBody');
   if(_drawerBody) _drawerBody.innerHTML='';
   const _takeover=document.getElementById('s4').classList.contains('bench-takeover');
-  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer);
+  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer, onArr);
 
   // ===== MODE HINT — what tapping a player does right now. Rendered inline as
   // a tinted chip inside the formation/strategy pill row (#modeHint span).
@@ -9873,7 +10142,9 @@ function renderRoster(){
     if(gameMode==='injury' && injuryOffSel!==null){
       hintCol='#e94560'; hintHtml=`${ic('arrow-down',12,'#e94560')} ${fn(avail[injuryOffSel])} off — tap a bench player to bring on`;
     } else if(fieldSwapSel!==null){
-      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} Tap another to swap (incl. keeper)`;
+      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} ${fn(avail[fieldSwapSel])} — tap a field player to swap, or a bench player to interchange`;
+    } else if(benchArmSel!==null){
+      hintCol='#fff'; hintHtml=`${ic('move',12,'#fff')} ${fn(avail[benchArmSel])} — tap a field player to bring on, or a bench player to swap places`;
     }
     hintC.innerHTML='';
     if(hintHtml){
@@ -10019,7 +10290,7 @@ const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class
 // Bench (subs coming on) — extracted from renderRoster so it can be rendered
 // into the TOP strip independently of the pitch. The dashboard's Undo button
 // now lives in the bottom bar, so the old in-bench "UNDO LAST SUB" pill is gone.
-function renderBenchInto(container, swapMap, posForPlayer){
+function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
   if(!container || !G || !G.bench.length) return;
   {
     const benchSection=document.createElement('div');
@@ -10039,16 +10310,31 @@ function renderBenchInto(container, swapMap, posForPlayer){
     // bench, this gives 4 waves and the grid auto-fits as many columns as
     // the viewport width supports (min 190px per column).
     const sc=Math.max(1, cfg.sc||1);
-    const waves=[];
-    for(let i=0;i<G.bench.length;i+=sc){
-      waves.push(G.bench.slice(i, i+sc));
-    }
-    const nextOnList=waves[0]||[];
-    const laterList =G.bench.slice(sc);   // for the indexOf / first/last check below
+    // v2.9.46 (owner: "no one coming off on this one?"): wave 0 is whoever the
+    // ENGINE is actually bringing on (getNextSwap's onArr), not the first sc
+    // names in bench order. Those two disagree in equal-time/manual mode, which
+    // picks the incoming players by least-played — so the card was listing a
+    // player nobody was coming off for (an empty "— / SUB" row) while the player
+    // genuinely next on sat down in a later wave. Bench order is the fallback
+    // for when there's no pending swap (end of period, no eligible pairing).
+    // v2.9.49: waves are built from the QUEUE; out-of-queue kids render as their
+    // own greyed group at the very bottom (still visible — they're at the ground).
+    const _q=benchQ();
+    const outList=G.bench.filter(p=>isOutQ(p));
+    const _engineNext=(nextOnArr||[]).filter(p=>_q.includes(p));
+    const nextOnList=_engineNext.length?_engineNext:_q.slice(0,sc);
+    const _rest=_q.filter(p=>!nextOnList.includes(p));
+    const waves=nextOnList.length?[nextOnList]:[];
+    for(let i=0;i<_rest.length;i+=sc) waves.push(_rest.slice(i,i+sc));
 
     // Reorder arrows operate on the FULL G.bench list — shared by the pill and
     // table renderers.
     const _benchArrow=(dir,disabled,pIdx)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
+
+    // v2.9.49: the out-of-queue toggle — a real, visible control on every bench
+    // row (owner: no more hidden gestures). 44px hit area, 16px glyph; the
+    // greyed OUT group gets the inverse ('back in').
+    const _outBtn=(pIdx)=>{ const out=isOutQ(pIdx); return `<button class="hit44" onclick="event.stopPropagation();toggleOutOfQueue(${pIdx})" aria-label="${out?'Put '+fn(avail[pIdx])+' back in the queue':fn(avail[pIdx])+' out of the queue'}" title="${out?'Back in the queue':'Out of the queue'}" style="margin-left:2px;color:${out?'#00d4aa':'#5a6b82'}">${ic(out?'user-check':'user-x',16,out?'#00d4aa':'#5a6b82')}</button>`; };
 
     function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
@@ -10074,15 +10360,17 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // the live game — the next-on rows step up a full tier (18px names,
       // 14px instruction, deeper padding, heavier border).
       if(isNext&&!isInjuryPick) row.className='bp-next';
-      row.style.cssText=`display:flex;align-items:center;padding:${rail?(isNext?'8px 8px':'5px 8px'):(isNext?'12px 14px':'6px 10px')};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
-      if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
+      const _armed=(benchArmSel===pIdx);
+      row.style.cssText=`display:flex;align-items:center;padding:${rail?(isNext?'8px 8px':'5px 8px'):(isNext?'12px 14px':'6px 10px')};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${_armed?'#fff':borderC};border-radius:${isNext?'12px':'8px'};${_armed?'box-shadow:0 0 0 2px rgba(255,255,255,.35);':glow}cursor:pointer`;
+      row.classList.add('bp-row');
+      row.onclick=(e)=>{e.stopPropagation();tapBenchPlayer(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
       const posLabel=isNext&&takesPos?takesPos:'SUB';
       const benchIdx=G.bench.indexOf(pIdx);
       const isFirst=benchIdx===0;
       const isLast=benchIdx===G.bench.length-1;
-      const reorderHtml=allowReorder
+      const reorderHtml=(allowReorder&&!isOutQ(pIdx))
         ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${_benchArrow('up',isFirst,pIdx)}${_benchArrow('down',isLast,pIdx)}</div>`
         : '';
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
@@ -10098,7 +10386,9 @@ function renderBenchInto(container, swapMap, posForPlayer){
         </div>
         ${rail?'':`<div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>`}
         ${reorderHtml}
+        ${rail?'':_outBtn(pIdx)}
       `;
+      if(isOutQ(pIdx)){ row.style.opacity='.55'; row.style.borderStyle='dashed'; }
       return row;
     }
 
@@ -10111,18 +10401,19 @@ function renderBenchInto(container, swapMap, posForPlayer){
       const card=document.createElement('div');
       card.className='bp-next';
       card.style.cssText='background:#0a1a16;border:2px solid #00d4aa;border-radius:12px;padding:2px 12px 4px;box-shadow:0 0 8px rgba(0,212,170,.3)';
-      const cols=`minmax(0,1.2fr) minmax(0,1fr) auto auto${allowReorder?' auto':''}`;
+      const cols=`minmax(0,1.2fr) minmax(0,1fr) auto auto${allowReorder?' auto':''} auto`;
       const tbl=document.createElement('div');
       tbl.style.cssText=`display:grid;grid-template-columns:${cols};align-items:center;column-gap:10px`;
       const eyebrow=(txt,col)=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.2px;color:${col};text-transform:uppercase;padding:6px 0 2px">${txt}</div>`;
-      tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'');
+      tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'')+eyebrow('','#7d8a9c');
       list.forEach((pIdx,ri)=>{
         const replacesP=swapMap?swapMap[pIdx]:undefined;
         const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
         const mins=Math.floor(G.pt[avail[pIdx]]/60);
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         const hairline=ri?'border-top:1px solid #16213e;':'';
-        const cell=(html,extra='')=>{const d=document.createElement('div');d.style.cssText=`${hairline}padding:9px 0;min-width:0;align-self:stretch;display:flex;align-items:center;${extra}`;d.innerHTML=html;return d;};
+        const _armed=(benchArmSel===pIdx);
+        const cell=(html,extra='')=>{const d=document.createElement('div');d.className='bp-row';d.style.cssText=`${hairline}padding:9px 0;min-width:0;align-self:stretch;display:flex;align-items:center;cursor:pointer;${_armed?'background:rgba(255,255,255,.08);':''}${extra}`;d.innerHTML=html;d.onclick=(e)=>{e.stopPropagation();tapBenchPlayer(pIdx);};return d;};
         tbl.appendChild(cell(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:17px;font-weight:800;color:#00d4aa;line-height:1.15;min-width:0">${ic('arrowUp',13,'#00d4aa')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${jersey?`<span style="font-size:11px;color:#7d8a9c;font-weight:800;font-variant-numeric:tabular-nums">#${jersey}</span> `:''}${fn(avail[pIdx])}</span></span>`));
         tbl.appendChild(cell(replacesP!==undefined
           ?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:700;color:#f0a500;line-height:1.15;min-width:0">${ic('arrowDown',12,'#f0a500')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fn(avail[replacesP])}</span></span>`
@@ -10133,6 +10424,7 @@ function renderBenchInto(container, swapMap, posForPlayer){
           const benchIdx=G.bench.indexOf(pIdx);
           tbl.appendChild(cell(`<div style="display:flex;flex-direction:column;gap:0">${_benchArrow('up',benchIdx===0,pIdx)}${_benchArrow('down',benchIdx===G.bench.length-1,pIdx)}</div>`,'justify-content:flex-end'));
         }
+        tbl.appendChild(cell(_outBtn(pIdx),'justify-content:flex-end'));
       });
       card.appendChild(tbl);
       return card;
@@ -10148,11 +10440,15 @@ function renderBenchInto(container, swapMap, posForPlayer){
     // - Single-wave: cards lay out in a 2-column auto-fit grid so a long bench doesn't run off the page.
     const grid=document.createElement('div');
     const useGrid=waves.length>1;
+    // v2.9.49: everyone's out (or the bench is only out-of-queue kids) — no
+    // NEXT ON card to draw; fall through to the OUT group alone.
+    const _emptyQ=!waves.length;
     grid.style.cssText=useGrid
       ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:start'
       : 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;align-items:start';
 
-    if(useGrid){
+    if(_emptyQ){ /* nothing in the queue */ }
+    else if(useGrid){
       // v2.9.26: the NEXT-ON wave takes the full width (the loud rows); later
       // waves sit in narrow columns BESIDE each other (130px min — two fit on a
       // phone), so the whole bench stays on screen for a typical squad.
@@ -10194,6 +10490,21 @@ function renderBenchInto(container, swapMap, posForPlayer){
       else { const t=makeNextOnTable(nextOnList); t.style.gridColumn='1/-1'; grid.appendChild(t); }
     }
     benchSection.appendChild(grid);
+    // v2.9.49: OUT OF QUEUE — greyed, at the very bottom, one 'back in' tap
+    // each. Visible so the coach still sees who's at the ground.
+    if(outList.length){
+      const oc=document.createElement('div');
+      oc.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;margin-top:6px';
+      const ot=document.createElement('div');
+      ot.style.cssText='font-size:9px;font-weight:800;letter-spacing:1.2px;color:#5a6b82;text-transform:uppercase;padding:0 4px 2px';
+      ot.textContent='Out of the queue';
+      oc.appendChild(ot);
+      const ow=document.createElement('div');
+      ow.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+      outList.forEach(pIdx=>{ const pill=makeBenchPill(pIdx,0,false); pill.style.flex='1 1 150px'; ow.appendChild(pill); });
+      oc.appendChild(ow);
+      benchSection.appendChild(oc);
+    }
     container.appendChild(benchSection);
   }
 }
@@ -10265,6 +10576,73 @@ function _persistOnHide(){ try{ if(typeof G!=='undefined' && G && typeof saveAct
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') _persistOnHide(); });
 window.addEventListener('pagehide', _persistOnHide);
 
+// v2.9.50 (owner: "why if I save the app as a bookmark app it doesn't
+// refresh?"): a home-screen PWA on iOS is RESUMED, not reloaded — tapping the
+// icon brings back the suspended web view exactly as it was, and iOS may keep
+// it alive for days. The service worker is network-first and the CDN says
+// must-revalidate, so a real load always gets the current build — but nothing
+// ever triggered a load. So: on every resume (and every ~10 min while open),
+// HEAD index.html (cheap — no body; the SW passes non-GET straight through)
+// and compare the ETag to the one this page booted with. Changed → reload
+// now if no game is underway; mid-game show a pill (the game is in
+// localStorage, resume is safe, but the coach chooses the moment).
+let _bootEtag=null,_updateSeen=null,_lastUpdateCheck=0;
+async function _headEtag(){
+  try{
+    const r=await fetch('index.html',{method:'HEAD',cache:'no-store'});
+    if(!r.ok)return null;
+    return r.headers.get('etag')||r.headers.get('last-modified')||null;
+  }catch(e){return null;}
+}
+async function checkForUpdate(force){
+  const now=Date.now();
+  if(!force&&now-_lastUpdateCheck<60*1000)return;   // resume-storm guard; the interval below is the slow poll
+  _lastUpdateCheck=now;
+  const tag=await _headEtag();
+  if(!tag)return;
+  if(_bootEtag===null){ _bootEtag=tag; return; }
+  if(tag===_bootEtag||tag===_updateSeen)return;
+  _updateSeen=tag;
+  const midGame=!!(typeof G!=='undefined'&&G&&loadActiveGame()!==null);
+  if(!midGame){ location.reload(); return; }
+  showUpdatePill();
+}
+// v2.9.50 (owner: 'integrate a check for updates thing in the menu that
+// refreshes the app'): the ☰ menu row. Explicit — always HEADs (no throttle),
+// and if the build is current says so; if it isn't, reloads straight away
+// (the coach ASKED for it, mid-game or not — the game is saved and resumes).
+async function checkForUpdateManual(){
+  const tag=await _headEtag();
+  if(!tag){ toastMsg('Couldn\'t reach the server — try again when you have signal'); return; }
+  if(_bootEtag===null) _bootEtag=tag;
+  if(tag===_bootEtag){ toastMsg('You\'re on the latest version ('+APP_VERSION.replace(/-beta$/,'')+')'); return; }
+  _persistOnHide();
+  location.reload();
+}
+// Tiny transient message — bottom-centre, above the tab bar, 2.5s.
+function toastMsg(txt){
+  let t=document.getElementById('appToast');
+  if(!t){ t=document.createElement('div'); t.id='appToast'; t.setAttribute('role','status'); t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar-h,58px) + 12px);z-index:9600;max-width:88vw;padding:10px 16px;border-radius:12px;background:#0d1828;border:1px solid #2a3550;color:#eee;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;transition:opacity .2s'; document.body.appendChild(t); }
+  t.textContent=txt; t.style.opacity='1';
+  clearTimeout(t._tm); t._tm=setTimeout(()=>{ t.style.opacity='0'; },2500);
+}
+function showUpdatePill(){
+  if(document.getElementById('updatePill'))return;
+  const p=document.createElement('button');
+  p.id='updatePill';
+  p.type='button';
+  p.textContent='New version — tap to update';
+  p.setAttribute('aria-label','A new version of Sub Timer is available. Tap to reload.');
+  // Sits just under the brand bar — never over the dash (SUB/START are the
+  // stamped thumb zone) and never over the pitch tokens.
+  p.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(44px + env(safe-area-inset-top) + 8px);z-index:9600;min-height:44px;padding:10px 16px;border:none;border-radius:22px;background:#00d4aa;color:#06231d;font-size:13px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap';
+  p.onclick=()=>{ _persistOnHide(); location.reload(); };
+  document.body.appendChild(p);
+}
+window.addEventListener('load',()=>{ checkForUpdate(true); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkForUpdate(false); });
+setInterval(()=>{ if(document.visibilityState==='visible') checkForUpdate(false); },10*60*1000);
+
 document.addEventListener('click',(e)=>{
   // v2.7.9: tap outside the hamburger menu closes it.
   const gm=document.getElementById('gameMenu');
@@ -10294,7 +10672,7 @@ document.addEventListener('click',(e)=>{
     const t=document.getElementById('planFmtToggle');
     if(t){ t.style.borderColor='#2a3550'; t.style.color='#9fb3c8'; t.style.background='rgba(13,18,30,.85)'; }
   }
-  if(fieldSwapSel===null && injuryOffSel===null) return;     // nothing armed
+  if(fieldSwapSel===null && injuryOffSel===null && benchArmSel===null && !_pend) return;     // nothing armed
   // Keep these clickables out of the cancel path — they're part of the armed flow:
   //   .fc       — field player pill (swap targets)
   //   .fb       — bench pill (injury-sub replacement)
@@ -10302,10 +10680,12 @@ document.addEventListener('click',(e)=>{
   //   #subBanner — injury BACK TO BENCH / OUT FOR GAME prompt
   //   #gameDash — bottom dashboard buttons (Undo, etc.)
   //   #gameMenu / #gameMenuBtn — top-left hamburger menu and its trigger
-  if(e.target.closest('.fc, .fb, .ov.show, #subBanner, #gameDash, #gameMenu, #gameMenuBtn')) return;
+  if(e.target.closest('.fc, .fb, .bp-row, .ov.show, #subBanner, #gameDash, #gameMenu, #gameMenuBtn')) return;
   fieldSwapSel=null;
   injuryOffSel=null;
+  benchArmSel=null;
   gameMode='swap';
+  if(_pend) cancelPending(false);
   renderG();
 });
 
@@ -11479,6 +11859,7 @@ function openDrawer(menuId){
     block.innerHTML=`
       <button class="ui-btn ui-btn--ghost" onclick="closeAnyDrawer();openSoundPicker&&openSoundPicker()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span style="flex:1">Sub-alert sound</span><span style="font-size:11px;color:#5bc0de;font-weight:800;letter-spacing:.3px">${pack.label}</span></button>
       <button class="ui-btn ui-btn--ghost" onclick="closeAnyDrawer();openHelp&&openHelp()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help &amp; gestures</button>
+      <button class="ui-btn ui-btn--ghost" onclick="closeAnyDrawer();checkForUpdateManual()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span style="flex:1">Check for updates</span><span style="font-size:11px;color:#7d8a9c;font-weight:700">${APP_VERSION.replace(/-beta$/,"")}</span></button>
       <button class="ui-btn ui-btn--ghost drawer-auth"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19.5a9 9 0 1 0-11 0"/><circle cx="12" cy="10" r="3.2"/></svg><span class="drawer-auth-label">Sign in</span></button>
     `;
     // Insert before the drawer-donate footer if it exists; otherwise append.

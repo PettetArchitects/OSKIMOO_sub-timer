@@ -96,7 +96,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | 2 | Auto-sub fires at sub time | Banner suggests off/on per strategy; confirm applies it |
 | 3 | Manual sub | Opens the same prompt on demand |
 | 4 | Undo last sub | Restores on-field, bench, pairs, minutes; removes the log entry; doesn't cross a period break |
-| 5 | Injury sub | Tap player → back-to-bench (re-enters queue) or out-for-game (removed from rotation) |
+| 5 | Injury | There is no separate injury gesture (owner, 2026-08-15): an injured player comes off through the ordinary interchange (P3b step 2), and if they're not going back on you mark them **out of the queue** on the bench (P3b step 4). The old long-press is a shortcut into the same interchange, nothing more |
 | 6 | Score +/- | Goal logged on +; most-recent goal removed on −; never negative. Our goals prompt **"Who scored?"** right away (skippable) — attribution happens at the goal (owner, 2026-08-08: "later will be forgotten"); summary/history editing is the fallback |
 | 7 | Equal-time rotation over the game | Minutes converge to even; nobody benched the interval after they came on ⚠️ |
 
@@ -108,6 +108,37 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ In Matched rotation the leftover odd group rotates like any other — nobody plays essentially the whole game.  [edge: nobody plays essentially the whole game · every player is subbed off at least once]
 ✓ A player who replaces an out-for-game injury joins the rotation (takes the vacated group seat).  [edge: the replacement is seated in the pair]
 ✓ Live sub times match the plan: subs restart each period (sf, 2·sf, …), so the live game fires at exactly the times the Plan page + preview show — even when the frequency doesn't divide evenly into the period.  [edit: half 2 restarts / live engine matches the Plan page]
+
+---
+
+## P3b — Manual changes on the game screen 🟢
+
+**Goal:** every change a coach makes by hand mid-game — a position swap, an
+interchange, a keeper change, a kid who isn't going back on — uses ONE visible
+gesture: **tap a player, tap the other player, confirm.** Nothing hidden, nothing
+applied before the confirm. (Owner, 2026-08-15, brainstormed from the sideline:
+"tap player and then tap the player you want to do a swap with and then confirm
+the move"; "if it's an injury it is a swap with someone on the bench"; "once
+the interchange has been done we can mark the player on the bench as not in the
+queue".)
+
+| # | Action | Expected result |
+| --- | --- | --- |
+| 1 | Tap a field player, then another field player | A confirm card proposes the position swap (both names, both new positions). If either is the keeper the card says who takes the gloves. Confirm applies it; cancel (or tapping elsewhere / the first player again) applies nothing |
+| 2 | Tap a field player then a bench player — or the reverse order | The card proposes the interchange: ↑ bench kid on · ↓ field kid off · at that position. Confirm applies it exactly like an engine sub — same log row, same relay shout, same undo. The kid who came off joins the bench queue |
+| 3 | Tap the keeper as either half of step 2 | Same interchange, and the card says the incoming kid takes the gloves. No separate keeper flow is needed mid-play |
+| 4 | Tap the "out of queue" control on a bench row | That kid greys out and drops to the bottom of the bench, the engine never picks them, and their minutes are kept. Tap it again and they're back in the queue where they were. Whether it's an injury, a sulk, or a lift home is the coach's business — the app doesn't ask |
+| 5 | Tap a bench player then another bench player | The card proposes swapping their places in the queue. Chevrons still work for one-step nudges |
+| 6 | Long-press a field player | Shortcut: same as tapping them (arms the interchange). Nothing depends on the long-press any more |
+
+✓ Nothing moves before Confirm — the first tap only arms; a mis-tap is cancelled by tapping the same player, the ✕, or elsewhere.  [edge: field+field proposes, nothing moves before confirm / cancel applies nothing]
+✓ Every confirmed action leaves the field size unchanged.  [edge: confirm swaps the two positions; field size unchanged]
+✓ A confirmed field↔bench interchange is indistinguishable from an engine sub afterwards: log row, relay card, undoable as the last sub.  [edge: confirmed interchange = engine sub: log row, relay, undoable, field size / undo restores the interchange]
+✓ A keeper interchange or keeper↔field swap hands over the gloves and credits the ex-keeper's rotation clock — the same as the setup/break keeper door does.  [edge: keeper interchange hands over the gloves (card says so); undo hands them back]
+✓ An out-of-queue player is never chosen by the engine as next on, in any strategy; the auto-sub still fires with whoever IS in the queue (a thin bench subs as many as it can).  [edge: every strategy preview skips them / the auto-sub still fires, without them]
+✓ An out-of-queue player keeps their minutes and is left out of the equal-time target while out; putting them back in restores their queue place and the target counts them again.  [edge: minutes kept while out / back in restores their queue place]
+✓ Out-of-queue survives a reload (it's part of the saved game) and a period break (the break rotation skips them too).  [edge: out-of-queue survives a reload]
+✓ The bench card shows out-of-queue kids greyed at the bottom, so the coach can still see they're at the ground.  [edge: bench shows them greyed at the bottom]
 
 ---
 

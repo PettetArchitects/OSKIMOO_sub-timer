@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.44
+> Last updated: v2.9.50
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -288,10 +288,37 @@ Most layouts use 8/10/12px gaps. Page padding is typically 12-16px. Card interna
 
 The app has two **persistent anchors** that frame every screen.
 
+### 3.0 Safe areas — the two rules (v2.9.45)
+
+**Rule 1: `viewport-fit=cover` is load-bearing.** It must stay in the viewport
+meta. Without it iOS insets the web view *below* the status bar and *above* the
+home indicator — the app is letterboxed in the page background (no full bleed) —
+**and every `env(safe-area-inset-*)` resolves to 0**, so every safe-area calc in
+the file silently does nothing. It was missing until v2.9.45; all the inset maths
+below had never once run on a phone.
+
+**Rule 2: a fixed-height bar GROWS by its inset; it never pads its content away.**
+Everything is `box-sizing:border-box` (line 37), so `height:44px` +
+`padding-top:env(safe-area-inset-top)` crushes the 44px content row to nothing
+once the inset is real. Write `height:calc(44px + env(safe-area-inset-top))`.
+Same for the landscape rails, where the notch inset is ~59px: the nav rail is
+`width:calc(64px + env(safe-area-inset-left))` and the dash column
+`calc(92px + env(safe-area-inset-right))` — widen, don't pad.
+
+**Corollary — never hard-code a bar's height.** `#bottomTabBar` has no fixed
+height (icon + label + padding + inset ≈ 67px, more under iOS Dynamic Type), and
+the 58px screens used to reserve put the game dash's SUB / START *under* it.
+`syncTabBarHeight()` measures the real `offsetHeight` and publishes it as
+`--tabbar-h` on every `renderViewSwitcher` / resize / orientation change (0 when
+the bar is hidden or rotated into the landscape rail). Reserve
+`var(--tabbar-h)`, never a number.
+
 ### 3.1 Top brand bar (`#appBrandBar`)
 
 - `position:fixed; top:0; left:0; right:0`
-- Height 44px + `env(safe-area-inset-top)`
+- `height: calc(44px + env(safe-area-inset-top))` — grows into the status bar and
+  paints it (§3.0 rule 2); the 44px content row is preserved by the matching
+  `padding-top`
 - Background `var(--surface-card-2)` with 1px bottom border `var(--border-section)`
 - **Three slots** (v2.7.82): hamburger LEFT · logo CENTRE · version RIGHT
   - Left: `#globalMenuBtn` 36×36 hamburger; routes to active screen's drawer
@@ -341,10 +368,11 @@ The app has two **persistent anchors** that frame every screen.
 ### 3.4 Page content padding
 
 All `.scr` screens:
-- `padding-top: calc(34px + env(safe-area-inset-top))` — clears brand bar
-- `padding-bottom: calc(58px + env(safe-area-inset-bottom))` — clears tab bar
+- `padding-top: calc(44px + env(safe-area-inset-top))` — clears brand bar
+- `padding-bottom: var(--tabbar-h)` — clears the tab bar at its **measured**
+  height (§3.0 corollary; was a hard-coded 58px until v2.9.45)
 
-Game screen (`#s4`) and Plan screen (`#subOrderOv`) override with overflow:hidden flex layout — their internal bottom-band (`#gameDash` / `#planControlBand`) absorbs the tab-bar offset via inline padding.
+Game screen (`#s4`) and Plan screen (`#subOrderOv`) override with overflow:hidden flex layout — their internal bottom-band (`#gameDash` / `#planControlBand`) absorbs the tab-bar offset via inline `calc(8px + var(--tabbar-h))`, which is also what keeps the 8px of air under the action tiles.
 
 ---
 
