@@ -833,6 +833,26 @@ const SCENARIOS = [
     chk('two ★ players are not taken off in the same sub when an equal-fit alternative exists', r.starsOff <= 1, r.off2.join(', '));
   }],
 
+  // v2.9.58 — owner: "changing the amount of subs grouped didn't work during a
+  // game". Matched groups must follow a mid-game players-per-sub change.
+  ['mid-game players-per-sub change re-groups Matched rotation', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Regroup FC', extraBench: 1 });
+    const r = await page.evaluate(() => {
+      G.subStrategy = 'paired'; const p = getTeamPrefs(currentTeam); p.subStrategy = 'paired'; p.sc = 2; saveTeamSettings();
+      if (!G.running) tog();
+      const sizeBefore = G.pairs.map((x) => x.on.length);
+      // Coach changes players-per-sub to 1 on the Settings tab mid-game.
+      p.sc = 1; saveTeamSettings();
+      const sizeAfter = G.pairs.map((x) => x.on.length);
+      G.secs = cfg.sf * 60; trigSub();
+      const lastSubs = G.log.filter((e) => e.type === 'sub' && e.time === cfg.sf * 60).length;
+      return { sizeBefore, sizeAfter, lastSubs, cfgSc: cfg.sc };
+    });
+    chk('groups were built at the old size', r.sizeBefore.every((n) => n === 2), r.sizeBefore.join(','));
+    chk('groups are rebuilt at the new size', r.sizeAfter.every((n) => n === 1), r.sizeAfter.join(','));
+    chk('the next sub swaps the new number', r.lastSubs === 1, `${r.lastSubs} swapped (cfg.sc ${r.cfgSc})`);
+  }],
+
   // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
   // any strategy; the auto-sub still fires with whoever IS in the queue; their
   // minutes and queue place survive; the state survives a reload.

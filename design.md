@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.57
+> Last updated: v2.9.58
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---

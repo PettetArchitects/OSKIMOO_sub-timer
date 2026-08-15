@@ -4465,12 +4465,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.57-beta';
+const APP_VERSION='v2.9.58-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.58-beta':{
+    title:'Change the group size mid-game',
+    items:['Fixed: on Matched rotation, changing players-per-sub during a game updated the setting but the groups kept their old size, so the next sub still swapped the old number. The groups are now rebuilt from the current field the moment you change it \u2014 or the strategy.']
+  },
   'v2.9.57-beta':{
     title:'Rotation that knows your positions',
     items:['The app now plans the game from what you\u2019ve entered \u2014 position tags, formation, timing. Who comes off is chosen so that whoever is due on can fill the gap in a position they play; fair minutes stay the floor. It\u2019s the same rule in the live game (Equal time) and in the plan, so the card, the plan and the field agree.','The Plan page shows the position each kid takes at every sub, names any cover move, and lists the rare spots where fair time left no fit \u2014 re-tag or accept.','New, optional: a \u2605 Key player mark on the Positions tab. The plan won\u2019t take two key players off together when there\u2019s an equal choice. That\u2019s all it does \u2014 minutes stay even.']
@@ -6575,8 +6579,19 @@ function saveTeamSettings(){
   // picked changes up — deliberate, but from the sideline it reads as broken:
   // the Settings tab is one tap from the game and its controls appear to work.
   if(curFmt===currentTeam.format){
+    const _scBefore=cfg.sc, _stratBefore=cfg.subStrategy;
     applyTeamPrefsToCfg(currentTeam);
-    if(G && loadActiveGame()!==null) absorbPassedSubTimes();
+    if(G && loadActiveGame()!==null){
+      absorbPassedSubTimes();
+      // v2.9.58 (owner: "changing the amount of subs grouped didn't work during a
+      // game"): Matched groups are built at kick-off with THAT players-per-sub;
+      // the setting changed but the groups kept their old size. Rebuild them
+      // from the current field whenever the size (or the strategy) changes.
+      if(cfg.sc!==_scBefore||cfg.subStrategy!==_stratBefore) rebuildPairsLive();
+      if(G.subStrategy!==cfg.subStrategy){ G.subStrategy=cfg.subStrategy; G.log.push({type:'sub_strategy',half:G.half,time:G.secs,strategy:cfg.subStrategy}); }
+      saveActiveGame();
+      if(typeof renderG==='function'&&document.getElementById('s4').classList.contains('active')) renderG();
+    }
   }
   const tick=document.getElementById('teamSettingsSaved');
   if(tick){ tick.style.opacity='1'; clearTimeout(_tsTickTimer); _tsTickTimer=setTimeout(()=>{ tick.style.opacity='0'; },1200); }
@@ -9267,6 +9282,18 @@ function toggleOutOfQueue(pIdx){
   if(G.ps&&!G.ps.injury&&G.ps.on.some(p=>isOutQ(p))){ G.ps=null; document.getElementById('subBanner').style.display='none'; }
   saveActiveGame();
   renderG();
+}
+// v2.9.58: regroup the CURRENT outfield into Matched groups of cfg.sc (field
+// order), keeping the keeper out — the same shape buildPairs() makes at
+// kick-off. Called when players-per-sub or the strategy changes mid-game.
+function rebuildPairsLive(){
+  if(!G)return;
+  const size=Math.max(1,cfg.sc||1);
+  const outfield=(G.on||[]).filter(p=>p!==G.gk);
+  const pairs=[];
+  for(let i=0;i<outfield.length;i+=size) pairs.push({on:outfield.slice(i,i+size)});
+  G.pairs=pairs; G.pairIdx=0;
+  if(cfg.subStrategy==='planned') cfg.subPlanStale=true;
 }
 function moveBenchUp(pIdx){
   if(!G||!G.bench)return;
