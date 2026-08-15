@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.52-beta — Favourites stick, properly (owner: "still not working and it is 51")
+
+The .51 merge let the **cloud's** `favorite` win. The pin the owner set on .50 was local-only (the push never existed), so the first .51 boot pulled `false` from the cloud and overwrote the local `true` — and the Supabase edge logs confirm it: only `GET /rest/v1/teams` from the phone, never a `PATCH`, because nothing had been toggled since. Fix: for the favourite (a pin, effectively a device preference) **local wins** when a local copy exists; the cloud only seeds a device with no copy; any disagreement lands in `needsRePush` so the cloud catches up on that boot. Toggling still pushes immediately.
+
 ## v2.9.51-beta — Favourites stick (owner: "the favourited team does not persist") + a temporary layout diag
 
 `toggleFavorite` called a `syncTeamsToCloud()` that **never existed** (a `typeof … === 'function'` guard silenced it), and the `teams` cloud row had no `favorite` column anyway — so the pin lived only in the phone's localStorage, and any team rebuilt from the cloud (second device, or a re-sync that didn't find the local row) came back unpinned. Same gap for `prefs`: the Settings-tab game defaults never left the device either. Migration `teams_favorite_and_prefs` adds `favorite boolean` + `prefs jsonb`; `pushCloudTeam` sends both; the initial-sync merge takes cloud's favourite (it's pushed the moment it's toggled) and applies the richer-side rule to prefs (an old client that never pushed prefs can't wipe local ones); `toggleFavorite` now actually pushes. **Also (temporary):** the ☰ → Check for updates toast appends a layout readout — inner/screen size, `env()` insets, brand-bar and tab-bar rects, visualViewport, standalone flag — so the owner's "it's pushed itself up too far" report on the deployed v2.9.50 can be diagnosed with numbers rather than by pixel-reading a screenshot. Removed once the layout is settled.
