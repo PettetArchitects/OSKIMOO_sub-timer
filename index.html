@@ -4375,12 +4375,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.47-beta';
+const APP_VERSION='v2.9.48-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.48-beta':{
+    title:'An injured keeper can come off',
+    items:['Fixed: mid-game there was no way to replace an injured keeper — the keeper picker only opens before kick-off or at a break, and the injury long-press skipped the keeper on purpose. Long-press the keeper like anyone else now: pick the replacement from the bench and they take the gloves. The banner says so, and the match log records the handover.']
+  },
   'v2.9.47-beta':{
     title:'Changes reach the game you’re in',
     items:['Change the sub interval, players per sub or the strategy mid-match and it now applies to the game you’re playing — not just the next one. Sub times that have already gone by are left alone, so nothing fires the moment you save: switch 5′ to 7′ at 8 minutes and your next sub is 14, as you’d expect.','Edit a player’s positions or side mid-game and the field takes it straight away, instead of quietly waiting for the next sub to apply it.','When a sub shuffles someone who was already on — because the kid coming on doesn’t suit that spot — the card now says so: "Molly moves to CM". It used to happen silently.']
@@ -9052,8 +9056,13 @@ function fieldPillPointerDown(e, pIdx, isGk){
   _lpFired=false;
   _lpStartX=e.clientX; _lpStartY=e.clientY;
   if(_lpTimer) clearTimeout(_lpTimer);
-  // GK injury goes through the keeper-change flow, not here. Empty bench = no replacement available.
-  if(isGk || !G || !G.bench.length) return;
+  // v2.9.48 (owner: "you can't do a keeper swap if the keeper is injured"):
+  // the keeper long-presses like anyone else. The old guard sent GK injuries
+  // to "the keeper-change flow" — but that door (openGkPick) only opens
+  // pre-kickoff or at a break, so mid-play an injured keeper had NO path at
+  // all. confInjury hands the gloves to the replacement. Empty bench = no
+  // replacement available.
+  if(!G || !G.bench.length) return;
   _lpTimer=setTimeout(()=>{
     _lpTimer=null;
     _lpFired=true;
@@ -9191,12 +9200,15 @@ function injurySub(pIdx, replacementIdx){
   const banner=document.getElementById('subBanner');
   const swaps=document.getElementById('subBannerSwaps');
   G.ps.injury=true;
+  // v2.9.48: say it when the replacement is going IN GOAL — the keeper is the
+  // one slot where "on for Alex" isn't enough instruction.
+  const _gkNote=(G.gk===pIdx)?`<div style="text-align:center;font-size:12px;color:#ff7bac;font-weight:700;margin-top:2px">${fn(avail[on[0]])} takes the gloves</div>`:'';
   swaps.innerHTML=`<div style="text-align:center;font-size:11px;color:#e94560;font-weight:700;letter-spacing:1px;margin-bottom:4px;display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%">${ic('bandage',13,'#e94560')}INJURY SUB</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0;font-size:14px;font-weight:700">
       <span style="color:#f0a500;display:inline-flex;align-items:center;gap:4px">${fn(avail[off[0]])}${ic('arrowDown',13,'#f0a500')}</span>
       <span style="color:#444;display:inline-flex;align-items:center">${ic('swap',13,'#444')}</span>
       <span style="color:#00d4aa;display:inline-flex;align-items:center;gap:4px">${ic('arrowUp',13,'#00d4aa')}${fn(avail[on[0]])}</span>
-    </div>
+    </div>${_gkNote}
     <div style="display:flex;gap:6px;margin-top:8px">
       <button onclick="confInjury(false)" style="flex:1;padding:10px;background:#f0a500;color:#1a1a2e;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">BACK TO BENCH</button>
       <button onclick="confInjury(true)" style="flex:1;padding:10px;background:#e94560;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">OUT FOR GAME</button>
@@ -9296,6 +9308,17 @@ function confInjury(outForGame){
   const fieldIdx=G.on.indexOf(off[0]);
   if(fieldIdx>=0) G.on[fieldIdx]=on[0];
   G.bench=G.bench.filter(p=>p!==on[0]);
+  // v2.9.48: the injured player was the keeper → the replacement takes the
+  // gloves. Same bookkeeping as a planned handover (setPlanKeeper): the old
+  // keeper is credited for outfield time missed so the fairness maths doesn't
+  // treat their GK minutes as rest, and the period's keeper pick follows.
+  const _wasGk=(G.gk===off[0]);
+  if(_wasGk){
+    creditExKeeper(off[0]);
+    G.gk=on[0];
+    if(G.half<=1) gk1=on[0]; else { gk2=on[0]; gk2Explicit=true; }
+    G.log.push({type:'gk',half:G.half,time:G.secs,off:avail[off[0]],on:avail[on[0]]});
+  }
   if(outForGame){
     // The injured player leaves the game — but their REPLACEMENT must take
     // their slot in the rotation pair, exactly as the minor-knock branch does.
