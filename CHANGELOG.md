@@ -16,6 +16,8 @@ The game screen's `top` camera preset now points its offset along X instead of Z
 
 **"Deliberately not a defender" (owner)** — `smartAssign` filled slots in formation order (LB, RB first in 2-3-1) and scored every non-matching player 0, lowest index wins — so a low-index FWD-only kid took RB before the FW slot had looked at her, and "tagged for other positions" was indistinguishable from "no preference". Now a mismatch scores −5 (below untagged 0, below exact 10) and slots are seated by **scarcity** (fewest exact-tag candidates first, formation order as tie-break). Edge check reproduces the report on the old code (`Charlie at RB`) and passes on the new (`Charlie at FW`).
 
+**"Tried to sub on someone into a position they don't play" (owner)** — the engine chose WHO by minutes but paired incoming→outgoing by list order, so the NEXT ON card (and the sub) could put a DEF-only kid at RM, with only the post-confirm re-seat to fix it. `pairByFit()` (2 tagged-for / 1 untagged / 0 tagged-elsewhere; best total, original order breaks ties) now runs in `getNextSwap` (preview) and `trigSub` (engine) before anything is shown. Edge check: MID+DEF bench in the wrong order → DEF→LB, MID→LM in preview and after the sub.
+
 **The LAN diag rig is permanent**: `?diag=1` (sticky per origin; on by default on a LAN address) shows a live strip — viewport, screen, `env()` insets, both bars, document size, visualViewport, UA, device-width matches. Serve the working build on :8001, open `http://<mac-ip>:8001/?diag=1` on the phone, Add to Home Screen to test the standalone shell.
 
 ## v2.9.54-beta — It tells you when Safari is zooming it (owner: "bottom tab is still too high" — with the diag numbers at last)

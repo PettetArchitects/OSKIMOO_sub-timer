@@ -4464,7 +4464,7 @@ const APP_VERSION='v2.9.55-beta';
 const CHANGELOG_DATA={
   'v2.9.55-beta':{
     title:'Top view, turned',
-    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: a player tagged for other positions could still be seated in defence at kick-off \u2014 \u201cnot a defender\u201d now counts for something: tagged-elsewhere players are the last resort for a slot, and the scarce positions are seated first.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
+    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: a sub could propose putting a kid into a position she doesn\u2019t play \u2014 the incoming players are now matched to the outgoing spots by their position tags before you ever see the card.','Fixed: a player tagged for other positions could still be seated in defence at kick-off \u2014 \u201cnot a defender\u201d now counts for something: tagged-elsewhere players are the last resort for a slot, and the scarce positions are seated first.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
   },
   'v2.9.54-beta':{
     title:'It tells you when Safari is zooming it',
@@ -7863,6 +7863,33 @@ function labelToTag(lbl){
 // caller can say so out loud. Re-seating is still allowed to move a player who
 // had nothing to do with the sub (that's how it resolves a bad fit), but it is
 // no longer silent.
+// v2.9.55 (owner: "the build just tried to sub on someone into a position they
+// don't play"): the engine picks WHO comes on/off by minutes, but paired them by
+// list order — so the NEXT ON card could read "Georgia at RM" for a DEF-only
+// kid, and only the post-confirm re-seat fixed it. Pair incoming to outgoing by
+// TAG FIT first (2 = tagged for it, 1 = untagged, 0 = tagged elsewhere), best
+// total wins, original order breaks ties. Small n — brute force is fine.
+function _fitScore(pIdx,lbl){
+  const tag=labelToTag(lbl||'');
+  if(!tag||tag==='GK'||!currentTeam) return 1;
+  const ptags=(getPlayerPos(currentTeam,avail[pIdx])||[]).filter(t=>t!=='GK');
+  if(!ptags.length) return 1;
+  if(ptags.includes(tag)) return 2;
+  if(/^(LM|RM)$/.test(lbl)&&ptags.includes('WNG')) return 2;
+  return 0;
+}
+function pairByFit(off,on){
+  const n=Math.min(off.length,on.length);
+  if(n<=1||n>6) return on;
+  const labels=off.slice(0,n).map(p=>posLabelFor(p));
+  let best=null,bestScore=-1;
+  const perm=(arr,used,cur)=>{
+    if(cur.length===n){ let sc=0; for(let i=0;i<n;i++) sc+=_fitScore(cur[i],labels[i]); if(sc>bestScore){bestScore=sc;best=cur.slice();} return; }
+    for(let i=0;i<n;i++){ if(used[i]) continue; used[i]=true; cur.push(arr[i]); perm(arr,used,cur); cur.pop(); used[i]=false; }
+  };
+  perm(on.slice(0,n),[],[]);
+  return best?[...best,...on.slice(n)]:on;
+}
 function repairSeating(){
   if(!G||!currentTeam)return[];
   const fmt=FORMATS[curFmt];
@@ -9022,6 +9049,7 @@ function trigSub(){
     off=of.slice(-c);on=_bq.slice(0,c);
   }
   const c=Math.min(off.length,on.length);
+  on=pairByFit(off.slice(0,c),on.slice(0,c));
   G.ps={off:off.slice(0,c),on:on.slice(0,c)};
   // Auto-apply — no SUBS DONE confirmation banner. Coach gets the cyan swap
   // pulse on the field + the Undo Sub pill if anything's wrong.
@@ -10190,7 +10218,7 @@ function getNextSwap(){
     offArr=of.slice(-c);onArr=_bq.slice(0,c);
   }
   const swapC=Math.min(offArr.length,onArr.length);
-  offArr=offArr.slice(0,swapC);onArr=onArr.slice(0,swapC);
+  offArr=offArr.slice(0,swapC);onArr=pairByFit(offArr,onArr.slice(0,swapC));
   offArr.forEach(p=>nextOff.add(p));
   onArr.forEach(p=>nextOn.add(p));
   // Build mapping: bench player -> field player they replace

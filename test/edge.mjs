@@ -692,6 +692,39 @@ const SCENARIOS = [
     chk('the one DEF-tagged player is in defence', /^(LB|RB)$/.test(r.defenderAt), `${r.defender} at ${r.defenderAt}`);
   }],
 
+  // v2.9.55 — owner: "the build just tried to sub on someone into a position they
+  // don't play". Incoming players are paired to outgoing SLOTS by tag fit, in the
+  // preview and in the engine — not by list order.
+  ['engine pairs incoming to outgoing slots by tag fit', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Pair FC' });
+    const r = await page.evaluate(() => {
+      const nm = (i) => avail[i];
+      currentTeam.positions = {};
+      G.subStrategy = 'fair'; cfg.sc = 2;
+      // Two on-field kids will come off: force by minutes — the LB and the LM.
+      const pos = getPositions();
+      const slotOf = (lbl) => { const out = G.on.filter((p) => p !== G.gk); const i = pos.slice(1).findIndex((x) => x.label === lbl); return out[i]; };
+      const lb = slotOf('LB'), lm = slotOf('LM');
+      G.on.forEach((p) => { G.pt[nm(p)] = 60; }); G.pt[nm(lb)] = 900; G.pt[nm(lm)] = 850;   // LB most, LM next → both come off
+      // Bench: index order is [MID-only, DEF-only] — list order would put the
+      // MID kid at LB (the first "off"). Fit must send DEF→LB, MID→LM.
+      const b0 = G.bench[0], b1 = G.bench[1];
+      setPlayerPos(currentTeam, nm(b0), ['MID']);
+      setPlayerPos(currentTeam, nm(b1), ['DEF']);
+      G.bench.forEach((p) => { G.pt[nm(p)] = 0; });
+      const prev = getNextSwap();
+      const previewLB = Object.entries(prev.swapMap).find(([on, off]) => parseInt(off) === lb);
+      const previewLM = Object.entries(prev.swapMap).find(([on, off]) => parseInt(off) === lm);
+      // Fire it and see where they land.
+      if (!G.running) tog(); G.secs = cfg.sf * 60; trigSub();
+      const after = {}; G.on.filter((p) => p !== G.gk).forEach((p, i) => { after[nm(p)] = pos[i + 1].label; });
+      return { previewLBgets: previewLB && nm(parseInt(previewLB[0])), previewLMgets: previewLM && nm(parseInt(previewLM[0])), defKid: nm(b1), midKid: nm(b0), after };
+    });
+    chk('preview: the DEF-tagged kid is paired to LB', r.previewLBgets === r.defKid, `${r.previewLBgets} → LB`);
+    chk('preview: the MID-tagged kid is paired to LM', r.previewLMgets === r.midKid, `${r.previewLMgets} → LM`);
+    chk('after the sub the DEF kid is in defence, the MID kid in midfield', /^(LB|RB)$/.test(r.after[r.defKid]) && /^(LM|CM|RM)$/.test(r.after[r.midKid]), JSON.stringify(r.after));
+  }],
+
   // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
   // any strategy; the auto-sub still fires with whoever IS in the queue; their
   // minutes and queue place survive; the state survives a reload.
