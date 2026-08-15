@@ -64,8 +64,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 /* The per-screen hamburger buttons (homeMenuBtn, gameMenuBtn, planMenuBtn) are superseded by the single brand-bar #globalMenuBtn. Hide them but keep their dropdown menus in the DOM so the global hamburger can still trigger them. */
 #homeMenuBtn,#gameMenuBtn,#planMenuBtn{display:none!important}
 /* v2.7.83: hamburger opens a SIDE DRAWER (not a dropdown). Slides in from the left, full-height, with scrim. Donate sits at the bottom of every drawer. */
-#homeMenu,#gameMenu,#planMenu{position:fixed!important;top:0!important;left:0!important;right:auto!important;bottom:auto!important;width:280px!important;max-width:80vw!important;height:100dvh!important;margin:0!important;border-radius:0!important;border:none!important;border-right:none!important;box-shadow:4px 0 24px rgba(0,0,0,.65)!important;background:#0d1828!important;transform:translateX(-100%);transition:transform .25s ease;z-index:9500!important;padding:calc(48px + env(safe-area-inset-top) + 12px) 10px calc(16px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column;gap:2px;overflow-y:auto;min-width:0!important}
-#homeMenu.drawer-open,#gameMenu.drawer-open,#planMenu.drawer-open{transform:translateX(0)}
+#homeMenu,#gameMenu,#planMenu{position:fixed!important;top:0!important;left:0!important;right:auto!important;bottom:auto!important;width:280px!important;max-width:80vw!important;height:100dvh!important;margin:0!important;border-radius:0!important;border:none!important;border-right:none!important;box-shadow:none!important;background:#0d1828!important;transform:translateX(-100%);transition:transform .25s ease;z-index:9500!important;padding:calc(48px + env(safe-area-inset-top) + 12px) 10px calc(16px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column;gap:2px;overflow-y:auto;min-width:0!important}
+/* v2.9.53 (owner: "a weird gradient colour on the left hand side"): the closed
+   drawer is parked one width off-screen, but its 24px shadow still bled onto
+   the page's left edge. Elevation only while it's actually open. */
+#homeMenu.drawer-open,#gameMenu.drawer-open,#planMenu.drawer-open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.65)!important}
 #appDrawerScrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9400;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #appDrawerScrim.on{opacity:1;pointer-events:auto}
 .drawer-donate{margin-top:auto!important;border-top:1px solid #1e2a45;padding-top:10px!important}
@@ -82,12 +85,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #appBrandBar .ab-ver{font-size:10px;color:#888;font-weight:600;letter-spacing:.4px;min-width:54px;text-align:right;padding-right:4px}
 #globalMenuBtn{width:36px;height:36px;border-radius:8px;border:none;background:none;color:#9fb3c8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
 /* v2.7.71: app-wide bottom tab bar — Apple-style anchor visible on every screen. Position:fixed at the body level so it's a true app anchor (not per-screen). Screens add bottom padding to keep their content above it. */
-#bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:center;padding:6px 0 calc(6px + env(safe-area-inset-bottom));background:#0d1828;border-top:1px solid #1e2a45;z-index:9000;backdrop-filter:blur(8px)}
-.btb-pill{display:inline-flex;background:transparent;padding:3px;gap:2px}
-/* v2.7.88: padding/min-width trimmed so a 4th tab (Roster) still fits on narrow phones. */
-.btb-btn{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:6px 11px;background:transparent;border:none;border-radius:14px;color:#7d8a9c;font-size:10px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;min-width:54px}
-.btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
-.btb-btn svg{width:22px;height:22px}
+/* v2.9.53 (owner: "I want a modern iOS nav bar" · "isn't there some off the
+   shelf standard for this?") — the bar is written to Apple's HIG tab-bar spec,
+   number for number, so a coach's thumb already knows it (design.md §3.2):
+   · 49pt tall + the home-indicator inset; full width; hairline top edge
+   · translucent material: dark tint + backdrop blur/saturate (the "glass")
+   · items EVENLY DISTRIBUTED across the width (flex:1), icon 24 over a 10pt label
+   · active = tint colour with the FILLED glyph; inactive = grey outline;
+     NO pill/background behind the active item (that's Material, not iOS)
+   · press feedback = the §5.0 scale compression, no highlight box
+   Optional iOS-26 shape: body.tabbar-float turns it into the floating
+   inset "glass" pill (same items, same rules). Unstamped — classic is default. */
+#bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:stretch;padding:0 0 env(safe-area-inset-bottom);background:rgba(13,24,40,.82);border-top:1px solid rgba(255,255,255,.08);z-index:9000;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+.btb-pill{display:flex;width:100%;max-width:520px;height:49px;background:transparent;padding:0;gap:0}
+.btb-btn{flex:1 1 0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 2px 0;background:transparent;border:none;color:#7d8a9c;font-size:10px;font-weight:600;letter-spacing:.1px;line-height:1;cursor:pointer;font-family:inherit;min-width:0;-webkit-tap-highlight-color:transparent;transition:transform .12s ease}
+.btb-btn:active{transform:scale(.94)}
+.btb-btn.active{color:#5bc0de;background:transparent;font-weight:700}
+.btb-btn svg{width:24px;height:24px;stroke-width:1.9}
+/* "Filled" glyph for the selected tab — our icon set is stroke-only, so the
+   fill is the tint at low alpha behind a slightly heavier stroke. */
+.btb-btn.active svg{fill:currentColor;fill-opacity:.22;stroke-width:2.2}
+/* iOS-26 floating variant (unstamped). */
+body.tabbar-float #bottomTabBar{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding:0;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:rgba(13,24,40,.72);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+body.tabbar-float .btb-pill{height:56px;padding:0 6px}
 /* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
 /* v2.9.45: --tabbar-h is the MEASURED height of #bottomTabBar (syncTabBarHeight,
    below the render code), not a guess. The hard-coded 58px was ~9px short of the
@@ -365,7 +385,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      content away — landscape puts the notch on one side, and with viewport-fit=
      cover that inset is ~59px, which would have left ~5px of usable rail. */
   #bottomTabBar{top:calc(44px + env(safe-area-inset-top))!important;bottom:0!important;left:0!important;right:auto!important;width:calc(64px + env(safe-area-inset-left));flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
-  #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important}
+  #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important;height:auto!important;width:auto!important}
+  #bottomTabBar .btb-btn{flex:0 0 auto!important;padding:8px 2px!important}
+  body.tabbar-float #bottomTabBar{left:0!important;right:auto!important;bottom:0!important;border-radius:0!important;box-shadow:none!important}
   body.has-tabbar .app{padding-left:calc(64px + env(safe-area-inset-left))!important;box-sizing:border-box}
   /* Game screen: side rails right (bench 170 + dash 92); with the nav rail on
      the left the bottom needs only the safe inset. */
@@ -4198,7 +4220,10 @@ function syncTabBarHeight(){
   // Hidden (landing/wizard screens) or rotated into the landscape side rail →
   // there is no bottom bar to clear; the screens' own rules own the spacing.
   const landscapeRail=window.matchMedia('(orientation:landscape) and (max-height:500px)').matches;
-  const h=(bar.style.display==='none'||landscapeRail)?0:bar.offsetHeight;
+  // Distance from the bar's TOP edge to the viewport bottom — not offsetHeight —
+  // so a floating (inset) bar reserves its gap too, and the safe-area padding
+  // is measured rather than re-derived (v2.9.53).
+  const h=(bar.style.display==='none'||landscapeRail)?0:Math.max(0,Math.round(window.innerHeight-bar.getBoundingClientRect().top));
   document.documentElement.style.setProperty('--tabbar-h',h+'px');
 }
 addEventListener('resize',syncTabBarHeight);
@@ -4391,12 +4416,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.52-beta';
+const APP_VERSION='v2.9.53-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.53-beta':{
+    title:'The tab bar goes native',
+    items:['The bottom tabs are rebuilt to Apple\u2019s own tab-bar spec \u2014 the same proportions, spacing and behaviour as the bars in Phone, Clock and Photos: 49pt tall, tabs spread evenly across the width, the current tab shows as a filled glyph in the tint colour with no box behind it, and the bar is a translucent \u201cglass\u201d layer over the page. Your thumb already knows this bar.','It\u2019s also a touch shorter, so the game screen gets a little more room.','Fixed: a faint dark shading down the left edge of every screen \u2014 it was the shadow of the closed side menu leaking onto the page.']
+  },
   'v2.9.52-beta':{
     title:'Favourites stick, properly',
     items:['If you starred a team before this update, the cloud copy still said \u201cnot starred\u201d and quietly won on the next sync. The phone\u2019s own star now wins and the cloud catches up \u2014 tap the star once and it stays.']
