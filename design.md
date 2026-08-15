@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.43
+> Last updated: v2.9.44
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -367,6 +367,7 @@ by screen as callers migrate, never in one sweep.
 | `.ui-btn--primary` | The one action a screen exists for. At most one per view. | 48px min |
 | `.ui-btn--secondary` | Everything supporting. Takes a tone modifier for meaning. | 44px min |
 | `.ui-btn--ghost` | Menu and drawer rows. Full width, left-aligned. | 48px min |
+| `.ui-btn--link` | Text-only tertiary action inside a dialog (Forgot password? / Cancel). No fill, no border; 44px hit area. v2.9.44 | 44px min |
 | `.ui-btn--danger` | Loses data or ends something. | 44px min |
 | `.ui-chip` | Compact, inline with content — tags, toggles, scores. | — |
 | `.ui-chip--card` | Block chip with a title + description line (strategy cards). | full width |

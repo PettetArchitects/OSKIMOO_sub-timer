@@ -193,7 +193,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 
 | # | Action | Expected result |
 | --- | --- | --- |
-| 1 | Sign in (email magic link) | Signed-in chip; initial sync merges cloud + local |
+| 1 | Sign in (email + password; Create account / Forgot password) | Signed-in chip; initial sync merges cloud + local |
 | 2 | Edit / delete a team | Change pushes to cloud |
 | 3 | Save a match | Pushes to cloud (insert) |
 | 4 | Sign out | Returns to anonymous; local data stays |

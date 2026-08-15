@@ -492,7 +492,7 @@ const SCENARIOS = [
       const visible = (e) => e && e.offsetParent !== null;
       const found = [...document.querySelectorAll('button,[onclick]')].filter((e) => {
         const oc = (e.getAttribute('onclick') || '') + (e.onclick ? e.onclick.toString() : '');
-        return /authOv|signOutCloud/.test(oc);
+        return /authOv|openAuth|signOutCloud/.test(oc);
       }).filter(visible);
       return { n: found.length, labels: found.map((e) => (e.innerText || '').trim().slice(0, 40)) };
     });

@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.9.43-beta · **Last reconciled:** see git history for this file
+**Version:** v2.9.44-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -35,7 +35,7 @@ Legend: ✅ tested · 🟡 partial · ❌ untested (automated coverage in `test/
 
 | Feature | Behaviour | Status |
 |---|---|---|
-| Magic-link email sign-in | Email → Supabase OTP via Resend SMTP. JWT stored, auto-refresh handled by Supabase JS. | ✅ |
+| Email + password sign-in (v2.9.44) | `signInWithPassword` / `signUp` / `resetPasswordForEmail`; recovery link → set-new-password mode; drawer "Set / change password" for signed-in users. JWT stored, auto-refresh by Supabase JS. Magic links retired. | ✅ |
 | Auto sign-in on launch | Refresh token rehydrates `cloudUser` on page load. | ✅ |
 | Sign out | Clears local session, returns to anonymous mode. Local teams + matches stay. | ✅ |
 | Initial sync after sign-in | `doInitialSync` pulls cloud teams + matches, merges with local. | ✅ |
@@ -354,7 +354,7 @@ the lineup-assignment algorithm.
 ## 12. Smoke-test Checklist (run before any release)
 
 - [ ] Create a new soccer team (e.g. 7v7), add 13 players, tag positions for half of them
-- [ ] Sign in via magic link — confirm Resend email arrives, click link, see "signed in" chip
+- [ ] Sign in with email + password — see "signed in" chip; Create account; Forgot password → reset link → new password saved
 - [ ] Sign out, sign back in — confirm team + positions persist across the round-trip
 - [ ] Start a game, run through to halftime, swap GK, finish 2nd half
 - [ ] During play: trigger a sub, then **Undo Last Sub** — confirm everything reverts
@@ -381,7 +381,7 @@ the lineup-assignment algorithm.
 - `localStorage.subTimerTipIdx` / `subTimerTipsDismissed` — tips state
 - Supabase tables: `teams` (with new `sport` column), `matches`, `feedback`
 
-**Auth:** Supabase JS client → Resend SMTP for magic-link emails.
+**Auth:** Supabase JS client, email + password (confirmation / reset emails via the project's SMTP).
 
 **AI:** vision model via Supabase Edge Function `extract-roster` (roster import
 + `mode:'plan'` sub-plan import). Edge function is server-side, not in this repo.
@@ -414,7 +414,7 @@ benching), save/resume/discard, live player removal.
    zero coverage.
 5. **Scoring scorer/assist + match save/history** — `promptScorer`,
    `saveMatch`, `showHistory`.
-6. **Cloud login + sync** — `sendMagicLink`, `pushCloudTeam`, `pullCloudMatches`
+6. **Cloud login + sync** — `authPrimary` / `authSecondary` / `sendPasswordReset`, `pushCloudTeam`, `pullCloudMatches`
    (needs a cloud env to test).
 7. **AI roster / plan import** — server-side; needs cloud.
 8. **3D pitch (`afl3d`) + camera views** — large subsystem, view-only.

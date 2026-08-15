@@ -217,7 +217,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Purpose:** Everything that is not the game: settings, help, account, feedback — one predictable place, same shape on every screen.
 **Serves:** P7.1, P7.4
 **Primary action:** context row for the current screen (Edit Team / End game — the Sub Plan row left with the Plan tab, v2.9.11).
-**Secondary:** `openSoundPicker()`, `openHelp()`, sign in/out (`sendMagicLink()` / `signOutCloud()`), `openFeedback()`, `openFlowExport()`, Donate
+**Secondary:** `openSoundPicker()`, `openHelp()`, sign in/out (`openAuth()` / `signOutCloud()`), set/change password (`openAuth('setpass')`), `openFeedback()`, `openFlowExport()`, Donate
 **Must show:** screen-specific rows first, universal rows after, sign-in state truthfully (P7 ✓ — reachable with a team saved).
 **Boundaries:** End game is the only destructive row and must read as such; drawer never holds game-critical controls (everything mid-game must be reachable without it).
 **Choice budget:** 9
