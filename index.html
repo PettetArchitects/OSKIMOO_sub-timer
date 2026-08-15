@@ -4375,12 +4375,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.46-beta';
+const APP_VERSION='v2.9.47-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.47-beta':{
+    title:'Changes reach the game you’re in',
+    items:['Change the sub interval, players per sub or the strategy mid-match and it now applies to the game you’re playing — not just the next one. Sub times that have already gone by are left alone, so nothing fires the moment you save: switch 5′ to 7′ at 8 minutes and your next sub is 14, as you’d expect.','Edit a player’s positions or side mid-game and the field takes it straight away, instead of quietly waiting for the next sub to apply it.','When a sub shuffles someone who was already on — because the kid coming on doesn’t suit that spot — the card now says so: "Molly moves to CM". It used to happen silently.']
+  },
   'v2.9.46-beta':{
     title:'The next-on card names the right kids',
     items:['Fixed: the NEXT ON card could list a player with nobody coming off — a blank row and "SUB" instead of a position. It was showing the first names on the bench, while the app was actually about to bring on whoever had played least. Now the card shows exactly who is going on, for whom, and where — and the player who really is next stops getting buried in a later wave.','The panel behind the field is gone. The pitch is the surface; only a fine line marks its edge.']
@@ -6423,13 +6427,15 @@ function saveTeamSettings(){
   if(!currentTeam) return;
   saveTeams(teams);
   if(cloudUser){ clearTimeout(_tsCloudTimer); _tsCloudTimer=setTimeout(()=>{ if(currentTeam) pushCloudTeam(currentTeam); },800); }
-  // No game underway → refresh the working cfg now, same as selectTeam does,
-  // so Settings → Roster → kick off uses the new defaults without a re-select.
-  // "Underway" is the active-game SNAPSHOT, not G: after a completed match is
-  // saved, G lingers in memory with no snapshot — settings changed from the
-  // summary must still reach the next game. A live/pre-kick game (snapshot
-  // present) keeps its cfg; the next game picks the changes up.
-  if((!G || loadActiveGame()===null) && curFmt===currentTeam.format) applyTeamPrefsToCfg(currentTeam);
+  // v2.9.47 (owner: "I updated the sub time to even recommended 7mins but it
+  // didn't change when I went back to the game"): settings now reach the LIVE
+  // game too. Until now a game underway kept its cfg and only the next match
+  // picked changes up — deliberate, but from the sideline it reads as broken:
+  // the Settings tab is one tap from the game and its controls appear to work.
+  if(curFmt===currentTeam.format){
+    applyTeamPrefsToCfg(currentTeam);
+    if(G && loadActiveGame()!==null) absorbPassedSubTimes();
+  }
   const tick=document.getElementById('teamSettingsSaved');
   if(tick){ tick.style.opacity='1'; clearTimeout(_tsTickTimer); _tsTickTimer=setTimeout(()=>{ tick.style.opacity='0'; },1200); }
 }
@@ -6729,6 +6735,11 @@ function saveAndBack(){
       if(fresh)currentTeam=fresh;
     }
     showScr('s4');
+    // v2.9.47 (owner: "if I change a players positional preferences it doesn't
+    // take effect unless I start a new game"): the edited tags now reach the
+    // field immediately instead of waiting for the next sub to apply them as a
+    // side-effect. Any resulting move is named on the card, never silent.
+    showSeatingMoves(repairSeating());
     renderG();
     saveActiveGame();
     return;
@@ -7176,7 +7187,10 @@ function posLabelFor(pIdx){
 // where the kid should run to. "You're on for Riley" is wayfinding: the
 // outgoing name tells the incoming kid where to go.
 let _relayTimer=null;
-function showRelay(off,on){
+// v2.9.47: `moved` = repairSeating()'s report. Players who were already on the
+// field and got re-seated by this sub are named here — the coach shouts them
+// too, and a position change stops being something you only notice later.
+function showRelay(off,on,moved){
   const el=document.getElementById('relayCard'); if(!el||!G) return;
   const c=Math.min(off.length,on.length);
   let rows='';
@@ -7184,7 +7198,27 @@ function showRelay(off,on){
     const pos=posLabelFor(on[i]);
     rows+=`<div style="font-size:16px;font-weight:800;color:#eee;padding:2px 0"><span style="color:#00d4aa">${avail[on[i]]}</span> <span style="font-weight:600;color:#9fb3c8">on for</span> <span style="color:#ff7088">${avail[off[i]]}</span>${pos?` <span style="font-weight:600;color:#9fb3c8">·</span> <span style="color:#5bc0de">${pos}</span>`:''}</div>`;
   }
+  // Only players who stayed ON the field count as a "move" — the incoming subs
+  // are already named above, and saying it twice reads as a second instruction.
+  const _in=new Set((on||[]).map(p=>avail[p]));
+  (moved||[]).filter(m=>!_in.has(m.name)&&m.pos).forEach(m=>{
+    rows+=`<div style="font-size:15px;font-weight:700;color:#eee;padding:2px 0"><span style="color:#f0a500">${m.name}</span> <span style="font-weight:600;color:#9fb3c8">moves to</span> <span style="color:#5bc0de">${m.pos}</span></div>`;
+  });
   el.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#00d4aa;margin-bottom:2px">SUB MADE — TELL THEM</div>`+rows;
+  el.style.display='block';
+  if(_relayTimer)clearTimeout(_relayTimer);
+  _relayTimer=setTimeout(hideRelay,12000);
+}
+// v2.9.47: the same card, without a sub behind it — used when a mid-game edit
+// (new position tags, a changed side preference) re-seats the field. Silent
+// re-seating is what made "I changed a player's positions and nothing happened"
+// and "it moved a player's position" the same bug seen from two ends.
+function showSeatingMoves(moved){
+  const el=document.getElementById('relayCard');
+  if(!el||!G||!moved||!moved.length) return;
+  const rows=moved.filter(m=>m.pos).map(m=>`<div style="font-size:15px;font-weight:700;color:#eee;padding:2px 0"><span style="color:#f0a500">${m.name}</span> <span style="font-weight:600;color:#9fb3c8">moves to</span> <span style="color:#5bc0de">${m.pos}</span></div>`).join('');
+  if(!rows) return;
+  el.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#00d4aa;margin-bottom:2px">POSITIONS UPDATED — TELL THEM</div>`+rows;
   el.style.display='block';
   if(_relayTimer)clearTimeout(_relayTimer);
   _relayTimer=setTimeout(hideRelay,12000);
@@ -7706,10 +7740,16 @@ function labelToTag(lbl){
 // with no outfield tags fits anywhere; the keeper is untouched. Runs at
 // kickoff (after any saved plan applies) and after each engine sub — never on
 // the coach's own tap-swaps between subs, and not in Plan-ahead build mode.
+// v2.9.47 (owner: "it also moved a players position" → "name the moves
+// instead"): returns the players whose SLOT changed — [{name, pos}] — so the
+// caller can say so out loud. Re-seating is still allowed to move a player who
+// had nothing to do with the sub (that's how it resolves a bad fit), but it is
+// no longer silent.
 function repairSeating(){
-  if(!G||!currentTeam)return;
+  if(!G||!currentTeam)return[];
   const fmt=FORMATS[curFmt];
-  if(!fmt||!fmt.hasGk)return;   // labelled-slot sports with a keeper (soccer-style)
+  if(!fmt||!fmt.hasGk)return[];   // labelled-slot sports with a keeper (soccer-style)
+  const _before=[...G.on];
   const pp=getPositions();
   const fits=(pIdx,posIdx)=>{
     const lbl=(pp[posIdx]&&pp[posIdx].label)||'';
@@ -7745,6 +7785,15 @@ function repairSeating(){
       }
     }
   }
+  // Who ended up in a different slot than they started this pass in? Report by
+  // the slot they NOW hold — that's the instruction ("Molly, go to CM").
+  const moved=[];
+  for(const {onI,posI} of idxs){
+    if(G.on[onI]===_before[onI])continue;
+    const lbl=(pp[posI]&&pp[posI].label)||'';
+    moved.push({name:avail[G.on[onI]],pos:lbl});
+  }
+  return moved;
 }
 
 function smartAssign(){
@@ -8208,6 +8257,15 @@ function subTs(){
   return r;
 }
 function nxtST(){for(const t of subTs())if(!G.sd.includes(t))return t;return null;}
+// v2.9.47: changing the sub interval mid-half rewrites the schedule under a
+// clock that has already run. Every new-schedule time at or before NOW is
+// marked done, so the new cadence starts from this moment forward instead of
+// firing a retroactive sub the instant the coach saves. (5′→7′ at 8:00 makes
+// the next sub 14′, not an immediate one for the 7′ that "passed".)
+function absorbPassedSubTimes(){
+  if(!G||!G.sd)return;
+  subTs().forEach(t=>{ if(t<=G.secs && !G.sd.includes(t)) G.sd.push(t); });
+}
 
 function renderG(){
   // v2.8.7: two render passes are DEFERRED — confSub schedules one 1.7s out to
@@ -9205,9 +9263,9 @@ function confSub(){
   // v2.9.22: engine subs inherit the outgoing player's slot — re-seat by
   // position strengths BEFORE the relay card reads the slots (never changes
   // who plays; coach tap-swaps between subs are untouched).
-  repairSeating();
+  const _moved=repairSeating();
   // relay card. Break auto-rotation is excluded: the announce view owns breaks.
-  if(!_breakRotation) showRelay(off,on);
+  if(!_breakRotation) showRelay(off,on,_moved);
   saveActiveGame();
   renderG();
 }
