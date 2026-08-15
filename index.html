@@ -4464,7 +4464,7 @@ const APP_VERSION='v2.9.55-beta';
 const CHANGELOG_DATA={
   'v2.9.55-beta':{
     title:'Top view, turned',
-    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
+    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: a player tagged for other positions could still be seated in defence at kick-off \u2014 \u201cnot a defender\u201d now counts for something: tagged-elsewhere players are the last resort for a slot, and the scarce positions are seated first.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
   },
   'v2.9.54-beta':{
     title:'It tells you when Safari is zooming it',
@@ -7928,31 +7928,44 @@ function smartAssign(){
     assigned[0]=gk1;used.add(gk1);
   }
 
-  // Score each player for each position (higher = better fit)
+  // v2.9.55 (owner: "I have a player who is deliberately not a defender but the
+  // app is putting her in that position"): two fixes to the kick-off seating.
+  // (1) A player TAGGED for other positions is not the same as an untagged
+  //     player — a mismatch scores BELOW "plays anywhere", so a FWD-only kid is
+  //     the LAST resort for a DEF slot, not a coin-flip with the untagged.
+  // (2) Slots are filled by SCARCITY, not formation order — the slot with the
+  //     fewest exact-tag candidates is seated first, so LB/RB (first in a 2-3-1)
+  //     can't grab a striker before the FW slot has looked at her.
+  const scoreFor=(pIdx,tag)=>{
+    const ptags=currentTeam?getPlayerPos(currentTeam,avail[pIdx]):[];
+    let score=0;
+    if(ptags.includes(tag)) score=10;                          // exact match
+    else if(ptags.filter(t=>t!=='GK').length>0) score=-5;      // tagged, but not for here
+    // v2.7.99: a pure keeper (tagged only GK) must not be auto-placed into an
+    // outfield slot ahead of an actual outfielder — bench instead.
+    if(ptags.length>0 && ptags.every(t=>t==='GK')) score-=100;
+    score-=pIdx*0.01;                                          // stable tie-break: original order
+    return score;
+  };
+  const openSlots=[];
   for(let slot=0;slot<on;slot++){
-    if(assigned[slot]>=0) continue; // already assigned (GK)
+    if(assigned[slot]>=0) continue;
     const tag=labelToTag(positions[slot].label);
     if(!tag) continue;
-    // Find best unassigned player for this position
-    let best=-1,bestScore=-1;
+    const exact=pool.filter(p=>!used.has(p)&&(currentTeam?getPlayerPos(currentTeam,avail[p]):[]).includes(tag)).length;
+    openSlots.push({slot,tag,exact});
+  }
+  // Fewest exact candidates first; ties keep formation order.
+  openSlots.sort((a,b)=>(a.exact-b.exact)||(a.slot-b.slot));
+  openSlots.forEach(({slot,tag})=>{
+    let best=-1,bestScore=-Infinity;
     pool.forEach(pIdx=>{
       if(used.has(pIdx)) return;
-      const ptags=currentTeam?getPlayerPos(currentTeam,avail[pIdx]):[];
-      let score=0;
-      if(ptags.includes(tag)) score=10; // exact match
-      // v2.7.99: a pure keeper (tagged only GK) must not be auto-placed into an
-      // outfield slot ahead of an actual outfielder. When the coach picks an
-      // outfielder as keeper, the displaced goalkeeper was landing at e.g. RM
-      // (scoring 0 like everyone else, then winning on low index) while better-
-      // fit bench players sat. Push pure GKs far down so they only take an
-      // outfield slot if no outfield player is left — i.e. they bench instead.
-      if(ptags.length>0 && ptags.every(t=>t==='GK')) score-=100;
-      // Give slight preference to keep original order for tie-breaking
-      score-=pIdx*0.01;
-      if(score>bestScore){bestScore=score;best=pIdx;}
+      const sc=scoreFor(pIdx,tag);
+      if(sc>bestScore){bestScore=sc;best=pIdx;}
     });
     if(best>=0){assigned[slot]=best;used.add(best);}
-  }
+  });
 
   // Fill any remaining slots with unassigned players
   const remaining=pool.filter(p=>!used.has(p));

@@ -664,6 +664,34 @@ const SCENARIOS = [
     chk('bench+bench swaps queue places', r.queueProposed && r.queueSwapped);
   }],
 
+  // v2.9.55 — owner: "a player who is deliberately not a defender but the app is
+  // putting her in that position". Kick-off seating must treat "tagged for
+  // other positions" as WORSE than "untagged" for a slot, and must not let a
+  // formation-first slot (LB/RB in 2-3-1) grab a striker before the FW slot
+  // has looked at her.
+  ['kick-off seating respects "not a defender"', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Tags FC' });
+    const r = await page.evaluate(() => {
+      // Squad: index 0 GK, index 1 = "Striker" tagged FWD only (low index — the
+      // old greedy fill would hand her LB), ONE player tagged DEF, everyone else
+      // untagged. 2-3-1 has LB + RB.
+      const names = avail.slice();
+      currentTeam.positions = {};
+      setPlayerPos(currentTeam, names[0], ['GK']);
+      setPlayerPos(currentTeam, names[1], ['FWD']);
+      setPlayerPos(currentTeam, names[2], ['DEF']);
+      gk1 = 0;
+      smartAssign();
+      const pos = getPositions();
+      const seat = {};
+      luOrd.slice(0, FORMATS[curFmt].onField).forEach((pIdx, i) => { seat[names[pIdx]] = pos[i].label; });
+      return { striker: names[1], strikerAt: seat[names[1]], defender: names[2], defenderAt: seat[names[2]], seat };
+    });
+    chk('the FWD-only player is NOT seated in defence', !/^(LB|RB|CB|LCB|RCB)$/.test(r.strikerAt), `${r.striker} at ${r.strikerAt}`);
+    chk('she takes the FW slot she is tagged for', r.strikerAt === 'FW', JSON.stringify(r.seat));
+    chk('the one DEF-tagged player is in defence', /^(LB|RB)$/.test(r.defenderAt), `${r.defender} at ${r.defenderAt}`);
+  }],
+
   // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
   // any strategy; the auto-sub still fires with whoever IS in the queue; their
   // minutes and queue place survive; the state survives a reload.

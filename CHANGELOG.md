@@ -14,6 +14,8 @@ The game screen's `top` camera preset now points its offset along X instead of Z
 
 **Game settings not sticking (owner)** — a real local bug, not sync (the cloud row had the new prefs): every `teams=loadTeams()` (each `renderHome()`) builds new objects while `currentTeam` kept pointing at the old one, so a Settings-tab edit after any visit to home mutated an orphan and `saveTeams(teams)` wrote the list without it. `_rebindTeamRefs()` after every reload + `saveTeamSettings` writes the edited object by id. Verified: edit after `renderHome()` now persists.
 
+**"Deliberately not a defender" (owner)** — `smartAssign` filled slots in formation order (LB, RB first in 2-3-1) and scored every non-matching player 0, lowest index wins — so a low-index FWD-only kid took RB before the FW slot had looked at her, and "tagged for other positions" was indistinguishable from "no preference". Now a mismatch scores −5 (below untagged 0, below exact 10) and slots are seated by **scarcity** (fewest exact-tag candidates first, formation order as tie-break). Edge check reproduces the report on the old code (`Charlie at RB`) and passes on the new (`Charlie at FW`).
+
 **The LAN diag rig is permanent**: `?diag=1` (sticky per origin; on by default on a LAN address) shows a live strip — viewport, screen, `env()` insets, both bars, document size, visualViewport, UA, device-width matches. Serve the working build on :8001, open `http://<mac-ip>:8001/?diag=1` on the phone, Add to Home Screen to test the standalone shell.
 
 ## v2.9.54-beta — It tells you when Safari is zooming it (owner: "bottom tab is still too high" — with the diag numbers at last)
