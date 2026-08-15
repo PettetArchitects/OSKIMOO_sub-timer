@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.52
+> Last updated: v2.9.53
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -326,16 +326,29 @@ the bar is hidden or rotated into the landscape rail). Reserve
   - Right: version tag (10px, muted, tabular)
 - The brand bar **IS** the persistent app header on every screen. Per-screen `.hdr` (if present) sits below as screen-specific content.
 
-### 3.2 Bottom tab bar (`#bottomTabBar`)
+### 3.2 Bottom tab bar (`#bottomTabBar`) — written to Apple's HIG tab-bar spec (v2.9.53, owner: "a modern iOS nav bar … isn't there an off-the-shelf standard?")
 
-- `position:fixed; bottom:0; left:0; right:0`
-- Padding 6px top, `calc(6px + env(safe-area-inset-bottom))` bottom
-- Background `var(--surface-card-2)` with 1px top border `var(--border-subtle)`
-- 3 tabs: **Game** (sport-aware ball icon) · **Plan** (clipboard) · **Team** (people)
-- Each tab is 62px min-width, 22×22px icon stacked above 10px label
-- Active tab: tint `var(--accent-cyan-tint)`, text `var(--accent-cyan)`, 14px pill background
-- Inactive: text `var(--text-muted)`, no background
-- **Visibility rule (v2.7.80)**: hidden on landing-style screens (home, sport picker, grade picker). The tabs only show once a team context is active.
+The bar follows the HIG number for number so a coach's thumb already knows it.
+These are the contract; ui-check may hold any of them.
+
+- `position:fixed; bottom:0; left:0; right:0` — full width, **49pt** content
+  height (`.btb-pill{height:49px}`) + `env(safe-area-inset-bottom)` padding
+- Material: `rgba(13,24,40,.82)` + `backdrop-filter: saturate(180%) blur(20px)`,
+  1px top hairline `rgba(255,255,255,.08)` — a translucent layer, not a slab
+- Items **evenly distributed** (`.btb-btn{flex:1}`), max content width 520px;
+  24pt icon (stroke 1.9) over a 10pt/600 label, 3px gap
+- **Active** = tint `var(--accent-cyan)` + *filled* glyph (fill = currentColor
+  at .22 alpha, stroke 2.2) — **no pill / background behind the active item**
+  (that is Material's nav bar, not iOS). Inactive = `var(--text-muted)` outline
+- Press = §5.0 scale compression (.94), no highlight box
+- **Visibility rule (v2.7.80/v2.9.35)**: hidden on landing + deep wizard screens
+- **Landscape (v2.9.42)**: rotates into a 64px LEFT side rail (not an iOS
+  tab-bar pattern — an app decision, kept)
+- **`--tabbar-h`** = viewport bottom − bar top, measured by `syncTabBarHeight()`
+  (§3.0) — never a number
+- Optional **iOS-26 floating pill** (`body.tabbar-float`): inset 12px, bottom
+  `inset + 8px`, radius 22, 56px tall, `rgba(13,24,40,.72)`, elevation shadow
+  (overlay layer — permitted by §5.0.7). **Unstamped**; classic is the default.
 
 ### 3.3 Page header (`.hdr`) — REMOVED from content screens (v2.9.28)
 
