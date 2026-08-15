@@ -34,6 +34,7 @@ game-flow recorder's pseudonymisation decision was taken.
 | `subTimerSoundPack`, `subTimerTheme`, `aflTilt`, `aflView` | Display preferences | No |
 | `subTimerTipIdx`, `subTimerTipsDismissed`, `subTimerLastSeenVersion` | UI state | No |
 | `subTimerDevMode` | Dev-panel flag | No |
+| `diagStrip` | Dev flag: show the on-screen layout readout (`?diag=1` / LAN rig) | No |
 
 ### Cache Storage (v2.9.3)
 
