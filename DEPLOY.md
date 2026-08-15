@@ -3,6 +3,7 @@
 **Live:** https://sub-timer.vercel.app
 **Deploy repo:** `PettetArchitects/sub-timer` (GitHub → Vercel auto-deploys `main`)
 **Source of truth:** the deployed `main` branch — **NOT** this iCloud copy.
+**Supabase (live):** project **`grvrigrxujbnmullixiz`** ("Team Manager" — the merged grassroots-manager project, ap-southeast-1; shared with the roster app). Auth URL config (Site URL / Redirect URLs for `https://sub-timer.vercel.app`) lives THERE. The OSKIMOO-org project `dnjwcfuegvlobhfwkfjo` ("Sub - Timer", Tokyo) was **retired 2026-05-30** (commit `a1a2587`) — it auto-pauses from disuse; ignore it, don't configure it.
 
 ---
 
