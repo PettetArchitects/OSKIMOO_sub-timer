@@ -592,7 +592,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    so the oval sits tall with its sides drawn in slightly (no egg). */
 .lu-pitch.np-afl{aspect-ratio:135/165}
 /* ===== 3D AFL pitch viewer (Three.js) — a clean self-contained zone ===== */
-.afl3d-wrap{position:absolute;inset:0;overflow:hidden;border-radius:10px;touch-action:none;background:rgba(9,14,24,.45);border:1px solid rgba(42,53,80,.55)}
+/* v2.9.46 (owner: "drop the panel fill on the score bar and the field"): no
+   panel fill behind the field — the pitch graphic IS the surface. The hairline
+   stays as the only edge (§5.0: structure by rule, not by fill). */
+.afl3d-wrap{position:absolute;inset:0;overflow:hidden;border-radius:10px;touch-action:none;background:transparent;border:1px solid rgba(42,53,80,.55)}
 .afl3d-wrap canvas{display:block;width:100%;height:100%;touch-action:none}
 .afl3d-overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .afl3d-overlay .fc{pointer-events:auto}
@@ -4372,12 +4375,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.45-beta';
+const APP_VERSION='v2.9.46-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.46-beta':{
+    title:'The next-on card names the right kids',
+    items:['Fixed: the NEXT ON card could list a player with nobody coming off — a blank row and "SUB" instead of a position. It was showing the first names on the bench, while the app was actually about to bring on whoever had played least. Now the card shows exactly who is going on, for whom, and where — and the player who really is next stops getting buried in a later wave.','The panel behind the field is gone. The pitch is the surface; only a fine line marks its edge.']
+  },
   'v2.9.45-beta':{
     title:'Edge to edge on iPhone',
     items:['Installed on an iPhone, the app now fills the whole screen — the app bar paints up behind the clock and signal icons instead of the phone leaving a mismatched strip above it.','The SUB and START buttons no longer sit under the bottom tab bar. The app measures that bar for real now rather than assuming a height, so nothing gets clipped whatever your text size.','Sideways, the nav rail keeps its full width on notched phones instead of being squeezed to a sliver.','The block of colour behind the score line is gone — the score sits on the page with a single dividing line.']
@@ -9877,7 +9884,7 @@ function renderRoster(){
   if(hintC) hintC.innerHTML='';
   const fmtDef=FORMATS[curFmt];
   const positions=getPositions();
-  const {nextOff,nextOn,swapMap}=getNextSwap();
+  const {nextOff,nextOn,swapMap,onArr}=getNextSwap();
 
   // Build position-to-player mapping so we can look up positions by player index
   let playerSlots=[];
@@ -9906,7 +9913,7 @@ function renderRoster(){
   const _drawerBody=document.getElementById('benchDrawerBody');
   if(_drawerBody) _drawerBody.innerHTML='';
   const _takeover=document.getElementById('s4').classList.contains('bench-takeover');
-  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer);
+  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer, onArr);
 
   // ===== MODE HINT — what tapping a player does right now. Rendered inline as
   // a tinted chip inside the formation/strategy pill row (#modeHint span).
@@ -10063,7 +10070,7 @@ const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class
 // Bench (subs coming on) — extracted from renderRoster so it can be rendered
 // into the TOP strip independently of the pitch. The dashboard's Undo button
 // now lives in the bottom bar, so the old in-bench "UNDO LAST SUB" pill is gone.
-function renderBenchInto(container, swapMap, posForPlayer){
+function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
   if(!container || !G || !G.bench.length) return;
   {
     const benchSection=document.createElement('div');
@@ -10083,12 +10090,18 @@ function renderBenchInto(container, swapMap, posForPlayer){
     // bench, this gives 4 waves and the grid auto-fits as many columns as
     // the viewport width supports (min 190px per column).
     const sc=Math.max(1, cfg.sc||1);
-    const waves=[];
-    for(let i=0;i<G.bench.length;i+=sc){
-      waves.push(G.bench.slice(i, i+sc));
-    }
-    const nextOnList=waves[0]||[];
-    const laterList =G.bench.slice(sc);   // for the indexOf / first/last check below
+    // v2.9.46 (owner: "no one coming off on this one?"): wave 0 is whoever the
+    // ENGINE is actually bringing on (getNextSwap's onArr), not the first sc
+    // names in bench order. Those two disagree in equal-time/manual mode, which
+    // picks the incoming players by least-played — so the card was listing a
+    // player nobody was coming off for (an empty "— / SUB" row) while the player
+    // genuinely next on sat down in a later wave. Bench order is the fallback
+    // for when there's no pending swap (end of period, no eligible pairing).
+    const _engineNext=(nextOnArr||[]).filter(p=>G.bench.includes(p));
+    const nextOnList=_engineNext.length?_engineNext:G.bench.slice(0,sc);
+    const _rest=G.bench.filter(p=>!nextOnList.includes(p));
+    const waves=[nextOnList];
+    for(let i=0;i<_rest.length;i+=sc) waves.push(_rest.slice(i,i+sc));
 
     // Reorder arrows operate on the FULL G.bench list — shared by the pill and
     // table renderers.
