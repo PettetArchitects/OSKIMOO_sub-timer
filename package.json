@@ -2,7 +2,7 @@
   "name": "sub-timer",
   "version": "0.0.0",
   "private": true,
-  "description": "Sub Timer — youth-sport substitution & game timer (single-file PWA).",
+  "description": "Sub Timer \u2014 youth-sport substitution & game timer (single-file PWA).",
   "type": "module",
   "scripts": {
     "sanity": "node test/sanity.mjs",
@@ -24,7 +24,8 @@
     "fairness": "node test/fairness.mjs",
     "loop": "node test/loop.mjs",
     "uimap": "node test/uimap.mjs --runtime",
-    "test": "npm run gate"
+    "test": "npm run gate",
+    "baseline": "git show main:index.html > app-main.html && echo '\u2713 app-main.html = main\u2019s committed index.html \u2014 open dev-gallery.html?compare=app-main.html'"
   },
   "devDependencies": {
     "playwright": "^1.49.0"

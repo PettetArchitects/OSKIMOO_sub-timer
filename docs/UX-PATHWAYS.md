@@ -72,7 +72,7 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 | --- | --- | --- |
 | 1 | Tap the team card (v2.9.12: the card IS the Play door — no action menu in between) | Squad-select screen, **everyone selected by default** (the whole roster is assumed present) |
 | 2 | **Deselect the no-shows** — tap any player who isn't here to take them out | Tapped players are removed (greyed/struck-through); footer shows playing / out / subs count; can't proceed below the format's onField |
-| 3 | Glance the **timing confirm strip** on the pre-kickoff screen (timing is seasonal, set per team on the **Settings tab** — v2.9.23, formerly inside Edit Team); tap **Change** only when something's unusual | Strip shows period length · sub cadence · group size · strategy; Change opens Settings on demand; values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
+| 3 | Timing needs no matchday step — it's seasonal, set per team on the **Settings tab** (v2.9.23), confirmed on **Today's game** (v2.9.35); the pre-kickoff screen carries no timing chrome (the v2.9.7 confirm strip retired in v2.9.38 — owner: space) | Values clamp to valid ranges; strategy applies ⚠️ matched multiples (3–4) |
 | 4 | **The setup step pages** (v2.9.17, owner directive): squad's Next → **keeper page** (proposed keeper marked; tap to change; benched pick comes on) → **shape page** (formation tiles) → line-up review on the game screen. Keeperless sports skip the keeper page; fixed-shape sports skip the shape page. The GK pill + formation pill on the pitch (v2.9.16) remain the re-entry doors — and the break-time doors | Field fills to onField; keeper on field; a pure-GK is never auto-placed outfield ⚠️ |
 | 5 | Kick off | Live game screen; clock at 0; correct XI on the pitch |
 
@@ -81,8 +81,8 @@ Status key: 🟢 fully covered by automated tests · 🟡 partially · 🔴 not 
 ✓ Keeper is the coach's manual pick; a benched pick swaps onto the field.  [smoke: benched player becomes keeper, on field]
 ✓ Projected minutes reflect the chosen keeper + line-up (keeper = full game).  [smoke: keeper is the top projected-minutes player / keeper is credited the full game]
 ✓ Squad-select can't proceed below onField; exactly-onField = no bench.  [edit: squad equals onField (no bench)]
-✓ Pre-kickoff shows the timing confirm strip with the seasonal settings; it disappears once the game is genuinely underway.  [edge: timing strip shown pre-kickoff / timing strip hidden once underway]
-✓ Pre-kickoff offers the announce view — the line-up as read to the huddle: every starter with a position, keeper marked, bench listed.  [edge: announce lists every starter with a position / announce marks the keeper / announce lists the bench]
+✓ The retired timing strip stays gone — no strip markup in any state.  [edge: strip markup + openMatchSettings are gone]
+✓ The announce view reads the line-up to the huddle — every starter with a position, keeper marked, bench listed — reached at breaks ("announce it"); pre-kickoff carries no announce chrome (the link retired in v2.9.40 — the pitch shows the full starting line-up).  [edge: announce lists every starter with a position / announce marks the keeper / announce lists the bench / pre-kickoff nsi carries no announce chrome / break still offers the announce door]
 
 ---
 

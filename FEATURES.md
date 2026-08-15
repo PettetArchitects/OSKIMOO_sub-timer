@@ -1,6 +1,6 @@
 # Sub Timer — Feature Catalogue & Review
 
-**Version:** v2.9.37-beta · **Last reconciled:** see git history for this file
+**Version:** v2.9.42-beta · **Last reconciled:** see git history for this file
 **Source:** `index.html` (single-file HTML/CSS/JS) · **Live:** https://sub-timer.vercel.app
 
 This document catalogues every user-facing feature, what it does, and its
@@ -174,7 +174,9 @@ _AFL adds goals+behinds scoring; quarter sports have 3 breaks (Q1/HT/Q3)._
 | Feature | Behaviour |
 |---|---|
 | Bench list | All players not on-field, in queue order. |
-| Next-on highlight | Green border + ↑ icon + "for X at POS" hint shown on the player(s) up next. |
+| Next-on table (v2.9.38) | The next-on wave is one card laid out as a table — ↑ COMING ON | ↓ OFF | AT + minutes + reorder — reading incoming names down a column. Injury-pick + landscape rail keep per-player pills. |
+| Urgency escalation (v2.9.38) | Bench follows the countdown thresholds: ≤30s next-on borders + countdown digits go amber and the NEXT ON tag reads "· get ready"; ≤10s red + pulse. Colour only until ≤10s. Driven by `updateClkSub` → `_setBenchUrgency`; classes on `#s4`. |
+| Takeover drawer (v2.9.38) | Portrait phone, ≤10s: the bench slides up as a bottom drawer (`#benchDrawer`) over the field; window-scoped Field/Bench chip (`toggleBenchView`) flips back; drawer retracts when the sub fires. Landscape keeps the right-rail bench. |
 | **Reorder chevrons** | ↑/↓ buttons per row (hidden in Paired mode). Tap to promote/demote in queue. Persists immediately. |
 | Mins display | Per-player playing minutes, updates each second. |
 

@@ -172,7 +172,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .ui-btn--ghost.is-danger{color:#ff7088}
 /* v2.9.7: the timing strip's Change link. 44px hit target via padding +
    negative margin; classed so it doesn't add an inline-button signature. */
-.strip-link{margin:-16px 0 -16px 2px;background:none;border:none;color:#5bc0de;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:underline;padding:16px 10px}
 /* v2.9.8: inline text links in the #nsi status line (announce / set line-up).
    44px hit target via padding + negative margin, visual stays a text link. */
 .nsi-link{display:inline-block;cursor:pointer;text-decoration:underline;font-weight:700;padding:16px 8px;margin:-14px -4px}
@@ -260,6 +259,49 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .tmr-c.warn{color:#f0a500}.tmr-c.alert{color:#e94560;animation:pulse .5s infinite alternate}.tmr-c.sub-now{color:#e94560;animation:sub-flash .4s ease-in-out infinite alternate}
 /* Next-sub countdown digit display — SAME size as the main clock now (v2.7.3) so the two read as a matched pair. Green by default. */
 .tmr-c.tmr-sub{letter-spacing:1.5px;color:#00d4aa}
+/* v2.9.38 bug fix: these came AFTER .tmr-c.warn/.alert in the sheet at equal
+   specificity, so the sub countdown DIGITS never actually went amber in the
+   warn window (the red ≤10s only worked because the pulse animation carries
+   colour). The NEXT SUB label always followed the thresholds — now the digits
+   match it. */
+.tmr-c.tmr-sub.warn{color:#f0a500}
+.tmr-c.tmr-sub.alert{color:#e94560}
+/* Bench next-on urgency: the next-on rows escalate with the countdown — amber
+   inside 30s, red pulse inside 10s — the SAME thresholds as the clock, so the
+   bench pops exactly when the coach should glance at it. Flat (§5.0.7):
+   emphasis is border colour + a gentle scale, no new shadows. */
+.bp-next{transition:border-color .3s}
+.bp-ready{display:none}
+/* The bench escalates as sub time nears — urgency classes live on #s4 so the
+   pill styling follows the bench into whichever container renders it
+   (#benchTop in flow, or the takeover drawer). ≤30s is COLOUR ONLY — no
+   layout change (the field is an ambient Must-show; a 44dvh bench expansion
+   was tried and starved the pitch at 3 players per sub — the drawer at ≤10s
+   is where every row becomes visible). */
+#s4.sub-soon .bp-next{border-color:#f0a500!important}
+#s4.sub-now .bp-next{border-color:#e94560!important;animation:bpPop .5s ease-in-out infinite alternate}
+#s4.sub-soon .bp-ready{display:inline;color:#f0a500}
+#s4.sub-now .bp-ready{display:inline;color:#e94560}
+@keyframes bpPop{from{transform:scale(1)}to{transform:scale(1.015)}}
+/* ≤10s, PORTRAIT PHONE ONLY (owner: space is at a premium; landscape already
+   has the right-rail bench): the bench slides up as a BOTTOM DRAWER over the
+   field — overlay grammar (v2.9.34: elevation belongs to the overlay layer),
+   so the sheet earns its shadow and the pitch underneath never re-lays-out.
+   The list is the instruction being executed; the drawer slides away the
+   moment the swap fires (the relay card then owns sub-due). The window-scoped
+   FIELD/BENCH chip in #fmtRow is the escape hatch. */
+#benchDrawer{position:absolute;inset:0;z-index:32;display:none;flex-direction:column;background:#0d1828;border:1px solid #2a3550;border-bottom:none;border-radius:16px 16px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.5);transform:translateY(105%);visibility:hidden;transition:transform .28s ease,visibility 0s linear .28s}
+.bench-drawer-handle{flex-shrink:0;width:36px;height:4px;border-radius:2px;background:#2a3550;margin:8px auto 4px}
+#benchDrawerBody{flex:1;min-height:0;overflow-y:auto;padding:4px 12px 10px}
+@media(max-width:767.98px) and (orientation:portrait){
+  #benchDrawer{display:flex}
+  #s4.bench-takeover #benchDrawer{transform:translateY(0);visibility:visible;transition:transform .28s ease}
+  #s4.bench-takeover #benchTop{display:none}
+}
+@media (prefers-reduced-motion:reduce){#benchDrawer{transition:none}}
+@media(min-width:768px){
+  #benchViewBtn{display:none!important}
+}
 /* iPhone / narrow-portrait: tighten the stacked score header so it clears
    the absolutely-positioned ✕ end-game button. Stacking itself is now the
    default in renderScore (not media-query-gated). */
@@ -288,16 +330,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    Triggers only for landscape with viewport height ≤ 500px so iPads
    + desktop are untouched. */
 @media(orientation:landscape) and (max-height:500px){
-  #s4{position:relative!important;padding-right:262px!important;box-sizing:border-box!important}
-  #s4 > div:first-child{padding:6px 36px!important;min-height:54px!important}
-  #s4 #gameMenuBtn{top:4px!important;left:6px!important;width:30px!important;height:30px!important}
+  /* v2.9.41 (owner: "landscape is a mess"). Root cause: .app stayed pinned to
+     the 430px portrait column, so the whole game squeezed into the middle of
+     the viewport — the score band literally ran underneath the bench rail,
+     and the hoisted clocks landed off-canvas behind the brand bar. Landscape
+     gets the FULL width; the rails (bench 170 + dash 92) hang off the true
+     right edge, and everything left of them breathes. */
+  .app{max-width:none!important;width:100%!important}
+  /* v2.9.42 (owner): the bottom nav rotates into a LEFT side rail — height is
+     the scarce dimension, so the bar stops taxing it and the pitch gets that
+     ~64px back. LEFT, not right: the right edge is the dash's stamped thumb
+     zone (SUB/START, v2.9.36 stable slots) and nav icons beside START would
+     be a mis-tap adjacency. The .app column clears it via body.has-tabbar
+     (set by renderViewSwitcher — landing/wizard screens hide the bar and
+     reclaim the edge). */
+  #bottomTabBar{top:44px!important;bottom:0!important;left:0!important;right:auto!important;width:64px;flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
+  #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important}
+  body.has-tabbar .app{padding-left:64px!important;box-sizing:border-box}
+  /* Game screen: side rails right (bench 170 + dash 92); with the nav rail on
+     the left the bottom needs only the safe inset. */
+  #s4{position:relative!important;padding-right:262px!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+  /* Rails start under the fixed 44px brand bar — top:0 buried the rail's
+     BENCH · N / NEXT ON header behind it. */
+  #s4 #benchTop,#s4 #gameDash{top:44px!important;bottom:env(safe-area-inset-bottom)!important}
+  /* Header = ONE row: menu | score centred in the free width (the score band
+     has been a single line since v2.9.39). */
+  #s4 > div:first-child{flex-direction:row!important;justify-content:center!important;align-items:center!important;padding:4px 10px 4px 42px!important;min-height:40px!important}
+  #s4 #gameMenuBtn{top:5px!important;left:6px!important;width:30px!important;height:30px!important}
   #s4 #gameMenu{top:38px!important;left:6px!important}
-  /* Clock area lifts up next to the score so they share the header row. */
-  #s4 #clkArea{position:absolute!important;top:4px!important;right:8px!important;padding:0!important;text-align:right!important}
-  #s4 #clkArea > div:first-child{display:flex!important;align-items:center!important;gap:14px!important;flex-wrap:nowrap!important}
-  /* Each clock-group becomes a horizontal row (label inline with the digits). */
+  #s4 #scoreArea{gap:4px!important}
+  #s4 .team-score{font-size:20px!important;min-width:18px!important}
+  #s4 .team-label{font-size:9px!important;max-width:56px}
+  #s4 .score-colon{font-size:16px!important;margin:0 2px!important}
+  /* Clocks: an in-flow compact row under the score — digits inline with their
+     labels, centred. (The old absolute hoist predated the rail padding and
+     painted them under other layers — never absolute-position into a padding
+     zone you don't control.) */
+  #s4 #clkArea{padding:2px 0 0!important;text-align:center!important}
+  #s4 #clkArea > div:first-child{display:flex!important;justify-content:center!important;align-items:baseline!important;gap:20px!important;flex-wrap:nowrap!important}
   #s4 #clkArea > div:first-child > div{flex-direction:row!important;gap:6px!important;align-items:baseline!important}
-  #s4 .tmr-c{font-size:24px!important;letter-spacing:1px!important}
+  #s4 .tmr-c{font-size:22px!important;letter-spacing:1px!important}
   #s4 #hLbl,#s4 #clkSubLbl{font-size:9px!important;letter-spacing:.8px!important;margin-top:0!important}
   /* v2.9.22: clock steppers removed app-wide. */
   /* nsi (mini status line) hidden in this compact header. */
@@ -1066,8 +1138,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <!-- ===== S4: GAME ===== -->
 <div id="s4" class="scr" style="height:100dvh;overflow:hidden;flex-direction:column">
   <!-- Top bar: score centred. v2.7.9 — hamburger menu replaces the ✕ end-game button + holds Edit Team.
-       v2.7.69: explicit min-height:84px so the Plan + Game page headers share the same eyebrow height (the Plan header has the same min-height — no jump when switching). -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 12px 6px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative;min-height:84px">
+       v2.9.39: band tightened to a single row (min-height 84 → 52; the v2.7.69
+       84px Plan-header height-match is moot — the Plan page left the game view
+       in v2.9.11). Menu button (38px @ top:6) still clears the band. -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative;min-height:52px">
     <button id="gameMenuBtn" onclick="toggleGameMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -1106,20 +1180,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
              a11y hit-target offenders). -->
       </div>
       <div id="clkSubGrp" style="display:none;flex-direction:column;align-items:center;gap:4px">
-        <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1;color:#00d4aa">05:00</div>
+        <!-- No inline color: it out-ranked the .warn/.alert classes, freezing the digits green (v2.9.38 fix). .tmr-c.tmr-sub carries the green default. -->
+        <div class="tmr-c tmr-sub" id="clkSub" style="margin:0;line-height:1">05:00</div>
         <div id="clkSubLbl" style="font-size:13px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;line-height:1.15;text-align:center;white-space:nowrap">NEXT SUB</div>
       </div>
     </div>
     <div id="nsi" style="margin-top:6px;font-size:12px;color:#888;font-weight:600;letter-spacing:.3px;min-height:14px"></div>
   </div>
 
-  <!-- v2.9.7: timing confirm strip — pre-kickoff only. Timing is seasonal (set
-       per team, once); matchday just glances. renderG shows it in the setup
-       phase and hides it the moment the game is genuinely underway. -->
-  <div id="timingStrip" style="display:none;margin:0 14px 4px;padding:9px 12px;background:#0d1828;border-radius:12px;font-size:12px;color:#9fb3c8;font-weight:600;text-align:center;flex-shrink:0">
-    <span id="timingStripTxt"></span>
-    <button class="strip-link" onclick="openMatchSettings()">Change</button>
-  </div>
+  <!-- v2.9.7 timing confirm strip lived here; retired v2.9.38 (owner: space —
+       s2 "Today's game" confirms timing one step earlier in the flow). -->
 
   <!-- v2.9.9: the RELAY CARD — the moment a sub fires, the screen scripts the
        shout in speaking order: who comes on, for whom, at which position.
@@ -1129,8 +1199,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
   <!-- Pitch — fills the middle, flexes to whatever space is left. v2.7.9 wraps it in
        a position:relative parent so the View cycle button can sit overlaid bottom-left. -->
-  <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
-    <div id="pitchMid" style="flex:1;min-height:0;overflow:hidden;padding:6px 14px 2px;display:flex;flex-direction:column"></div>
+  <div id="pitchWrap" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
+    <!-- isolation:isolate contains the tokens' depth-sort z-indexes (up to ~2000)
+         so overlaid siblings (benchDrawer z32, pickers z31, toggles z30) always
+         paint above the pitch as a unit. -->
+    <div id="pitchMid" style="flex:1;min-height:0;overflow:hidden;padding:6px 14px 2px;display:flex;flex-direction:column;isolation:isolate"></div>
     <button id="viewToggle" onclick="cycleView()" aria-label="Cycle camera view" style="display:none;position:absolute;bottom:8px;left:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
     <!-- v2.7.29: Formation toggle moves off the bottom dashboard onto the bottom-right of the pitch overlay (mirror of viewToggle bottom-left). Hidden for sports with a fixed single formation (netball / AFL). -->
     <button id="fmtToggle" onclick="toggleGameFormation()" aria-label="Change formation" title="Change formation" style="display:none;position:absolute;bottom:8px;right:14px;background:rgba(13,18,30,.85);border:1px solid #2a3550;color:#9fb3c8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.4px;cursor:pointer;backdrop-filter:blur(4px);align-items:center;gap:6px;z-index:30;font-family:inherit"></button>
@@ -1143,6 +1216,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <div id="gameFmtPicker" style="display:none;position:absolute;bottom:48px;right:14px;background:#0d1828;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.65);padding:6px;min-width:78px;max-height:60dvh;overflow-y:auto;z-index:31">
       <div id="gameFmtGrid" style="display:flex;flex-direction:column;gap:4px"></div>
     </div>
+    <!-- v2.9.38: bench-takeover bottom drawer — slides up over the field in the
+         final 10s before a sub (portrait phone). renderRoster renders the bench
+         in here (instead of #benchTop) while #s4.bench-takeover is set. -->
+    <div id="benchDrawer" aria-hidden="true">
+      <div class="bench-drawer-handle"></div>
+      <div id="benchDrawerBody"></div>
+    </div>
   </div>
 
   <!-- Formation / strategy / sound pills + the contextual tap-tip — one combined
@@ -1153,6 +1233,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <span id="subStratLbl" onclick="changeSubStrategy()" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px;display:none">Subs</span>
     <!-- AFL pitch view toggle (portrait / landscape) — shown only for AFL. -->
     <span id="aflViewBtn" onclick="toggleAflView()" style="display:none;align-items:center;gap:4px;font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #333;border-radius:12px"></span>
+    <!-- Bench-takeover escape hatch (phone, sub window only): flip back to the
+         field while the bench has taken the screen, or back again. -->
+    <span id="benchViewBtn" onclick="toggleBenchView()" role="button" aria-label="Switch between field and bench view" style="display:none;align-items:center;gap:4px;font-size:11px;color:#9fb3c8;font-weight:700;letter-spacing:.5px;cursor:pointer;padding:4px 8px;border:1px solid #2a3550;border-radius:12px"></span>
     <!-- AFL tilt control (portrait perspective only). -->
     <span id="aflTiltCtrl" style="display:none;align-items:center;gap:6px;font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;padding:2px 6px;border:1px solid #333;border-radius:12px">
       <button onclick="aflTiltAdj(-AFL_TILT_STEP)" style="background:none;border:none;color:#5bc0de;font-size:15px;font-weight:800;cursor:pointer;line-height:1;padding:0 2px">−</button>
@@ -3956,6 +4039,9 @@ function renderViewSwitcher(){
   const onLanding=['home','sportPicker','gradePicker','gkStep','shapeStep'].some(id=>{const el=document.getElementById(id);return el&&el.classList.contains('active');});
   if(onLanding){ host.style.display='none'; }
   else { host.style.display='flex'; }
+  // v2.9.42: landscape turns the bar into a left side rail — content clears
+  // it via this class (no rail on landing/wizard screens, no dead edge).
+  document.body.classList.toggle('has-tabbar',!onLanding);
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
   const fab=document.getElementById('coffeeFab');
   if(fab){ const home=document.getElementById('home'); fab.style.display=(home&&home.classList.contains('active'))?'flex':'none'; }
@@ -4125,12 +4211,32 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.37-beta';
+const APP_VERSION='v2.9.42-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.42-beta':{
+    title:'Sideways nav for sideways phones',
+    items:['In landscape the bottom tabs become a slim rail on the LEFT edge — sideways, height is what\u2019s scarce, and the pitch gets that whole band back. Your game buttons (SUB, START) keep the right edge where your thumb already lives.','The rail steps aside on screens that never showed tabs (landing, the keeper/shape steps) — no dead edge.']
+  },
+  'v2.9.41-beta':{
+    title:'Landscape earns its keep',
+    items:['Turn your phone sideways mid-game and the screen finally uses all of it: the field takes the full width with the bench and buttons as side rails, instead of everything crushing into a phone-width column in the middle.','The clocks are back in landscape — game clock and next-sub countdown side by side above the field. They had been lost off-screen.','Bench cards slim down to fit the side rail properly, and nothing hides behind the top or bottom bars any more.']
+  },
+  'v2.9.40-beta':{
+    title:'Less chrome before kick-off',
+    items:['The "announce the line-up" link under the clock is gone — the pitch right below it already shows the full starting line-up. The big read-aloud announce view still exists where it earns its place: at every break, next to the break options.']
+  },
+  'v2.9.39-beta':{
+    title:'A slimmer scoreboard',
+    items:['The score band is half the height: team names sit beside the numbers on one line instead of stacked above them. Scoring is untouched — plus and minus are still one tap, right where they were.','The reclaimed space goes to the field and the bench — the two things you actually watch.']
+  },
+  'v2.9.38-beta':{
+    title:'The bench warms up with the countdown',
+    items:['As the next sub approaches, the next-on rows heat up with the clock: amber inside 30 seconds ("get ready"), a red pulse inside 10 — and the countdown digits now actually go amber at 30s (they used to stay green until the final 10).','In the final 10 seconds on a phone, the bench slides up over the field like a bottom drawer — the list IS the instruction you’re executing — then slides away the moment the swap is done. A small Field/Bench chip lets you peek at the field during the window.','The next-on wave is now ONE card that reads as a table — ↑ COMING ON, ↓ OFF, AT — so you can read every incoming name straight down a single column, in the same green-up / amber-down language the announce screen speaks.','The "20′ halves · subs every 5′…" strip is gone from the game screen — it was repeating what Today’s game already confirmed, and the field gets that space back.','Jersey numbers on bench rows go neutral so the only colours are the ones that mean something.']
+  },
   'v2.9.37-beta':{
     title:'Louder next-on, tidier roster editor',
     items:['Who\u2019s coming on next is the single most important thing on the game screen \u2014 those rows are now unmissable: bigger names, a bigger "for Riley at LB" line, a proper position badge.','The roster editor joins the cleaned-up look: quiet section labels, a one-line "what this screen is" up top, and the photo auto-fill in the app\u2019s green instead of its own blue-purple.']
@@ -6843,7 +6949,6 @@ function removeAvailIndex(idx){
 // the settings screen (goSettings lost its last in-app caller back when
 // squad-select started routing straight to the game). Settings are seasonal;
 // this is the on-demand path for the unusual Saturday.
-function openMatchSettings(){ goSettings(); }
 
 // v2.9.8: the ANNOUNCE view. The screen scripts what the coach says to the
 // huddle — every starter with a position (keeper marked), then the bench.
@@ -7977,24 +8082,11 @@ function renderG(){
     pb.className=G.running?'gd-btn gd-pause':'gd-btn gd-go';
   }
 
-  // v2.9.7: timing confirm strip — the seasonal settings, glanceable before
-  // kick-off. Timing is per-team config; matchday confirms rather than
-  // configures. Gone the moment anything has actually happened.
-  const strip=document.getElementById('timingStrip');
-  if(strip){
-    const preKick=!G.running&&!G.atBreak&&!gameInProgress();
-    if(preKick){
-      const strat=SUB_STRATEGIES.find(s=>s.key===G.subStrategy);
-      const per=_sport.periodCount===2?'halves':`periods of ${_sport.periodCount}`;
-      const cadence=cfg.breaksOnly?'subs at breaks':`subs every ${cfg.sf}′`;
-      document.getElementById('timingStripTxt').textContent=
-        `${cfg.hm}′ ${per} · ${cadence} · ${cfg.sc} per sub · ${strat?strat.label:G.subStrategy}`;
-      strip.style.display='block';
-      // v2.9.8: pre-kickoff, nsi becomes the announce door — the last step of
-      // the setup ritual (keeper → shape → positions → timing glance → ANNOUNCE).
-      ni.innerHTML=`<span class="nsi-link" onclick="openAnnounce()" style="color:#00d4aa">announce the line-up</span>`;
-    } else strip.style.display='none';
-  }
+  // v2.9.40: the pre-kickoff "announce the line-up" door retired (owner —
+  // follows the v2.9.38 timing strip out; the pitch already shows the full
+  // starting line-up, so the link was a second way to read what's on screen).
+  // The BREAK-time "announce it" door stays — the break ritual still ends in
+  // the announce view (v2.9.11 stamp). openAnnounce() itself is unchanged.
 
   // Score
   renderScore();
@@ -8075,17 +8167,19 @@ function renderScore(){
     };
     area.innerHTML=`${col('us','#00d4aa')}<span style="color:#444;font-size:24px;font-weight:300;align-self:flex-start;margin-top:18px">:</span>${col('them','#e94560')}`;
   } else {
-    // v2.7.3: each side ALWAYS stacks (label above score+buttons) — not just on
-    // mobile. Reads like a scoreboard, and the iPad layout has plenty of room.
-    const block=(who,colr,lbl,scoreVal)=>`<div class="team-block" style="display:flex;flex-direction:column;align-items:center;gap:3px">
-      <span class="team-label" style="font-size:11px;color:#888;font-weight:700;letter-spacing:.5px">${lbl}</span>
+    // v2.9.39 (owner: "if it's going to be persistent, tighten it up"): ONE
+    // row — label sits beside its cluster (mirrored so both scores hug the
+    // colon), 26px digits, band height roughly halved. Entry stays one tap
+    // (the 2026-08-08 standing exception) — only the display shrank.
+    const block=(who,colr,lbl,scoreVal,flip)=>`<div class="team-block" style="display:flex;align-items:center;gap:7px;min-width:0;${flip?'flex-direction:row-reverse;':''}">
+      <span class="team-label" style="font-size:10px;color:#888;font-weight:700;letter-spacing:.5px;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lbl}</span>
       <div class="team-controls" style="display:flex;align-items:center;gap:6px">
         <button onclick="adjScore('${who}',-1)" class="hit44" style="margin:-8px"><span style="${sBtn}">−</span></button>
-        <span class="team-score" style="font-size:34px;font-weight:800;color:${colr};min-width:26px;text-align:center;font-variant-numeric:tabular-nums;line-height:1">${scoreVal}</span>
+        <span class="team-score" style="font-size:26px;font-weight:800;color:${colr};min-width:22px;text-align:center;font-variant-numeric:tabular-nums;line-height:1">${scoreVal}</span>
         <button onclick="adjScore('${who}',1)" class="hit44" style="margin:-8px"><span style="${sBtn}">+</span></button>
       </div>
     </div>`;
-    area.innerHTML=`${block('us','#00d4aa',teamName,G.scoreUs)}<span class="score-colon" style="color:#444;font-size:28px;font-weight:300;margin:0 4px;align-self:flex-end;padding-bottom:4px">:</span>${block('them','#e94560','THEM',G.scoreThem)}`;
+    area.innerHTML=`${block('us','#00d4aa',teamName,G.scoreUs,false)}<span class="score-colon" style="color:#444;font-size:22px;font-weight:300;margin:0 4px">:</span>${block('them','#e94560','THEM',G.scoreThem,true)}`;
   }
   _li();
 }
@@ -8287,6 +8381,58 @@ function resetHalf(){
   saveActiveGame();
   renderG();
 }
+// Apply/clear the bench urgency classes. The pop-up cap change (30dvh → 44dvh)
+// and the phone bench-takeover both alter the pitch's flex height, and the
+// player tokens are px-projected against it — so on any threshold CROSSING
+// (not every tick) re-render the roster to re-project them. renderRoster
+// never calls back into _setBenchUrgency's callers, so this cannot recurse.
+let benchViewOverride=false;  // coach tapped FIELD during the takeover window
+function toggleBenchView(){
+  // Only reachable from the chip, which only shows inside the sub window —
+  // so takeover is simply the inverse of the override.
+  benchViewOverride=!benchViewOverride;
+  document.getElementById('s4').classList.toggle('bench-takeover',!benchViewOverride);
+  const dr=document.getElementById('benchDrawer');
+  if(dr) dr.setAttribute('aria-hidden',benchViewOverride?'true':'false');
+  _paintBenchViewBtn();
+  if(typeof renderRoster==='function') renderRoster();
+}
+function _paintBenchViewBtn(){
+  const btn=document.getElementById('benchViewBtn');
+  if(!btn) return;
+  const takeover=document.getElementById('s4').classList.contains('bench-takeover');
+  btn.innerHTML=`${ic('refresh',11)}<span>${takeover?'Field':'Bench'}</span>`;
+}
+function _setBenchUrgency(bt,soon,now){
+  const s4=document.getElementById('s4');
+  if(!s4) return;
+  // Takeover (the bottom drawer) fires at sub-NOW only (≤10s) — the brief's
+  // "sub-due: everything else recedes" moment, as the approach ramp into the
+  // relay card. The 30s sub-soon window is colour-only: the field stays
+  // untouched (SCREEN-BRIEFS s4: ambient state = the countdown dominates,
+  // field is a Must-show — a 30s-early takeover would be a fourth king on a
+  // timer). Urgency classes live on #s4 so pill styling follows the bench
+  // into the drawer. Threshold crossings re-render the roster so the bench
+  // moves between #benchTop and the drawer body.
+  if(!now) benchViewOverride=false;            // override lasts one takeover window
+  // Portrait-phone gate lives HERE too, not just in CSS: renderRoster picks
+  // the bench's container off the takeover class, so setting it where the
+  // drawer is display:none (landscape rail, tablet) would render the bench
+  // into an invisible element — an empty rail at the worst moment (v2.9.41).
+  const drawerLive=matchMedia('(max-width:767.98px) and (orientation:portrait)').matches;
+  const takeover=now&&!benchViewOverride&&drawerLive;
+  const changed=(s4.classList.contains('sub-soon')!==soon)
+    ||(s4.classList.contains('sub-now')!==now)
+    ||(s4.classList.contains('bench-takeover')!==takeover);
+  s4.classList.toggle('sub-soon',soon);
+  s4.classList.toggle('sub-now',now);
+  s4.classList.toggle('bench-takeover',takeover);
+  const dr=document.getElementById('benchDrawer');
+  if(dr) dr.setAttribute('aria-hidden',takeover?'false':'true');
+  const btn=document.getElementById('benchViewBtn');
+  if(btn){ btn.style.display=(now&&drawerLive)?'inline-flex':'none'; if(now&&drawerLive) _paintBenchViewBtn(); }
+  if(changed&&typeof renderRoster==='function') renderRoster();
+}
 // Live update of the "next sub" countdown shown next to the main game clock (same digital style, green by default, amber<30s, red<10s).
 // Hidden when there are no rolling subs (breaks-only mode, empty bench, or the time has elapsed).
 function updateClkSub(){
@@ -8295,8 +8441,17 @@ function updateClkSub(){
   // disappears when there's no upcoming sub (breaks-only, empty bench, time elapsed).
   const grp=document.getElementById('clkSubGrp');
   const ns=typeof nxtST==='function'?nxtST():null;
-  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){ if(grp) grp.style.display='none'; return; }
+  const bt=document.getElementById('benchTop');
+  if(cfg.breaksOnly||ns===null||!G.bench||!G.bench.length||(ns-G.secs)<=0){
+    if(grp) grp.style.display='none';
+    _setBenchUrgency(bt,false,false);
+    return;
+  }
   const d=ns-G.secs, m=Math.floor(d/60), s=d%60;
+  // Bench urgency mirrors the countdown thresholds — the next-on rows go amber
+  // inside 30s and pulse red inside 10s, so who's-coming-on pops right when
+  // the coach needs it (see .bp-next CSS).
+  _setBenchUrgency(bt,d<=30&&d>10,d<=10);
   if(grp) grp.style.display='flex';
   cs.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   cs.className='tmr-c tmr-sub'+(d<=10?' alert':(d<=30?' warn':''));
@@ -9573,8 +9728,12 @@ function renderRoster(){
     });
   }
 
-  // ===== BENCH (subs coming on) — rendered at the TOP =====
-  renderBenchInto(benchTop, swapMap, posForPlayer);
+  // ===== BENCH (subs coming on) — rendered at the TOP, or into the takeover
+  // drawer while it's up (v2.9.38: #benchTop is display:none in that state) =====
+  const _drawerBody=document.getElementById('benchDrawerBody');
+  if(_drawerBody) _drawerBody.innerHTML='';
+  const _takeover=document.getElementById('s4').classList.contains('bench-takeover');
+  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer);
 
   // ===== MODE HINT — what tapping a player does right now. Rendered inline as
   // a tinted chip inside the formation/strategy pill row (#modeHint span).
@@ -9758,10 +9917,17 @@ function renderBenchInto(container, swapMap, posForPlayer){
     const nextOnList=waves[0]||[];
     const laterList =G.bench.slice(sc);   // for the indexOf / first/last check below
 
+    // Reorder arrows operate on the FULL G.bench list — shared by the pill and
+    // table renderers.
+    const _benchArrow=(dir,disabled,pIdx)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
+
     function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
       const replacesP=swapMap?swapMap[pIdx]:undefined;
       const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
+      // The 170px landscape rail can't fit the full pill anatomy — compact
+      // tier: smaller badge/typography, minutes dropped (v2.9.41).
+      const rail=matchMedia('(orientation:landscape) and (max-height:500px)').matches;
       const row=document.createElement('div');
       // In injury mode (after the off-player is chosen) every bench pill is a
       // tappable "bring on" target — highlight red and wire the click.
@@ -9778,33 +9944,74 @@ function renderBenchInto(container, swapMap, posForPlayer){
       // v2.9.37 (owner): who's-coming-on is THE most important information on
       // the live game — the next-on rows step up a full tier (18px names,
       // 14px instruction, deeper padding, heavier border).
-      row.style.cssText=`display:flex;align-items:center;padding:${isNext?'12px 14px':'6px 10px'};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
+      if(isNext&&!isInjuryPick) row.className='bp-next';
+      row.style.cssText=`display:flex;align-items:center;padding:${rail?(isNext?'8px 8px':'5px 8px'):(isNext?'12px 14px':'6px 10px')};background:${bgC};border:${isNext?'2px':'1.5px'} solid ${borderC};border-radius:${isNext?'12px':'8px'};${glow}${isInjuryPick?'cursor:pointer':''}`;
       if(isInjuryPick) row.onclick=(e)=>{e.stopPropagation();tapBenchForInjury(pIdx);};
       const posBg=isNext?'#0d3320':'#2a1f0a';
       const posCol=isNext?'#00d4aa':'#f0a500';
       const posLabel=isNext&&takesPos?takesPos:'SUB';
-      // Reorder arrows operate on the FULL G.bench list, so we need the
-      // player's index in that array — not their index in the split column.
       const benchIdx=G.bench.indexOf(pIdx);
       const isFirst=benchIdx===0;
       const isLast=benchIdx===G.bench.length-1;
-      const arrowBtn=(dir,disabled)=>`<button onclick="event.stopPropagation();moveBench${dir==='up'?'Up':'Down'}(${pIdx})" ${disabled?'disabled':''} style="background:none;border:none;cursor:${disabled?'default':'pointer'};padding:2px 4px;color:${disabled?'#2a3550':'#666'};display:flex;align-items:center;justify-content:center;line-height:0" title="Move ${dir}">${ic(dir==='up'?'chevron-up':'chevron-down',14,disabled?'#2a3550':'#888')}</button>`;
       const reorderHtml=allowReorder
-        ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${arrowBtn('up',isFirst)}${arrowBtn('down',isLast)}</div>`
+        ? `<div style="display:flex;flex-direction:column;gap:0;margin-left:6px;flex-shrink:0">${_benchArrow('up',isFirst,pIdx)}${_benchArrow('down',isLast,pIdx)}</div>`
         : '';
       const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
-      const jerseyHtml=jersey?`<span style="font-size:12px;color:#5bc0de;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
+      // Neutral jersey number — the pill's only colours are the ON green and
+      // the OFF amber, so the two directions are the only things that pop.
+      const jerseyHtml=jersey?`<span style="font-size:12px;color:#7d8a9c;font-weight:800;font-variant-numeric:tabular-nums;margin-right:6px">#${jersey}</span>`:'';
+      const badge=rail?(isNext?26:16):(isNext?36:18);
       row.innerHTML=`
-        <div style="width:${isNext?'36':'18'}px;height:${isNext?'36':'18'}px;border-radius:${isNext?'8':'5'}px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'11':'8'):(isNext?'14':'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:${isNext?'10':'7'}px">${posLabel}</div>
+        <div style="width:${badge}px;height:${badge}px;border-radius:${isNext?'8':'5'}px;background:${posBg};display:flex;align-items:center;justify-content:center;font-size:${posLabel.length>2?(isNext?'11':'8'):(isNext?(rail?'12':'14'):'10')}px;font-weight:800;color:${posCol};flex-shrink:0;margin-right:${isNext?(rail?'7':'10'):'7'}px">${posLabel}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:${isNext?'18':'14'}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',14,'#00d4aa'):''}</div>
-          ${isNext&&replacesP!==undefined?`<div style="font-size:14px;color:#f0a500;font-weight:700;margin-top:3px;line-height:1.15">for ${fn(avail[replacesP])} at ${takesPos}</div>`:''}
+          <div style="font-size:${rail?(isNext?'15':'13'):(isNext?'18':'14')}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',rail?12:14,'#00d4aa'):''}</div>
+          ${isNext&&replacesP!==undefined?`<div style="font-size:${rail?'11':'14'}px;color:#f0a500;font-weight:700;margin-top:${rail?'2':'3'}px;line-height:1.2;display:flex;align-items:center;gap:3px">${ic('arrowDown',rail?11:13,'#f0a500')}<span>for ${fn(avail[replacesP])} at ${takesPos}</span></div>`:''}
         </div>
-        <div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>
+        ${rail?'':`<div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>`}
         ${reorderHtml}
       `;
       return row;
     }
+
+    // v2.9.38 (owner): the next-on wave reads as an aligned TABLE — ONE
+    // benchmark-style card (§5.0: one card, hairline rows — not N bordered
+    // pills), columns ↑ON | ↓OFF | AT, so the coach reads all incoming names
+    // straight down one column. Later waves, injury-pick mode and the
+    // landscape rail (170px — too narrow for columns) keep the pills.
+    function makeNextOnTable(list){
+      const card=document.createElement('div');
+      card.className='bp-next';
+      card.style.cssText='background:#0a1a16;border:2px solid #00d4aa;border-radius:12px;padding:2px 12px 4px;box-shadow:0 0 8px rgba(0,212,170,.3)';
+      const cols=`minmax(0,1.2fr) minmax(0,1fr) auto auto${allowReorder?' auto':''}`;
+      const tbl=document.createElement('div');
+      tbl.style.cssText=`display:grid;grid-template-columns:${cols};align-items:center;column-gap:10px`;
+      const eyebrow=(txt,col)=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.2px;color:${col};text-transform:uppercase;padding:6px 0 2px">${txt}</div>`;
+      tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'');
+      list.forEach((pIdx,ri)=>{
+        const replacesP=swapMap?swapMap[pIdx]:undefined;
+        const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
+        const mins=Math.floor(G.pt[avail[pIdx]]/60);
+        const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
+        const hairline=ri?'border-top:1px solid #16213e;':'';
+        const cell=(html,extra='')=>{const d=document.createElement('div');d.style.cssText=`${hairline}padding:9px 0;min-width:0;align-self:stretch;display:flex;align-items:center;${extra}`;d.innerHTML=html;return d;};
+        tbl.appendChild(cell(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:17px;font-weight:800;color:#00d4aa;line-height:1.15;min-width:0">${ic('arrowUp',13,'#00d4aa')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${jersey?`<span style="font-size:11px;color:#7d8a9c;font-weight:800;font-variant-numeric:tabular-nums">#${jersey}</span> `:''}${fn(avail[pIdx])}</span></span>`));
+        tbl.appendChild(cell(replacesP!==undefined
+          ?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:700;color:#f0a500;line-height:1.15;min-width:0">${ic('arrowDown',12,'#f0a500')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fn(avail[replacesP])}</span></span>`
+          :`<span style="font-size:12px;color:#7d8a9c">—</span>`));
+        tbl.appendChild(cell(`<span style="min-width:30px;height:26px;border-radius:6px;background:#0d3320;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#00d4aa;padding:0 6px">${takesPos||'SUB'}</span>`,'justify-content:flex-end'));
+        tbl.appendChild(cell(`<span style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums">${mins}′</span>`,'justify-content:flex-end'));
+        if(allowReorder){
+          const benchIdx=G.bench.indexOf(pIdx);
+          tbl.appendChild(cell(`<div style="display:flex;flex-direction:column;gap:0">${_benchArrow('up',benchIdx===0,pIdx)}${_benchArrow('down',benchIdx===G.bench.length-1,pIdx)}</div>`,'justify-content:flex-end'));
+        }
+      });
+      card.appendChild(tbl);
+      return card;
+    }
+    // Pills stay for injury-pick (rows are individual tap targets) and the
+    // landscape rail (renderer-side check — CSS can't reach this decision).
+    const _nextAsPills=(gameMode==='injury'&&injuryOffSel!==null)
+      ||matchMedia('(orientation:landscape) and (max-height:500px)').matches;
 
     // Grid container — auto-fit columns based on available width.
     // v2.7.21: bench always flows into columns instead of a long vertical stack.
@@ -9824,9 +10031,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
       nextCol.style.cssText='display:flex;flex-direction:column;gap:4px;min-width:0;margin-bottom:6px';
       const nextTag=document.createElement('div');
       nextTag.style.cssText='font-size:9px;font-weight:800;letter-spacing:1.2px;color:#00d4aa;text-transform:uppercase;padding:0 4px 2px';
-      nextTag.textContent='Next on';
+      nextTag.innerHTML='Next on<span class="bp-ready"> · get ready</span>';
       nextCol.appendChild(nextTag);
-      waves[0].forEach(pIdx=>nextCol.appendChild(makeBenchPill(pIdx,0,true)));
+      if(_nextAsPills) waves[0].forEach(pIdx=>nextCol.appendChild(makeBenchPill(pIdx,0,true)));
+      else nextCol.appendChild(makeNextOnTable(waves[0]));
       benchSection.appendChild(nextCol);
       // v2.9.37: later waves flow as compact WRAP ROWS (was stacked
       // full-width rows) — with the louder next-on tier above, vertical
@@ -9851,8 +10059,10 @@ function renderBenchInto(container, swapMap, posForPlayer){
         grid.appendChild(col);
       });
     } else {
-      // Single wave — no labels, just stack the pills
-      nextOnList.forEach((pIdx,i)=>grid.appendChild(makeBenchPill(pIdx,i,true)));
+      // Single wave — the whole bench is next-on: one table (or pills in
+      // injury-pick / landscape-rail mode), spanning the auto-fit grid.
+      if(_nextAsPills) nextOnList.forEach((pIdx,i)=>grid.appendChild(makeBenchPill(pIdx,i,true)));
+      else { const t=makeNextOnTable(nextOnList); t.style.gridColumn='1/-1'; grid.appendChild(t); }
     }
     benchSection.appendChild(grid);
     container.appendChild(benchSection);
@@ -9877,6 +10087,10 @@ function closeWhatsNew(){
   try{localStorage.setItem('subTimerLastSeenVersion',APP_VERSION);}catch(e){}
 }
 function maybeShowWhatsNew(){
+  // Embedded instances (dev-gallery tiles, or any iframe) skip the modal —
+  // it's a returning-coach announcement, and 17 copies of it wallpaper the
+  // gallery after every version bump.
+  try{ if(window.self!==window.top) return; }catch(e){ return; }
   let lastSeen=null;
   try{lastSeen=localStorage.getItem('subTimerLastSeenVersion');}catch(e){}
   if(lastSeen===APP_VERSION)return;

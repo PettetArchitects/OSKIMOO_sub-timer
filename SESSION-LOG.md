@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-08-15 (Session 8) — THE GLANCEABLE GAME SCREEN: bench urgency + drawer + table, chrome purge, landscape rebuilt; the gallery grows compare mode
+
+**State:** branch `session-8-glanceable-bench` = **v2.9.42-beta**, all green (full gate at every version v2.9.38→42). NOT deployed; v2.9.32→42 all local — sync-first per DEPLOY.md.
+
+### How this session worked (worth repeating)
+The owner iterated LIVE in the dev gallery, firing ideas mid-build; each was tested against SCREEN-BRIEFS s4 / design.md §5.0 BEFORE building. Some passed straight (bench escalation, drawer, ON|OFF|AT table), some got reshaped by the brief (takeover at ≤10s not ≤30s; window-scoped chip, not a standing toggle; nav rail LEFT not right), one was refused and redirected (score → popup behind a button: collides with the 2026-08-08 one-tap standing exception — compacted the display instead).
+
+### Shipped (one version per decision, records in docs/records/)
+| Ver | What |
+|---|---|
+| v2.9.38 | Bench escalates on the countdown's thresholds (amber ≤30s "get ready", red pulse ≤10s); portrait-phone bottom-DRAWER takeover ≤10s (overlay grammar, Field/Bench escape chip); next-on wave = ONE §5.0 card as a table ↑COMING ON \| ↓OFF \| AT; `#pitchMid` isolation contains token z-indexes; countdown digits actually go amber now (inline-colour bug); timing strip retired |
+| v2.9.39 | Score band → one slim row (84→52px), entry untouched (standing exception honoured) |
+| v2.9.40 | Pre-kickoff "announce the line-up" link retired (break-time door survives — the ritual's real home) |
+| v2.9.41 | Landscape rebuilt: `.app` was still pinned to the 430px portrait column (score under the bench rail, clocks painted off-canvas); full-width now, in-flow compact clocks, rails clear both fixed bars, rail-compact pills. Real bug: takeover class was orientation-blind → bench rendered into the hidden drawer = empty rail at ≤10s; portrait gate now in JS too |
+| v2.9.42 | Bottom nav → 64px LEFT side rail in landscape (right edge kept for SUB/START thumb zone); `body.has-tabbar` clears content, landing/wizard screens keep full width |
+
+### Dev tooling (uncommitted-workflow upgrades)
+CLAUDE.md born (session startup context) · `gallery-server.py` + "dev gallery" launch config (one-step, serves its own dir, / → gallery) · gallery COMPARE mode (`?compare=app-main.html`, `npm run baseline` from main's committed index.html — every tile main-vs-working, same driven state) · landscape live-game tile (740×360) · 11-player fixture (4-deep bench) · elements strip → own page (`?elements`, top-right switch) · iframed app instances skip the What's New modal.
+
+### Next session — pick up here
+1. **Merge the PR**, deploy per DEPLOY.md (production is at v2.9.31 — eleven versions behind).
+2. **Atlas re-shoot** — the game screen changed shape (table, drawer, slim score, no strip/announce, landscape). figma-atlas skill.
+3. **Real-device pass** on the drawer thresholds + landscape rails (gallery-tuned only).
+4. Backlog unchanged from Session 7: palette Option C stamp · Plan page benchmark pass · migration steps 4–5 · nav audit A3/A5 · `.sec-label`/`card`/`info` sweeps.
+
+---
+
 ## 2026-08-14/15 (Session 7) — THE BENCHMARK ERA: §5.0 stamped and rolled out, flat controls, nav audit lands, atlas re-shot
 
 **State:** `main` = **v2.9.37-beta**, all green (full gate at every version), eleven commits `a68d2f1…6ea7a7c`, working tree clean. NOT yet deployed to production — deploy per DEPLOY.md when ready.

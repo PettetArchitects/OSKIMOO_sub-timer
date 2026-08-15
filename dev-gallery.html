@@ -29,6 +29,14 @@
   .port iframe{width:var(--pw);height:var(--ph);border:0;display:block}
   .port{transform:scale(var(--zoom));margin-bottom:calc(var(--ph) * (var(--zoom) - 1))}
   .tile{width:calc(var(--pw) * var(--zoom))}
+  /* Compare mode (?compare=<file>): each tile carries TWO ports side by side —
+     baseline left, working APP right — driven to the identical state. The
+     wrapper divs are sized to the port's VISUAL (zoomed) width so the pair
+     sits flush at any zoom. */
+  .duo{display:flex;gap:10px;align-items:flex-start}
+  .duo > div{width:calc(var(--pw) * var(--zoom))}
+  .cap{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin:0 0 4px 2px}
+  .tile.cmp{width:calc(var(--pw) * var(--zoom) * 2 + 10px)}
   .port{position:relative}
   .grid{position:absolute;inset:0;pointer-events:none;display:none;z-index:10}
   body[data-grid="on"] .grid{display:block}
@@ -53,15 +61,16 @@
 <header>
   <h1>SUB TIMER · LIVE GALLERY</h1>
   <span class="hint">Every tile is the real app — tap, type, play. Zoom: ⌘/ctrl + scroll (pinch) on the canvas, or − / + here; click the % for fit ↔ 100%. Reset wipes storage and reboots all tiles.</span>
-  <button onclick="zoomBy(1/1.25)" title="Zoom out">−</button>
-  <button id="zoomPct" onclick="toggleZoom()" title="Toggle fit / 100%">50%</button>
-  <button onclick="zoomBy(1.25)" title="Zoom in">+</button>
-  <button onclick="toggleGrid()">Grid</button>
-  <button id="devBtn" onclick="toggleDevice()">iPad</button>
+  <button class="canvas-ctl" onclick="zoomBy(1/1.25)" title="Zoom out">−</button>
+  <button class="canvas-ctl" id="zoomPct" onclick="toggleZoom()" title="Toggle fit / 100%">50%</button>
+  <button class="canvas-ctl" onclick="zoomBy(1.25)" title="Zoom in">+</button>
+  <button class="canvas-ctl" onclick="toggleGrid()">Grid</button>
+  <button class="canvas-ctl" id="devBtn" onclick="toggleDevice()">iPad</button>
   <button onclick="resetAll()">Reset all</button>
+  <button id="modeBtn" style="border-color:var(--accent);color:var(--accent)"></button>
 </header>
 <div id="canvas"></div>
-<div style="padding:0 26px 8px"><h2 style="font-size:12px;letter-spacing:2px;color:var(--dim);margin:0">ELEMENTS · LIVE CONTROL FAMILIES — rendered by the app's own CSS</h2></div>
+<div id="elementsHead" style="padding:0 26px 8px"><h2 style="font-size:12px;letter-spacing:2px;color:var(--dim);margin:0">ELEMENTS · LIVE CONTROL FAMILIES — rendered by the app's own CSS</h2></div>
 <div id="elements" style="padding:0 26px 40px"><iframe id="elFrame" src="index.html" style="width:100%;height:560px;border:1px solid #2a3550;border-radius:14px;background:#1a1a2e"></iframe></div>
 <script>
 // Each state drives the same journey functions the test harness uses
@@ -70,6 +79,12 @@ const wait = (ms) => new Promise(r => setTimeout(r, ms));
 // ?app=<file> boots every tile + the elements strip from an alternate build
 // of the app (e.g. palette-mock.html for colour experiments).
 const APP = new URLSearchParams(location.search).get('app') || 'index.html';
+// ?compare=<file> boots every tile TWICE — that build on the left, the working
+// APP on the right, both driven to the identical state — for side-by-side fix
+// review. Generate a baseline from a branch with `npm run baseline` (writes
+// app-main.html from main's committed index.html), then open
+// dev-gallery.html?compare=app-main.html
+const COMPARE = new URLSearchParams(location.search).get('compare');
 // Drivers run via contentWindow.eval so they share the app's top-level
 // lexical scope (teams / G / currentTeam are `let` bindings — not on window).
 const ENSURE = `
@@ -77,6 +92,14 @@ const ENSURE = `
     const t = teams.find(t => t.name === 'Gallery');
     if (t) return t.id;
     newTeam(); pickSport('soccer'); pickFormat('7v7', 'soccer'); fillSampleSquad();
+    // Top the sample squad up to 11 (7 on field + 4 bench) — a 4-deep bench
+    // exercises the multi-wave bench UI (next-on tier + later-wave pills).
+    ['Harper', 'Billie'].forEach(n => {
+      if (!editingTeam.players.includes(n)) {
+        editingTeam.players.push(n);
+        editingTeam.numbers[n] = String(editingTeam.players.length);
+      }
+    });
     document.getElementById('teamNameInput').value = 'Gallery';
     saveAndBack();
     return teams[teams.length - 1].id;
@@ -105,6 +128,9 @@ const GROUPS = [
   ]],
   ['P3 · LIVE GAME', [
     ['Live game', TO_GAME],
+    // Landscape phone is its own bench layout (170px right rail; the portrait
+    // takeover drawer is inert here) — worth a permanent tile.
+    ['Live game · landscape', TO_GAME, { w: 740, h: 360 }],
   ]],
   ['P4 · BREAK', [
     ['Half-time', TO_GAME + 'advH();'],
@@ -140,11 +166,22 @@ async function boot() {
     grp.innerHTML = `<div class="grp-title">${groupTitle}</div><div class="grp-tiles"></div>`;
     canvas.appendChild(grp);
     const grpTiles = grp.querySelector('.grp-tiles');
-    for (const [name, drive] of states) {
+    for (const [name, drive, opts] of states) {
     const label = String(++n).padStart(2, '0') + ' · ' + name;
     const tile = document.createElement('div');
     tile.className = 'tile';
-    tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
+    // Per-tile viewport override (e.g. landscape phone) — the .port/.iframe
+    // sizing vars cascade from the tile element.
+    if (opts && opts.w) { tile.style.setProperty('--pw', opts.w + 'px'); tile.style.setProperty('--ph', opts.h + 'px'); }
+    if (COMPARE) {
+      tile.classList.add('cmp');
+      tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
+        <div class="duo">
+          <div><div class="cap" style="color:#f0a500">${COMPARE.replace(/^app-|\.html$/g, '')}</div><div class="port"><iframe src="${COMPARE}"></iframe></div></div>
+          <div><div class="cap" style="color:#00d4aa">working</div><div class="port"><iframe src="${APP}"></iframe></div></div>
+        </div>`;
+    } else {
+      tile.innerHTML = `<div class="label" title="Click to zoom this tile"><b>${label}</b><span class="st">booting…</span></div>
       <div class="port"><iframe src="${APP}"></iframe>
         <div class="grid">
           <div class="baseline"></div>
@@ -155,37 +192,40 @@ async function boot() {
           <div class="line amber" style="bottom:132px"><span>action row</span></div>
         </div>
       </div>`;
+    }
     grpTiles.appendChild(tile);
-    const frame = tile.querySelector('iframe');
+    const frames = [...tile.querySelectorAll('iframe')];
     const status = tile.querySelector('.st');
     tile.querySelector('.label').onclick = () => {
       toggleZoom();
       tile.scrollIntoView({ behavior: 'smooth', inline: 'center' });
     };
-    tiles.push({ drive, frame, status });
+    tiles.push({ drive, frames, status });
     }
   }
-  // Wait for every app instance to finish booting (concurrently).
-  await Promise.all(tiles.map(async (t) => {
-    await new Promise(res => { t.frame.onload = res; });
-    const w = t.frame.contentWindow;
+  // Wait for every app instance to finish booting (concurrently). In compare
+  // mode each tile carries two frames — both must be up before driving.
+  await Promise.all(tiles.flatMap(t => t.frames.map(async (f) => {
+    await new Promise(res => { f.onload = res; });
+    const w = f.contentWindow;
     for (let i = 0; i < 400 && typeof w.newTeam !== 'function'; i++) await wait(25);
     w.document.getElementById('launchSplash')?.remove();
-  }));
+  })));
   if (gen !== bootGen) return;
   // Drivers run in order, but they're cheap synchronous evals now. Each frame
   // booted in parallel (possibly against empty storage), so it re-reads
   // localStorage first to see the Gallery team an earlier driver created.
-  // Tile 01 has no driver and keeps whatever state it booted with.
+  // Tile 01 has no driver and keeps whatever state it booted with. In compare
+  // mode the SAME driver runs in both builds — identical state, two renderers.
   for (const t of tiles) {
     if (gen !== bootGen) return;
-    const w = t.frame.contentWindow;
-    try {
-      if (t.drive) w.eval('teams = loadTeams();' + t.drive);
-      t.status.textContent = 'live';
-    } catch (e) {
-      t.status.textContent = '⚠ ' + String(e.message || e).slice(0, 40);
+    let err = null;
+    for (const f of t.frames) {
+      try {
+        if (t.drive) f.contentWindow.eval('teams = loadTeams();' + t.drive);
+      } catch (e) { err = err || e; }
     }
+    t.status.textContent = err ? '⚠ ' + String(err.message || err).slice(0, 40) : 'live';
   }
   seededResolve();
   window.__galleryReady = Math.round(performance.now()); // boot-time probe (read from console/devtools)
@@ -390,8 +430,33 @@ function resetAll() {
   localStorage.clear();
   location.reload();
 }
-boot();
-bootElements();
+// ===== Two pages, one file: the tile GALLERY (default) and the ELEMENTS
+// strip (?elements) — swapped via the top-right header button. Splitting them
+// also halves each page's boot: the gallery no longer runs the elements
+// harvest, and the elements page boots one frame instead of 17.
+const ELEMENTS_ONLY = new URLSearchParams(location.search).has('elements');
+{
+  const qs = new URLSearchParams(location.search);
+  const btn = document.getElementById('modeBtn');
+  if (ELEMENTS_ONLY) {
+    qs.delete('elements');
+    btn.textContent = '← Gallery';
+    btn.onclick = () => location.href = 'dev-gallery.html' + (qs.size ? '?' + qs : '');
+    document.getElementById('canvas').style.display = 'none';
+    document.querySelectorAll('header .canvas-ctl').forEach(b => b.style.display = 'none');
+    document.querySelector('header .hint').textContent =
+      "Every live control family, rendered by the app's own CSS at true size — each specimen annotated with its selector + measured metrics.";
+    seededResolve();   // no tile drivers to race — release the harvest gate
+    bootElements();
+  } else {
+    qs.set('elements', '1');
+    btn.textContent = 'Elements →';
+    btn.onclick = () => location.href = 'dev-gallery.html?' + qs;
+    document.getElementById('elementsHead').style.display = 'none';
+    document.getElementById('elements').style.display = 'none';
+    boot();
+  }
+}
 </script>
 </body>
 </html>

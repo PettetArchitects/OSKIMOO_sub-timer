@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.37
+> Last updated: v2.9.42
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -794,6 +794,41 @@ Legacy `"Untitled Team"` rows migrate on next load.
 ### 5.7 Day-stable rotating content
 
 The daily quote uses `Math.floor(new Date().setHours(0,0,0,0)/86400000) % N` so the same quote shows all day across refreshes, advances at midnight. Same pattern is reusable for any "once-per-day" surfaced content.
+
+### 5.8 Bench urgency escalation (v2.9.38)
+
+The live game's bench escalates on the **countdown's own stamped thresholds**
+(§4.4: amber ≤ 30s, red ≤ 10s) — never on thresholds of its own:
+
+| Window | Bench behaviour |
+|---|---|
+| Ambient | Quiet pills; the countdown dominates (SCREEN-BRIEFS s4, "three kings") |
+| ≤ 30s (`#s4.sub-soon`) | **Colour only** — next-on borders amber, NEXT ON tag grows "· get ready", countdown digits amber (a v2.9.38 cascade fix: `.tmr-c.tmr-sub` used to out-order `.warn`). No layout change: a 44dvh bench expansion was tried and starved the pitch at 3 players per sub |
+| ≤ 10s (`#s4.sub-now`) | Borders red + `bpPop` pulse (scale 1 → 1.015, flat — no glow added); **portrait phone only (< 768px):** `#s4.bench-takeover` — the bench slides up as a **bottom drawer** (`#benchDrawer`) over the field; window-scoped Field/Bench chip (`#benchViewBtn`) as escape hatch. Landscape phones keep their right-rail bench — the drawer is inert there |
+| Sub fires / none upcoming | All classes clear; the drawer slides away; the relay card owns the sub-due moment |
+
+The drawer is **overlay grammar** (§2.5 / v2.9.34: elevation belongs to the
+overlay layer) — sheet radius 16 top, grab handle, scrim-grade shadow, slide
+.28s (none under `prefers-reduced-motion`). Because it overlays rather than
+re-flows, the pitch beneath never changes size while it's up; `#pitchMid`
+carries `isolation:isolate` so the tokens' depth-sort z-indexes stay beneath
+it. `renderRoster` renders the bench into the drawer body while takeover is
+active, `#benchTop` otherwise.
+
+Rationale: the takeover lands at sub-NOW, not sub-soon — the s4 brief puts
+"everything else recedes" at sub-due, and the field is an ambient Must-show; a
+30s-early takeover would be a fourth king on a timer. The chip exists only
+inside the window (s4's choice budget is over target — no standing toggle).
+Threshold crossings re-render the roster (px-projected tokens must re-read the
+pitch height when the in-flow cap changes); the escalation is driven from
+`updateClkSub` → `_setBenchUrgency`.
+
+The next-on wave renders as ONE benchmark card (§5.0 grammar — one card,
+hairline rows) laid out as a table: columns ↑ COMING ON | ↓ OFF | AT (+ minutes
++ reorder chevrons), so incoming names read straight down a column. Direction
+language is the announce screen's (§7): ↑ green = coming on, ↓ amber = coming
+off — the only two colours the bench speaks; jersey numbers are neutral.
+Injury-pick mode and the landscape rail (170px) keep per-player pills.
 
 ---
 

@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.37-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
+> App version: **v2.9.42-beta** · 0 static + 119 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -30,7 +30,7 @@
 These are emitted by `innerHTML` templates; a static parse can't say which
 screen shows them. See §C for the runtime-verified placement.
 
-- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBugReport`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `endPeriodNow`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `openMatchSettings`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendBugReport`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
+- **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `changeSubStrategy`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeBugReport`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `endPeriodNow`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendBugReport`, `sendFeedback`, `sendMagicLink`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleBenchView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
 - **`renderMatchDetail()`** → `histEditCancel`, `histEditSave`, `histEditStart`, `histToggleScorer`, `openBugReport`, `showHistory`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
 - **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`

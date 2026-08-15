@@ -22,3 +22,4 @@ flows/generated/
 test/tmp-*.mjs
 screen-audit.json
 palette-mock.html
+app-*.html
