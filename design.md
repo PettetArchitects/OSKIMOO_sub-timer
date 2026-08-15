@@ -355,7 +355,7 @@ These are the contract; ui-check may hold any of them.
 - **`--tabbar-h`** = viewport bottom − bar top, measured by `syncTabBarHeight()`
   (§3.0) — never a number
 - **DEFAULT (owner-stamped v2.9.55): the floating capsule** — inset 12px each
-  side, bottom `inset + 8px`, radius 22, 56px tall, `rgba(13,24,40,.72)`, glass +
+  side, bottom `inset + 8px`, radius 28 (= half the height: a true pill), 56px tall, `rgba(13,24,40,.72)`, glass +
   elevation shadow (overlay layer — permitted by §5.0.7). `body.tabbar-classic`
   restores the full-width 49pt HIG bar. `body.ios-noinset` (installed iPhone app
   reporting no inset) lifts it 22px off the home indicator.

@@ -121,7 +121,7 @@ body.ios-noinset.tabbar-classic #bottomTabBar{bottom:0;padding-bottom:22px}
    the default. Inset 12px each side, lifted off the home indicator, 22px radius,
    glass material + a soft elevation shadow (overlay layer — §5.0.7 permits it).
    body.tabbar-classic restores the full-width HIG bar. */
-#bottomTabBar{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding:0;border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.1);border-radius:22px;background:rgba(13,24,40,.72);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#bottomTabBar{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding:0;border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.1);border-radius:28px;background:rgba(13,24,40,.72);box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .btb-pill{height:56px;padding:0 6px}
 body.tabbar-classic #bottomTabBar{left:0;right:0;bottom:0;padding:0 0 env(safe-area-inset-bottom);border:none;border-top:1px solid rgba(255,255,255,.08);border-radius:0;background:rgba(13,24,40,.82);box-shadow:none}
 body.tabbar-classic .btb-pill{height:49px;padding:0}
@@ -10754,7 +10754,7 @@ function showUpdatePill(){
   p.setAttribute('aria-label','A new version of Sub Timer is available. Tap to reload.');
   // Sits just under the brand bar — never over the dash (SUB/START are the
   // stamped thumb zone) and never over the pitch tokens.
-  p.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(44px + env(safe-area-inset-top) + 8px);z-index:9600;min-height:44px;padding:10px 16px;border:none;border-radius:22px;background:#00d4aa;color:#06231d;font-size:13px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap';
+  p.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(44px + env(safe-area-inset-top) + 8px);z-index:9600;min-height:44px;padding:10px 16px;border:none;border-radius:28px;background:#00d4aa;color:#06231d;font-size:13px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap';
   p.onclick=()=>{ _persistOnHide(); location.reload(); };
   document.body.appendChild(p);
 }
