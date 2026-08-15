@@ -4,6 +4,10 @@ All notable changes to the app, by version. The in-app "What's New" modal pulls 
 
 ---
 
+## v2.9.56-beta — The card says where she'll really play (owner, on the deployed .55: "first sub you have Molly going into a position she is marked not to play")
+
+Paired strategy: the off-group is BOTH defenders, so both incoming kids inherit DEF slots and no pairing order (v2.9.55) can help; the post-confirm re-seat moved the not-DEF kid to a slot she plays and dropped an untagged midfielder to RB — but the card showed the **pre**-re-seat slot. Fix: `repairSeating` refactored into a pure `_reseatArr(onArr,gk)`; `getNextSwap` now simulates the swap **and the identical re-seat** and returns `finalPos` (where each incoming kid will actually play) and `moves` (kids already on the field who shift). The NEXT ON card's AT column shows the final slot and a footer names the cover ("Charlie moves to RB"), in the same words the relay card uses afterwards. Edge check: paired 2-3-1, defenders off, one incoming MID/FWD → card `LM`, `Charlie→RB`, and the sub does exactly that.
+
 ## v2.9.55-beta — Top view, turned (owner: "the top view on the pitch rotated 90 degrees from its current default")
 
 The game screen's `top` camera preset now points its offset along X instead of Z (`[0.04,1,0]`, the same direction the Plan page has used as `top-h` since v2.7.55), so the field's long axis runs across the screen with the goals left and right. The old portrait framing survives as `top-v` for programmatic use.

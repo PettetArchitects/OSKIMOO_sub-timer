@@ -725,6 +725,37 @@ const SCENARIOS = [
     chk('after the sub the DEF kid is in defence, the MID kid in midfield', /^(LB|RB)$/.test(r.after[r.defKid]) && /^(LM|CM|RM)$/.test(r.after[r.midKid]), JSON.stringify(r.after));
   }],
 
+  // v2.9.56 — owner: "first sub you have Molly going into a position she is
+  // marked not to play". Paired strategy: BOTH defenders come off together, one
+  // incoming kid is not-DEF. The card must show where she will ACTUALLY play
+  // after the re-seat (not the vacated DEF slot) and name who moves to cover.
+  ['next-on card shows the post-re-seat position and who moves', async (page, { chk }) => {
+    await bootstrap(page, { format: '7v7', name: 'Molly FC' });
+    const r = await page.evaluate(() => {
+      const nm = (i) => avail[i];
+      currentTeam.positions = {};
+      G.subStrategy = 'paired'; cfg.sc = 2;
+      const pos = getPositions();
+      const out = G.on.filter((p) => p !== G.gk);
+      const lb = out[0], rb = out[1], cm = out[3];
+      // Pair 0 = the two defenders. Bench[1] = "Molly" tagged MID+FWD (not DEF).
+      G.pairs = [{ on: [lb, rb] }, { on: [out[2], cm] }, { on: [out[4], out[5]] }]; G.pairIdx = 0;
+      const sofia = G.bench[0], molly = G.bench[1];
+      setPlayerPos(currentTeam, nm(sofia), ['DEF']);
+      setPlayerPos(currentTeam, nm(molly), ['MID', 'FWD']);
+      setPlayerPos(currentTeam, nm(cm), []);          // untagged CM can cover RB
+      const prev = getNextSwap();
+      const cardPos = prev.finalPos[molly];
+      const moves = prev.moves.map((m) => `${m.name}→${m.pos}`);
+      if (!G.running) tog(); G.secs = cfg.sf * 60; trigSub();
+      const after = {}; G.on.filter((p) => p !== G.gk).forEach((p, i) => { after[nm(p)] = pos[i + 1].label; });
+      return { molly: nm(molly), cardPos, moves, actual: after[nm(molly)], after };
+    });
+    chk('the card does NOT put the not-DEF kid in defence', !/^(LB|RB)$/.test(r.cardPos), `${r.molly} at ${r.cardPos}`);
+    chk('the card names who moves to cover', r.moves.length > 0 && r.moves.some((m) => /→(LB|RB)$/.test(m)), r.moves.join(', '));
+    chk('the card matches what the sub actually does', r.cardPos === r.actual, `card ${r.cardPos} · actual ${r.actual}`);
+  }],
+
   // v2.9.49 — P3b step 4: out of the queue. The engine never picks them, in
   // any strategy; the auto-sub still fires with whoever IS in the queue; their
   // minutes and queue place survive; the state survives a reload.

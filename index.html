@@ -4456,12 +4456,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.55-beta';
+const APP_VERSION='v2.9.56-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.56-beta':{
+    title:'The card says where she\u2019ll really play',
+    items:['When two kids come off from the same line (say both defenders) and one of the kids coming on isn\u2019t a defender, the app has always shuffled someone to cover after the sub \u2014 but the NEXT ON card was showing the vacated spot, not the shuffle. It now shows the position each kid will actually take, and names who moves to cover (\u201cCharlie moves to RB\u201d) before you tap SUB.']
+  },
   'v2.9.55-beta':{
     title:'Top view, turned',
     items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: a sub could propose putting a kid into a position she doesn\u2019t play \u2014 the incoming players are now matched to the outgoing spots by their position tags before you ever see the card.','Fixed: a player tagged for other positions could still be seated in defence at kick-off \u2014 \u201cnot a defender\u201d now counts for something: tagged-elsewhere players are the last resort for a slot, and the scarce positions are seated first.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
@@ -7890,11 +7894,16 @@ function pairByFit(off,on){
   perm(on.slice(0,n),[],[]);
   return best?[...best,...on.slice(n)]:on;
 }
-function repairSeating(){
-  if(!G||!currentTeam)return[];
+// v2.9.56: the re-seat is a PURE function over an on-field array, so the
+// NEXT ON preview can run the exact same pass the sub will run and show the
+// coach the FINAL positions (owner: "first sub you have Molly going into a
+// position she is marked not to play" — the card showed the pre-re-seat slot).
+function _reseatArr(onArr,gk){
+  const out={arr:onArr.slice(),moved:[]};
+  if(!G||!currentTeam)return out;
   const fmt=FORMATS[curFmt];
-  if(!fmt||!fmt.hasGk)return[];   // labelled-slot sports with a keeper (soccer-style)
-  const _before=[...G.on];
+  if(!fmt||!fmt.hasGk)return out;   // labelled-slot sports with a keeper (soccer-style)
+  const arr=out.arr, _before=onArr.slice();
   const pp=getPositions();
   const fits=(pIdx,posIdx)=>{
     const lbl=(pp[posIdx]&&pp[posIdx].label)||'';
@@ -7909,22 +7918,21 @@ function repairSeating(){
     return false;
   };
   // v2.9.24 (review finding): slots must follow the RENDERED mapping —
-  // outfielders in G.on order, keeper filtered out, onto positions[1..].
-  // Each entry pairs the player's index within G.on with their position index.
+  // outfielders in on-field order, keeper filtered out, onto positions[1..].
   const idxs=[];
-  {let k=0;for(let i=0;i<G.on.length;i++){ if(G.on[i]===G.gk)continue; k++; idxs.push({onI:i,posI:k}); }}
+  {let k=0;for(let i=0;i<arr.length;i++){ if(arr[i]===gk)continue; k++; idxs.push({onI:i,posI:k}); }}
   let guard=0,improved=true;
   while(improved&&guard++<24){
     improved=false;
     outer:
     for(const a of idxs){
-      if(fits(G.on[a.onI],a.posI))continue;
+      if(fits(arr[a.onI],a.posI))continue;
       for(const b of idxs){
         if(a===b)continue;
-        const before=1+(fits(G.on[b.onI],b.posI)?0:1);
-        const after=(fits(G.on[b.onI],a.posI)?0:1)+(fits(G.on[a.onI],b.posI)?0:1);
+        const before=1+(fits(arr[b.onI],b.posI)?0:1);
+        const after=(fits(arr[b.onI],a.posI)?0:1)+(fits(arr[a.onI],b.posI)?0:1);
         if(after<before){
-          const t=G.on[a.onI];G.on[a.onI]=G.on[b.onI];G.on[b.onI]=t;
+          const t=arr[a.onI];arr[a.onI]=arr[b.onI];arr[b.onI]=t;
           improved=true;break outer;
         }
       }
@@ -7932,13 +7940,18 @@ function repairSeating(){
   }
   // Who ended up in a different slot than they started this pass in? Report by
   // the slot they NOW hold — that's the instruction ("Molly, go to CM").
-  const moved=[];
   for(const {onI,posI} of idxs){
-    if(G.on[onI]===_before[onI])continue;
+    if(arr[onI]===_before[onI])continue;
     const lbl=(pp[posI]&&pp[posI].label)||'';
-    moved.push({name:avail[G.on[onI]],pos:lbl});
+    out.moved.push({pIdx:arr[onI],name:avail[arr[onI]],pos:lbl});
   }
-  return moved;
+  return out;
+}
+function repairSeating(){
+  if(!G)return[];
+  const r=_reseatArr(G.on,G.gk);
+  G.on=r.arr;
+  return r.moved;
 }
 
 function smartAssign(){
@@ -10224,7 +10237,18 @@ function getNextSwap(){
   // Build mapping: bench player -> field player they replace
   const swapMap={};// onArr[i] -> offArr[i]
   for(let i=0;i<swapC;i++) swapMap[onArr[i]]=offArr[i];
-  return {nextOff,nextOn,offArr,onArr,swapMap};
+  // v2.9.56: simulate the swap + the re-seat the sub will run, so the card can
+  // show where each incoming kid will ACTUALLY play, and who else moves.
+  const finalPos={}, moves=[];
+  try{
+    const sim=G.on.slice();
+    for(let i=0;i<swapC;i++){ const fi=sim.indexOf(offArr[i]); if(fi>=0) sim[fi]=onArr[i]; }
+    const r=_reseatArr(sim,G.gk);
+    const pp=getPositions();
+    let k=0; for(let i=0;i<r.arr.length;i++){ if(r.arr[i]===G.gk) continue; k++; if(onArr.includes(r.arr[i])) finalPos[r.arr[i]]=(pp[k]&&pp[k].label)||''; }
+    r.moved.forEach(m=>{ if(!onArr.includes(m.pIdx)) moves.push(m); });
+  }catch(e){}
+  return {nextOff,nextOn,offArr,onArr,swapMap,finalPos,moves};
 }
 
 function renderRoster(){
@@ -10249,7 +10273,7 @@ function renderRoster(){
   if(hintC) hintC.innerHTML='';
   const fmtDef=FORMATS[curFmt];
   const positions=getPositions();
-  const {nextOff,nextOn,swapMap,onArr}=getNextSwap();
+  const {nextOff,nextOn,swapMap,onArr,finalPos,moves}=getNextSwap();
 
   // Build position-to-player mapping so we can look up positions by player index
   let playerSlots=[];
@@ -10278,7 +10302,7 @@ function renderRoster(){
   const _drawerBody=document.getElementById('benchDrawerBody');
   if(_drawerBody) _drawerBody.innerHTML='';
   const _takeover=document.getElementById('s4').classList.contains('bench-takeover');
-  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer, onArr);
+  renderBenchInto(_takeover&&_drawerBody?_drawerBody:benchTop, swapMap, posForPlayer, onArr, finalPos, moves);
 
   // ===== MODE HINT — what tapping a player does right now. Rendered inline as
   // a tinted chip inside the formation/strategy pill row (#modeHint span).
@@ -10437,7 +10461,8 @@ const subInline=(isOff&&replacedBy!==null && window.innerWidth>480)?`<span class
 // Bench (subs coming on) — extracted from renderRoster so it can be rendered
 // into the TOP strip independently of the pitch. The dashboard's Undo button
 // now lives in the bottom bar, so the old in-bench "UNDO LAST SUB" pill is gone.
-function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
+function renderBenchInto(container, swapMap, posForPlayer, nextOnArr, finalPos, moves){
+  finalPos=finalPos||{}; moves=moves||[];
   if(!container || !G || !G.bench.length) return;
   {
     const benchSection=document.createElement('div');
@@ -10486,7 +10511,7 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
     function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
       const replacesP=swapMap?swapMap[pIdx]:undefined;
-      const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
+      const takesPos=finalPos[pIdx]||(replacesP!==undefined?posForPlayer[replacesP]:null);
       // The 170px landscape rail can't fit the full pill anatomy — compact
       // tier: smaller badge/typography, minutes dropped (v2.9.41).
       const rail=matchMedia('(orientation:landscape) and (max-height:500px)').matches;
@@ -10555,7 +10580,7 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
       tbl.innerHTML=eyebrow('Coming on','#00d4aa')+eyebrow('Off','#f0a500')+eyebrow('At','#7d8a9c')+eyebrow('','#7d8a9c')+(allowReorder?eyebrow('','#7d8a9c'):'')+eyebrow('','#7d8a9c');
       list.forEach((pIdx,ri)=>{
         const replacesP=swapMap?swapMap[pIdx]:undefined;
-        const takesPos=replacesP!==undefined?posForPlayer[replacesP]:null;
+        const takesPos=finalPos[pIdx]||(replacesP!==undefined?posForPlayer[replacesP]:null);
         const mins=Math.floor(G.pt[avail[pIdx]]/60);
         const jersey=currentTeam?getPlayerNumber(currentTeam,avail[pIdx]):'';
         const hairline=ri?'border-top:1px solid #16213e;':'';
@@ -10574,6 +10599,14 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr){
         tbl.appendChild(cell(_outBtn(pIdx),'justify-content:flex-end'));
       });
       card.appendChild(tbl);
+      // v2.9.56: kids already on the field who shift to make the fit — say so
+      // BEFORE the sub, in the same words the relay card will use.
+      if(moves.length){
+        const mv=document.createElement('div');
+        mv.style.cssText='border-top:1px solid #16213e;padding:7px 0 5px;font-size:12px;font-weight:700;color:#f0a500;display:flex;flex-wrap:wrap;gap:4px 12px';
+        mv.innerHTML=moves.map(m=>`<span>${fn(m.name)} <span style="color:#9fb3c8;font-weight:600">moves to</span> <span style="color:#5bc0de">${m.pos}</span></span>`).join('');
+        card.appendChild(mv);
+      }
       return card;
     }
     // Pills stay for injury-pick (rows are individual tap targets) and the
