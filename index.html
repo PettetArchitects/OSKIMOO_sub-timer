@@ -4375,12 +4375,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.49-beta';
+const APP_VERSION='v2.9.50-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.50-beta':{
+    title:'The home-screen app keeps itself current',
+    items:['Saved to your home screen, the app used to sit on whatever version it opened with — iPhone brings a home-screen app back exactly as you left it rather than reloading it, sometimes for days. Now every time you come back to it (and every ten minutes while it’s open) it quietly checks for a newer build. Between games it just refreshes itself. Mid-game it shows a small "New version — tap to update" pill instead, so it never reloads under you; your game is saved and picks up where it was.']
+  },
   'v2.9.49-beta':{
     title:'Tap, tap, confirm',
     items:['Every change you make by hand mid-game is now one visible gesture: tap a player, tap the other player, confirm. Two on the field swaps positions. One on the field and one on the bench is an interchange — that kid on, this kid off, at that spot — and it looks exactly like an ordinary sub afterwards (in the log, on the shout card, undoable). Two on the bench swap places in the queue. Nothing moves until you confirm, so a mis-tap can’t shift anyone.','Tap the keeper as either half and the card says who takes the gloves — a keeper change no longer waits for a break.','A kid who isn’t going back on — injured, had enough, getting a lift home — gets one tap on the bench: out of the queue. They grey out at the bottom, the rotation skips them, their minutes are kept, and one more tap puts them back where they were. The app doesn’t ask why.','The long-press-for-injury gesture is retired (it still works as a shortcut into the same flow, but nothing depends on it any more).']
@@ -10571,6 +10575,54 @@ else maybeShowWhatsNew(); // fire the changelog modal if this is a new version f
 function _persistOnHide(){ try{ if(typeof G!=='undefined' && G && typeof saveActiveGame==='function') saveActiveGame(); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') _persistOnHide(); });
 window.addEventListener('pagehide', _persistOnHide);
+
+// v2.9.50 (owner: "why if I save the app as a bookmark app it doesn't
+// refresh?"): a home-screen PWA on iOS is RESUMED, not reloaded — tapping the
+// icon brings back the suspended web view exactly as it was, and iOS may keep
+// it alive for days. The service worker is network-first and the CDN says
+// must-revalidate, so a real load always gets the current build — but nothing
+// ever triggered a load. So: on every resume (and every ~10 min while open),
+// HEAD index.html (cheap — no body; the SW passes non-GET straight through)
+// and compare the ETag to the one this page booted with. Changed → reload
+// now if no game is underway; mid-game show a pill (the game is in
+// localStorage, resume is safe, but the coach chooses the moment).
+let _bootEtag=null,_updateSeen=null,_lastUpdateCheck=0;
+async function _headEtag(){
+  try{
+    const r=await fetch('index.html',{method:'HEAD',cache:'no-store'});
+    if(!r.ok)return null;
+    return r.headers.get('etag')||r.headers.get('last-modified')||null;
+  }catch(e){return null;}
+}
+async function checkForUpdate(force){
+  const now=Date.now();
+  if(!force&&now-_lastUpdateCheck<60*1000)return;   // resume-storm guard; the interval below is the slow poll
+  _lastUpdateCheck=now;
+  const tag=await _headEtag();
+  if(!tag)return;
+  if(_bootEtag===null){ _bootEtag=tag; return; }
+  if(tag===_bootEtag||tag===_updateSeen)return;
+  _updateSeen=tag;
+  const midGame=!!(typeof G!=='undefined'&&G&&loadActiveGame()!==null);
+  if(!midGame){ location.reload(); return; }
+  showUpdatePill();
+}
+function showUpdatePill(){
+  if(document.getElementById('updatePill'))return;
+  const p=document.createElement('button');
+  p.id='updatePill';
+  p.type='button';
+  p.textContent='New version — tap to update';
+  p.setAttribute('aria-label','A new version of Sub Timer is available. Tap to reload.');
+  // Sits just under the brand bar — never over the dash (SUB/START are the
+  // stamped thumb zone) and never over the pitch tokens.
+  p.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(44px + env(safe-area-inset-top) + 8px);z-index:9600;min-height:44px;padding:10px 16px;border:none;border-radius:22px;background:#00d4aa;color:#06231d;font-size:13px;font-weight:800;letter-spacing:.3px;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,.45);white-space:nowrap';
+  p.onclick=()=>{ _persistOnHide(); location.reload(); };
+  document.body.appendChild(p);
+}
+window.addEventListener('load',()=>{ checkForUpdate(true); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkForUpdate(false); });
+setInterval(()=>{ if(document.visibilityState==='visible') checkForUpdate(false); },10*60*1000);
 
 document.addEventListener('click',(e)=>{
   // v2.7.9: tap outside the hamburger menu closes it.
