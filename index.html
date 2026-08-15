@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<!-- v2.9.45: viewport-fit=cover — without it iOS insets the web view BELOW the
+     status bar / above the home indicator (letterboxed in the page background)
+     AND resolves every env(safe-area-inset-*) to 0. Every safe-area calc in this
+     file was dead until this line existed. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
@@ -66,7 +70,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #appDrawerScrim.on{opacity:1;pointer-events:auto}
 .drawer-donate{margin-top:auto!important;border-top:1px solid #1e2a45;padding-top:10px!important}
 /* v2.7.82: persistent app header — hamburger LEFT, logo CENTRE, version RIGHT. Single bar across every page. */
-#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:44px;padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
+/* v2.9.45: height INCLUDES the top inset. Everything is border-box (line 37), so
+   the old height:44px + padding-top:env() crushed the 44px content row down to
+   nothing the moment viewport-fit=cover made the inset real. The bar now grows
+   into the status bar and paints it — that's the full bleed. */
+#appBrandBar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:6px;height:calc(44px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 8px 0;background:#0d1828;border-bottom:1px solid #243049;z-index:9001;backdrop-filter:blur(8px)}
 #appBrandBar .ab-center{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:8px;min-width:0;cursor:pointer;align-self:stretch;min-height:44px}
 #appBrandBar .ab-logo{width:14px;height:21px}
 #appBrandBar .ab-name{font-size:12px;font-weight:900;letter-spacing:2px;color:#eee}
@@ -81,7 +89,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btb-btn.active{color:#5bc0de;background:rgba(91,192,222,.14)}
 .btb-btn svg{width:22px;height:22px}
 /* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
-.scr{padding-top:calc(44px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom));box-sizing:border-box}
+/* v2.9.45: --tabbar-h is the MEASURED height of #bottomTabBar (syncTabBarHeight,
+   below the render code), not a guess. The hard-coded 58px was ~9px short of the
+   bar's real 67px on a phone — every screen that reserved 58px had its bottom
+   action row sitting under the bar, which is the "clipped buttons" the owner
+   photographed. The declaration here is the pre-measure fallback only. */
+:root{--tabbar-h:calc(58px + env(safe-area-inset-bottom))}
+.scr{padding-top:calc(44px + env(safe-area-inset-top));padding-bottom:var(--tabbar-h);box-sizing:border-box}
 #s4.active,#subOrderOv.active{padding-bottom:0}
 /* v2.7.80: landing pages don't show the tab bar, so they don't need the bottom reservation either. */
 #home.active,#sportPicker.active,#gradePicker.active{padding-bottom:env(safe-area-inset-bottom)}
@@ -347,15 +361,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
      be a mis-tap adjacency. The .app column clears it via body.has-tabbar
      (set by renderViewSwitcher — landing/wizard screens hide the bar and
      reclaim the edge). */
-  #bottomTabBar{top:44px!important;bottom:0!important;left:0!important;right:auto!important;width:64px;flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
+  /* v2.9.45: the rail WIDENS by the notch inset rather than padding its 64px
+     content away — landscape puts the notch on one side, and with viewport-fit=
+     cover that inset is ~59px, which would have left ~5px of usable rail. */
+  #bottomTabBar{top:calc(44px + env(safe-area-inset-top))!important;bottom:0!important;left:0!important;right:auto!important;width:calc(64px + env(safe-area-inset-left));flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
   #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important}
-  body.has-tabbar .app{padding-left:64px!important;box-sizing:border-box}
+  body.has-tabbar .app{padding-left:calc(64px + env(safe-area-inset-left))!important;box-sizing:border-box}
   /* Game screen: side rails right (bench 170 + dash 92); with the nav rail on
      the left the bottom needs only the safe inset. */
-  #s4{position:relative!important;padding-right:262px!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
-  /* Rails start under the fixed 44px brand bar — top:0 buried the rail's
+  #s4{position:relative!important;padding-right:calc(262px + env(safe-area-inset-right))!important;padding-bottom:env(safe-area-inset-bottom)!important;box-sizing:border-box!important}
+  /* Rails start under the fixed brand bar — top:0 buried the rail's
      BENCH · N / NEXT ON header behind it. */
-  #s4 #benchTop,#s4 #gameDash{top:44px!important;bottom:env(safe-area-inset-bottom)!important}
+  #s4 #benchTop,#s4 #gameDash{top:calc(44px + env(safe-area-inset-top))!important;bottom:env(safe-area-inset-bottom)!important}
   /* Header = ONE row: menu | score centred in the free width (the score band
      has been a single line since v2.9.39). */
   #s4 > div:first-child{flex-direction:row!important;justify-content:center!important;align-items:center!important;padding:4px 10px 4px 42px!important;min-height:40px!important}
@@ -394,7 +411,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   }
   /* Dashboard column — full height on the far right. */
   #s4 #gameDash{
-    position:absolute!important;right:0;top:0;bottom:0;width:92px;
+    position:absolute!important;right:0;top:0;bottom:0;width:calc(92px + env(safe-area-inset-right));
     flex-direction:column!important;
     border-top:none!important;border-left:1px solid #243049;
     padding:8px calc(8px + env(safe-area-inset-right)) 8px 8px!important;
@@ -1151,7 +1168,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        v2.9.39: band tightened to a single row (min-height 84 → 52; the v2.7.69
        84px Plan-header height-match is moot — the Plan page left the game view
        in v2.9.11). Menu button (38px @ top:6) still clears the band. -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative;min-height:52px">
+  <!-- v2.9.45 (owner: "remove the drop fill behind the scoring line"): the
+       #16213e band is gone — the score sits on the page surface, divided by the
+       hairline alone (§5.0: three surfaces, structure by rule not by fill). -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;border-bottom:1px solid #243049;flex-shrink:0;position:relative;min-height:52px">
     <button id="gameMenuBtn" onclick="toggleGameMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -1277,7 +1297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
        SUB owns its slot permanently (dimmed when it can't fire) instead of
        becoming RESET on pause — an action's position never changes meaning.
        RESET moved to the game menu (rare recovery ≠ a primary slab). -->
-  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
+  <div id="gameDash" style="display:flex;gap:6px;padding:8px 10px calc(8px + var(--tabbar-h));flex-shrink:0;border-top:1px solid #243049;background:#0f1422">
     <button class="gd-btn" id="gdUndo" onclick="undoLastSub()"></button>
     <!-- v2.9.19: the half-time override rides the clock cluster. Shown only while play is on. -->
     <button class="gd-btn gd-endhalf" id="gdEndHalf" onclick="endPeriodNow()" style="display:none"></button>
@@ -1359,9 +1379,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
   </div>
   <!-- v2.7.58/71: bottom control band shares the gameDash styling. Bottom padding
-       includes the 58px tab bar offset so the tile buttons sit ABOVE the app-wide
-       bottom tab bar instead of hiding behind it. -->
-  <div id="planControlBand" style="display:flex;gap:6px;padding:8px 10px calc(8px + 58px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)"></div>
+       clears --tabbar-h (v2.9.45: measured, was a hard-coded 58px) so the tile
+       buttons sit ABOVE the app-wide bottom tab bar instead of behind it. -->
+  <div id="planControlBand" style="display:flex;gap:6px;padding:8px 10px calc(8px + var(--tabbar-h));flex-shrink:0;border-top:1px solid #243049;background:linear-gradient(180deg,#141a2e,#0f1422)"></div>
 </div>
 
 <!-- v2.7.17: full Settings overlay — Sound, Account, Feedback, Help. Replaces the old openSettings() shortcut into the sound picker. -->
@@ -4148,6 +4168,23 @@ function showScr(id, keepClock){
 // team card; the Settings tab arrived in v2.9.23). Single body-level
 // #bottomTabBar element, position:fixed at the bottom of the viewport — a true
 // nav anchor visible on every screen (like iOS native apps).
+// v2.9.45: publish the tab bar's REAL height as --tabbar-h. The bar has no fixed
+// height — it's icon + label + padding + safe-area inset, so it lands ~67px on a
+// phone and taller again under iOS Dynamic Type. Screens used to reserve a
+// hard-coded 58px, which put their bottom action rows behind the bar (the owner's
+// clipped SUB / START photo). Measured beats guessed.
+function syncTabBarHeight(){
+  const bar=document.getElementById('bottomTabBar');
+  if(!bar) return;
+  // Hidden (landing/wizard screens) or rotated into the landscape side rail →
+  // there is no bottom bar to clear; the screens' own rules own the spacing.
+  const landscapeRail=window.matchMedia('(orientation:landscape) and (max-height:500px)').matches;
+  const h=(bar.style.display==='none'||landscapeRail)?0:bar.offsetHeight;
+  document.documentElement.style.setProperty('--tabbar-h',h+'px');
+}
+addEventListener('resize',syncTabBarHeight);
+addEventListener('orientationchange',()=>setTimeout(syncTabBarHeight,100));
+
 function renderViewSwitcher(){
   const host=document.getElementById('bottomTabBar');
   if(!host) return;
@@ -4166,7 +4203,7 @@ function renderViewSwitcher(){
   // v2.7.81: donate FAB is home-only. Show on home, hide everywhere else.
   const fab=document.getElementById('coffeeFab');
   if(fab){ const home=document.getElementById('home'); fab.style.display=(home&&home.classList.contains('active'))?'flex':'none'; }
-  if(onLanding) return;
+  if(onLanding){ syncTabBarHeight(); return; }
   // Active view = whichever .scr currently has .active. Default to Game-context.
   let active='game';
   const ov=document.getElementById('subOrderOv');
@@ -4223,6 +4260,9 @@ function renderViewSwitcher(){
   host.innerHTML=`<div class="btb-pill">
     ${tabs.map(t=>`<button class="btb-btn${t.k===active?' active':''}" onclick="switchToView('${t.k}')" aria-label="${t.label} view">${t.svg}<span>${t.label}</span></button>`).join('')}
   </div>`;
+  // The bar has its tabs now — measure it and publish --tabbar-h so every
+  // screen's bottom reservation matches the real bar (v2.9.45).
+  syncTabBarHeight();
 }
 
 function switchToView(v){
@@ -4332,12 +4372,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.44-beta';
+const APP_VERSION='v2.9.45-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.45-beta':{
+    title:'Edge to edge on iPhone',
+    items:['Installed on an iPhone, the app now fills the whole screen — the app bar paints up behind the clock and signal icons instead of the phone leaving a mismatched strip above it.','The SUB and START buttons no longer sit under the bottom tab bar. The app measures that bar for real now rather than assuming a height, so nothing gets clipped whatever your text size.','Sideways, the nav rail keeps its full width on notched phones instead of being squeezed to a sliver.','The block of colour behind the score line is gone — the score sits on the page with a single dividing line.']
+  },
   'v2.9.44-beta':{
     title:'Sign in with a password',
     items:['Cloud sign-in is now email + password \u2014 no more waiting on an emailed link. Tap Sign in, enter your email and a password (6+ characters), done. New here? Create account with the same two fields.','Forgot your password? One tap emails you a reset link; open it on your phone and choose a new one.','Already signed in and want a password on your account? \u2630 menu \u2192 Set / change password.','Continue with Google is coming to the same screen \u2014 it appears automatically once switched on.']
