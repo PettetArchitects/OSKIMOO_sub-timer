@@ -1878,7 +1878,11 @@ async function pushCloudTeam(team){
       positions:team.positions||{},
       sides:team.sides||{},
       foots:team.foots||{},
-      numbers:team.numbers||{}
+      numbers:team.numbers||{},
+      // v2.9.51: the favourite pin + the team's game defaults ride the row too —
+      // they were local-only, so a team rebuilt from the cloud lost both.
+      favorite:!!team.favorite,
+      prefs:team.prefs||{}
     };
     if(team.cloud_id){
       const{error}=await sb.from('teams').update(row).eq('id',team.cloud_id);
@@ -1972,6 +1976,14 @@ async function doInitialSync(){
           const cloudHasNums=ct.numbers&&Object.keys(ct.numbers).length>0;
           const localHasNums=existing&&existing.numbers&&Object.keys(existing.numbers).length>0;
           const numbers=cloudHasNums?ct.numbers:(localHasNums?existing.numbers:{});
+          // v2.9.51: favourite pin + game defaults. Prefs follow the richer-side
+          // rule (an old client that never pushed prefs must not wipe local ones);
+          // favourite is pushed the instant it's toggled, so cloud is fresh —
+          // fall back to local only when the column is absent (older rows).
+          const cloudHasPrefs=ct.prefs&&Object.keys(ct.prefs).length>0;
+          const localHasPrefs=existing&&existing.prefs&&Object.keys(existing.prefs).length>0;
+          const prefs=cloudHasPrefs?ct.prefs:(localHasPrefs?existing.prefs:{});
+          const favorite=(typeof ct.favorite==='boolean')?ct.favorite:!!(existing&&existing.favorite);
           // Players: same rule. If local has more players than cloud, the
           // user probably added some offline before the push landed — keep
           // them rather than clobbering with cloud's shorter list.
@@ -1984,11 +1996,11 @@ async function doInitialSync(){
           // would lose the rename, but that needs per-field timestamps to
           // fix robustly. Logged as a known limitation.
           if(existing){
-            merged.push({...existing,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,cloud_id:ct.id});
-            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||localPlayers.length>cloudPlayers.length;
+            merged.push({...existing,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite,cloud_id:ct.id});
+            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||(localHasPrefs&&!cloudHasPrefs)||localPlayers.length>cloudPlayers.length;
             if(localRicher)needsRePush.push(merged[merged.length-1]);
           }else{
-            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players,positions,sides,foots,numbers});
+            merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite});
           }
         });
         saveTeamsRaw(merged);
@@ -4375,12 +4387,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.50-beta';
+const APP_VERSION='v2.9.51-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.51-beta':{
+    title:'Favourites stick',
+    items:['The star on a team card now stays put. It was only ever saved on the phone that tapped it, and a cloud sync could drop it — it now travels with the team, along with the team’s game settings (formation, strategy, timing), so a second device shows the same defaults.']
+  },
   'v2.9.50-beta':{
     title:'The home-screen app keeps itself current',
     items:['Saved to your home screen, the app used to sit on whatever version it opened with — iPhone brings a home-screen app back exactly as you left it rather than reloading it, sometimes for days. Now every time you come back to it (and every ten minutes while it’s open) it quietly checks for a newer build. Between games it just refreshes itself. Mid-game it shows a small "New version — tap to update" pill instead, so it never reloads under you; your game is saved and picks up where it was.','And there’s a Check for updates row in the ☰ menu — it tells you you’re current, or refreshes on the spot.']
@@ -5834,7 +5850,9 @@ function toggleFavorite(id){
   if(!t) return;
   t.favorite=!t.favorite;
   saveTeams(teams);
-  if(typeof syncTeamsToCloud==='function'){ try{ syncTeamsToCloud(); }catch(e){} }
+  // v2.9.51: this used to call a syncTeamsToCloud() that never existed, so the
+  // pin never left the device — and a cloud re-sync dropped it. Push the row.
+  if(cloudUser){ try{ pushCloudTeam(t); }catch(e){} }
   renderHome();
 }
 
@@ -10615,16 +10633,28 @@ async function checkForUpdateManual(){
   const tag=await _headEtag();
   if(!tag){ toastMsg('Couldn\'t reach the server — try again when you have signal'); return; }
   if(_bootEtag===null) _bootEtag=tag;
-  if(tag===_bootEtag){ toastMsg('You\'re on the latest version ('+APP_VERSION.replace(/-beta$/,'')+')'); return; }
+  if(tag===_bootEtag){ toastMsg('You\'re on the latest version ('+APP_VERSION.replace(/-beta$/,'')+')'+_layoutDiag()); return; }
   _persistOnHide();
   location.reload();
+}
+// TEMP diag (v2.9.51, remove once the phone layout is settled): the numbers
+// behind the bars, readable from the phone with one tap.
+function _layoutDiag(){
+  try{
+    const cs=getComputedStyle(document.documentElement);
+    const probe=document.createElement('div'); probe.style.cssText='position:fixed;top:0;left:0;width:0;height:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)'; document.body.appendChild(probe);
+    const pcs=getComputedStyle(probe); const it=pcs.paddingTop, ib=pcs.paddingBottom; probe.remove();
+    const tb=document.getElementById('bottomTabBar').getBoundingClientRect();
+    const bb=document.getElementById('appBrandBar').getBoundingClientRect();
+    return ' · win '+window.innerWidth+'×'+window.innerHeight+' scr '+screen.width+'×'+screen.height+' dvh '+Math.round(document.documentElement.clientHeight)+' inT '+it+' inB '+ib+' brand '+Math.round(bb.top)+'/'+Math.round(bb.height)+' tab '+Math.round(tb.top)+'/'+Math.round(tb.height)+' vv '+(window.visualViewport?Math.round(window.visualViewport.height)+'@'+Math.round(window.visualViewport.offsetTop):'-')+' sa '+(navigator.standalone?'Y':'N');
+  }catch(e){return ' · diag err';}
 }
 // Tiny transient message — bottom-centre, above the tab bar, 2.5s.
 function toastMsg(txt){
   let t=document.getElementById('appToast');
   if(!t){ t=document.createElement('div'); t.id='appToast'; t.setAttribute('role','status'); t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar-h,58px) + 12px);z-index:9600;max-width:88vw;padding:10px 16px;border-radius:12px;background:#0d1828;border:1px solid #2a3550;color:#eee;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;transition:opacity .2s'; document.body.appendChild(t); }
   t.textContent=txt; t.style.opacity='1';
-  clearTimeout(t._tm); t._tm=setTimeout(()=>{ t.style.opacity='0'; },2500);
+  clearTimeout(t._tm); t._tm=setTimeout(()=>{ t.style.opacity='0'; },txt.length>80?12000:2500);
 }
 function showUpdatePill(){
   if(document.getElementById('updatePill'))return;
