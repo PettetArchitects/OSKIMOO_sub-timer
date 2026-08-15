@@ -525,35 +525,21 @@ const SCENARIOS = [
     await page.evaluate(() => closeAnyDrawer());
   }],
 
-  // v2.9.7 — the timing confirm strip. Timing is seasonal (per-team prefs);
-  // matchday glances a one-line summary pre-kickoff instead of walking a
-  // settings screen. The strip must vanish once the game is genuinely
-  // underway — it is setup chrome, not game chrome.
-  ['timing confirm strip — pre-kickoff glance, gone once underway', async (page, { chk }) => {
+  // v2.9.38 — the v2.9.7 timing confirm strip is RETIRED (owner: "just taking
+  // up space" — s2 "Today's game" confirms timing one step earlier in the
+  // flow). The game screen must not carry the strip in any state, and the
+  // pre-kickoff announce door it used to sit above must survive it.
+  ['pre-kickoff chrome retired — strip (v2.9.38) + announce link (v2.9.40)', async (page, { chk }) => {
     await bootstrap(page);
-    const strip = () => page.evaluate(() => {
-      const el = document.getElementById('timingStrip');
-      return { shown: !!el && el.style.display !== 'none', text: document.getElementById('timingStripTxt').textContent, hm: cfg.hm, sf: cfg.sf, sc: cfg.sc };
-    });
-    const pre = await strip();
-    chk('timing strip shown pre-kickoff', pre.shown, pre.text);
-    chk('strip carries the seasonal values', pre.text.includes(`${pre.hm}′`) && pre.text.includes(`${pre.sf}′`) && pre.text.includes(`${pre.sc} per sub`), pre.text);
-
-    // Change opens the on-demand settings screen; Apply returns to the game.
-    await page.evaluate(() => openMatchSettings());
+    const gone = await page.evaluate(() => !document.getElementById('timingStrip') && typeof window.openMatchSettings === 'undefined');
+    chk('strip markup + openMatchSettings are gone', gone);
+    const nsi = await page.evaluate(() => document.getElementById('nsi').textContent.trim());
+    chk('pre-kickoff nsi carries no announce chrome', !/announce/i.test(nsi), nsi || '(blank)');
+    // The break-time door survives — the break ritual still ends in announce.
+    await page.evaluate(() => { G.elapsedMs = 5000; G.secs = 5; advH(); });
     await page.waitForTimeout(200);
-    const onS2 = await page.evaluate(() => document.getElementById('s2').classList.contains('active'));
-    chk('Change opens settings on demand', onS2);
-    await page.evaluate(() => quickStart());
-    await page.waitForTimeout(200);
-    const back = await strip();
-    const onS4 = await page.evaluate(() => document.getElementById('s4').classList.contains('active'));
-    chk('Apply returns to the pre-kickoff review', onS4 && back.shown, back.text);
-
-    // Underway (time has accrued, paused): the strip must be gone.
-    await page.evaluate(() => { G.elapsedMs = 5000; G.secs = 5; renderG(); });
-    const mid = await strip();
-    chk('timing strip hidden once underway', !mid.shown);
+    const brk = await page.evaluate(() => document.getElementById('nsi').textContent.trim());
+    chk('break still offers the announce door', /announce it/i.test(brk), brk);
   }],
 
   // v2.9.8 — the announce view: the line-up as read to the huddle. Every
