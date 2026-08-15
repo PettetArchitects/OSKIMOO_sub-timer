@@ -1978,12 +1978,16 @@ async function doInitialSync(){
           const numbers=cloudHasNums?ct.numbers:(localHasNums?existing.numbers:{});
           // v2.9.51: favourite pin + game defaults. Prefs follow the richer-side
           // rule (an old client that never pushed prefs must not wipe local ones);
-          // favourite is pushed the instant it's toggled, so cloud is fresh —
-          // fall back to local only when the column is absent (older rows).
+          // favourite: LOCAL wins when a local copy exists (v2.9.52 — the pin the
+          // owner set on v2.9.50 was local-only, and letting the cloud's false
+          // overwrite it on the first v2.9.51 boot is exactly what 'still not
+          // sticking' looked like); the cloud only seeds a device that has no
+          // copy. Any disagreement re-pushes so the cloud catches up.
           const cloudHasPrefs=ct.prefs&&Object.keys(ct.prefs).length>0;
           const localHasPrefs=existing&&existing.prefs&&Object.keys(existing.prefs).length>0;
           const prefs=cloudHasPrefs?ct.prefs:(localHasPrefs?existing.prefs:{});
-          const favorite=(typeof ct.favorite==='boolean')?ct.favorite:!!(existing&&existing.favorite);
+          const favorite=existing?!!existing.favorite:!!ct.favorite;
+          const favDiffers=existing&&(!!existing.favorite!==!!ct.favorite);
           // Players: same rule. If local has more players than cloud, the
           // user probably added some offline before the push landed — keep
           // them rather than clobbering with cloud's shorter list.
@@ -1997,7 +2001,7 @@ async function doInitialSync(){
           // fix robustly. Logged as a known limitation.
           if(existing){
             merged.push({...existing,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite,cloud_id:ct.id});
-            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||(localHasPrefs&&!cloudHasPrefs)||localPlayers.length>cloudPlayers.length;
+            const localRicher=(localHasPos&&!cloudHasPos)||(localHasSides&&!cloudHasSides)||(localHasFoots&&!cloudHasFoots)||(localHasNums&&!cloudHasNums)||(localHasPrefs&&!cloudHasPrefs)||favDiffers||localPlayers.length>cloudPlayers.length;
             if(localRicher)needsRePush.push(merged[merged.length-1]);
           }else{
             merged.push({id:Date.now()+Math.floor(Math.random()*10000),cloud_id:ct.id,name:ct.name,format:ct.format,players,positions,sides,foots,numbers,prefs,favorite});
@@ -4387,12 +4391,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.51-beta';
+const APP_VERSION='v2.9.52-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.52-beta':{
+    title:'Favourites stick, properly',
+    items:['If you starred a team before this update, the cloud copy still said \u201cnot starred\u201d and quietly won on the next sync. The phone\u2019s own star now wins and the cloud catches up \u2014 tap the star once and it stays.']
+  },
   'v2.9.51-beta':{
     title:'Favourites stick',
     items:['The star on a team card now stays put. It was only ever saved on the phone that tapped it, and a cloud sync could drop it — it now travels with the team, along with the team’s game settings (formation, strategy, timing), so a second device shows the same defaults.']
