@@ -35,7 +35,7 @@ Legend: ✅ tested · 🟡 partial · ❌ untested (automated coverage in `test/
 
 | Feature | Behaviour | Status |
 |---|---|---|
-| Email + password sign-in (v2.9.44) | `signInWithPassword` / `signUp` / `resetPasswordForEmail`; recovery link → set-new-password mode; drawer "Set / change password" for signed-in users. JWT stored, auto-refresh by Supabase JS. Magic links retired. | ✅ |
+| Email + password sign-in (v2.9.44) | `signInWithPassword` / `signUp` / `resetPasswordForEmail`; recovery link → set-new-password mode; drawer "Set / change password" for signed-in users. JWT stored, auto-refresh by Supabase JS. Magic links retired. Google OAuth button auto-shows when the provider is enabled (reads `/auth/v1/settings`). | ✅ |
 | Auto sign-in on launch | Refresh token rehydrates `cloudUser` on page load. | ✅ |
 | Sign out | Clears local session, returns to anonymous mode. Local teams + matches stay. | ✅ |
 | Initial sync after sign-in | `doInitialSync` pulls cloud teams + matches, merges with local. | ✅ |
