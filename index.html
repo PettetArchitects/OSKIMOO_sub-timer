@@ -107,8 +107,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:stretch;padding:0 0 env(safe-area-inset-bottom);background:rgba(13,24,40,.82);border-top:1px solid rgba(255,255,255,.08);z-index:9000;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
 .btb-pill{display:flex;width:100%;max-width:520px;height:49px;background:transparent;padding:0;gap:0}
 /* v2.9.55: installed iPhone app with no reported inset — clear the home indicator. */
-body.ios-noinset #bottomTabBar{padding-bottom:22px}
-body.ios-noinset.tabbar-float #bottomTabBar{bottom:22px}
+body.ios-noinset #bottomTabBar{bottom:22px}
+body.ios-noinset.tabbar-classic #bottomTabBar{bottom:0;padding-bottom:22px}
 .btb-btn{flex:1 1 0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 2px 0;background:transparent;border:none;color:#7d8a9c;font-size:10px;font-weight:600;letter-spacing:.1px;line-height:1;cursor:pointer;font-family:inherit;min-width:0;-webkit-tap-highlight-color:transparent;transition:transform .12s ease}
 .btb-btn:active{transform:scale(.94)}
 .btb-btn.active{color:#5bc0de;background:transparent;font-weight:700}
@@ -116,9 +116,15 @@ body.ios-noinset.tabbar-float #bottomTabBar{bottom:22px}
 /* "Filled" glyph for the selected tab — our icon set is stroke-only, so the
    fill is the tint at low alpha behind a slightly heavier stroke. */
 .btb-btn.active svg{fill:currentColor;fill-opacity:.22;stroke-width:2.2}
-/* iOS-26 floating variant (unstamped). */
-body.tabbar-float #bottomTabBar{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding:0;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:rgba(13,24,40,.72);box-shadow:0 10px 30px rgba(0,0,0,.45)}
-body.tabbar-float .btb-pill{height:56px;padding:0 6px}
+/* v2.9.55 (owner-stamped: "floating in a capsule shape that unifies them all,
+   inset from the edge like a lot of modern iOS apps") — the FLOATING CAPSULE is
+   the default. Inset 12px each side, lifted off the home indicator, 22px radius,
+   glass material + a soft elevation shadow (overlay layer — §5.0.7 permits it).
+   body.tabbar-classic restores the full-width HIG bar. */
+#bottomTabBar{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 8px);padding:0;border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.1);border-radius:22px;background:rgba(13,24,40,.72);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.btb-pill{height:56px;padding:0 6px}
+body.tabbar-classic #bottomTabBar{left:0;right:0;bottom:0;padding:0 0 env(safe-area-inset-bottom);border:none;border-top:1px solid rgba(255,255,255,.08);border-radius:0;background:rgba(13,24,40,.82);box-shadow:none}
+body.tabbar-classic .btb-pill{height:49px;padding:0}
 /* Screens leave room for the fixed brand bar (top) and tab bar (bottom). s4/subOrderOv handle the bottom-band offset via their inline padding, but ALL screens push content below the top brand bar. */
 /* v2.9.45: --tabbar-h is the MEASURED height of #bottomTabBar (syncTabBarHeight,
    below the render code), not a guess. The hard-coded 58px was ~9px short of the
@@ -398,7 +404,8 @@ body.tabbar-float .btb-pill{height:56px;padding:0 6px}
   #bottomTabBar{top:calc(44px + env(safe-area-inset-top))!important;bottom:0!important;left:0!important;right:auto!important;width:calc(64px + env(safe-area-inset-left));flex-direction:column!important;justify-content:center!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important;border-top:none!important;border-right:1px solid #1e2a45}
   #bottomTabBar .btb-pill{flex-direction:column!important;gap:6px!important;height:auto!important;width:auto!important}
   #bottomTabBar .btb-btn{flex:0 0 auto!important;padding:8px 2px!important}
-  body.tabbar-float #bottomTabBar{left:0!important;right:auto!important;bottom:0!important;border-radius:0!important;box-shadow:none!important}
+  #bottomTabBar{left:0!important;right:auto!important;bottom:0!important;border-radius:0!important;box-shadow:none!important;padding:8px calc(2px) 8px calc(2px + env(safe-area-inset-left))!important}
+  .btb-pill{height:auto!important;padding:0!important}
   body.has-tabbar .app{padding-left:calc(64px + env(safe-area-inset-left))!important;box-sizing:border-box}
   /* Game screen: side rails right (bench 170 + dash 92); with the nav rail on
      the left the bottom needs only the safe inset. */
@@ -3189,6 +3196,14 @@ function getPositions(){
 
 // ===== STATE =====
 let teams=loadTeams();
+// v2.9.55 (owner: "my game settings aren't sticking"): every `teams=loadTeams()`
+// builds NEW objects, but currentTeam / editingTeam kept pointing at the OLD
+// ones — so a Settings-tab edit mutated an orphan and saveTeams(teams) wrote the
+// list without it. Re-point the live references at the fresh objects whenever
+// the list is reloaded.
+function _rebindTeamRefs(){
+  if(currentTeam){ const f=teams.find(t=>String(t.id)===String(currentTeam.id)); if(f&&f!==currentTeam){ currentTeam=f; } }
+}
 let currentTeam=null;
 let editingTeam=null;
 let sel=new Set();
@@ -4449,7 +4464,7 @@ const APP_VERSION='v2.9.55-beta';
 const CHANGELOG_DATA={
   'v2.9.55-beta':{
     title:'Top view, turned',
-    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
+    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The bottom tabs are now a floating capsule, inset from the edges \u2014 the modern iOS shape.','Fixed: changing a team\u2019s game settings could quietly not stick if you\u2019d been back to the home screen first. They save every time now.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
   },
   'v2.9.54-beta':{
     title:'It tells you when Safari is zooming it',
@@ -5762,7 +5777,7 @@ function abandonGame(){
   renderHome();
 }
 function renderHome(){
-  teams=loadTeams();
+  teams=loadTeams(); _rebindTeamRefs();
   renderAuthChip();
   const c=document.getElementById('teamList');
   c.innerHTML='';
@@ -6049,7 +6064,7 @@ function importSharedTeam(payload){
   if(t){ Object.assign(t,fields); }
   else { t=Object.assign({id:Date.now(),sharedFrom:payload.sid},fields); all.push(t); }
   saveTeamsRaw(all);
-  teams=loadTeams();
+  teams=loadTeams(); _rebindTeamRefs();
   return teams.find(x=>x.id===t.id)||t;
 }
 // Boot-time hook: if the app was opened via a share link, import the team
@@ -6525,6 +6540,9 @@ function renderTeamSettings(){
 let _tsCloudTimer=null,_tsTickTimer=null;
 function saveTeamSettings(){
   if(!currentTeam) return;
+  // If the list was reloaded under us, make sure the object we edited is the
+  // one that gets written (v2.9.55).
+  if(!teams.includes(currentTeam)){ const i=teams.findIndex(t=>String(t.id)===String(currentTeam.id)); if(i>=0) teams[i]=currentTeam; }
   saveTeams(teams);
   if(cloudUser){ clearTimeout(_tsCloudTimer); _tsCloudTimer=setTimeout(()=>{ if(currentTeam) pushCloudTeam(currentTeam); },800); }
   // v2.9.47 (owner: "I updated the sub time to even recommended 7mins but it

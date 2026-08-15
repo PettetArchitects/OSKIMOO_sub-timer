@@ -354,9 +354,11 @@ These are the contract; ui-check may hold any of them.
   tab-bar pattern — an app decision, kept)
 - **`--tabbar-h`** = viewport bottom − bar top, measured by `syncTabBarHeight()`
   (§3.0) — never a number
-- Optional **iOS-26 floating pill** (`body.tabbar-float`): inset 12px, bottom
-  `inset + 8px`, radius 22, 56px tall, `rgba(13,24,40,.72)`, elevation shadow
-  (overlay layer — permitted by §5.0.7). **Unstamped**; classic is the default.
+- **DEFAULT (owner-stamped v2.9.55): the floating capsule** — inset 12px each
+  side, bottom `inset + 8px`, radius 22, 56px tall, `rgba(13,24,40,.72)`, glass +
+  elevation shadow (overlay layer — permitted by §5.0.7). `body.tabbar-classic`
+  restores the full-width 49pt HIG bar. `body.ios-noinset` (installed iPhone app
+  reporting no inset) lifts it 22px off the home indicator.
 
 ### 3.3 Page header (`.hdr`) — REMOVED from content screens (v2.9.28)
 
