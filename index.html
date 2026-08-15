@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- v2.9.45: viewport-fit=cover — without it iOS insets the web view BELOW the
-     status bar / above the home indicator (letterboxed in the page background)
-     AND resolves every env(safe-area-inset-*) to 0. Every safe-area calc in this
-     file was dead until this line existed. -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- v2.9.55: viewport-fit=cover REMOVED again (added v2.9.45). On the owner's
+     iPhone it triggered the standalone web-app viewport bug — the web view is
+     laid out as if Safari's bottom toolbar were present, so a ~59pt dead band
+     appears under the tab bar and the whole page is scaled to fit
+     (win 506 on a 430pt screen). Without cover: env(safe-area-inset-*) is 0
+     and iOS insets the layout under the status bar — the strip it leaves is
+     painted by the ROOT background, which is set to the brand-bar colour below,
+     so it reads as part of the bar. That is the "full bleed" the owner wanted,
+     without the band. The safe-area calcs stay (harmless at 0). -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
@@ -40,6 +45,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100dvh;margin:0;padding:0;overflow:hidden}
+/* v2.9.55: the root paints the strip iOS leaves under the status bar (and any
+   overscroll) — brand-bar colour, so the bar appears to run edge to edge. */
+html{background:#0d1828}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#eee;-webkit-user-select:none;user-select:none;display:flex;align-items:center;justify-content:center}
 
 /* Layout */
@@ -3863,7 +3871,11 @@ const afl3d={
     // Presets define only a DIRECTION (elevation/azimuth); the distance is auto-fitted so the oval fills the box.
     // top is nudged off the exact zenith (z) so the length axis stays vertical and OrbitControls keeps a defined azimuth (no gimbal flip).
     // v2.7.55: 'top-h' is top-down with the offset along X instead of Z — that flips screen-up to point along world X, making the field's long axis (Z) appear horizontal. Used by the Plan page in CUSTOM mode for a tactical board view.
-    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0,1,0.04], 'top-h':[0.04,1,0]}[name]||[0,0.64,1];
+    // v2.9.55 (owner): the game screen's Top view is rotated 90° — the field's
+    // long axis runs ACROSS the screen (same framing as the Plan page's tactical
+    // board), not down it. 'top-v' keeps the old portrait framing for anyone who
+    // needs it programmatically.
+    const P={behind:[0,0.64,1], side:[1,0.85,0], top:[0.04,1,0], 'top-h':[0.04,1,0], 'top-v':[0,1,0.04]}[name]||[0,0.64,1];
     const dir=new THREE.Vector3(P[0],P[1],P[2]).normalize();
     // Hard-reset the orbit frame: restore up, place camera along dir, re-aim. Without the up reset a prior near-vertical view leaves the azimuth rotated.
     this.camera.up.set(0,1,0);
@@ -4416,12 +4428,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.54-beta';
+const APP_VERSION='v2.9.55-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.55-beta':{
+    title:'Top view, turned',
+    items:['The Top view of the pitch is rotated 90\u00b0 \u2014 the field now runs across the screen, goals left and right, like a tactics board.','The dead band under the bottom tabs on iPhone is gone \u2014 it was iOS reserving space for a Safari toolbar that isn\u2019t there, triggered by a setting added in v2.9.45. That setting is off again; the top bar still runs up behind the clock and signal icons.']
+  },
   'v2.9.54-beta':{
     title:'It tells you when Safari is zooming it',
     items:['If Safari\u2019s page zoom for this site isn\u2019t 100% (the aA button in the address bar), the home-screen app inherits it \u2014 everything shrinks, the bars sit oddly and a dead band appears under the tabs. Nothing in the app can override that, so it now notices and tells you how to fix it: Safari \u2192 aA \u2192 100%.']
