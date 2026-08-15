@@ -4416,12 +4416,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.53-beta';
+const APP_VERSION='v2.9.54-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.54-beta':{
+    title:'It tells you when Safari is zooming it',
+    items:['If Safari\u2019s page zoom for this site isn\u2019t 100% (the aA button in the address bar), the home-screen app inherits it \u2014 everything shrinks, the bars sit oddly and a dead band appears under the tabs. Nothing in the app can override that, so it now notices and tells you how to fix it: Safari \u2192 aA \u2192 100%.']
+  },
   'v2.9.53-beta':{
     title:'The tab bar goes native',
     items:['The bottom tabs are rebuilt to Apple\u2019s own tab-bar spec \u2014 the same proportions, spacing and behaviour as the bars in Phone, Clock and Photos: 49pt tall, tabs spread evenly across the width, the current tab shows as a filled glyph in the tint colour with no box behind it, and the bar is a translucent \u201cglass\u201d layer over the page. Your thumb already knows this bar.','It\u2019s also a touch shorter, so the game screen gets a little more room.','Fixed: a faint dark shading down the left edge of every screen \u2014 it was the shadow of the closed side menu leaking onto the page.']
@@ -10670,28 +10674,16 @@ async function checkForUpdateManual(){
   const tag=await _headEtag();
   if(!tag){ toastMsg('Couldn\'t reach the server — try again when you have signal'); return; }
   if(_bootEtag===null) _bootEtag=tag;
-  if(tag===_bootEtag){ toastMsg('You\'re on the latest version ('+APP_VERSION.replace(/-beta$/,'')+')'+_layoutDiag()); return; }
+  if(tag===_bootEtag){ toastMsg('You\'re on the latest version ('+APP_VERSION.replace(/-beta$/,'')+')'); return; }
   _persistOnHide();
   location.reload();
-}
-// TEMP diag (v2.9.51, remove once the phone layout is settled): the numbers
-// behind the bars, readable from the phone with one tap.
-function _layoutDiag(){
-  try{
-    const cs=getComputedStyle(document.documentElement);
-    const probe=document.createElement('div'); probe.style.cssText='position:fixed;top:0;left:0;width:0;height:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)'; document.body.appendChild(probe);
-    const pcs=getComputedStyle(probe); const it=pcs.paddingTop, ib=pcs.paddingBottom; probe.remove();
-    const tb=document.getElementById('bottomTabBar').getBoundingClientRect();
-    const bb=document.getElementById('appBrandBar').getBoundingClientRect();
-    return ' · win '+window.innerWidth+'×'+window.innerHeight+' scr '+screen.width+'×'+screen.height+' dvh '+Math.round(document.documentElement.clientHeight)+' inT '+it+' inB '+ib+' brand '+Math.round(bb.top)+'/'+Math.round(bb.height)+' tab '+Math.round(tb.top)+'/'+Math.round(tb.height)+' vv '+(window.visualViewport?Math.round(window.visualViewport.height)+'@'+Math.round(window.visualViewport.offsetTop):'-')+' sa '+(navigator.standalone?'Y':'N');
-  }catch(e){return ' · diag err';}
 }
 // Tiny transient message — bottom-centre, above the tab bar, 2.5s.
 function toastMsg(txt){
   let t=document.getElementById('appToast');
   if(!t){ t=document.createElement('div'); t.id='appToast'; t.setAttribute('role','status'); t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar-h,58px) + 12px);z-index:9600;max-width:88vw;padding:10px 16px;border-radius:12px;background:#0d1828;border:1px solid #2a3550;color:#eee;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;transition:opacity .2s'; document.body.appendChild(t); }
   t.textContent=txt; t.style.opacity='1';
-  clearTimeout(t._tm); t._tm=setTimeout(()=>{ t.style.opacity='0'; },txt.length>80?12000:2500);
+  clearTimeout(t._tm); t._tm=setTimeout(()=>{ t.style.opacity='0'; },2500);
 }
 function showUpdatePill(){
   if(document.getElementById('updatePill'))return;
@@ -10706,7 +10698,31 @@ function showUpdatePill(){
   p.onclick=()=>{ _persistOnHide(); location.reload(); };
   document.body.appendChild(p);
 }
-window.addEventListener('load',()=>{ checkForUpdate(true); });
+// v2.9.54 (owner's phone: "the tab bar is still too high" — the diag read
+// win 506 vs scr 430, i.e. Safari PAGE ZOOM at 85% for this site, which the
+// home-screen app inherits): iOS renders the whole page scaled, so bars sit
+// low/high and a dead band appears under the tab bar. CSS can't override it —
+// but we can NOTICE it and say so, once per session, with the fix.
+function checkPageZoom(){
+  try{
+    if(!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+    if(!screen.width||!window.innerWidth) return;
+    // Portrait only, and only when no keyboard/split view could be skewing it.
+    if(window.innerWidth>window.innerHeight) return;
+    const zoom=screen.width/window.innerWidth;
+    if(Math.abs(zoom-1)<0.04) return;
+    if(sessionStorage.getItem('zoomWarned')) return;
+    sessionStorage.setItem('zoomWarned','1');
+    const pct=Math.round(zoom*100);
+    const el=document.createElement('div');
+    el.setAttribute('role','status');
+    el.style.cssText='position:fixed;left:12px;right:12px;top:calc(44px + env(safe-area-inset-top) + 8px);z-index:9600;padding:12px 14px;border-radius:12px;background:#0d1828;border:1px solid #2a3550;color:#eee;font-size:13px;font-weight:600;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+    el.innerHTML='<div style="font-weight:800;color:#f0a500;margin-bottom:4px">Safari page zoom is at '+pct+'% for this site</div><div style="color:#9fb3c8">That squeezes the whole app. Fix: open sub-timer.vercel.app in Safari → tap <b style="color:#eee">aA</b> in the address bar → <b style="color:#eee">100%</b>. Then reopen this app.</div><button class="hit44" style="position:absolute;top:2px;right:2px;color:#7d8a9c" aria-label="Dismiss" onclick="this.parentNode.remove()">✕</button>';
+    document.body.appendChild(el);
+    setTimeout(()=>{ if(el.parentNode) el.remove(); },20000);
+  }catch(e){}
+}
+window.addEventListener('load',()=>{ checkForUpdate(true); setTimeout(checkPageZoom,800); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkForUpdate(false); });
 setInterval(()=>{ if(document.visibilityState==='visible') checkForUpdate(false); },10*60*1000);
 
