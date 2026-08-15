@@ -12,6 +12,30 @@
 
 ---
 
+## 2026-08-15 (Session 9) — Field bug from the owner's phone: the ☰ drawer was dead on iPhone (v2.9.43)
+
+**State:** PR #74 `session-9 → main` = **v2.9.43-beta**, gate green. Production was already at v2.9.42 at session start (Session 8's PR #73 had merged + deployed).
+
+### What happened
+Owner, on the phone at session start: "sign in via cloud link isn't working" → "it just doesn't pop up" → "the main page sign in works". Nothing reproduced in Chromium (browser pane, iPhone-13 touch emulation, gallery) — all opened the modal. Auth logs showed **zero** requests from the phone. Break-through: a temporary `?diag=1` **on-screen log strip** in the local build, served to the phone over LAN (`http://<mac-ip>:8002/index.html?diag=1`); the owner's screenshot showed the ☰ → Sign in tap landing on `#appDrawerScrim`, not the button. **WebKit hit-tests a `position:fixed` element nested in an overflow scroller below a body-level sibling** even though it paints above it. Fix: `hoistDrawers()` moves the three drawers to body after the scrim. Owner re-tested on the phone: modal opens. Record: `docs/records/v2.9.43-drawer-webkit/`; design.md §3.4 carries the placement rule.
+
+### Lessons (→ LESSONS.md candidates)
+- **Chromium ≠ WebKit for hit-testing.** No desktop test, the browser pane or the gallery can catch a WebKit hit-test bug; the gallery served over LAN to the phone + an on-screen diag strip is the fastest reproduction rig we have. (Playwright WebKit isn't installed; iOS Simulator needs full Xcode.)
+- The Session-5 "magic link verified — localhost redirect explained" note was a masked bug: GoTrue's `"referer":"http://localhost:3000"` in auth logs means the requested `redirect_to` was NOT allow-listed and it fell back to the project Site URL.
+
+### Owner actions outstanding
+1. **Supabase → Authentication → URL Configuration:** Site URL `https://sub-timer.vercel.app`; Redirect URLs add `https://sub-timer.vercel.app/**` (+ `http://localhost:8001/**`, `http://localhost:8002/**`). Until then every magic link points at localhost:3000.
+2. Merge PR #74 → deploys.
+3. iOS PWA caveat: a magic link opened from Mail lands in Safari, not the home-screen app — if the installed app is the daily driver, an OTP **code** flow (`{{ .Token }}` in the email template + a code field) is the fix; unbuilt, unstamped.
+
+### Next session — pick up here
+1. Merge #74 if not merged; confirm production = v2.9.43.
+2. Session 8's list still stands: atlas re-shoot (now also v2.9.43-neutral) · real-device pass on drawer thresholds + landscape rails (the LAN rig makes this easy now) · palette Option C stamp · Plan page benchmark pass · migration 4–5 · nav audit A3/A5.
+3. Small: landing CTA paints through the sign-in modal backdrop over Cancel (seen in Chromium 375×812) — cosmetic, unfiled.
+4. Consider `npx playwright install webkit` + a WebKit lane in the smoke harness for the drawer/overlay hit-tests.
+
+---
+
 ## 2026-08-15 (Session 8) — THE GLANCEABLE GAME SCREEN: bench urgency + drawer + table, chrome purge, landscape rebuilt; the gallery grows compare mode
 
 **State:** branch `session-8-glanceable-bench` = **v2.9.42-beta**, all green (full gate at every version v2.9.38→42). NOT deployed; v2.9.32→42 all local — sync-first per DEPLOY.md.

@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.42
+> Last updated: v2.9.44
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -333,6 +333,7 @@ The app has two **persistent anchors** that frame every screen.
 - Background `var(--surface-card-2)` with 1px right border `var(--border-emphasized)` + 4px×24px ambient shadow
 - Padding top accounts for brand bar (`calc(48px + env(safe-area-inset-top) + 12px)`)
 - Companion **scrim** `#appDrawerScrim` — `position:fixed inset:0`, 55% black, z-index 9400. Tap to close.
+- **DOM placement rule (v2.9.43):** the three drawers live at **body level, after the scrim** — `hoistDrawers()` moves them there before the first open. They must NOT sit inside a screen's `.scr` scroll container: WebKit hit-tests a fixed element nested in an overflow scroller below the body-level scrim (taps land on the scrim → drawer closes, nothing else fires) even though it paints above it. Chromium is unaffected, so only a real iPhone catches a regression.
 - Triggered by `#globalMenuBtn` via `toggleGlobalMenu()` which routes to the active screen's drawer (home / game / plan)
 - **Drawer body**: vertical list of menu items, each `13px 14px` padding, 15px label, leading icon
 - **Drawer footer** (`.drawer-donate`): pinned to the bottom via `margin-top:auto`, divided from the body by a 1px top border. Always contains Send feedback + Donate (amber pill).
@@ -366,6 +367,7 @@ by screen as callers migrate, never in one sweep.
 | `.ui-btn--primary` | The one action a screen exists for. At most one per view. | 48px min |
 | `.ui-btn--secondary` | Everything supporting. Takes a tone modifier for meaning. | 44px min |
 | `.ui-btn--ghost` | Menu and drawer rows. Full width, left-aligned. | 48px min |
+| `.ui-btn--link` | Text-only tertiary action inside a dialog (Forgot password? / Cancel). No fill, no border; 44px hit area. v2.9.44 | 44px min |
 | `.ui-btn--danger` | Loses data or ends something. | 44px min |
 | `.ui-chip` | Compact, inline with content — tags, toggles, scores. | — |
 | `.ui-chip--card` | Block chip with a title + description line (strategy cards). | full width |
