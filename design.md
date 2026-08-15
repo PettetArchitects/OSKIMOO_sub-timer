@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.53
+> Last updated: v2.9.55
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -290,7 +290,15 @@ The app has two **persistent anchors** that frame every screen.
 
 ### 3.0 Safe areas — the two rules (v2.9.45)
 
-**Rule 1: `viewport-fit=cover` is load-bearing.** It must stay in the viewport
+**Rule 1 (REVERSED v2.9.55): `viewport-fit=cover` is OFF, deliberately.** On the
+owner's iPhone it triggered the standalone web-app viewport bug (layout computed
+as if Safari's bottom toolbar were present → a ~59pt dead band under the tab bar,
+page scaled to fit; Apple forums 799216). Full-bleed is achieved instead by
+`html{background:#0d1828}` — the strip iOS leaves under the status bar is painted
+by the root background in the brand-bar colour. Every `env()` is 0; the inset
+maths below stays as insurance. Do NOT re-add cover without a real-device check.
+
+Original rule, kept for the record: `viewport-fit=cover` must stay in the viewport
 meta. Without it iOS insets the web view *below* the status bar and *above* the
 home indicator — the app is letterboxed in the page background (no full bleed) —
 **and every `env(safe-area-inset-*)` resolves to 0**, so every safe-area calc in
@@ -346,9 +354,11 @@ These are the contract; ui-check may hold any of them.
   tab-bar pattern — an app decision, kept)
 - **`--tabbar-h`** = viewport bottom − bar top, measured by `syncTabBarHeight()`
   (§3.0) — never a number
-- Optional **iOS-26 floating pill** (`body.tabbar-float`): inset 12px, bottom
-  `inset + 8px`, radius 22, 56px tall, `rgba(13,24,40,.72)`, elevation shadow
-  (overlay layer — permitted by §5.0.7). **Unstamped**; classic is the default.
+- **DEFAULT (owner-stamped v2.9.55): the floating capsule** — inset 12px each
+  side, bottom `inset + 8px`, radius 28 (= half the height: a true pill), 56px tall, `rgba(13,24,40,.72)`, glass +
+  elevation shadow (overlay layer — permitted by §5.0.7). `body.tabbar-classic`
+  restores the full-width 49pt HIG bar. `body.ios-noinset` (installed iPhone app
+  reporting no inset) lifts it 22px off the home indicator.
 
 ### 3.3 Page header (`.hdr`) — REMOVED from content screens (v2.9.28)
 
