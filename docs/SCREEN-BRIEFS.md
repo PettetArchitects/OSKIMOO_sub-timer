@@ -87,17 +87,6 @@ one question: *which mode does this belong to?*
 **Boundaries:** tags survive rename, are removed on delete (P1.5); saved team round-trips through edit→save→reopen (P1 ✓); no game-defaults controls here — those belong to `teamSettings`.
 **Choice budget:** 8
 
-## Team settings · `teamSettings`
-
-**Mode:** PLAN
-**Purpose:** The team's **seasonal game defaults** — formation, sub strategy, timing (period length, sub cadence, players per sub) and the breaks-only rule — on their own bottom-bar tab (owner directive, 2026-08-09: game settings leave the roster editor). Set once midweek; every matchday then goes straight to the pitch (owner, 2026-08-08: timing is seasonal, not matchday). Formerly the "Game Settings" block inside `editTeam`.
-**Serves:** P1.6, P2.3
-**Primary action:** tap any control — every change lands instantly via `saveTeamSettings()` (live-save + a quiet Saved tick; there is no Save button to forget).
-**Secondary:** navigation is the bottom tabs (v2.9.23: header back-links dropped from tab-reachable screens; the brand-bar logo goes Home)
-**Must show:** the current value of every default; what each sub strategy means in one line; the Saved tick after a change.
-**Boundaries:** live-save — leaving the screen can never lose a change; values clamp to valid ranges; changes touch the team's defaults (and the pre-game working config), never a game already underway — the next game picks them up; formation list is scoped to the team's format and hidden for fixed-position sports (netball); quarter sports read "Quarter length".
-**Choice budget:** 13 *(formation tiles + strategy cards are each one semantic decision — shape, stance — plus three steppers, the breaks-only toggle and back)*
-
 ## Squad select · `s1`
 
 **Mode:** PLAY
@@ -175,9 +164,12 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 
 ## Plan page · `subOrderOv`
 
+*(v2.9.60: the ONE Plan page — Team settings merged in.)*
+
 **Mode:** PLAN
-**Purpose:** See and shape the whole game's sub schedule — **a midweek planning tool, full stop** (owner, 2026-08-08: planning happens during the week or is preset; and the Plan page does NOT live on the game view — a second cockpit inside the live game complicates it). Mid-game doubt is answered by the game screen's own ambient info (countdown, coming swaps, bench rest) — never by dropping the coach into build mode. Preview never lies about the live game.
-**Reached from (v2.9.11):** team card → **Plan ahead** (`teamActionPlanAhead()`) — the only door. The Plan tab, the game drawer's Sub Plan row, and the break-hint's "set next line-up" link are all gone from the live game. While the Plan page is open the tab bar shows no active tab (exit via Game/Team/Roster). `switchToView('plan')` survives as the programmatic route only (tests, replay flows).
+**Defaults card (top, formerly the `teamSettings` screen — THE §5.0 BENCHMARK):** the team's **seasonal game defaults** — formation, sub strategy, timing (period length, sub cadence, players per sub) and the breaks-only rule — live-saved on every tap via `saveTeamSettings()` (Saved tick, no Save button); 600px measure, one `.set-group` card per section, solid-fill selection, flat. Since v2.9.47 a change reaches a game already underway; since v2.9.60 it re-plans the game below on the spot. Choice budget for the card: 13 *(formation tiles + strategy rows are one semantic decision each, plus three steppers, breaks-only)*.
+**Purpose:** ONE page for the team's defaults and this game's plan. Below the card — see and shape the whole game's sub schedule — **a midweek planning tool, full stop** (owner, 2026-08-08: planning happens during the week or is preset; and the Plan page does NOT live on the game view — a second cockpit inside the live game complicates it). Mid-game doubt is answered by the game screen's own ambient info (countdown, coming swaps, bench rest) — never by dropping the coach into build mode. Preview never lies about the live game.
+**Reached from:** the **Plan tab** (v2.9.59, owner — reverses v2.9.11 now that the page shows every swap WITH positions), team card → Plan ahead, `switchToView('settings')` (routes here since v2.9.60). Without a game the card shows with a "set today's squad" note; with a game the plan appears.
 **Decision (2026-08-08, follows the stamped s4 break ritual):** break line-up editing lives on the **game screen's break state, on the field** — tap-swap positions, keeper pick, formation change, then the announce view — not on the Plan page. The field at a break shows the proposed next-period line-up as reviewable defaults; the announce view is the exit. The engine guarantee "plan-at-break describes only the upcoming period" (P4.4b) still holds and stays gated for the programmatic/midweek route.
 **Scenarios (owner, 2026-08-08):** the Plan-mode object is the **game-day scenario** — multiple named plans per team ("full squad", "only 9", "vs Wanderers"), built midweek, pulled up in Play mode. The saved-profile machinery (P6) already does the storage/apply; the gaps are identity (name plans as scenarios, not profiles) and **smart offer** — squad select knows the headcount (and, with the opposition log, the opponent) and should propose the matching scenario rather than make the coach browse.
 **Serves:** P6 (all), P4.4b
@@ -185,7 +177,7 @@ squad → line-up/keeper (+ glance) → announce → kick off.
 **Secondary:** `planScrubStep()` / `planScrubLive()` preview, `setPlanFormation()`, `planClearField()` / pick starters, `soAdj()` steppers, `saveCurrentPlanPrompt()` (menu), `applyPlanProfile()` / `pickSquadPlan()`, plan drawer
 **Must show:** the timeline of swaps at their real times, projected minutes per player, LIVE vs preview state, which period is being described.
 **Boundaries:** pitch + chips + minutes stay in sync (P6.2); at a break it describes the upcoming period only (P4.4b ✓); game-day edits never corrupt the saved profile (P6.5 ✓).
-**Choice budget:** 9 *(current UIMAP count: 12)*
+**Choice budget:** 9 for the game section *(current UIMAP count: 12)* + 13 for the defaults card
 
 ## Summary · `s5`
 
