@@ -106,6 +106,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    inset "glass" pill (same items, same rules). Unstamped — classic is default. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:stretch;padding:0 0 env(safe-area-inset-bottom);background:rgba(13,24,40,.82);border-top:1px solid rgba(255,255,255,.08);z-index:9000;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
 .btb-pill{display:flex;width:100%;max-width:520px;height:49px;background:transparent;padding:0;gap:0}
+/* v2.9.61 (owner: the Positions page's photo / sample / bulk-tag boxes crowd out
+   the list once a team exists): body.editor-has-players collapses them — the
+   photo tile becomes a quiet one-line action, sample squad hides, bulk-tag keeps
+   only its chip row. A new empty team keeps the full guidance. */
+body.editor-has-players #rosterImportBtn{padding:9px 12px!important;background:none!important;border:1px solid #2a3550!important;border-radius:10px!important;margin-bottom:8px!important;gap:8px!important}
+body.editor-has-players #rosterImportBtn i,body.editor-has-players #rosterImportBtn svg{width:16px!important;height:16px!important}
+body.editor-has-players #rosterImportBtn span span:first-child{font-size:12px!important;color:#9fb3c8!important;font-weight:700!important}
+body.editor-has-players #rosterImportBtn span span:last-child{display:none!important}
+body.editor-has-players #sampleSquadBtn{display:none!important}
+body.editor-has-players #posTagsHint{background:none!important;border:none!important;padding:0 2px 6px!important;margin-bottom:6px!important}
+body.editor-has-players #posTagsHint .bulk-prose{display:none}
+/* v2.9.61 (owner: "the player detail pills better laid out"): each player is one
+   block — name row, then an aligned two-column grid (72px label column) for
+   Positions · Side / Foot / ★. Hairline between players (§5.0: rows by rule,
+   not a box per row); segmented pickers get a real 32px hit height. */
+/* v2.9.61 (owner-stamped: "put each player's attributes into a unified card"):
+   ONE card per player — name row + the aligned attribute grid inside it. (§5.0's
+   'no box per row' is about settings rows; a player is an entity — owner call.) */
+.pe-block{padding:10px 12px 12px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;margin-bottom:10px}
+.pe-block .player-edit-row .input{background:#13203a}
+.pe-grid{display:grid;grid-template-columns:72px 1fr;row-gap:8px;column-gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #16213e}
+.pe-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;line-height:1}
+.pe-lbl.warn{color:#f0a500}
+.pe-val{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.pe-seg{display:inline-flex;border:1px solid #2a3550;border-radius:8px;overflow:hidden}
+.pe-seg button{min-height:32px;padding:0 11px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:transparent;color:#888;font-family:inherit}
+.pe-seg button+button{border-left:1px solid #2a3550}
+/* v2.9.61 (owner: "the footing is quite overbearing in the card"): 'Both' is the
+   default — selected but QUIET (a light neutral); only a deliberate L or R earns
+   the solid accent fill, so a left-footer stands out and everyone else is calm. */
+.pe-seg button.sel{background:#1a2747;color:#9fb3c8}
+.pe-seg button.sel.side-set{background:#00d4aa;color:#0a1628}
+.pe-sub{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;margin-left:6px}
+.pe-star{color:#5a6b82;font-size:20px;line-height:1;flex:none}
+.pe-star.on{color:#f0a500}
 /* v2.9.55: installed iPhone app with no reported inset — clear the home indicator. */
 body.ios-noinset #bottomTabBar{bottom:22px}
 body.ios-noinset.tabbar-classic #bottomTabBar{bottom:0;padding-bottom:22px}
@@ -578,7 +613,11 @@ body.tabbar-classic .btb-pill{height:49px;padding:0}
 .input:focus{outline:none;border-color:#00d4aa}
 .player-edit-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .player-edit-row .input{margin-bottom:0;flex:1}
-.player-edit-row .rm-btn{width:36px;height:36px;border-radius:50%;border:1px solid #e94560;background:transparent;color:#e94560;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+/* v2.9.61 (owner: "delete a player shouldn't be so obvious"): a quiet grey glyph
+   at rest — no red ring shouting from every row; red only while pressed (§5.0:
+   red is for the moment of danger, not decoration). 44px hit area kept. */
+.player-edit-row .rm-btn{width:44px;height:44px;border-radius:8px;border:none;background:transparent;color:#5a6b82;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.player-edit-row .rm-btn:active{color:#e94560}
 
 /* Pair cards */
 .pair-card{background:#16213e;border:2px solid #333;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -2889,6 +2928,11 @@ function getPlayerFoot(team,name){ return (team.foots&&team.foots[name])||'B'; }
 // v2.9.57 (P8, owner: strengths): an optional ★ per player — 'key player'. The
 // planner never takes two ★ off in the same sub when an alternative exists.
 // That's ALL it does: fair minutes stay the floor (grassroots).
+function togglePlayerStar(i){
+  let nm=editingTeam.players[i];
+  if(!nm||!nm.trim()){ let n=editingTeam.players.length; nm=`Player ${i+1}`; while(editingTeam.players.some((p,j)=>j!==i&&p===nm)){nm=`Player ${++n}`;} editingTeam.players[i]=nm; }
+  setPlayerStar(editingTeam,nm,!getPlayerStar(editingTeam,nm)); renderEditTeam();
+}
 function getPlayerStar(team,name){ return !!(team&&team.stars&&team.stars[name]); }
 function setPlayerStar(team,name,on){ if(!team.stars)team.stars={}; if(on)team.stars[name]=true; else delete team.stars[name]; }
 function setPlayerFoot(team,name,foot){
@@ -4481,12 +4525,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.60-beta';
+const APP_VERSION='v2.9.61-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.61-beta':{
+    title:'Positions page: the roster comes first',
+    items:['Once a team has players, the setup helpers on the Positions page get out of the way \u2014 \u201cAuto-fill from photo\u201d becomes a quiet one-line action, the sample-squad button disappears, and Bulk-tag keeps just its position chips. Your roster starts near the top. A brand-new empty team still gets the full guidance.','Each player\u2019s details are laid out cleanly \u2014 name row with the \u2605 key-player mark and a quiet remove, then Positions and Side / Foot lined up underneath. Three lines per player instead of five.']
+  },
   'v2.9.60-beta':{
     title:'One Plan page',
     items:['Settings and Sub Plan were the same page from two ends \u2014 timing, strategy and formation on both, the even-time hint twice. They\u2019re one page now: your team\u2019s defaults at the top (the same clean card as the old Settings tab), this game\u2019s plan underneath \u2014 keeper, starting line-up, every swap with positions, projected minutes. Change a default and the plan below re-plans on the spot; mid-game it reaches the live game too.','The bottom nav is back to four: Game \u00b7 Plan \u00b7 Positions \u00b7 Roster.','On the game screen the bench now carries the plan: each later-wave kid shows when she\u2019s due, for whom and at what position, and \u201cFull plan \u203a\u201d on the bench header opens the whole thing. The plan always starts from exactly what the next sub will do, so the card, the bench and the plan agree.']
@@ -6308,8 +6356,10 @@ function renderEditTeam(){
     const chips=types.map(pt=>`<span class="pos-tag pos-tag-${pt.toLowerCase()}" onclick="openBulkTag('${pt}')" style="font-size:11px;padding:2px 8px;cursor:pointer">${pt}</span>`).join(' ');
     hint.innerHTML=`<div style="font-weight:700;color:#00d4aa;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px">${ic('zap',12,'#00d4aa')} Bulk-tag positions</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px"><strong style="color:#5bc0de">Tap a position</strong> ${chips}</div>
-      to pick which players get it — faster than going row-by-row. Or use the chips under each player below.`;
+      <span class="bulk-prose">to pick which players get it — faster than going row-by-row. Or use the chips under each player below.</span>`;
   }
+  // v2.9.61: with real players in the list, the setup helpers collapse.
+  document.body.classList.toggle('editor-has-players',(editingTeam.players||[]).some(p=>p&&String(p).trim()));
   // Name-cleanup banner — only shown when at least one player has a
   // trailing position-like token in their name (usually from a slightly
   // dirty AI roster import).
@@ -6328,25 +6378,26 @@ function renderEditTeam(){
   }
   editingTeam.players.forEach((p,i)=>{
     const wrap=document.createElement('div');
-    wrap.style.cssText='margin-bottom:10px';
+    wrap.className='pe-block';
     const row=document.createElement('div');
     row.className='player-edit-row';
     const curNum=getPlayerNumber(editingTeam,p);
     row.innerHTML=`<input class="input" inputmode="numeric" maxlength="3" value="${curNum.replace(/"/g,'&quot;')}" placeholder="#" oninput="onPlayerNumberChange(${i},this.value)" style="width:46px;flex:none;text-align:center;font-variant-numeric:tabular-nums;color:#5bc0de;font-weight:700">
       <input class="input" value="${p.replace(/"/g,'&quot;')}" placeholder="Player name" oninput="onPlayerNameChange(${i},this.value)">
+      <button type="button" class="hit44 pe-star${getPlayerStar(editingTeam,p)?' on':''}" onclick="togglePlayerStar(${i})" aria-label="${getPlayerStar(editingTeam,p)?'Unmark':'Mark'} ${(p||'player').replace(/"/g,'&quot;')} as a key player" title="Key player — the plan avoids taking two key players off together">${getPlayerStar(editingTeam,p)?'★':'☆'}</button>
       <button class="rm-btn" onclick="removePlayerField(${i})">×</button>`;
     wrap.appendChild(row);
-    // Position tags
-    const tagsRow=document.createElement('div');
-    tagsRow.style.cssText='display:flex;align-items:center;gap:6px;margin-left:4px;margin-top:4px;flex-wrap:wrap';
+    // v2.9.61: aligned label/value grid for the player's details.
+    const grid=document.createElement('div');
+    grid.className='pe-grid';
     const cur=getPlayerPos(editingTeam,p);
     const lbl=document.createElement('span');
-    lbl.style.cssText='font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:'+(cur.length?'#666':'#f0a500');
-    lbl.textContent=cur.length?'Positions':'⚠ Set positions';
-    tagsRow.appendChild(lbl);
+    lbl.className='pe-lbl'+(cur.length?'':' warn');
+    lbl.textContent=cur.length?'Positions':'⚠ Positions';
+    grid.appendChild(lbl);
     const tags=document.createElement('div');
-    tags.className='pos-tags';
-    tags.style.cssText='display:flex;gap:4px;flex-wrap:wrap';
+    tags.className='pos-tags pe-val';
+    tags.style.cssText='gap:4px';
     getPosTypes(editingTeam).forEach(pt=>{
       const tag=document.createElement('span');
       const active=cur.includes(pt);
@@ -6369,26 +6420,27 @@ function renderEditTeam(){
       };
       tags.appendChild(tag);
     });
-    tagsRow.appendChild(tags);
-    wrap.appendChild(tagsRow);
+    grid.appendChild(tags);
+    wrap.appendChild(grid);
     // Soccer-only: side preference + dominant foot. Netball positions are
     // fixed by rule so left/right doesn't apply there.
     const _sport=getSport(editingTeam);
     if(_sport.key==='soccer'){
+      const sideLbl=document.createElement('span'); sideLbl.className='pe-lbl'; sideLbl.textContent='Side';
       const prefRow=document.createElement('div');
-      prefRow.style.cssText='display:flex;gap:14px;margin-left:4px;margin-top:6px;flex-wrap:wrap;font-size:11px';
+      prefRow.className='pe-val';
       const buildPicker=(label,curVal,onPick)=>{
         const opts=[{v:'L',t:'L'},{v:'B',t:'Both'},{v:'R',t:'R'}];
         const wrap2=document.createElement('div');
-        wrap2.style.cssText='display:flex;align-items:center;gap:6px';
-        wrap2.innerHTML=`<span style="font-weight:700;color:#666;letter-spacing:1px;text-transform:uppercase">${label}</span>`;
+        wrap2.style.cssText='display:inline-flex;align-items:center;gap:6px';
+        if(label!=='Side'){ const sl=document.createElement('span'); sl.className='pe-sub'; sl.textContent=label; wrap2.appendChild(sl); }
         const grp=document.createElement('div');
-        grp.style.cssText='display:inline-flex;border:1px solid #2a3550;border-radius:6px;overflow:hidden';
-        opts.forEach((o,oi)=>{
+        grp.className='pe-seg';
+        opts.forEach((o)=>{
           const btn=document.createElement('button');
           btn.type='button';
-          const sel=curVal===o.v;
-          btn.style.cssText='padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;border:none;'+(sel?'background:#00d4aa;color:#0a1628':'background:transparent;color:#888')+';'+(oi<opts.length-1?'border-right:1px solid #2a3550':'');
+          if(curVal===o.v){ btn.classList.add('sel'); if(o.v!=='B') btn.classList.add('side-set'); }
+          btn.setAttribute('aria-label',label+': '+o.t);
           btn.textContent=o.t;
           btn.onclick=(e)=>{e.preventDefault();onPick(o.v);};
           grp.appendChild(btn);
@@ -6409,14 +6461,7 @@ function renderEditTeam(){
       };
       prefRow.appendChild(buildPicker('Side',getPlayerSide(editingTeam,p),v=>{setPlayerSide(editingTeam,ensureName(),v);renderEditTeam();}));
       prefRow.appendChild(buildPicker('Foot',getPlayerFoot(editingTeam,p),v=>{setPlayerFoot(editingTeam,ensureName(),v);renderEditTeam();}));
-      // v2.9.57: ★ key player (optional) — see getPlayerStar.
-      { const st=document.createElement('button'); st.type='button'; const on=getPlayerStar(editingTeam,p);
-        st.setAttribute('aria-label',(on?'Unmark ':'Mark ')+(p||'player')+' as a key player'); st.title=on?'Key player — the plan avoids taking two key players off together':'Mark as key player';
-        st.style.cssText='display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:2px 8px;border:1px solid '+(on?'#f0a500':'#2a3550')+';border-radius:6px;background:'+(on?'rgba(240,165,0,.16)':'transparent')+';color:'+(on?'#f0a500':'#666')+';font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit';
-        st.innerHTML=(on?'★':'☆')+' Key';
-        st.onclick=(e)=>{e.preventDefault();setPlayerStar(editingTeam,ensureName(),!on);renderEditTeam();};
-        prefRow.appendChild(st); }
-      wrap.appendChild(prefRow);
+      grid.appendChild(sideLbl); grid.appendChild(prefRow);
     }
     c.appendChild(wrap);
   });

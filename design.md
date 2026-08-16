@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.60
+> Last updated: v2.9.61
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -774,7 +774,9 @@ every screen gets measured against**. What makes it the benchmark:
    warning), never as decoration or variety.
 2. **Three surfaces max**: background / section card / control. ONE
    `.set-group` card per section, rows divided by hairlines — never a box
-   per row.
+   per row. *(Owner-stamped exception, v2.9.61: the Positions page renders one
+   card per **player** — a player is an entity with several attributes, not a
+   settings row.)*
 3. **Selection is a solid accent fill** with inverse text — a luminance
    flip. No ticks, no tints.
 4. **One component per family**, shared with every other screen
