@@ -121,9 +121,12 @@ body.editor-has-players #posTagsHint .bulk-prose{display:none}
    block — name row, then an aligned two-column grid (72px label column) for
    Positions · Side / Foot / ★. Hairline between players (§5.0: rows by rule,
    not a box per row); segmented pickers get a real 32px hit height. */
-.pe-block{padding:10px 0 12px;border-top:1px solid #16213e}
-.pe-block:first-child{border-top:none;padding-top:0}
-.pe-grid{display:grid;grid-template-columns:72px 1fr;row-gap:8px;column-gap:10px;align-items:center;margin-top:8px}
+/* v2.9.61 (owner-stamped: "put each player's attributes into a unified card"):
+   ONE card per player — name row + the aligned attribute grid inside it. (§5.0's
+   'no box per row' is about settings rows; a player is an entity — owner call.) */
+.pe-block{padding:10px 12px 12px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;margin-bottom:10px}
+.pe-block .player-edit-row .input{background:#13203a}
+.pe-grid{display:grid;grid-template-columns:72px 1fr;row-gap:8px;column-gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #16213e}
 .pe-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;line-height:1}
 .pe-lbl.warn{color:#f0a500}
 .pe-val{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
