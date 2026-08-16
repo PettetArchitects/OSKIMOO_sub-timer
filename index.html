@@ -106,6 +106,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
    inset "glass" pill (same items, same rules). Unstamped — classic is default. */
 #bottomTabBar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:stretch;padding:0 0 env(safe-area-inset-bottom);background:rgba(13,24,40,.82);border-top:1px solid rgba(255,255,255,.08);z-index:9000;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
 .btb-pill{display:flex;width:100%;max-width:520px;height:49px;background:transparent;padding:0;gap:0}
+/* v2.9.61 (owner: the Positions page's photo / sample / bulk-tag boxes crowd out
+   the list once a team exists): body.editor-has-players collapses them — the
+   photo tile becomes a quiet one-line action, sample squad hides, bulk-tag keeps
+   only its chip row. A new empty team keeps the full guidance. */
+body.editor-has-players #rosterImportBtn{padding:9px 12px!important;background:none!important;border:1px solid #2a3550!important;border-radius:10px!important;margin-bottom:8px!important;gap:8px!important}
+body.editor-has-players #rosterImportBtn i,body.editor-has-players #rosterImportBtn svg{width:16px!important;height:16px!important}
+body.editor-has-players #rosterImportBtn span span:first-child{font-size:12px!important;color:#9fb3c8!important;font-weight:700!important}
+body.editor-has-players #rosterImportBtn span span:last-child{display:none!important}
+body.editor-has-players #sampleSquadBtn{display:none!important}
+body.editor-has-players #posTagsHint{background:none!important;border:none!important;padding:0 2px 6px!important;margin-bottom:6px!important}
+body.editor-has-players #posTagsHint .bulk-prose{display:none}
 /* v2.9.55: installed iPhone app with no reported inset — clear the home indicator. */
 body.ios-noinset #bottomTabBar{bottom:22px}
 body.ios-noinset.tabbar-classic #bottomTabBar{bottom:0;padding-bottom:22px}
@@ -4481,12 +4492,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.60-beta';
+const APP_VERSION='v2.9.61-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.61-beta':{
+    title:'Positions page: the roster comes first',
+    items:['Once a team has players, the setup helpers on the Positions page get out of the way \u2014 \u201cAuto-fill from photo\u201d becomes a quiet one-line action, the sample-squad button disappears, and Bulk-tag keeps just its position chips. Your roster starts near the top. A brand-new empty team still gets the full guidance.']
+  },
   'v2.9.60-beta':{
     title:'One Plan page',
     items:['Settings and Sub Plan were the same page from two ends \u2014 timing, strategy and formation on both, the even-time hint twice. They\u2019re one page now: your team\u2019s defaults at the top (the same clean card as the old Settings tab), this game\u2019s plan underneath \u2014 keeper, starting line-up, every swap with positions, projected minutes. Change a default and the plan below re-plans on the spot; mid-game it reaches the live game too.','The bottom nav is back to four: Game \u00b7 Plan \u00b7 Positions \u00b7 Roster.','On the game screen the bench now carries the plan: each later-wave kid shows when she\u2019s due, for whom and at what position, and \u201cFull plan \u203a\u201d on the bench header opens the whole thing. The plan always starts from exactly what the next sub will do, so the card, the bench and the plan agree.']
@@ -6308,8 +6323,10 @@ function renderEditTeam(){
     const chips=types.map(pt=>`<span class="pos-tag pos-tag-${pt.toLowerCase()}" onclick="openBulkTag('${pt}')" style="font-size:11px;padding:2px 8px;cursor:pointer">${pt}</span>`).join(' ');
     hint.innerHTML=`<div style="font-weight:700;color:#00d4aa;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px">${ic('zap',12,'#00d4aa')} Bulk-tag positions</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px"><strong style="color:#5bc0de">Tap a position</strong> ${chips}</div>
-      to pick which players get it — faster than going row-by-row. Or use the chips under each player below.`;
+      <span class="bulk-prose">to pick which players get it — faster than going row-by-row. Or use the chips under each player below.</span>`;
   }
+  // v2.9.61: with real players in the list, the setup helpers collapse.
+  document.body.classList.toggle('editor-has-players',(editingTeam.players||[]).some(p=>p&&String(p).trim()));
   // Name-cleanup banner — only shown when at least one player has a
   // trailing position-like token in their name (usually from a slightly
   // dirty AI roster import).

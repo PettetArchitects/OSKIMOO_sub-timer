@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.60-beta** · 0 static + 130 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.61-beta** · 0 static + 130 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -78,12 +78,11 @@ visible/clickable. This corrects §A/§B guesses.
 - `showScr()`
 - `toggleGlobalMenu()`
 
-### Team editor `editTeam` — 10 visible
+### Team editor `editTeam` — 9 visible
 
 - `addPlayerField()`
 - `click()`
 - `closeAnyDrawer()`
-- `fillSampleSquad()`
 - `home()`
 - `openBulkTag()`
 - `removePlayerField()`
