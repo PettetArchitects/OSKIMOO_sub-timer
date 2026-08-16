@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.61-beta** · 0 static + 130 JS-rendered controls · runtime-verified 8 screens.
+> App version: **v2.9.61-beta** · 0 static + 131 JS-rendered controls · runtime-verified 8 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -32,8 +32,8 @@ screen shows them. See §C for the runtime-verified placement.
 - **`(unknown)()`** → `addPlayerField`, `adj`, `aflTiltAdj`, `applyBulkTag`, `authPrimary`, `authSecondary`, `changeSubStrategy`, `closeAnnounce`, `closeAnyDrawer`, `closeAppSettings`, `closeAuth`, `closeBugReport`, `closeBulkTag`, `closeGameMenu`, `closeGkPick`, `closePlanMenu`, `closeShareTeam`, `closeSoundPicker`, `closeSubSettings`, `closeTeamActions`, `closeTeamCodeEntry`, `closeWhatsNew`, `confSub`, `copyTeamShareLink`, `cycleView`, `deleteTeam`, `devFlowLoad`, `devFlowPlay`, `devFlowStep`, `devJump`, `devSeedGame`, `devSkipToBreak`, `devSkipToFullTime`, `discardActiveGame`, `dismissTip`, `endPeriodNow`, `exportGameFlow`, `fillSampleSquad`, `gkStepNext`, `hideRelay`, `importWelcomeClose`, `importWelcomePlay`, `newTeam`, `nextTip`, `openFeedback`, `openGkPick`, `pickSubStrategy`, `prevTip`, `quickStart`, `resumeActiveGame`, `saveAndBack`, `saveMatch`, `sendBugReport`, `sendFeedback`, `sendPasswordReset`, `setDevMode`, `shapeStepBack`, `shapeStepNext`, `shareTeamNative`, `showScr`, `signInWithGoogle`, `skipGoalStep`, `soAdj`, `ssAdj`, `startFromSquad`, `subOrderApply`, `submitTeamCode`, `teamActionEdit`, `teamActionPastGames`, `teamActionPlanAhead`, `teamActionShare`, `tog`, `toggleAflView`, `toggleBenchView`, `toggleDevPanel`, `toggleGameFormation`, `toggleGameMenu`, `toggleGlobalMenu`, `toggleHomeMenu`, `togglePlanMenu`, `undoLastSub`
 - **`renderMatchDetail()`** → `histEditCancel`, `histEditSave`, `histEditStart`, `histToggleScorer`, `openBugReport`, `showHistory`
 - **`renderPlanRosterOverview()`** → `planAddStarter`, `planAutoFillStarters`, `planClearField`, `planFinishStarters`, `planRemoveStarter`
+- **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`, `togglePlayerStar`
 - **`renderHome()`** → `newTeam`, `openAuth`, `openTeamCodeEntry`
-- **`renderEditTeam()`** → `cleanupPlayerNames`, `openBulkTag`, `removePlayerField`
 - **`renderScore()`** → `adjScore`, `aflScore`, `aflUndo`
 - **`proposeChange()`** → `cancelPending`, `confSub`, `confirmPending`
 - **`renderPlanProfiles()`** → `applyPlanProfile`, `deletePlanProfile`, `renamePlanProfile`
@@ -78,7 +78,7 @@ visible/clickable. This corrects §A/§B guesses.
 - `showScr()`
 - `toggleGlobalMenu()`
 
-### Team editor `editTeam` — 9 visible
+### Team editor `editTeam` — 10 visible
 
 - `addPlayerField()`
 - `click()`
@@ -89,6 +89,7 @@ visible/clickable. This corrects §A/§B guesses.
 - `saveAndBack()`
 - `switchToView()`
 - `toggleGlobalMenu()`
+- `togglePlayerStar()`
 
 ### Squad select `s1` — 6 visible
 
