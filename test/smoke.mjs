@@ -793,10 +793,11 @@ const SCENARIOS = [
       const editorClean = !document.querySelector('#editTeam #teamPrefsSection')
         && !/Game Settings/.test(document.getElementById('editTeam').innerHTML);
       // the tab appears once a team is in context
-      const hasTab = /switchToView\('settings'\)/.test(document.getElementById('bottomTabBar').innerHTML);
+      // v2.9.60: Settings merged into Plan — the Plan tab carries the card.
+      const hasTab = /switchToView\('plan'\)/.test(document.getElementById('bottomTabBar').innerHTML);
       switchToView('settings');
-      const onScreen = document.getElementById('teamSettings').classList.contains('active');
-      const tabBtn = [...document.querySelectorAll('#bottomTabBar .btb-btn')].find((b) => /Settings/.test(b.textContent));
+      const onScreen = document.getElementById('subOrderOv').classList.contains('active');
+      const tabBtn = [...document.querySelectorAll('#bottomTabBar .btb-btn')].find((b) => /Plan/.test(b.textContent));
       const highlighted = !!tabBtn && tabBtn.classList.contains('active');
       // formation tap → persists to the team (live-save, no Save button)
       const host = document.getElementById('teamPrefsSection');
@@ -819,8 +820,8 @@ const SCENARIOS = [
       };
     });
     chk('team editor no longer carries the Game Settings block', r.editorClean);
-    chk('Settings tab shows once a team is selected', r.hasTab);
-    chk('switchToView(settings) lands on the teamSettings screen, tab highlighted', r.onScreen && r.highlighted);
+    chk('Plan tab (which carries the defaults card) shows once a team is selected', r.hasTab);
+    chk('switchToView(settings) lands on the Plan page, Plan tab highlighted', r.onScreen && r.highlighted);
     chk('formation tap live-saves to the team', !!r.target && r.savedFormation === r.target);
     chk('stepper change live-saves to the team', r.savedHm === r.hmBefore + 1);
     chk('with no game underway the working cfg picks the change up', r.cfgHm === r.hmBefore + 1);

@@ -1,6 +1,6 @@
 # Sub Timer — Design System
 
-> Last updated: v2.9.59
+> Last updated: v2.9.60
 > Sub Timer is a single-file PWA for grassroots youth-sports coaches. This document is the canonical reference for every design token and component used in the app. Inspired by Apple's Human Interface Guidelines + Figma's design-system examples.
 
 ---
@@ -762,9 +762,10 @@ belongs to that family.
 
 ### 5.0 THE BENCHMARK — the Team settings standard (owner-stamped, v2.9.32)
 
-The refined Settings tab (`teamSettings`; before/after record in
-`docs/records/v2.9.32-team-settings/`) is **the bar every screen gets
-measured against**. What makes it the benchmark:
+The refined Team-settings card (built as the `teamSettings` tab in v2.9.32 —
+before/after in `docs/records/v2.9.32-team-settings/` — and since v2.9.60 the
+**defaults card at the top of the one Plan page**, `subOrderOv`) is **the bar
+every screen gets measured against**. What makes it the benchmark:
 
 1. **Two colours used** (owner's words): NEUTRALS + ONE ACCENT. The page is
    surfaces and blue-grey text, with brand green as the only accent — on

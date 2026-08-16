@@ -1048,12 +1048,13 @@ body.tabbar-classic .btb-pill{height:49px;padding:0}
      Owner directive: the Game Settings block (formation / sub strategy / timing)
      moves out of the team editor onto its own bottom-bar tab. PLAN-mode surface;
      controls live-save to the team (quiet Saved tick) — no Save button to forget. -->
-<div id="teamSettings" class="scr">
-  <!-- v2.9.28: heading band removed (owner) — the Saved tick rides the info line. -->
+<!-- v2.9.60 (owner: "settings and sub plan should merge — a lot of it is duplicated"):
+     the Team settings screen is retired; its benchmark card (renderTeamSettings)
+     now renders at the top of the ONE Plan page (#subOrderOv → #teamPrefsSection
+     there). switchToView('settings') routes to plan. -->
+<div id="teamSettings" class="scr" style="display:none!important">
   <div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left"><span>Defaults for this team — applied every game, so you go straight to the pitch. Changes save automatically.</span><span id="teamSettingsSaved" style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#00d4aa;opacity:0;transition:opacity .3s;white-space:nowrap">✓ Saved</span></div>
-  <div class="sec">
-    <div id="teamPrefsSection"></div>
-  </div>
+  <div class="sec"></div>
 </div>
 
 <!-- ===== S1: SELECT AVAILABLE ===== -->
@@ -1391,14 +1392,25 @@ body.tabbar-classic .btb-pill{height:49px;padding:0}
   <!-- v2.7.56/64: Clock anchor — same padding (12px 0 4px) + no background, no
        border as the game-screen #clkArea so the clock sits in exactly the same
        visual position on both pages. -->
-  <div id="planClockAnchor" style="padding:12px 0 4px;flex-shrink:0;text-align:center"></div>
+  <div id="planClockAnchor" style="display:none;padding:12px 0 4px;flex-shrink:0;text-align:center"></div>
   <!-- Scrollable body — full-page real estate for the strategy controls + the sub timeline. -->
   <div style="flex:1;min-height:0;overflow-y:auto;padding:14px 16px;max-width:1200px;width:100%;margin:0 auto;box-sizing:border-box">
+    <!-- v2.9.60: THE DEFAULTS CARD — the §5.0 benchmark (formation · strategy ·
+         timing · breaks-only), rendered by renderTeamSettings. Changes apply to
+         the live game and rebuild the plan below. Capped measure like the
+         benchmark page. -->
+    <div style="max-width:600px;width:100%;margin:0 auto 6px;box-sizing:border-box">
+      <div class="info" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:0 0 10px"><span>Team defaults — every game starts from these.</span><span id="teamSettingsSaved" style="font-size:11px;color:#00d4aa;font-weight:800;letter-spacing:.5px;opacity:0;transition:opacity .2s">Saved ✓</span></div>
+      <div id="teamPrefsSection"></div>
+    </div>
+    <div id="planGameSection">
+    <div id="planNoGame" style="display:none;max-width:600px;margin:0 auto 14px;padding:12px 14px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;font-size:13px;color:#9fb3c8;line-height:1.45">This game's plan appears here once today's squad is set — <b style="color:#eee">Roster</b> → Next.</div>
+    <div class="sec-label" id="planGameLabel" style="margin:6px 0 8px">This game</div>
     <!-- v2.7.65: all sub controls grouped in a single horizontal row right under
          the clock anchor — AUTO/CUSTOM tabs, Players-per-sub stepper, and saved-
          profile chips share one band so the page reads as "clock + controls" up
          top, then the field, then the timeline. -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
+    <div style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
       <div id="subOrderTabs" style="display:flex;gap:4px;background:#0a1628;border:1px solid #1e2a45;border-radius:12px;padding:4px;flex-shrink:0"></div>
       <!-- v2.9.35 (§5.0): green family (was cyan), ±44pt hit zones via .hit44. -->
       <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:0 12px;flex-shrink:0" id="planTopSteppers">
@@ -1423,6 +1435,7 @@ body.tabbar-classic .btb-pill{height:49px;padding:0}
     <div id="planProjMins" style="margin-bottom:14px"></div>
     <div id="subOrderInfo" style="font-size:13px;color:#888;text-align:center;margin:0 0 14px"></div>
     <div id="subOrderList"></div>
+    </div><!-- /planGameSection -->
     <button id="subOrderApplyBtn" onclick="subOrderApply()" style="display:none;width:100%;margin-top:14px;padding:14px;background:linear-gradient(180deg,#1ae0b8,#00c2a0);border:none;border-radius:8px;color:#06231d;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;font-family:inherit">Use this strategy</button>
   </div>
   <!-- v2.7.58/71: bottom control band shares the gameDash styling. Bottom padding
@@ -4311,10 +4324,7 @@ function renderViewSwitcher(){
     const et=document.getElementById('editTeam');
     if(et&&et.classList.contains('active')) active='team';
     else {
-      // v2.9.23: the team-settings screen owns the Settings tab highlight.
-      const ts=document.getElementById('teamSettings');
-      if(ts&&ts.classList.contains('active')) active='settings';
-      else {
+      {
         // v2.7.88: s1 is the squad availability page — owns the Roster tab highlight.
         const s1=document.getElementById('s1');
         if(s1&&s1.classList.contains('active')) active='roster';
@@ -4353,7 +4363,7 @@ function renderViewSwitcher(){
     // v2.9.23: Settings tab — the team's game defaults (formation / strategy /
     // timing) on their own PLAN-mode screen, out of the roster editor. Sits
     // next to Team (both midweek surfaces); Game stays first, Roster stays last.
-    {k:'settings', label:'Settings', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>'},
+    // v2.9.60: the Settings tab is retired — its card lives at the top of Plan.
     // v2.7.88: Roster tab — jumps to the squad page (who's here / who's not today),
     // so a coach can wave in late arrivals or strike no-shows without leaving the game.
     {k:'roster', label:'Roster', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'}
@@ -4376,17 +4386,15 @@ function switchToView(v){
     if(G){ if(typeof renderG==='function') renderG(); showScr('s4'); }
     else if(typeof home==='function') home();
   } else if(v==='plan'){
-    // v2.9.11: no Plan tab renders any more — this branch stays as the
-    // programmatic route to the Plan page (tests, replay flows, deep links).
-    if(G){ if(typeof openSubOrder==='function') openSubOrder(); }
+    // v2.9.60: the ONE Plan page — defaults card with or without a game.
+    if(currentTeam){ if(typeof openSubOrder==='function') openSubOrder(); }
     else if(typeof home==='function') home();
   } else if(v==='team'){
     if(currentTeam){ if(typeof editTeamFromGame==='function') editTeamFromGame(); }
     else if(typeof home==='function') home();
   } else if(v==='settings'){
-    // v2.9.23: the team's game defaults (formation / strategy / timing) on
-    // their own screen. Needs a team in context, like Team and Roster.
-    if(currentTeam){ renderTeamSettings(); showScr('teamSettings'); }
+    // v2.9.60: Settings merged into Plan — same door.
+    if(currentTeam){ openSubOrder(); }
     else if(typeof home==='function') home();
   } else if(v==='roster'){
     // v2.7.88: open the squad availability page. Don't re-select the team — that
@@ -4473,12 +4481,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.59-beta';
+const APP_VERSION='v2.9.60-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.60-beta':{
+    title:'One Plan page',
+    items:['Settings and Sub Plan were the same page from two ends \u2014 timing, strategy and formation on both, the even-time hint twice. They\u2019re one page now: your team\u2019s defaults at the top (the same clean card as the old Settings tab), this game\u2019s plan underneath \u2014 keeper, starting line-up, every swap with positions, projected minutes. Change a default and the plan below re-plans on the spot; mid-game it reaches the live game too.','The bottom nav is back to four: Game \u00b7 Plan \u00b7 Positions \u00b7 Roster.','On the game screen the bench now carries the plan: each later-wave kid shows when she\u2019s due, for whom and at what position, and \u201cFull plan \u203a\u201d on the bench header opens the whole thing. The plan always starts from exactly what the next sub will do, so the card, the bench and the plan agree.']
+  },
   'v2.9.59-beta':{
     title:'The plan shows positions \u2014 and the bench opens it',
     items:['The Sub Plan page now shows, for every swap in the whole game, the position each incoming kid takes and any cover move (\u201cGeorgia moves to RB\u201d) \u2014 the same rule the live game uses, so what you read there is what will happen.','Plan is back in the bottom nav, next to Game \u2014 one tap to the whole-game plan mid-match. And the big \u201cSub Plan\u201d heading on that page is gone; the field gets the room.']
@@ -6603,6 +6615,13 @@ function saveTeamSettings(){
       if(G.subStrategy!==cfg.subStrategy){ G.subStrategy=cfg.subStrategy; G.log.push({type:'sub_strategy',half:G.half,time:G.secs,strategy:cfg.subStrategy}); }
       saveActiveGame();
       if(typeof renderG==='function'&&document.getElementById('s4').classList.contains('active')) renderG();
+    }
+    // v2.9.60: the card sits on the Plan page — a change re-plans the game below.
+    const _pl=document.getElementById('subOrderOv');
+    if(G&&_pl&&_pl.classList.contains('active')){
+      _subOrderStrat=stratToToggle(cfg.subStrategy||'fair'); _planScrubIdx=0; _planTimeline=null;
+      buildPlanTimeline(); renderPlanRosterOverview(); renderPlanProjectedMinutes(); renderSubOrder(); renderPlanProfiles();
+      const cg=document.getElementById('planMenuCustomGroup'); if(cg) cg.style.display=(_subOrderStrat==='planned')?'block':'none';
     }
   }
   const tick=document.getElementById('teamSettingsSaved');
@@ -10595,8 +10614,11 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr, finalPos, 
     const benchSection=document.createElement('div');
     benchSection.style.cssText='display:flex;flex-direction:column;gap:6px';
     const bLbl=document.createElement('div');
-    bLbl.style.cssText='padding:0 2px';
-    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span>`;
+    bLbl.style.cssText='padding:0 2px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    // v2.9.60 (owner: "on the game screen I should be able to see the full bench
+    // plan"): the header carries the door to the Plan tab, and the later-wave
+    // pills below carry the plan itself (when · for whom · at).
+    bLbl.innerHTML=`<span style="font-size:10px;font-weight:700;color:#f0a500;letter-spacing:1.5px;text-transform:uppercase">BENCH · ${G.bench.length}</span><button type="button" class="ui-btn ui-btn--link" onclick="switchToView('plan')" aria-label="Open the full game plan">Full plan ${ic('chevron-right',12,'currentColor')}</button>`;
     benchSection.appendChild(bLbl);
 
     // Pair-rotation mode swaps pre-grouped pairs as units, so reordering an
@@ -10635,10 +10657,21 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr, finalPos, 
     // greyed OUT group gets the inverse ('back in').
     const _outBtn=(pIdx)=>{ const out=isOutQ(pIdx); return `<button class="hit44" onclick="event.stopPropagation();toggleOutOfQueue(${pIdx})" aria-label="${out?'Put '+fn(avail[pIdx])+' back in the queue':fn(avail[pIdx])+' out of the queue'}" title="${out?'Back in the queue':'Out of the queue'}" style="margin-left:2px;color:${out?'#00d4aa':'#5a6b82'}">${ic(out?'user-check':'user-x',16,out?'#00d4aa':'#5a6b82')}</button>`; };
 
+    // v2.9.60: the game plan for the LATER waves — for each bench kid, the first
+    // upcoming planned sub she comes on in: when, for whom, at which position.
+    // Built once per render from the same simulator the Plan page uses.
+    const _planFor={};
+    try{
+      const onPlan=document.getElementById('subOrderOv').classList.contains('active');
+      const tl=onPlan?_planTimeline:(buildPlanTimeline()||null);
+      if(tl&&tl.events){ tl.events.filter(e=>!e.past&&!e.done).forEach(e=>{ (e.on||[]).forEach((p,i)=>{ if(_planFor[p]===undefined) _planFor[p]={period:e.period,time:e.time,off:(e.off||[])[i],at:e.at&&e.at[p]}; }); }); }
+    }catch(e){}
+    const _fmtPlanTime=(pf)=>{ const cur=G.atBreak?G.half+1:G.half; const m=Math.floor(pf.time/60); return (pf.period===cur?'':getSport(currentTeam).periodShort(pf.period)+' ')+m+'′'; };
     function makeBenchPill(pIdx,bIdx,isNext){
       const mins=Math.floor(G.pt[avail[pIdx]]/60);
       const replacesP=swapMap?swapMap[pIdx]:undefined;
       const takesPos=finalPos[pIdx]||(replacesP!==undefined?posForPlayer[replacesP]:null);
+      const pf=(!isNext&&!isOutQ(pIdx))?_planFor[pIdx]:undefined;
       // The 170px landscape rail can't fit the full pill anatomy — compact
       // tier: smaller badge/typography, minutes dropped (v2.9.41).
       const rail=matchMedia('(orientation:landscape) and (max-height:500px)').matches;
@@ -10682,6 +10715,7 @@ function renderBenchInto(container, swapMap, posForPlayer, nextOnArr, finalPos, 
         <div style="flex:1;min-width:0">
           <div style="font-size:${rail?(isNext?'15':'13'):(isNext?'18':'14')}px;font-weight:${isNext?'800':'700'};color:${isNext?'#00d4aa':'#9fb3c8'};display:inline-flex;align-items:center;gap:4px;line-height:1.2">${jerseyHtml}${fn(avail[pIdx])}${isNext?ic('arrowUp',rail?12:14,'#00d4aa'):''}</div>
           ${isNext&&replacesP!==undefined?`<div style="font-size:${rail?'11':'14'}px;color:#f0a500;font-weight:700;margin-top:${rail?'2':'3'}px;line-height:1.2;display:flex;align-items:center;gap:3px">${ic('arrowDown',rail?11:13,'#f0a500')}<span>for ${fn(avail[replacesP])} at ${takesPos}</span></div>`:''}
+          ${pf&&!rail?`<div style="font-size:11px;color:#7d8a9c;font-weight:600;margin-top:2px;line-height:1.2">${_fmtPlanTime(pf)}${pf.off!==undefined?` · for <span style="color:#f0a500">${fn(avail[pf.off])}</span>`:''}${pf.at?` · <span style="color:#5bc0de;font-weight:800">${pf.at}</span>`:''}</div>`:''}
         </div>
         ${rail?'':`<div style="font-size:11px;font-weight:700;color:#7d8a9c;font-variant-numeric:tabular-nums;margin-left:4px">${mins}′</div>`}
         ${reorderHtml}
@@ -11146,7 +11180,21 @@ let _planTimeline=null;
 let _planScrubIdx=0;
 let _planLiveTickId=null;  // interval that keeps the LIVE clock ticking on the Plan page
 function openSubOrder(){
-  if(!G) return;
+  // v2.9.60: the ONE Plan page. The defaults card renders whenever a team is in
+  // context; this game's plan needs a game (pre-kick or live).
+  if(!currentTeam) return;
+  if(typeof renderTeamSettings==='function') renderTeamSettings();
+  const gameSec=document.getElementById('planGameSection'), noGame=document.getElementById('planNoGame'), band=document.getElementById('planControlBand');
+  if(!G){
+    if(gameSec) gameSec.style.display='block';
+    if(noGame) noGame.style.display='block';
+    ['planGameLabel','planRosterOverview','planProjMins','subOrderInfo','subOrderList','planProfilesRow'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+    if(band) band.style.display='none';
+    showScr('subOrderOv'); _li(); return;
+  }
+  if(noGame) noGame.style.display='none';
+  ['planGameLabel','planRosterOverview','planProjMins','subOrderInfo','subOrderList'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=''; });
+  if(band) band.style.display='flex';
   // v2.7.34: tabs work in toggle space (auto/planned), not internal strategies.
   _subOrderStrat=stratToToggle(G.subStrategy||'fair');
   // v2.7.53: build the scrub timeline first so the roster overview, scrub bar,
@@ -11170,6 +11218,7 @@ function openSubOrder(){
   if(customGroup) customGroup.style.display=(_subOrderStrat==='planned')?'block':'none';
   // v2.7.46: saved-profile chips visibility also follows the toggle.
   renderPlanProfiles();
+  { const pr=document.getElementById('planProfilesRow'), lbl=document.getElementById('planGameLabel'); if(pr&&lbl&&pr.previousElementSibling!==lbl) lbl.insertAdjacentElement('afterend',pr); }
   // v2.7.43: full-page screen instead of an overlay so the dense sub list has real estate.
   showScr('subOrderOv');
   // v2.7.53: while LIVE and the game clock is running, repaint the scrub bar
@@ -11657,6 +11706,8 @@ function commitPlanLineup(){
   _planTimeline=null;
 }
 function renderPlanFormationChips(){
+  // v2.9.60: formation lives in the defaults card at the top of the page.
+  { const el=document.getElementById('planFormationChips'); if(el){ el.style.display='none'; el.innerHTML=''; } return; }
   const host=document.getElementById('planFormationChips');
   if(!host) return;
   const formations=FORMATIONS[curFmt]||{};
@@ -11835,9 +11886,12 @@ function subOrderApply(){
 // used to inline — extracted here so the scrub bar, pitch, bench and timeline
 // list all read from one source of truth.
 function buildPlanTimeline(){
+  let _usedLiveNext=false;
   if(!G){ _planTimeline=null; return null; }
-  const toggle=_subOrderStrat||stratToToggle(G.subStrategy||'fair');
-  const strat=(toggle==='auto')?toggleToStrat('auto'):'planned';
+  // v2.9.60: the plan follows the game's ACTUAL strategy. (The old Auto/Custom
+  // toggle mapped Auto → Matched whenever pair groups existed — they always do
+  // after kick-off — so the page simulated Matched while the game ran Equal time.)
+  const strat=(G.subStrategy==='planned')?'planned':(G.subStrategy==='paired'?'paired':'fair');
   const sport=getSport(currentTeam);
   const periodCount=sport.periodCount||2;
   const hmSec=(cfg.hm||0)*60, sfSec=(cfg.sf||1)*60;
@@ -11919,7 +11973,13 @@ function buildPlanTimeline(){
         const onSorted=[...simBench].sort((a,b)=>
           (simRot[avail[a]]||0)-(simRot[avail[b]]||0) || (offSince[a]||0)-(offSince[b]||0));
         let off=[],on=[];
-        if(strat==='paired' && G.pairs && G.pairs.length){
+        // v2.9.60: the FIRST upcoming sub is exactly what the live engine will do —
+        // getNextSwap() is the truth the NEXT ON card shows; the plan continues
+        // from it, whatever the strategy.
+        if(!_usedLiveNext && p===curP && !done && simOn.length===G.on.length && simOn.every((v,i)=>v===G.on[i])){
+          try{ const live=getNextSwap(); if(live&&live.offArr&&live.offArr.length){ off=live.offArr.slice(); on=live.onArr.slice(); _usedLiveNext=true; } }catch(e){}
+        }
+        if(!off.length && strat==='paired' && G.pairs && G.pairs.length){
           const pairsByMins=G.pairs.map(pair=>({
             onMembers:pair.on.filter(pl=>eligibleOn.includes(pl)),
             totalMins:pair.on.reduce((s,pl)=>s+(simRot[avail[pl]]||0),0)/Math.max(1,pair.on.length),
@@ -12337,8 +12397,8 @@ function renderSubOrder(){
   // callers in openSubOrder / soAdj / subOrderPick rebuild explicitly, but
   // direct renderSubOrder calls — eg. ssSetStrat → renderSubOrder — drop here too).
   if(!_planTimeline) buildPlanTimeline();
-  const toggle=_subOrderStrat||stratToToggle(G.subStrategy||'fair');
-  const strat=(toggle==='auto')?toggleToStrat('auto'):'planned';
+  // v2.9.60: label the plan by the game's actual strategy (see buildPlanTimeline).
+  const strat=(G.subStrategy==='planned')?'planned':(G.subStrategy==='paired'?'paired':'fair');
   const stratLabels={fair:'Equal time',paired:'Matched',planned:'Custom'};
   const fmtTime=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
   const sport=getSport(currentTeam);
