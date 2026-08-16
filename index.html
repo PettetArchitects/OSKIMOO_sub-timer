@@ -133,7 +133,11 @@ body.editor-has-players #posTagsHint .bulk-prose{display:none}
 .pe-seg{display:inline-flex;border:1px solid #2a3550;border-radius:8px;overflow:hidden}
 .pe-seg button{min-height:32px;padding:0 11px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:transparent;color:#888;font-family:inherit}
 .pe-seg button+button{border-left:1px solid #2a3550}
-.pe-seg button.sel{background:#00d4aa;color:#0a1628}
+/* v2.9.61 (owner: "the footing is quite overbearing in the card"): 'Both' is the
+   default — selected but QUIET (a light neutral); only a deliberate L or R earns
+   the solid accent fill, so a left-footer stands out and everyone else is calm. */
+.pe-seg button.sel{background:#1a2747;color:#9fb3c8}
+.pe-seg button.sel.side-set{background:#00d4aa;color:#0a1628}
 .pe-sub{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;margin-left:6px}
 .pe-star{color:#5a6b82;font-size:20px;line-height:1;flex:none}
 .pe-star.on{color:#f0a500}
@@ -6435,7 +6439,7 @@ function renderEditTeam(){
         opts.forEach((o)=>{
           const btn=document.createElement('button');
           btn.type='button';
-          if(curVal===o.v) btn.classList.add('sel');
+          if(curVal===o.v){ btn.classList.add('sel'); if(o.v!=='B') btn.classList.add('side-set'); }
           btn.setAttribute('aria-label',label+': '+o.t);
           btn.textContent=o.t;
           btn.onclick=(e)=>{e.preventDefault();onPick(o.v);};
