@@ -1362,7 +1362,11 @@ body.tabbar-classic .btb-pill{height:49px;padding:0}
        hamburger position. min-height matches the natural score-area height of the
        game header (~84px: 11px team label + 26px score + button row + gaps + 16px
        padding) so the clock anchor below sits at the SAME y on both pages. -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 12px 6px;background:#16213e;border-bottom:1px solid #333;flex-shrink:0;position:relative;min-height:84px">
+  <!-- v2.9.59 (owner: "remove this banner, it's taking up too much room"): the
+       84px "Sub Plan" band is gone — the brand bar is the header (§3.3) and the
+       Plan tab in the bottom nav says where you are. The hidden per-screen menu
+       button stays for the drawer routing. -->
+  <div style="display:none;position:relative">
     <button id="planMenuBtn" onclick="togglePlanMenu(event)" aria-label="Menu" title="Menu" style="position:absolute;top:6px;left:8px;width:38px;height:38px;border-radius:10px;border:1px solid #444;background:none;color:#ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
@@ -4302,7 +4306,7 @@ function renderViewSwitcher(){
   const ov=document.getElementById('subOrderOv');
   // v2.9.11: the Plan page has no tab any more — while it's active, no tab
   // highlights (the bar stays visible so the coach can leave via Game/Team/Roster).
-  if(ov&&ov.classList.contains('active')) active='';
+  if(ov&&ov.classList.contains('active')) active='plan';
   else {
     const et=document.getElementById('editTeam');
     if(et&&et.classList.contains('active')) active='team';
@@ -4339,6 +4343,10 @@ function renderViewSwitcher(){
   const gameSvg=ballSvgs[sportKey]||ballSvgs.soccer;
   const tabs=[
     {k:'game', label:'Game', svg:gameSvg},
+    // v2.9.59 (owner: "add sub plan back in the bottom nav" — reverses v2.9.11):
+    // the Plan page shows the whole-game swap plan WITH positions now, which is
+    // what a coach wants mid-game.
+    {k:'plan', label:'Plan', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h6"/></svg>'},
     // v2.9.11: Plan tab removed — the Plan page is a midweek planning tool (owner:
     // it does NOT live on the game view). Door: team card → Plan ahead.
     {k:'team', label:'Positions', svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
@@ -4465,12 +4473,16 @@ function dismissTip(){
 }
 
 // ===== FEEDBACK =====
-const APP_VERSION='v2.9.58-beta';
+const APP_VERSION='v2.9.59-beta';
 // === Changelog data (mirrored in CHANGELOG.md) ===
 // The "What's New" modal pulls from this dict when APP_VERSION advances.
 // Only the latest version's entry is required for the modal; older entries
 // kept here for the "view past changes" link in feedback (future).
 const CHANGELOG_DATA={
+  'v2.9.59-beta':{
+    title:'The plan shows positions \u2014 and the bench opens it',
+    items:['The Sub Plan page now shows, for every swap in the whole game, the position each incoming kid takes and any cover move (\u201cGeorgia moves to RB\u201d) \u2014 the same rule the live game uses, so what you read there is what will happen.','Plan is back in the bottom nav, next to Game \u2014 one tap to the whole-game plan mid-match. And the big \u201cSub Plan\u201d heading on that page is gone; the field gets the room.']
+  },
   'v2.9.58-beta':{
     title:'Change the group size mid-game',
     items:['Fixed: on Matched rotation, changing players-per-sub during a game updated the setting but the groups kept their old size, so the next sub still swapped the old number. The groups are now rebuilt from the current field the moment you change it \u2014 or the strategy.']
@@ -8011,16 +8023,21 @@ function _reseatArr(onArr,gk){
 // from the c+2 most-played (fairness stays tight) — as the subset the incoming
 // kids fit best (pairByFit's scoring), ties → more minutes off first.
 // Stars: two ★ players never leave in the same sub when an alternative exists.
-function chooseOffByFit(onArr,gk,elig,onKids,rotOf,tol){
+function chooseOffByFit(onArr,gk,elig,onKids,rotOf,tol,tieOf){
   const c=onKids.length;
   if(!c) return [];
-  const sorted=[...elig].sort((a,b)=>rotOf(b)-rotOf(a));
+  // Most minutes first; equal minutes → on the field longest first (tieOf asc),
+  // the Plan page's fairness tie-break — keeps 'on then straight off' churn away.
+  const sorted=[...elig].sort((a,b)=>(rotOf(b)-rotOf(a))||(tieOf?(tieOf(a)-tieOf(b)):0));
   if(sorted.length<=c) return sorted.slice(0,c);
   // Candidates: everyone within HALF a sub interval of the c-th most-played —
   // effectively "tied on minutes" — so fairness never drifts; fit chooses among
   // the tied. Capped at 8 for the combinatorics. At kick-off everyone is tied →
   // the whole field is eligible.
-  const floor=rotOf(sorted[c-1])-(tol||0);
+  // Candidates = everyone tied (within tol) with the MOST-played kid — so the
+  // spread can never grow past an interval; fit chooses among the tied. If
+  // fewer than c are tied, the top c are forced (fairness first).
+  const floor=rotOf(sorted[0])-(tol||0);
   let pool=sorted.filter(p=>rotOf(p)>=floor);
   if(pool.length<c) pool=sorted.slice(0,c);
   pool=pool.slice(0,8);
@@ -8036,9 +8053,10 @@ function chooseOffByFit(onArr,gk,elig,onKids,rotOf,tol){
       const fit=bestPair(cur);
       const stars=cur.filter(star).length;
       const mins=cur.reduce((s,p)=>s+rotOf(p),0);
+      const tie=tieOf?cur.reduce((s,p)=>s+tieOf(p),0):0;
       // fit dominates (a kid out of position is worse than two ★ resting);
-      // then never two ★ off together; then more minutes off
-      const key=fit*1e6-(stars>1?1e5:0)+mins/1e3;
+      // then never two ★ off together; then more minutes off; then on-longest
+      const key=fit*1e6-(stars>1?1e5:0)+mins/1e3-tie/1e9;
       if(key>bestKey){bestKey=key;bestSet=cur.slice();}
       return;
     }
@@ -11192,6 +11210,10 @@ function soAdj(k,d){
 // + half length + players-per-sub. Surfaces in the Sub Order overlay so the
 // coach can compare against their current cfg.sf without leaving the game.
 function renderSubOrderSuggestion(){
+  // v2.9.59 (owner: "this is just repeating what is already selected"): the
+  // EQUAL-TIME IDEAL block restated the steppers above it and the Settings tab's
+  // own even-time hint. Retired — the element stays for the harness/UIMAP.
+  { const el=document.getElementById('subOrderSuggestion'); if(el) el.style.display='none'; return; }
   const el=document.getElementById('subOrderSuggestion');
   if(!el||!cfg||!currentTeam) return;
   const onF=FORMATS[curFmt]&&FORMATS[curFmt].onField;
@@ -11869,8 +11891,10 @@ function buildPlanTimeline(){
         const cc=Math.min(off.length,on.length);
         const slicedOff=off.slice(0,cc), slicedOn=on.slice(0,cc);
         for(let i=0;i<cc;i++){ const idx=simOn.indexOf(slicedOff[i]); if(idx>=0) simOn[idx]=slicedOn[i]; }
+        let at={},moves=[];
+        try{ const r=_reseatArr(simOn,G.gk); simOn=r.arr; const pp=getPositions(); let k=0; for(let i=0;i<simOn.length;i++){ if(simOn[i]===G.gk) continue; k++; if(slicedOn.includes(simOn[i])) at[simOn[i]]=(pp[k]&&pp[k].label)||''; } moves=r.moved.filter(m=>!slicedOn.includes(m.pIdx)).map(m=>({name:m.name,pos:m.pos})); }catch(e){}
         simBench=simBench.filter(pl=>!slicedOn.includes(pl)).concat(slicedOff);
-        events.push({period:p,time:t,off:slicedOff,on:slicedOn,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
+        events.push({period:p,time:t,off:slicedOff,on:slicedOn,at,moves,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
       });
     } else {
       times.forEach(t=>{
@@ -11908,17 +11932,25 @@ function buildPlanTimeline(){
           }
         }
         if(!off.length){
-          off=offSorted.slice(0,c);
+          // v2.9.59 (P8 on the Plan page): incoming = least-played; who comes off
+          // is chosen for FIT among the kids tied on minutes — the same chooser
+          // the live engine and the auto plan use.
           on=onSorted.slice(0,c);
+          off=chooseOffByFit(simOn,G.gk,eligibleOn,on,pl=>(simRot[avail[pl]]||0),(cfg.sf||5)*30,pl=>(onSince[pl]||0));
         }
         const cc=Math.min(off.length,on.length);
-        off=off.slice(0,cc); on=on.slice(0,cc);
+        off=off.slice(0,cc); on=pairByFit(off,on.slice(0,cc),simOn,G.gk);
         for(let i=0;i<cc;i++){ const idx=simOn.indexOf(off[i]); if(idx>=0) simOn[idx]=on[i]; }
+        // Same re-seat the sub will run → the position each incoming kid takes,
+        // and any cover move, so the Plan page can show them (owner: "I need to
+        // know what positions they are assigned to as well").
+        let at={},moves=[];
+        try{ const r=_reseatArr(simOn,G.gk); simOn=r.arr; const pp=getPositions(); let k=0; for(let i=0;i<simOn.length;i++){ if(simOn[i]===G.gk) continue; k++; if(on.includes(simOn[i])) at[simOn[i]]=(pp[k]&&pp[k].label)||''; } moves=r.moved.filter(m=>!on.includes(m.pIdx)).map(m=>({name:m.name,pos:m.pos})); }catch(e){}
         simBench=simBench.filter(pl=>!on.includes(pl)).concat(off);
         // Stamp the swap times so the next interval's tiebreakers are fair.
         off.forEach(pl=>{ offSince[pl]=simClock; });
         on.forEach(pl=>{ onSince[pl]=simClock; });
-        events.push({period:p,time:t,off,on,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
+        events.push({period:p,time:t,off,on,at,moves,done,stateAfterOn:[...simOn],stateAfterBench:[...simBench]});
       });
     }
     const remaining=Math.max(0,hmSec-simSecs);
@@ -12327,7 +12359,7 @@ function renderSubOrder(){
       slot.push({time:ev.time,off:ev.off,on:ev.on,done:true,past:true});
     } else {
       futIdx++;
-      slot.push({time:ev.time,off:ev.off,on:ev.on,done:ev.done,note:ev.note,scrubIdx:futIdx});
+      slot.push({time:ev.time,off:ev.off,on:ev.on,at:ev.at,moves:ev.moves,done:ev.done,note:ev.note,scrubIdx:futIdx});
     }
   });
 
@@ -12372,11 +12404,17 @@ function renderSubOrder(){
       } else {
         for(let i=0;i<rowCount;i++){
           const offN=off[i]||'—', onN=on[i]||'—';
+          // v2.9.59: the position the incoming kid takes (post-re-seat), as a badge.
+          const onIdx=(b.on||[])[i]; const atLbl=(b.at&&typeof onIdx==='number')?b.at[onIdx]:'';
+          const atHtml=atLbl?`<span style="min-width:28px;height:20px;border-radius:6px;background:#0d3320;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#00d4aa;padding:0 5px;margin-left:6px">${atLbl}</span>`:'';
           rowsHtml+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-top:1px solid #16213e;font-size:12.5px">
             <span style="flex:1;text-align:right;color:${off[i]?'#f0a500':'#555'};font-weight:700">${offN}</span>
             <span style="color:#444;font-size:14px">→</span>
-            <span style="flex:1;text-align:left;color:${on[i]?'#00d4aa':'#555'};font-weight:700">${onN}</span>
+            <span style="flex:1;text-align:left;color:${on[i]?'#00d4aa':'#555'};font-weight:700;display:inline-flex;align-items:center">${onN}${atHtml}</span>
           </div>`;
+        }
+        if(b.moves&&b.moves.length){
+          rowsHtml+=`<div style="padding:6px 12px 8px;border-top:1px solid #16213e;font-size:11.5px;color:#f0a500;font-weight:700">${b.moves.map(m=>`${m.name} <span style="color:#9fb3c8;font-weight:600">moves to</span> <span style="color:#5bc0de">${m.pos}</span>`).join(' · ')}</div>`;
         }
       }
       // v2.7.53: future blocks are tappable — tap one and the scrub bar jumps

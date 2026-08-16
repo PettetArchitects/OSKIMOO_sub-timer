@@ -4,7 +4,7 @@
 > `node test/uimap.mjs --runtime`. This is the "what the app
 > actually wires up" layer; intended journeys live in `docs/UX-PATHWAYS.md`.
 >
-> App version: **v2.9.58-beta** · 0 static + 129 JS-rendered controls · runtime-verified 9 screens.
+> App version: **v2.9.59-beta** · 0 static + 129 JS-rendered controls · runtime-verified 9 screens.
 
 ## Screen flow (`showScr` targets)
 
@@ -115,10 +115,9 @@ visible/clickable. This corrects §A/§B guesses.
 - `showScr()`
 - `toggleGlobalMenu()`
 
-### Plan page `subOrderOv` — 13 visible
+### Plan page `subOrderOv` — 12 visible
 
 - `closeAnyDrawer()`
-- `closePlanMenu()`
 - `home()`
 - `planClearField()`
 - `planClkAdj()`
